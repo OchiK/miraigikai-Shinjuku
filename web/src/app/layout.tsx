@@ -19,6 +19,7 @@ const lexendGiga = Lexend_Giga({
 });
 
 const isDev = process.env.NODE_ENV === "development";
+const isStaging = process.env.VERCEL_TARGET_ENV === "staging";
 const ogImage = {
   url: "/ogp.jpg",
   width: 1200,
@@ -34,8 +35,12 @@ export const metadata: Metadata = {
   icons: {
     icon: isDev
       ? "/icons/pwa/icon_dev_192_v3.png"
-      : "/icons/pwa/icon_android_192.png",
-    apple: "/icons/pwa/icon_ios.png",
+      : isStaging
+        ? "/icons/pwa/icon_staging_192.png"
+        : "/icons/pwa/icon_android_192.png",
+    apple: isStaging
+      ? "/icons/pwa/icon_staging_ios.png"
+      : "/icons/pwa/icon_ios.png",
   },
   manifest: "/manifest.json",
   openGraph: {

@@ -7,6 +7,11 @@ import { updateSession } from "@/lib/supabase/middleware";
 export async function middleware(request: NextRequest) {
   const { supabaseResponse, user } = await updateSession(request);
 
+  // OAuth コールバックはそのまま通す（Route Handler で処理する）
+  if (request.nextUrl.pathname === "/api/auth/callback") {
+    return supabaseResponse;
+  }
+
   // ログインページへのアクセスで、既にログイン済みの場合
   if (request.nextUrl.pathname === routes.login()) {
     if (user && checkAdminPermission(user)) {

@@ -19,6 +19,7 @@ export function prepareBillForDuplication(originalBill: Bill): BillInsert {
     name: `${originalBill.name} (複製)`,
     publish_status: "draft",
     bill_number: "",
+    is_review_completed: false,
   };
 }
 

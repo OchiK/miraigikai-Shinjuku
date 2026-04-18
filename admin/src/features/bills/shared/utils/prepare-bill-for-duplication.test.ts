@@ -15,6 +15,7 @@ const baseBill: Bill = {
   council_session_id: "session-001",
   committee_id: null,
   is_featured: true,
+  is_review_completed: true,
   pdf_url: null,
   publish_status: "published",
   published_at: null,
@@ -50,6 +51,11 @@ describe("prepareBillForDuplication", () => {
     const billWithNumber = { ...baseBill, bill_number: "第1号" };
     const result = prepareBillForDuplication(billWithNumber);
     expect(result.bill_number).toBe("");
+  });
+
+  it("is_review_completedをfalseにリセットする", () => {
+    const result = prepareBillForDuplication(baseBill);
+    expect(result.is_review_completed).toBe(false);
   });
 
   it("その他のフィールドを保持する", () => {
