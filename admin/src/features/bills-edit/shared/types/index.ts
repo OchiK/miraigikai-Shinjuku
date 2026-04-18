@@ -35,6 +35,7 @@ const billBaseSchema = z.object({
   thumbnail_url: z.string().nullable().optional(),
   share_thumbnail_url: z.string().nullable().optional(),
   is_featured: z.boolean(),
+  is_review_completed: z.boolean(),
   committee_id: z.string().uuid().nullable().optional(),
   council_session_id: z.string().uuid().nullable().optional(),
   pdf_url: z

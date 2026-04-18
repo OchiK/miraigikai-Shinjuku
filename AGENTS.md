@@ -8,8 +8,8 @@
 変更作業は、**必ず git worktree を作成してから開始すること**。メインのリポジトリディレクトリでは直接変更を行わない。
 
 ```bash
-# 1. worktreeを作成
-git worktree add ../mirai-gikai-kawasaki-worktree/<branch-name> -b <branch-name>
+# 1. worktreeを作成（必ずkawasaki/developから分岐すること）
+git worktree add ../mirai-gikai-kawasaki-worktree/<branch-name> -b <branch-name> kawasaki/develop
 
 # 2. settings.local.jsonをコピー（権限設定のため必須）
 mkdir -p ../mirai-gikai-kawasaki-worktree/<branch-name>/.claude
@@ -22,8 +22,18 @@ cp .env ../mirai-gikai-kawasaki-worktree/<branch-name>/
 cd ../mirai-gikai-kawasaki-worktree/<branch-name> && pnpm install --frozen-lockfile
 ```
 
+- **必ず `kawasaki/develop` から分岐する**: `git worktree add` の末尾に `kawasaki/develop` を指定すること。省略すると現在のブランチ（HEADが別ブランチを指している場合）から分岐し、無関係なコミットがPRに混入する原因になる。
 - **目的**: kawasaki/developブランチを常にクリーンに保ち、作業の分離と並列作業を容易にする
 - **重要**: worktreeは必ずプロジェクト外（`../mirai-gikai-kawasaki-worktree/`）に作成すること。プロジェクト内（`.claude/worktrees/` 等）に作成するとBiomeが「nested root configuration」エラーを起こす。
+- **kawasaki/developに変更が残っている場合のリカバリ**: worktreeを作成する前に、kawasaki/developブランチの変更を必ずクリーンアップすること。作業途中の変更をkawasaki/developに残したままworktreeを作成・作業することは禁止。
+  ```bash
+  # 変更を退避してからworktreeを作成
+  git stash --include-untracked
+  git worktree add ../mirai-gikai-kawasaki-worktree/<branch-name> -b <branch-name> kawasaki/develop
+  # worktreeに移動して退避した変更を適用
+  cd ../mirai-gikai-kawasaki-worktree/<branch-name>
+  git stash pop
+  ```
 
 ### Worktreeクリーンアップ（必須）
 PR作成・マージ完了後は、不要になったworktreeを速やかに削除すること。放置するとディスクを圧迫し、Biome等のツールがエラーを起こす原因になる。
@@ -50,6 +60,9 @@ gh pr create --base kawasaki/develop ...
 ### セルフレビュー必須
 実装完了後（コミット前）に、必ず `/review` スキルを実行してセルフレビューを受けること。`/review` はCodexレビュー・`test-guidelines-checker` によるテストガイドラインチェック・`code-quality-checker` によるコード品質チェックを同時に実行する。指摘があれば修正してからコミットする。
 レビューを通過したら、ユーザーに確認せずそのままPR作成まで一気に進めること（push → `gh pr create`）。
+
+### UI変更時のスクリーンショット必須
+PR作成後、変更差分にUI関連ファイル（`web/src/`, `admin/src/` 配下の `.tsx`, `.css` 等）が含まれる場合は、必ず `/pr-screenshot` スキルを実行すること。スキルが自動でdevサーバー起動→スクリーンショット撮影→R2アップロード→PR本文更新まで行う。
 
 ### 並列PR作成
 複数の独立したPRを作成する場合は `/parallel-pr` スキルを使用すること。

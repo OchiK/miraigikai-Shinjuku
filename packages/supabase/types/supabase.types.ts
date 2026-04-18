@@ -101,6 +101,7 @@ export type Database = {
           created_at: string
           id: string
           is_featured: boolean
+          is_review_completed: boolean
           name: string
           pdf_url: string | null
           publish_status: Database["public"]["Enums"]["bill_publish_status"]
@@ -120,6 +121,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_featured?: boolean
+          is_review_completed?: boolean
           name: string
           pdf_url?: string | null
           publish_status?: Database["public"]["Enums"]["bill_publish_status"]
@@ -139,6 +141,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_featured?: boolean
+          is_review_completed?: boolean
           name?: string
           pdf_url?: string | null
           publish_status?: Database["public"]["Enums"]["bill_publish_status"]
