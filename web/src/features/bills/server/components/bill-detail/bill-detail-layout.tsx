@@ -1,0 +1,101 @@
+import { Container } from "@/components/layouts/container";
+import { siteConfig } from "@/config/site.config";
+import type { DifficultyLevelEnum } from "@/features/bill-difficulty/shared/types";
+import { InterviewLandingSection } from "@/features/interview-config/client/components/interview-landing-section";
+import { getInterviewConfig } from "@/features/interview-config/server/loaders/get-interview-config";
+import { BillInterviewOpinionsSection } from "@/features/interview-report/server/components/bill-interview-opinions-section";
+import { getPublicReportsByBillId } from "@/features/interview-report/server/loaders/get-public-reports-by-bill-id";
+import { BillDetailClient } from "../../../client/components/bill-detail/bill-detail-client";
+import { BillDisclaimer } from "../../../client/components/bill-detail/bill-disclaimer";
+import { BillStatusProgress } from "../../../client/components/bill-detail/bill-status-progress";
+import { FactionStanceCard } from "../../../client/components/bill-detail/faction-stance-card";
+import type { BillWithContent } from "../../../shared/types";
+import { BillShareButtons } from "../share/bill-share-buttons";
+import { BillContent } from "./bill-content";
+import { BillDetailHeader } from "./bill-detail-header";
+
+interface BillDetailLayoutProps {
+  bill: BillWithContent;
+  currentDifficulty: DifficultyLevelEnum;
+}
+
+export async function BillDetailLayout({
+  bill,
+  currentDifficulty,
+}: BillDetailLayoutProps) {
+  const showStances =
+    bill.status === "preparing" ||
+    (bill.faction_stances && bill.faction_stances.length > 0);
+
+  const [interviewConfig, publicReportsResult] = await Promise.all([
+    getInterviewConfig(bill.id),
+    getPublicReportsByBillId(bill.id),
+  ]);
+
+  return (
+    <div className="container mx-auto pb-8 max-w-4xl">
+      {/*
+        テキスト選択機能とチャット連携の実装パターン:
+        - BillContentはServer Componentのまま保持（SSRによる高速な初期レンダリング）
+        - BillDetailClientでクライアントサイド機能（テキスト選択、チャット連携）を提供
+        - このパターンによりSSRを保持しつつインタラクティブ機能を実装
+      */}
+      <BillDetailClient
+        bill={bill}
+        currentDifficulty={currentDifficulty}
+        hasInterviewConfig={interviewConfig != null}
+      >
+        <BillDetailHeader
+          bill={bill}
+          hasInterviewConfig={interviewConfig != null}
+          opinionCount={publicReportsResult.totalCount}
+        />
+        <Container>
+          {/* 議案ステータス進捗 */}
+          <div className="my-8">
+            <BillStatusProgress
+              status={bill.status}
+              statusNote={bill.status_note}
+            />
+          </div>
+
+          <BillContent bill={bill} />
+        </Container>
+      </BillDetailClient>
+
+      <Container>
+        {publicReportsResult.totalCount > 0 && (
+          <div className="my-8">
+            <BillInterviewOpinionsSection
+              billId={bill.id}
+              reports={publicReportsResult.reports}
+              totalCount={publicReportsResult.totalCount}
+            />
+          </div>
+        )}
+        {siteConfig.features.aiInterview && interviewConfig != null && (
+          <div className="my-8">
+            <InterviewLandingSection billId={bill.id} />
+          </div>
+        )}
+        {showStances && (
+          <div className="my-8">
+            <FactionStanceCard
+              stances={bill.faction_stances ?? []}
+              billStatus={bill.status}
+            />
+          </div>
+        )}
+        {/* シェアボタン */}
+        <div className="my-8">
+          <BillShareButtons bill={bill} />
+        </div>
+
+        {/* データの出典と免責事項 */}
+        <div className="my-8">
+          <BillDisclaimer />
+        </div>
+      </Container>
+    </div>
+  );
+}

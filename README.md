@@ -3,10 +3,12 @@
 新宿区議会の議案・審議情報を、住民が理解しやすい形で閲覧・質問できる非公式の市民向け情報サイト。
 
 - **運営形態**: 個人・趣味運営（非公式）
+  - 新宿区、新宿区議会、政党チームみらいの公式サービスではありません。
 - **Architecture Pathway**: **Pathway B: Managed / Serverless**
 - **Tech Stack**: Next.js (App Router, TypeScript) + Supabase (PostgreSQL) + Vercel + Vercel AI SDK
 - **Base Repo**: [kozosophia-lgtm/mirai-gikai-kawasaki](https://github.com/kozosophia-lgtm/mirai-gikai-kawasaki) (`kawasaki/develop`)
 - **Upstream**: [team-mirai/mirai-gikai](https://github.com/team-mirai/mirai-gikai)
+- **Source Repository**: [OchiK/miraikaigi-Shinjuku](https://github.com/OchiK/miraikaigi-Shinjuku)
 
 ---
 
@@ -27,15 +29,34 @@
 
 ---
 
-## ✅ Day 1 Mandatory Checklist
+## 🚀 ローカル開発セットアップ
 
-- [x] **Pathway Selected**: Pathway B (Managed / Serverless: Vercel + Next.js + Supabase)
-- [x] **Git Initialized**: `git init` 実行完了、デフォルトブランチ `main`
-- [x] **Secrets & Environment**: `.env.example` 作成、`.gitignore` 検証（`.env`, `.env*.local` 除外確認）
-- [ ] **Remote Repository**: 自身の公開 GitHub リポジトリを作成して `origin` を設定
-- [ ] **Base Codebase Setup**: `mirai-gikai-kawasaki` をクローンしてローカル起動
-- [ ] **AI Safety Compliance**: 自動実行制限とAI生成コミットの監査体制確認
-- [ ] **Skills Mapping**: 開発支援スキルの適用
+```bash
+# 1. Supabase の起動
+npx supabase start
+
+# 2. 環境変数の設定
+cp .env.example .env
+
+# 3. パッケージインストール
+pnpm install
+
+# 4. Supabase DB初期化 & シードデータ投入
+pnpm db:reset
+
+# 5. 開発サーバー起動（Web: 3002 / Admin: 3001）
+pnpm dev
+```
+
+### マイグレーション
+
+```bash
+# マイグレーションファイル新規作成
+npx supabase migration new マイグレーション名
+
+# マイグレーション実行 & TypeScript型定義更新
+pnpm db:migrate
+```
 
 ---
 
@@ -53,9 +74,8 @@
 
 ## 🛠️ Skills Mapping
 
-本プロジェクトで推奨・連携するスキル:
 - `vercel-react-best-practices`: Next.js / React のパフォーマンス最適化
-- `api-security-best-practices`: Supabase RLS、AIエンドポイントのレートリミット・入力バリデーション
+- `api-security-best-practices`: Supabase RLS、AIエンドポイントの保護
 - `natural-japanese`: やさしい日本語生成・UIテキストの自然な日本語品質
 - `mobile-first-testing`: 市民向けスマートフォンスムーズ閲覧のためのレスポンシブ検証
 - `wcag-accessibility`: 多様な住民（高齢者・外国人含む）のためのアクセシビリティ確保

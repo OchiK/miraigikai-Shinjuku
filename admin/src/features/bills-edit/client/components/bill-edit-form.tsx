@@ -1,0 +1,106 @@
+"use client";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form } from "@/components/ui/form";
+
+import type { Committee } from "@/features/committees/shared/types";
+import type { CouncilSession } from "@/features/council-sessions/shared/types";
+import { utcToJstDatetimeLocal } from "@/lib/utils/datetime-jst";
+import { updateBill } from "../../server/actions/update-bill";
+import {
+  type Bill,
+  type BillUpdateInput,
+  billUpdateSchema,
+} from "../../shared/types";
+import { useBillForm } from "../hooks/use-bill-form";
+import { BillFormFields } from "./bill-form-fields";
+
+interface BillEditFormProps {
+  bill: Bill;
+  councilSessions: CouncilSession[];
+  committees: Committee[];
+}
+
+export function BillEditForm({
+  bill,
+  councilSessions,
+  committees,
+}: BillEditFormProps) {
+  const { isSubmitting, error, handleSubmit, handleCancel } = useBillForm();
+
+  // If bill has no council_session_id, default to the latest session (first in the list)
+  const defaultCouncilSessionId =
+    bill.council_session_id ??
+    (councilSessions.length > 0 ? councilSessions[0].id : null);
+
+  const form = useForm<BillUpdateInput>({
+    resolver: zodResolver(billUpdateSchema),
+    defaultValues: {
+      bill_number: bill.bill_number,
+      name: bill.name,
+      status: bill.status,
+      status_note: bill.status_note,
+      published_at: bill.published_at
+        ? utcToJstDatetimeLocal(bill.published_at)
+        : "",
+      thumbnail_url: bill.thumbnail_url,
+      share_thumbnail_url: bill.share_thumbnail_url,
+      is_featured: bill.is_featured,
+      is_review_completed: bill.is_review_completed,
+      committee_id: bill.committee_id,
+      council_session_id: defaultCouncilSessionId,
+      pdf_url: bill.pdf_url,
+    },
+  });
+
+  const onSubmit = (data: BillUpdateInput) => {
+    handleSubmit(
+      () => updateBill(bill.id, data),
+      "更新中にエラーが発生しました"
+    );
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>議案基本情報編集</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <BillFormFields
+              control={form.control}
+              billId={bill.id}
+              councilSessions={councilSessions}
+              committees={committees}
+            />
+
+            {error && (
+              <div className="rounded-md bg-red-50 p-4 text-sm text-red-800">
+                {error}
+              </div>
+            )}
+
+            <div className="flex items-center gap-4">
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "保存中..." : "保存"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCancel}
+                disabled={isSubmitting}
+              >
+                キャンセル
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
+  );
+}
