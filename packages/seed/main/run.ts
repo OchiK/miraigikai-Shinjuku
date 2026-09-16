@@ -23,6 +23,7 @@ import {
   DEMO_REPORT_ID_CITIZEN,
 } from "./data";
 import { createBillContents } from "./bill-contents-data";
+import { R8_2_SESSION } from "./shinjuku-r8-2-inventory";
 import {
   createShippingBillInterviewConfig,
   createShippingBillQuestions,
@@ -66,7 +67,7 @@ async function seedDatabase() {
       await supabase
         .from("council_sessions")
         .insert(councilSessions)
-        .select("id");
+        .select("id, slug");
 
     if (councilSessionsError) {
       throw new Error(
@@ -125,7 +126,8 @@ async function seedDatabase() {
     const { data: insertedBills, error: billsError } = await supabase
       .from("bills")
       .insert(bills)
-      .select("id, name");
+      // 関連付けは件名ではなく slug（安定識別子）で突合するため slug を取得する
+      .select("id, name, slug");
 
     if (billsError) {
       throw new Error(`Failed to insert bills: ${billsError.message}`);
@@ -137,19 +139,34 @@ async function seedDatabase() {
 
     console.log(`✅ Inserted ${insertedBills.length} bills`);
 
-    // Link all bills to the current council session
-    const currentSessionId = insertedCouncilSessions[0]?.id;
-    if (currentSessionId) {
-      for (const bill of insertedBills) {
-        await supabase
-          .from("bills")
-          .update({ council_session_id: currentSessionId })
-          .eq("id", bill.id);
-      }
-      console.log(
-        `🔗 Linked ${insertedBills.length} bills to current council session`
+    // Link all bills to the R8-2 council session.
+    // 配列の並び順ではなく slug で会期を特定する。
+    const currentSessionId = insertedCouncilSessions.find(
+      (s) => s.slug === R8_2_SESSION.slug
+    )?.id;
+    if (!currentSessionId) {
+      throw new Error(
+        `Council session not found for slug: ${R8_2_SESSION.slug}`
       );
     }
+
+    const { error: linkError } = await supabase
+      .from("bills")
+      .update({ council_session_id: currentSessionId })
+      .in(
+        "id",
+        insertedBills.map((b) => b.id)
+      );
+
+    if (linkError) {
+      throw new Error(
+        `Failed to link bills to council session: ${linkError.message}`
+      );
+    }
+
+    console.log(
+      `🔗 Linked ${insertedBills.length} bills to ${R8_2_SESSION.name}`
+    );
 
     // Insert bill_contents
     console.log("📚 Inserting bill contents...");

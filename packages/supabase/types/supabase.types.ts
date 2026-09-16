@@ -99,16 +99,19 @@ export type Database = {
           committee_id: string | null
           council_session_id: string | null
           created_at: string
+          decision_source_url: string | null
           id: string
           is_featured: boolean
           is_review_completed: boolean
           name: string
+          overview_pdf_url: string | null
           pdf_url: string | null
           publish_status: Database["public"]["Enums"]["bill_publish_status"]
           publish_status_order: number | null
           published_at: string | null
           share_thumbnail_url: string | null
           slug: string | null
+          source_page_url: string | null
           status: Database["public"]["Enums"]["bill_status_enum"]
           status_note: string | null
           status_order: number | null
@@ -120,16 +123,19 @@ export type Database = {
           committee_id?: string | null
           council_session_id?: string | null
           created_at?: string
+          decision_source_url?: string | null
           id?: string
           is_featured?: boolean
           is_review_completed?: boolean
           name: string
+          overview_pdf_url?: string | null
           pdf_url?: string | null
           publish_status?: Database["public"]["Enums"]["bill_publish_status"]
           publish_status_order?: number | null
           published_at?: string | null
           share_thumbnail_url?: string | null
           slug?: string | null
+          source_page_url?: string | null
           status: Database["public"]["Enums"]["bill_status_enum"]
           status_note?: string | null
           status_order?: number | null
@@ -141,16 +147,19 @@ export type Database = {
           committee_id?: string | null
           council_session_id?: string | null
           created_at?: string
+          decision_source_url?: string | null
           id?: string
           is_featured?: boolean
           is_review_completed?: boolean
           name?: string
+          overview_pdf_url?: string | null
           pdf_url?: string | null
           publish_status?: Database["public"]["Enums"]["bill_publish_status"]
           publish_status_order?: number | null
           published_at?: string | null
           share_thumbnail_url?: string | null
           slug?: string | null
+          source_page_url?: string | null
           status?: Database["public"]["Enums"]["bill_status_enum"]
           status_note?: string | null
           status_order?: number | null
