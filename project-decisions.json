@@ -1,0 +1,36 @@
+{
+  "project_name": "みらい議会＠新宿区",
+  "operation": "personal_hobby_unofficial",
+  "base_repo": "https://github.com/kozosophia-lgtm/mirai-gikai-kawasaki",
+  "base_branch": "kawasaki/develop",
+  "upstream_repo": "https://github.com/team-mirai/mirai-gikai",
+  "target_locales": [
+    "ja",
+    "en",
+    "zh-Hans",
+    "ko",
+    "ne",
+    "my",
+    "vi"
+  ],
+  "japanese_difficulties": [
+    "easy",
+    "normal",
+    "hard"
+  ],
+  "features": {
+    "ai_chat": true,
+    "ai_interview_initial": false,
+    "team_mirai_section": false,
+    "minutes_mvp": false
+  },
+  "mvp_fixture": "Shinjuku 2026 2nd regular meeting",
+  "first_live_target": "Shinjuku 2026 3rd regular meeting",
+  "cost_guards_usd": {
+    "daily_per_user": 0.25,
+    "daily_total": 1.0,
+    "monthly_total": 10.0
+  },
+  "canonical_language": "ja",
+  "translation_policy": "derived_from_canonical_japanese"
+}
