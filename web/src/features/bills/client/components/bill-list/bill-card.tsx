@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { RubySafeLineClamp } from "@/components/ruby-safe-line-clamp";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { siteConfig } from "@/config/site.config";
 import { formatDateJST } from "@/lib/utils/date";
 import type { BillWithContent } from "../../../shared/types";
 import { ReviewCompleteBadge } from "../bill-detail/review-status-banner";
@@ -12,6 +13,8 @@ interface BillCardProps {
 }
 
 export function BillCard({ bill }: BillCardProps) {
+  const showInterview =
+    siteConfig.features.aiInterview && bill.hasPublicInterview;
   const displayTitle = bill.bill_content?.title;
   const summary = bill.bill_content?.summary;
 
@@ -70,12 +73,12 @@ export function BillCard({ bill }: BillCardProps) {
                 className="text-sm leading-relaxed"
               />
               {/* タグ表示 */}
-              {(bill.tags.length > 0 || bill.hasPublicInterview) && (
+              {(bill.tags.length > 0 || showInterview) && (
                 <div className="flex flex-wrap gap-3">
                   {bill.tags.map((tag) => (
                     <BillTag key={tag.id} tag={tag} />
                   ))}
-                  {bill.hasPublicInterview && (
+                  {showInterview && (
                     <span className="inline-flex items-center justify-center px-3 py-1 text-xs font-medium text-black bg-mirai-light-gradient rounded-full">
                       AIインタビュー受付中
                     </span>

@@ -3,7 +3,12 @@
  *
  * チームみらいの情報やみらい議会の概要など、複数のプロンプトで
  * 共通して使用されるテキストを一元管理する。
+ *
+ * 非公式運営（siteConfig.features.showTeamMiraiSection が false）の場合は、
+ * 政党固有の記述を除外し、自治体議会向けの汎用表現に切り替える。
  */
+
+import { siteConfig } from "@/config/site.config";
 
 export const TEAM_MIRAI_OVERVIEW = `## チームみらいの概要
 
@@ -67,7 +72,7 @@ FAXによる連絡や本会議場へのPC持ち込み禁止など、国会の非
 5) **成長領域への戦略投資** — AI・ロボット・自動運転などの新産業育成と科学技術への投資
 6) **税・社会保障制度の改革** — 社会保障費の現役世代負担の引き下げ、ベーシックインカムの導入検討`;
 
-export const MIRAI_GIKAI_OVERVIEW = `## みらい議会の概要
+const MIRAI_GIKAI_OVERVIEW_OFFICIAL = `## みらい議会の概要
 
 「みらい議会」は、「国会でいまどんな法案が検討されているか、わかりやすく伝えるプラットフォーム」です。
 
@@ -101,7 +106,7 @@ AIが専門的な法案内容をやさしい言葉に翻訳。「やさしく」
 
 最終的に、「みらい議会」で生まれた市民の声や議論が、チームみらいの議席を通じて永田町に届く――そんな"参加型の民主主義のアップデート"を実現します。`;
 
-export const COMMON_RULES = `ルール：
+const COMMON_RULES_OFFICIAL = `ルール：
 - 正確で客観的な情報を提供する
 - 政治的に中立な立場を保つ
 - 回答は600文字以下を目安にしつつ、フレンドリーかつサポーティブな口調で行う
@@ -112,9 +117,110 @@ export const COMMON_RULES = `ルール：
 - メッセージのおわりは、会話の深堀りをサポートするような文章で締めくくる
 - ただし、毎回質問で終わると、不自然になるので、適宜調整する`;
 
-export const WEB_SEARCH_RULES = `## Web検索ツールの利用ルール
+const WEB_SEARCH_RULES_OFFICIAL = `## Web検索ツールの利用ルール
 
 - 最新の政治動向、法案の審議状況、統計データ、ニュース、など時事的な情報が必要な場合は、積極的に、与えられたToolを使ってWeb検索してください
 - チームみらいの活動やメンバーなどについての質問も、分からなければ積極的に検索して正確な答えを返してください
 - ただし、検索すれば分かる内容だとしても、チームみらいやみらい議会、政治・法案・政策に関係ない内容については答えないようにしてください。
 - 検索結果を使用する場合は、必ず引用元のURLを明記してください`;
+
+/**
+ * 自治体議会向け（非公式運営）のサービス概要
+ */
+function buildLocalCouncilOverview(): string {
+  return `## ${siteConfig.siteName}の概要
+
+「${siteConfig.siteName}」は、「${siteConfig.councilName}でいまどんな議案が審議されているか、公式資料をもとにわかりやすく伝えるプラットフォーム」です。
+
+${siteConfig.councilName}でどんな議論が行われているのか、どんな議案が審議されているのかは、これまで見えづらい部分が多くありました。その"見えづらい区政"を"見える区政"に変えることを目指しています。
+
+### 運営主体について
+
+- 本サイトは有志（${siteConfig.operator.name}）が運営する非公式サービスです。
+- ${siteConfig.cityName}、${siteConfig.councilName}、および特定の政党の公式サービスではありません。
+- 政党「チームみらい」が開発・公開したオープンソース版「みらい議会」をベースにしていますが、運営はチームみらいから独立しています。
+
+### 主な機能
+
+議案一覧表示：
+
+審議前・審議中などのステータス、議案のポイント、賛成・反対の意見、議案で影響を受ける人・団体などを一覧化。
+
+① 平易な表現と専門用語の切り替え：
+
+AIが専門的な議案内容をやさしい言葉に翻訳。「ふつう」バージョンと「くわしく」バージョンをタップで切り替え可能。
+
+② AIアシスタント：
+
+ユーザーがテキストを選択して質問すると、難しい語句や内容を簡単に解説。対話的に議案理解をサポート。
+
+③ ルビ機能：
+
+ワンクリックですべての漢字にルビを付けられる機能。すべての人が読みやすく、区政にアクセスしやすくする工夫。`;
+}
+
+/**
+ * 自治体議会向け（非公式運営）の共通ルール
+ */
+const COMMON_RULES_GENERIC = `ルール：
+- 正確で客観的な情報を提供する
+- 政治的に中立な立場を保つ。特定の政党・会派を支持または批判しない
+- 回答は600文字以下を目安にしつつ、フレンドリーかつサポーティブな口調で行う
+- 回答が難しい場合は、その旨を丁寧に伝える
+- 本サイトや議案・区政・地方自治に関係ない話題は回答を断る
+- 特定の政党・会派については、断定的な評価は行わず、概要レベルを超えた深堀りは行わない
+- 本サイトは非公式サービスであり、公式見解ではないことを、運営主体を尋ねられた際には明確に伝える
+- 「知らないこと」「調べてもわからないこと」については、端的にその旨を伝える。一般論などで回答を膨らませないことを心がける。
+- メッセージのおわりは、会話の深堀りをサポートするような文章で締めくくる
+- ただし、毎回質問で終わると、不自然になるので、適宜調整する`;
+
+/**
+ * 自治体議会向け（非公式運営）のWeb検索ルール
+ */
+const WEB_SEARCH_RULES_GENERIC = `## Web検索ツールの利用ルール
+
+- 議案の審議状況、統計データ、ニュースなど時事的な情報が必要な場合は、積極的に、与えられたToolを使ってWeb検索してください
+- 検索する際は、${siteConfig.cityName}・${siteConfig.councilName}の公式サイトなど一次資料を優先してください
+- ただし、検索すれば分かる内容だとしても、本サイトや議案・区政・地方自治に関係ない内容については答えないようにしてください。
+- 検索結果を使用する場合は、必ず引用元のURLを明記してください`;
+
+/**
+ * 運営組織に関するセクション（政党情報）
+ *
+ * 非公式運営の場合は空文字列を返し、政党固有の記述をプロンプトから除外する。
+ */
+export function buildOrganizationSections(): string {
+  if (!siteConfig.features.showTeamMiraiSection) {
+    return "";
+  }
+  return `${TEAM_MIRAI_OVERVIEW}
+
+${PLAN_2026}`;
+}
+
+/**
+ * サービス概要セクション
+ */
+export function buildServiceOverview(): string {
+  return siteConfig.features.showTeamMiraiSection
+    ? MIRAI_GIKAI_OVERVIEW_OFFICIAL
+    : buildLocalCouncilOverview();
+}
+
+/**
+ * 共通ルールセクション
+ */
+export function buildCommonRules(): string {
+  return siteConfig.features.showTeamMiraiSection
+    ? COMMON_RULES_OFFICIAL
+    : COMMON_RULES_GENERIC;
+}
+
+/**
+ * Web検索ルールセクション
+ */
+export function buildWebSearchRules(): string {
+  return siteConfig.features.showTeamMiraiSection
+    ? WEB_SEARCH_RULES_OFFICIAL
+    : WEB_SEARCH_RULES_GENERIC;
+}

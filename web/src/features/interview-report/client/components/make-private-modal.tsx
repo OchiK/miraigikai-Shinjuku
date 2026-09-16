@@ -4,13 +4,13 @@ import { ArrowRight, Lock } from "lucide-react";
 import Image from "next/image";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { siteConfig } from "@/config/site.config";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { siteConfig } from "@/config/site.config";
 
 interface MakePrivateModalProps {
   open: boolean;
@@ -58,7 +58,7 @@ export function MakePrivateModal({
           <CheckListItem>
             {siteConfig.managingParty
               ? `${siteConfig.managingParty}の政策検討に最大限活用させていただきます。`
-              : "政策検討に最大限活用させていただきます。"}
+              : "統計的な集計やサービス改善に活用させていただきます。"}
           </CheckListItem>
         </div>
 

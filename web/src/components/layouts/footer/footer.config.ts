@@ -46,7 +46,7 @@ export const primaryLinks: FooterLink[] = [
 export const policyLinks: FooterPolicyLink[] = [
   {
     label: "よくあるご質問",
-    href: "/faq",
+    href: routes.faq(),
   },
   {
     label: "利用規約",
@@ -55,5 +55,10 @@ export const policyLinks: FooterPolicyLink[] = [
   {
     label: "プライバシーポリシー",
     href: routes.privacy(),
+  },
+  {
+    label: "ソースコード (GitHub)",
+    href: siteConfig.operator.contactUrl,
+    external: true,
   },
 ];

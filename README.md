@@ -8,24 +8,24 @@
 - **Tech Stack**: Next.js (App Router, TypeScript) + Supabase (PostgreSQL) + Vercel + Vercel AI SDK
 - **Base Repo**: [kozosophia-lgtm/mirai-gikai-kawasaki](https://github.com/kozosophia-lgtm/mirai-gikai-kawasaki) (`kawasaki/develop`)
 - **Upstream**: [team-mirai/mirai-gikai](https://github.com/team-mirai/mirai-gikai)
-- **Source Repository**: [OchiK/miraikaigi-Shinjuku](https://github.com/OchiK/miraikaigi-Shinjuku)
+- **Source Repository**: [OchiK/miraigikai-Shinjuku](https://github.com/OchiK/miraigikai-Shinjuku)
 
 ---
 
 ## 📁 ディレクトリ・ドキュメント構成
 
-- [START_HERE.md](file:///Users/ken/antigravity/Mirai_kaigi/START_HERE.md): リポジトリのクローン手順と環境構築
-- [AGENT_BRIEF.md](file:///Users/ken/antigravity/Mirai_kaigi/AGENT_BRIEF.md): AI実装エージェント向けの設計原則・禁止事項・開発規範
-- [project-decisions.json](file:///Users/ken/antigravity/Mirai_kaigi/project-decisions.json): 主要な決定事項と設定（ターゲット言語、難易度、コスト上限など）
-- [docs/](file:///Users/ken/antigravity/Mirai_kaigi/docs): 詳細仕様書
+- [START_HERE.md](START_HERE.md): リポジトリのクローン手順と環境構築
+- [AGENT_BRIEF.md](AGENT_BRIEF.md): AI実装エージェント向けの設計原則・禁止事項・開発規範
+- [project-decisions.json](project-decisions.json): 主要な決定事項と設定（ターゲット言語、難易度、コスト上限など）
+- [docs/](docs): 詳細仕様書
   - `ROADMAP.md`: 実装ロードマップ（Phase 0 〜 Phase 7）
   - `ARCHITECTURE.md`: アーキテクチャとデータフロー
   - `AI_CHAT_POLICY.md`: AIチャットのポリシーとガードレール
   - `I18N_AND_EASY_JAPANESE.md`: やさしい日本語と多言語展開の仕様
   - `LICENSE_AND_BRANDING.md`: ライセンス・免責事項・ブランディング
   - `DATA_PIPELINE.md`: データ収集・正規化パイプライン
-- [prompts/](file:///Users/ken/antigravity/Mirai_kaigi/prompts): AIプロンプト定義（やさしい日本語変換、翻訳、議案チャット）
-- [snippets/](file:///Users/ken/antigravity/Mirai_kaigi/snippets): 設定例・初期SQL・環境変数テンプレート
+- [prompts/](prompts): AIプロンプト定義（やさしい日本語変換、翻訳、議案チャット）
+- [snippets/](snippets): 設定例・初期SQL・環境変数テンプレート
 
 ---
 
@@ -79,3 +79,7 @@ pnpm db:migrate
 - `natural-japanese`: やさしい日本語生成・UIテキストの自然な日本語品質
 - `mobile-first-testing`: 市民向けスマートフォンスムーズ閲覧のためのレスポンシブ検証
 - `wcag-accessibility`: 多様な住民（高齢者・外国人含む）のためのアクセシビリティ確保
+
+## 改変履歴
+
+- 2026-09-16: 新宿区向けに名称、配色、画像、免責表示、ソースコードへのリンク、CIの対象ブランチを変更しました。上流のAGPL-3.0ライセンスを継承しています。

@@ -3,6 +3,7 @@ import type { Route } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { siteConfig } from "@/config/site.config";
 import { getInterviewLPLink } from "@/features/interview-config/shared/utils/interview-links";
 import { routes } from "@/lib/routes";
 import { formatDateWithDots } from "@/lib/utils/date";
@@ -107,7 +108,7 @@ export async function BillDetailHeader({
           </Link>
         )}
         <div className="flex items-center gap-2">
-          {hasInterviewConfig && (
+          {siteConfig.features.aiInterview && hasInterviewConfig && (
             <Button
               variant="default"
               size="sm"

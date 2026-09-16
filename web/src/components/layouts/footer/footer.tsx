@@ -1,10 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import type { Route } from "next";
+import Image from "next/image";
 import Link from "next/link";
-import { siteConfig } from "@/config/site.config";
 import { usePathname } from "next/navigation";
+import { siteConfig } from "@/config/site.config";
 import { isInterviewPage } from "@/lib/page-layout-utils";
 import { routes } from "@/lib/routes";
 import { policyLinks, primaryLinks } from "./footer.config";
@@ -22,7 +22,7 @@ export function Footer() {
         {siteConfig.features.showTeamMiraiSection && <FooterLogoSection />}
         <FooterPrimaryLinks />
         <FooterPolicies />
-        {siteConfig.features.showTeamMiraiSection && <FooterCopyright />}
+        <FooterCopyright />
       </div>
     </footer>
   );
@@ -96,9 +96,24 @@ function FooterPolicies() {
 }
 
 function FooterCopyright() {
+  if (siteConfig.features.showTeamMiraiSection) {
+    return (
+      <div className="text-center text-sm font-medium text-slate-800">
+        © 2025 Team Mirai All rights Reserved
+      </div>
+    );
+  }
+
   return (
-    <div className="text-center text-sm font-medium text-slate-800">
-      © 2025 Team Mirai All rights Reserved
+    <div className="space-y-1 text-center text-xs font-medium text-slate-700">
+      <p>これは政党チームみらいが運営しているものではありません。</p>
+      <p>
+        本サイトは個人が運営する非公式サービスです。{siteConfig.cityName}および
+        {siteConfig.councilName}が運営・監修するものではありません。
+      </p>
+      <p>
+        © 2026 {siteConfig.siteName} (非公式) / 運営: {siteConfig.operator.name}
+      </p>
     </div>
   );
 }

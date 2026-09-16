@@ -14,9 +14,9 @@ import { adminClient, cleanupTestCouncilSession } from "../utils";
  *   1. 件名が重複する承認第2号・第3号が取り違えなく別レコードとして入ること
  *   2. 同じ取り込みを繰り返しても件数が増えず、関連付けもずれないこと
  *   3. 安定識別子（slug）の一意制約が重複投入を実際に拒否すること
+ *   4. 公式出典URLがDBへ保存され、再取り込み後も維持されること
  *
  * seed 済みのデータには一切触れず、テスト専用の定例会と議案のみを作成・削除する。
- * 新しい出典URLカラムはこのテストでは扱わない（本テストの対象は識別子と関連付けの意味論）。
  */
 
 /**
@@ -38,23 +38,12 @@ describe("令和8年第2回定例会インベントリの取り込み", () => {
   const importInventory = async () => {
     // 本番の変換ロジック（toBillInsert）をそのまま通し、
     // テスト隔離に必要な識別子だけを上書きする。
-    const rows = r8SecondSessionItems.map((item) => {
-      // 出典URLの新カラムは本テストの対象外（検証対象は識別子と関連付けの意味論）。
-      // 未適用のローカルDBでも走るよう、ここで取り除く。
-      const {
-        overview_pdf_url: _overview,
-        source_page_url: _sourcePage,
-        decision_source_url: _decisionSource,
-        ...billInsert
-      } = toBillInsert(item);
-
-      return {
-        ...billInsert,
-        bill_number: testBillNumber(item),
-        slug: testSlug(item),
-        council_session_id: sessionId,
-      };
-    });
+    const rows = r8SecondSessionItems.map((item) => ({
+      ...toBillInsert(item),
+      bill_number: testBillNumber(item),
+      slug: testSlug(item),
+      council_session_id: sessionId,
+    }));
 
     const { data, error } = await adminClient
       .from("bills")
@@ -68,7 +57,9 @@ describe("令和8年第2回定例会インベントリの取り込み", () => {
   const fetchImported = async () => {
     const { data, error } = await adminClient
       .from("bills")
-      .select("id, name, bill_number, slug, status_note, publish_status")
+      .select(
+        "id, name, bill_number, slug, status_note, publish_status, overview_pdf_url, source_page_url, decision_source_url"
+      )
       .eq("council_session_id", sessionId);
     if (error) throw new Error(error.message);
     return data ?? [];
@@ -154,6 +145,23 @@ describe("令和8年第2回定例会インベントリの取り込み", () => {
     const idBySlug = (rows: typeof first) =>
       Object.fromEntries(rows.map((b) => [b.slug, b.id]));
     expect(idBySlug(second)).toEqual(idBySlug(first));
+  });
+
+  it("公式出典URLが保存され、再取り込み後も正確に維持される", async () => {
+    await importInventory();
+    await importInventory();
+    const imported = await fetchImported();
+
+    for (const item of r8SecondSessionItems) {
+      const stored = imported.find((bill) => bill.slug === testSlug(item));
+      const expected = toBillInsert(item);
+
+      expect(stored).toMatchObject({
+        overview_pdf_url: expected.overview_pdf_url,
+        source_page_url: expected.source_page_url,
+        decision_source_url: expected.decision_source_url,
+      });
+    }
   });
 
   it("再取り込み後も解説が正しい議案に結び付く", async () => {
