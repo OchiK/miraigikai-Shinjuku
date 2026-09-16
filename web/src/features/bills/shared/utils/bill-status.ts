@@ -1,39 +1,26 @@
+import {
+  getBillCardStatusLabel,
+  getBillStatusVariant,
+} from "@mirai-gikai/shared/bills/decision-label";
 import type { BillStatusEnum } from "../types";
 
-/** カード用の簡略化されたステータスラベルを取得 */
-export function getCardStatusLabel(status: BillStatusEnum): string {
-  switch (status) {
-    case "submitted":
-    case "in_committee":
-    case "plenary_session":
-      return "議会審議中";
-    case "approved":
-      return "可決";
-    case "rejected":
-      return "否決";
-    case "reported":
-      return "専決処分報告";
-    default:
-      return "議案上程前";
-  }
+/**
+ * カード用の簡略化されたステータスラベルを取得
+ *
+ * 実体は @mirai-gikai/shared に一本化している。status_note を渡すと、
+ * 専決処分の承認のように列挙だけでは区別できない議決用語を正しく表示できる。
+ */
+export function getCardStatusLabel(
+  status: BillStatusEnum,
+  statusNote?: string | null
+): string {
+  return getBillCardStatusLabel({ status, statusNote });
 }
 
 /** ステータスに対応するBadgeのvariantを取得 */
 export function getStatusVariant(
-  status: BillStatusEnum
+  status: BillStatusEnum,
+  statusNote?: string | null
 ): "light" | "default" | "dark" | "muted" {
-  switch (status) {
-    case "submitted":
-    case "in_committee":
-    case "plenary_session":
-      return "light";
-    case "approved":
-      return "default";
-    case "rejected":
-      return "dark";
-    case "reported":
-      return "default";
-    default:
-      return "muted";
-  }
+  return getBillStatusVariant({ status, statusNote });
 }

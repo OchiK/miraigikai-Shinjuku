@@ -1,3 +1,4 @@
+import { getBillStatusLabel as getSharedBillStatusLabel } from "@mirai-gikai/shared/bills/decision-label";
 import type { Database } from "@mirai-gikai/supabase";
 
 // Database types
@@ -95,30 +96,18 @@ export const BILL_STATUS_ORDER: Record<BillStatusEnum, number> = {
   preparing: 6,
 };
 
-// ステータスを日本語ラベルに変換する関数
-export function getBillStatusLabel(status: BillStatusEnum): string {
-  switch (status) {
-    case "preparing":
-      return "準備中";
-    case "submitted":
-      return "上程済み";
-    case "in_committee":
-      return "委員会審査中";
-    case "plenary_session":
-      return "本会議採決中";
-    case "approved":
-      return "可決";
-    case "rejected":
-      return "否決";
-    case "adopted":
-      return "採択";
-    case "partially_adopted":
-      return "趣旨採択";
-    case "reported":
-      return "専決処分報告";
-    default:
-      return status;
-  }
+/**
+ * ステータスを日本語ラベルに変換する
+ *
+ * 実体は @mirai-gikai/shared に一本化している（web と admin で同じラベルを出すため）。
+ * status_note を渡すと、専決処分の承認のように列挙だけでは区別できない議決用語を
+ * 正しく表示できる。
+ */
+export function getBillStatusLabel(
+  status: BillStatusEnum,
+  statusNote?: string | null
+): string {
+  return getSharedBillStatusLabel({ status, statusNote });
 }
 
 export const STANCE_LABELS: Record<StanceTypeEnum, string> = {
