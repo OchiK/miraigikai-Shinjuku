@@ -79,12 +79,6 @@ export interface ShinjukuSessionItem {
   isFeatured: boolean;
 }
 
-/**
- * 解説済み議案のサムネイル。公式素材ではなく開発用のプレースホルダであり、
- * 画像ありの表示経路をローカルで確認できるようにするためだけに設定する。
- */
-const PLACEHOLDER_THUMBNAIL_URL = "https://placehold.co/600x400";
-
 /** 会期メタデータ（公式ページ記載: 「会期：6月10日～6月19日」） */
 export const R8_2_SESSION: CouncilSessionInsert = {
   name: "令和8年 第2回定例会",
@@ -95,8 +89,14 @@ export const R8_2_SESSION: CouncilSessionInsert = {
   is_active: true,
 };
 
-/** 議決日（公式ページの最終更新日かつ会期末日） */
-export const R8_2_DECISION_DATE = "2026-06-19T10:00:00+09:00";
+/**
+ * bills.published_at に入れるサイト掲載日時。
+ *
+ * 会期末日（2026-06-19）を用いる。議決結果ページには案件ごとの議決日・議決時刻の
+ * 記載がなく、ページの最終更新日から個別の議決日時を推定することはできない。
+ * この値は「サイトでの掲載時点」であり、議決日時ではない。
+ */
+export const R8_2_PUBLISHED_AT = "2026-06-19T00:00:00+09:00";
 
 /**
  * 公式PDFのURLを組み立てる。
@@ -431,13 +431,14 @@ export function toBillInsert(item: ShinjukuSessionItem): BillInsert {
     status_note: statusNote,
     // 解説が未整備の案件は公開せず、coming_soon として一覧にのみ載せる
     publish_status: item.hasPublishableContent ? "published" : "coming_soon",
-    published_at: item.hasPublishableContent ? R8_2_DECISION_DATE : null,
+    // 議決日時ではなくサイト掲載日時。詳細は R8_2_PUBLISHED_AT のコメントを参照。
+    published_at: item.hasPublishableContent ? R8_2_PUBLISHED_AT : null,
     is_featured: item.isFeatured,
-    // 日本語解説はいずれも未レビューの生成物であり、レビュー完了扱いにしない
+    // 解説は公式PDFと突合済みだが、公開判断を伴う人手のレビューは未了のため false のままとする
     is_review_completed: false,
-    thumbnail_url: item.hasPublishableContent
-      ? PLACEHOLDER_THUMBNAIL_URL
-      : null,
+    // 外部プレースホルダ画像（placehold.co）は公開ページのOGP画像にそのまま出てしまうため使わない。
+    // 公式素材のサムネイルが用意できるまで null とする。
+    thumbnail_url: null,
     pdf_url: item.fullTextPdfUrl,
     overview_pdf_url: item.overviewPdfUrl,
     source_page_url: R8_2_SUBMISSIONS_URL,

@@ -16,7 +16,8 @@ interface CompactBillCardProps {
  */
 export function CompactBillCard({ bill, className }: CompactBillCardProps) {
   const displayTitle = bill.bill_content?.title || bill.name;
-  const statusLabel = "提出";
+  // published_at はサイト掲載日時であり、議案の提出日ではない
+  const statusLabel = "掲載";
 
   return (
     <Card

@@ -219,6 +219,20 @@ describe("公開可否", () => {
     }
   });
 
+  it("外部プレースホルダ画像をサムネイルに設定しない", () => {
+    for (const bill of toBillInserts()) {
+      expect(bill.thumbnail_url).toBeNull();
+    }
+  });
+
+  it("published_at は会期末日であり、時刻付きの議決日時を作らない", () => {
+    const published = toBillInserts().filter((b) => b.published_at != null);
+    expect(published).not.toHaveLength(0);
+    for (const bill of published) {
+      expect(bill.published_at).toBe("2026-06-19T00:00:00+09:00");
+    }
+  });
+
   it("公開対象は解説済みの5件のみ", () => {
     const published = toBillInserts().filter(
       (b) => b.publish_status === "published"

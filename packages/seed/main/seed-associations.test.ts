@@ -121,21 +121,15 @@ describe("createBillsTags", () => {
 });
 
 describe("createFactionStances", () => {
-  it("配列の並び順ではなく slug で議案に結び付ける", () => {
-    const stances = createFactionStances(insertedBills, "faction-uuid");
-    const slugs = stances.map(
-      (s) => insertedBills.find((b) => b.id === s.bill_id)?.slug
-    );
-
-    expect(slugs).toEqual([
-      "shinjuku-2026-r2-gian-53",
-      "shinjuku-2026-r2-gian-42",
-      "shinjuku-2026-r2-gian-49",
-      "shinjuku-2026-r2-gian-51",
-      "shinjuku-2026-r2-gian-58",
-    ]);
-    // 先頭5件への位置ベース割り当てになっていないこと
-    expect(slugs).not.toEqual(insertedBills.slice(0, 5).map((b) => b.slug));
+  it("出典のない会派見解を投入しない", () => {
+    // 令和8年第2回定例会の会派ごとの賛否は一次情報として取得できていない。
+    // 創作した見解を実在会派に紐づけて公開UIに出すことがないよう、空であることを固定する。
+    //
+    // 出典のある会派見解を投入する際は、このテストを「slug で議案に結び付ける
+    // （配列の並び順に依存しない）」ことを検証する回帰テストに戻すこと。
+    // 以前 createFactionStances は insertedBills[index] による位置ベース割り当てで、
+    // 議案が増えた時点で無関係な議案へ見解が付く不具合があった。
+    expect(createFactionStances(insertedBills, "faction-uuid")).toEqual([]);
   });
 });
 
