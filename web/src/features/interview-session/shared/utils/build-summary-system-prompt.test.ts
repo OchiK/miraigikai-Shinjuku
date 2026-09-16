@@ -38,6 +38,7 @@ const makeBill = (
   },
   tags: [],
   ...overrides,
+  slug: overrides.slug ?? null,
 });
 
 describe("buildSummarySystemPrompt", () => {

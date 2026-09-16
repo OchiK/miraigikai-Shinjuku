@@ -31,6 +31,7 @@ const baseBill: BillWithContent = {
   committee_id: null,
   created_at: "2026-02-15T00:00:00Z",
   updated_at: "2026-02-15T00:00:00Z",
+  slug: null,
   bill_content: {
     id: "mock-content-001",
     bill_id: "mock-bill-001",

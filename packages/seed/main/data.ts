@@ -23,21 +23,21 @@ type InterviewReportInsert =
 // 定例会データ
 export const councilSessions: CouncilSessionInsert[] = [
   {
-    name: "令和7年 第4回定例会",
-    slug: "r7-4",
+    name: "令和8年 第2回定例会",
+    slug: "r8-2",
     council_url:
-      "https://www.city.kawasaki.jp/980/page/0000020940.html",
-    start_date: "2025-11-25",
-    end_date: "2025-12-20",
+      "https://www.city.shinjuku.lg.jp/kusei/kuseijoho01_001109_02.html",
+    start_date: "2026-06-05",
+    end_date: "2026-06-19",
     is_active: true,
   },
   {
-    name: "令和7年 第3回定例会",
-    slug: "r7-3",
+    name: "令和8年 第1回定例会",
+    slug: "r8-1",
     council_url:
-      "https://www.city.kawasaki.jp/980/page/0000020940.html",
-    start_date: "2025-09-01",
-    end_date: "2025-10-15",
+      "https://www.city.shinjuku.lg.jp/kusei/kuseijoho01_001109_01.html",
+    start_date: "2026-02-18",
+    end_date: "2026-03-23",
     is_active: false,
   },
 ];
@@ -45,21 +45,27 @@ export const councilSessions: CouncilSessionInsert[] = [
 // 会派データ
 export const factions: FactionInsert[] = [
   {
-    name: "mirai",
-    display_name: "みらい",
-    sort_order: 1,
-    is_active: true,
-  },
-  {
     name: "jimin",
-    display_name: "自民党",
-    sort_order: 2,
+    display_name: "自由民主党",
+    sort_order: 1,
     is_active: true,
   },
   {
     name: "komei",
     display_name: "公明党",
+    sort_order: 2,
+    is_active: true,
+  },
+  {
+    name: "kyosan",
+    display_name: "日本共産党",
     sort_order: 3,
+    is_active: true,
+  },
+  {
+    name: "rikken",
+    display_name: "立憲民主党・無所属クラブ",
+    sort_order: 4,
     is_active: true,
   },
 ];
@@ -67,34 +73,27 @@ export const factions: FactionInsert[] = [
 // 委員会データ
 export const committees: CommitteeInsert[] = [
   {
-    name: "総務委員会",
-    description: "市の基本計画、財政、臨海部、商工業などについての審査",
+    name: "環境建設委員会",
+    description: "環境保全、ごみ減量、道路、公園、都市計画、建築などについての審査",
     sort_order: 1,
     is_active: true,
   },
   {
-    name: "文教委員会",
-    description:
-      "交通安全、文化、スポーツ、こども、保育園、学校、教育などについての審査",
+    name: "総務区民委員会",
+    description: "区政の総合企画、財務、税務、広報、戸籍、地域共生などについての審査",
     sort_order: 2,
     is_active: true,
   },
   {
-    name: "健康福祉委員会",
-    description: "お年寄り、障がい者、保健衛生、病院、消防についての審査",
+    name: "文教子ども家庭委員会",
+    description: "学校教育、生涯学習、スポーツ、子ども・子育て支援、保育などについての審査",
     sort_order: 3,
     is_active: true,
   },
   {
-    name: "まちづくり委員会",
-    description: "都市計画、道路、河川、住宅、公園などについての審査",
+    name: "福祉健康委員会",
+    description: "地域福祉、高齢者・障害者支援、保健衛生、健康づくりなどについての審査",
     sort_order: 4,
-    is_active: true,
-  },
-  {
-    name: "環境委員会",
-    description: "ごみ、環境、水道、市営バスなどについての審査",
-    sort_order: 5,
     is_active: true,
   },
 ];
@@ -103,66 +102,91 @@ export const committees: CommitteeInsert[] = [
 export const tags: TagInsert[] = [
   {
     label: "まちづくり・環境",
-    description: "まちづくり、環境保護、都市計画に関する議案",
+    description: "まちづくり、環境美化、路上喫煙防止、都市計画に関する議案",
     featured_priority: 1,
   },
   {
-    label: "子育て・教育",
-    description: "子育て支援、教育政策、若者支援に関する議案",
+    label: "くらし・行財政",
+    description: "補正予算、区税、行政制度、区民生活支援に関する議案",
     featured_priority: 2,
   },
   {
-    label: "福祉・医療",
-    description: "福祉、医療、高齢者支援に関する議案",
+    label: "多文化共生・手続き",
+    description: "外国人住民支援、証明書コンビニ交付、行政手続きに関する議案",
     featured_priority: 3,
+  },
+  {
+    label: "子育て・教育",
+    description: "子育て支援、保育事業、教育環境に関する議案",
+    featured_priority: 4,
+  },
+  {
+    label: "文化・生涯学習",
+    description: "文化施設、生涯学習、科学教育に関する議案",
+    featured_priority: 5,
   },
 ];
 
 export const bills: BillInsert[] = [
   {
-    name: "川崎市子ども医療費助成条例の一部改正",
-    status: "in_committee",
-    status_note: "文教委員会で審査中",
-    published_at: "2025-11-25T09:00:00+09:00",
+    name: "新宿区空き缶等の散乱及び路上喫煙による被害の防止に関する条例の一部を改正する条例",
+    bill_number: "第53号議案",
+    slug: "bill-r8-2-53",
+    status: "approved",
+    status_note: "本会議で原案可決",
+    published_at: "2026-06-19T10:00:00+09:00",
     publish_status: "published",
     is_featured: true,
     thumbnail_url: "https://placehold.co/600x400",
+    pdf_url: "https://www.city.shinjuku.lg.jp/content/000457652.pdf",
   },
   {
-    name: "川崎市地域包括ケアシステム推進条例",
+    name: "令和8年度新宿区一般会計補正予算（第2号）",
+    bill_number: "第42号議案",
+    slug: "bill-r8-2-42",
     status: "approved",
-    status_note: "本会議で可決",
-    published_at: "2025-09-15T10:00:00+09:00",
+    status_note: "本会議で原案可決",
+    published_at: "2026-06-19T10:00:00+09:00",
     publish_status: "published",
     is_featured: true,
     thumbnail_url: "https://placehold.co/600x400",
+    pdf_url: "https://www.city.shinjuku.lg.jp/content/000457639.pdf",
   },
   {
-    name: "川崎市公園条例の一部改正",
-    status: "rejected",
-    status_note: "本会議で否決",
-    published_at: "2025-10-01T09:00:00+09:00",
-    publish_status: "published",
-    is_featured: false,
-    thumbnail_url: "https://placehold.co/600x400",
-  },
-  {
-    name: "川崎市学校給食費の無償化に関する条例",
+    name: "新宿区印鑑条例等の一部を改正する条例",
+    bill_number: "第49号議案",
+    slug: "bill-r8-2-49",
     status: "approved",
-    status_note: "本会議で可決、来年度から実施",
-    published_at: "2025-09-10T09:00:00+09:00",
+    status_note: "本会議で原案可決",
+    published_at: "2026-06-19T10:00:00+09:00",
     publish_status: "published",
-    is_featured: false,
+    is_featured: true,
     thumbnail_url: "https://placehold.co/600x400",
+    pdf_url: "https://www.city.shinjuku.lg.jp/content/000457648.pdf",
   },
   {
-    name: "川崎市防災対策基本条例の一部改正",
-    status: "rejected",
-    status_note: "本会議で否決",
-    published_at: "2025-09-20T10:00:00+09:00",
+    name: "新宿区特定教育・保育施設及び特定地域型保育事業の運営に関する基準を定める条例の一部を改正する条例",
+    bill_number: "第51号議案",
+    slug: "bill-r8-2-51",
+    status: "approved",
+    status_note: "本会議で原案可決",
+    published_at: "2026-06-19T10:00:00+09:00",
     publish_status: "published",
     is_featured: false,
     thumbnail_url: "https://placehold.co/600x400",
+    pdf_url: "https://www.city.shinjuku.lg.jp/content/000457650.pdf",
+  },
+  {
+    name: "新宿コズミックセンタープラネタリウム設備改修工事等委託契約",
+    bill_number: "第58号議案",
+    slug: "bill-r8-2-58",
+    status: "approved",
+    status_note: "本会議で原案可決",
+    published_at: "2026-06-19T10:00:00+09:00",
+    publish_status: "published",
+    is_featured: false,
+    thumbnail_url: "https://placehold.co/600x400",
+    pdf_url: "https://www.city.shinjuku.lg.jp/content/000457657.pdf",
   },
 ];
 
@@ -172,11 +196,11 @@ export function createBillsTags(
   insertedTags: { id: string; label: string }[]
 ): Omit<BillsTagsInsert, "id" | "created_at">[] {
   const billTagMap: { [billName: string]: string[] } = {
-    "川崎市子ども医療費助成条例の一部改正": ["子育て・教育"],
-    "川崎市地域包括ケアシステム推進条例": ["福祉・医療"],
-    "川崎市公園条例の一部改正": ["まちづくり・環境"],
-    "川崎市学校給食費の無償化に関する条例": ["子育て・教育"],
-    "川崎市防災対策基本条例の一部改正": ["まちづくり・環境"],
+    "新宿区空き缶等の散乱及び路上喫煙による被害の防止に関する条例の一部を改正する条例": ["まちづくり・環境"],
+    "令和8年度新宿区一般会計補正予算（第2号）": ["くらし・行財政"],
+    "新宿区印鑑条例等の一部を改正する条例": ["多文化共生・手続き"],
+    "新宿区特定教育・保育施設及び特定地域型保育事業の運営に関する基準を定める条例の一部を改正する条例": ["子育て・教育"],
+    "新宿コズミックセンタープラネタリウム設備改修工事等委託契約": ["文化・生涯学習"],
   };
 
   const billsTags: Omit<BillsTagsInsert, "id" | "created_at">[] = [];
@@ -204,33 +228,23 @@ const factionStancesData: Omit<
 >[] = [
   {
     type: "for",
-    comment: `子どもの医療費助成の拡充は、子育て世代の経済的負担を軽減する重要な施策です。
-
-川崎市の子育て環境をより良くし、安心して子育てできるまちづくりに貢献すると考えます。`,
+    comment: `繁華街をはじめとする区内全域での路上喫煙やテイクアウト容器等のポイ捨て防止を徹底し、清潔で安心なまちづくりを前進させる適切な改正です。`,
   },
   {
     type: "for",
-    comment: `高齢化が進む中、地域包括ケアシステムの推進は川崎市にとって重要な課題です。
-
-医療・介護・予防・住まい・生活支援を一体的に提供する体制の整備は、市民の安心につながります。`,
+    comment: `物価高騰下における区民生活への緊急支援と地域防災の強化を迅速に進めるための追加予算として賛成します。`,
   },
   {
     type: "for",
-    comment: `公園は市民の憩いの場であり、防災拠点としても重要です。
-
-この条例改正により、公園の利活用が促進され、地域コミュニティの活性化が期待できます。`,
+    comment: `在留カードとマイナンバーカードの一体化に対応し、外国人住民の証明書コンビニ交付の利便性を向上させる前向きな措置です。`,
   },
   {
     type: "for",
-    comment: `学校給食の無償化は、子育て支援と教育の充実を同時に実現する重要な政策です。
-
-全ての子どもが質の高い食事を平等に受けられることは、健康格差の解消にもつながります。川崎市の地元食材を活用した食育の推進も期待できます。`,
+    comment: `満3歳以上の小規模保育事業の基準を整備し、待機児童対策と質の高い保育環境の確保を両立させる改正として妥当です。`,
   },
   {
-    type: "against",
-    comment: `防災対策の強化は重要ですが、現行条例の運用改善で対応できる部分も多いと考えます。
-
-条例改正よりも先に、現場レベルでの防災訓練の充実や地域防災力の向上に注力すべきです。`,
+    type: "for",
+    comment: `子どもたちの科学への関心を育み、幅広い世代の区民に親しまれる教育・生涯学習拠点としての設備更新として賛成します。`,
   },
 ];
 
@@ -256,8 +270,8 @@ export function createInterviewConfig(
     bill_id: targetBill.id,
     name: "デフォルト設定",
     status: "public",
-    themes: ["賛否", "理由"],
-    knowledge_source: `この議案についてあなたの意見を聞かせてください。`,
+    themes: ["賛否", "ポイ捨て防止", "愛犬マナー"],
+    knowledge_source: `新宿区空き缶等の散乱及び路上喫煙による被害の防止に関する条例の一部改正について、区民の皆様のご意見を聞かせてください。`,
   };
 }
 
@@ -268,15 +282,15 @@ export function createInterviewQuestions(
   return [
     {
       interview_config_id: interviewConfigId,
-      question: "この議案に賛成ですか？反対ですか？",
-      follow_up_guide: "ユーザーの立場を明確にしてください。",
+      question: "この条例改正案について、賛成ですか？反対ですか？",
+      follow_up_guide: "条例改正に対するユーザーの立場を明確にしてください。",
       quick_replies: ["賛成", "反対", "どちらでもない"],
       question_order: 1,
     },
     {
       interview_config_id: interviewConfigId,
-      question: "その理由を教えてください。",
-      follow_up_guide: "具体的な理由を引き出してください。",
+      question: "その理由や、路上喫煙・ごみ散乱対策について日頃感じていることを教えてください。",
+      follow_up_guide: "身近な生活環境や街の美化に関する具体的な実感を掘り下げてください。",
       quick_replies: null,
       question_order: 2,
     },
@@ -595,25 +609,25 @@ export function createDemoMessages(): Omit<
       interview_session_id: DEMO_SESSION_ID,
       role: "assistant",
       content:
-        "こんにちは！本日はインタビューにご協力いただきありがとうございます。\n\n川崎市議会で審議されている議案について、市民の皆さまのご意見をお聞かせください。この議案について、どのようにお考えですか？",
+        "こんにちは！本日はインタビューにご協力いただきありがとうございます。\n\n新宿区議会で審議されている路上喫煙・散乱ごみ防止条例の改正について、区民の皆さまのご意見をお聞かせください。この条例改正について、どのようにお考えですか？",
     },
     {
       interview_session_id: DEMO_SESSION_ID,
       role: "user",
       content:
-        "市政のデジタル化や、ムダの削減を達成して欲しい",
+        "繁華街だけでなく住宅街のポイ捨てや犬のふん放置も困っていたので、条例でしっかり対策を進めてほしいです。",
     },
     {
       interview_session_id: DEMO_SESSION_ID,
       role: "assistant",
       content:
-        "なるほど。市政のデジタル化を通じて、行政サービスの効率化と市民の利便性向上を期待されているということですね。とても重要な指摘だと思います。\n\n具体的に、川崎市のどのような行政手続きや窓口サービスがデジタル化されると良いとお考えですか？",
+        "身近な生活環境の改善を期待されているのですね。特にテイクアウト容器の散乱や犬のふん処理について、どのような対策や周知が効果的だとお考えですか？",
     },
     {
       interview_session_id: DEMO_SESSION_ID,
       role: "user",
       content:
-        "市役所の窓口手続きのオンライン化や、行政文書のデジタル化が進むと市民にとって便利になると期待しています。",
+        "テイクアウト店へのごみ箱設置協力や、散歩ルートでのマナー周知など、誰にでもわかりやすい啓発が大切だと思います。",
     },
     {
       interview_session_id: DEMO_SESSION_ID,
@@ -629,19 +643,18 @@ export function createDemoReport(): InterviewReportInsert {
   return {
     id: DEMO_REPORT_ID,
     interview_session_id: DEMO_SESSION_ID,
-    stance: "neutral",
+    stance: "for",
     summary:
-      "デジタル化推進による省庁の業務効率化や官僚の働き方改革には期待するが、システム移行時の混乱や中小フォワーダーへの対応コスト増大について懸念も大きい。慎重な段階的導入を求める。",
+      "テイクアウト容器等の散乱や犬のふん放置対策の強化に賛成。実効性を高めるため、飲食店との連携や分かりやすい多言語マナー啓発の推進を求める。",
     role: "subject_expert",
-    role_title: "フォワーダー",
+    role_title: "環境衛生専門家",
     role_description:
-      "川崎市在住の会社員\n行政手続きの煩雑さを日常的に感じている",
+      "新宿区在住の環境アドバイザー\n都市の生活環境美化と衛生管理に精通している",
     opinions: [
       {
-        title:
-          "市政のデジタル化や、ムダの削減を達成して欲しい",
+        title: "生活環境美化と犬のふん放置防止の徹底",
         content:
-          "市役所の窓口手続きのオンライン化や、行政文書のデジタル化が進むと市民にとって便利になると期待している。",
+          "繁華街だけでなく住宅街や通学路の美化向上のため、飲食店へのごみ箱管理協力や多言語でのマナー啓発が必要。",
       },
     ],
     is_public_by_user: true,
@@ -696,19 +709,19 @@ export function createAdditionalDemoMessages(): Omit<
       interview_session_id: DEMO_SESSION_ID_WORK,
       role: "user",
       content:
-        "子どもの医療費負担が大きいので、この議案には賛成です。",
+        "店舗前の路上へのごみポイ捨てが多く困っていたので、条例改正には大賛成です。",
     },
     {
       interview_session_id: DEMO_SESSION_ID_WORK,
       role: "assistant",
       content:
-        "子育て世帯としてのお立場からのご意見ですね。具体的にどのような影響がありますか？",
+        "事業者としてのお立場からのご意見ですね。具体的にどのような影響がありますか？",
     },
     {
       interview_session_id: DEMO_SESSION_ID_WORK,
       role: "user",
       content:
-        "共働きで子ども2人を育てていますが、医療費の自己負担が家計を圧迫しています。助成拡充で少しでも負担が減れば助かります。",
+        "毎朝店舗前のプラスチック容器や吸い殻の清掃に追われています。テイクアウト容器も対象になることで、ポイ捨て抑止につながると期待しています。",
     },
     {
       interview_session_id: DEMO_SESSION_ID_WORK,
@@ -727,19 +740,19 @@ export function createAdditionalDemoMessages(): Omit<
       interview_session_id: DEMO_SESSION_ID_DAILY,
       role: "user",
       content:
-        "子どもが小さいので、医療費の負担が軽くなるのは嬉しいです。",
+        "愛犬の散歩を毎日していますが、ふんの不始末で愛犬家全体が悪く見られるのが悲しかったので、用具携帯の義務化に賛成です。",
     },
     {
       interview_session_id: DEMO_SESSION_ID_DAILY,
       role: "assistant",
       content:
-        "生活への影響が大きいとのことですね。どのような場面で医療費の負担を感じますか？",
+        "飼い主として日常的な影響を感じていらっしゃるのですね。どのような周知や設備があると良いとお考えですか？",
     },
     {
       interview_session_id: DEMO_SESSION_ID_DAILY,
       role: "user",
       content:
-        "風邪や怪我で小児科にかかることが多く、月に何回も通院することがあります。自己負担が積み重なると大変です。",
+        "公園にマナー啓発の看板を増やしたり、専用のごみ箱が適切に管理されると、散歩する側も街の人も気持ちよく過ごせると思います。",
     },
     {
       interview_session_id: DEMO_SESSION_ID_DAILY,
@@ -758,19 +771,19 @@ export function createAdditionalDemoMessages(): Omit<
       interview_session_id: DEMO_SESSION_ID_CITIZEN,
       role: "user",
       content:
-        "財源が気になりますが、子育て支援として医療費助成は必要だと思います。",
+        "きれいな街になるのは良いことですが、過剰な取り締まりにならないかや、外国人観光客への周知が気になります。",
     },
     {
       interview_session_id: DEMO_SESSION_ID_CITIZEN,
       role: "assistant",
       content:
-        "財源と子育て支援のバランスを考えていらっしゃるのですね。どのような点が気になりますか？",
+        "実効性と周知方法のバランスについてお考えなのですね。どのような点が大切だと思いますか？",
     },
     {
       interview_session_id: DEMO_SESSION_ID_CITIZEN,
       role: "user",
       content:
-        "他の行政サービスとのバランスも考えつつ、子育て世帯への支援として医療費助成は拡充すべきだと思います。",
+        "罰則だけでなく、多言語での分かりやすい案内表示や喫煙所の適切な配置など、環境整備もセットで進めてほしいです。",
     },
     {
       interview_session_id: DEMO_SESSION_ID_CITIZEN,
@@ -789,16 +802,16 @@ export function createAdditionalDemoReports(): InterviewReportInsert[] {
       interview_session_id: DEMO_SESSION_ID_WORK,
       stance: "for",
       summary:
-        "子育て世帯として医療費負担軽減のため賛成",
+        "商店街の店舗経営者として、店舗前ごみ散乱防止と街の美化向上のため賛成",
       role: "work_related",
-      role_title: "運送会社経営者",
+      role_title: "飲食店経営者",
       role_description:
-        "川崎市在住の共働き世帯\n子ども2人\n医療費の負担を日常的に感じている",
+        "新宿区内で店舗を営む事業者\n毎朝の路上清掃負担や街の景観に関心がある",
       opinions: [
         {
-          title: "子どもの医療費負担が大きい",
+          title: "テイクアウトごみのポイ捨て抑止に期待",
           content:
-            "共働きで子ども2人を育てているが、医療費の自己負担が家計を圧迫している。助成拡充で負担が減れば助かる。",
+            "毎朝店舗前のプラスチック容器や吸い殻の清掃に追われている。テイクアウト容器も対象になることで、ポイ捨て抑止につながると期待している。",
         },
       ],
       is_public_by_user: true,
@@ -809,16 +822,16 @@ export function createAdditionalDemoReports(): InterviewReportInsert[] {
       interview_session_id: DEMO_SESSION_ID_DAILY,
       stance: "for",
       summary:
-        "子育て中の保護者として医療費負担軽減を期待",
+        "愛犬の散歩を行う区民として、マナー向上と清潔な歩道環境の確保を期待",
       role: "daily_life_affected",
-      role_title: "主婦",
+      role_title: "主婦・愛犬家",
       role_description:
-        "川崎市在住の主婦\n小さい子ども2人の子育て中\n医療費の自己負担を日常的に感じている",
+        "新宿区在住の区民\n犬の散歩を日課としており、公園や歩道の美化に関心がある",
       opinions: [
         {
-          title: "子どもの医療費負担が大きい",
+          title: "飼い主のマナー向上と用具携帯の義務化を歓迎",
           content:
-            "風邪や怪我で小児科にかかることが多く、月に何回も通院する。自己負担が積み重なると家計に影響が大きい。",
+            "一部のマナー違反で愛犬家全体が悪く見られることを防ぐためにも、用具携帯義務化と啓発看板の設置を歓迎する。",
         },
       ],
       is_public_by_user: true,
@@ -829,16 +842,16 @@ export function createAdditionalDemoReports(): InterviewReportInsert[] {
       interview_session_id: DEMO_SESSION_ID_CITIZEN,
       stance: "neutral",
       summary:
-        "財源と子育て支援のバランスを考慮して判断",
+        "環境美化には賛同しつつも、多言語での分かりやすい周知と喫煙所整備を要望",
       role: "general_citizen",
       role_title: "会社員",
       role_description:
-        "川崎市在住の会社員\n子育て支援に関心あり\n市の財政にも関心がある",
+        "新宿区在住の会社員\n外国人来訪者への案内や都市の受入環境に関心がある",
       opinions: [
         {
-          title: "財源と子育て支援のバランス",
+          title: "多言語啓発と喫煙環境整備のバランス",
           content:
-            "他の行政サービスとのバランスも考えつつ、子育て世帯への支援として医療費助成は拡充すべきと考える。",
+            "罰則だけでなく、外国人観光客にも分かりやすい案内表示や喫煙所の適切な配置など、受入環境の整備もセットで進めてほしい。",
         },
       ],
       is_public_by_user: true,

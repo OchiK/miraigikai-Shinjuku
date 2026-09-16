@@ -42,6 +42,7 @@ const makeBill = (
   },
   tags: [],
   ...overrides,
+  slug: overrides.slug ?? null,
 });
 
 const sampleQuestions = [
