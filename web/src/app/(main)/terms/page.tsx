@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Container } from "@/components/layouts/container";
 import {
   LegalList,
   LegalPageLayout,
@@ -6,7 +7,6 @@ import {
   LegalSectionTitle,
   LegalSubSectionTitle,
 } from "@/components/layouts/legal-page-layout";
-import { Container } from "@/components/layouts/container";
 import { siteConfig } from "@/config/site.config";
 
 export const metadata: Metadata = {
@@ -115,7 +115,7 @@ export default function TermsPage() {
                     <span className="font-semibold text-slate-800">
                       内部分析利用：
                     </span>
-                    本人が公開に同意しなかったデータについても、当組織内においてサービス向上や政策検討の目的で共有・活用されるものとし、ユーザーはこれに同意するものとします。
+                    本人が公開に同意しなかったデータについても、当組織内においてサービス向上や地域課題の集約・分析の目的で共有・活用されるものとし、ユーザーはこれに同意するものとします。
                   </>
                 ),
               },

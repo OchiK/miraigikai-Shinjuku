@@ -212,7 +212,7 @@ export function executeClaudeToFile(
 }
 
 export function getTempOutputPath(runId: string): string {
-  return path.join(os.tmpdir(), `kawasaki_collection_${runId}.json`);
+  return path.join(os.tmpdir(), `council_collection_${runId}.json`);
 }
 
 export async function readCollectionOutput(

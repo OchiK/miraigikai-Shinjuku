@@ -2,8 +2,8 @@ import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import { Lexend_Giga, Noto_Sans_JP } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
-import { siteConfig } from "@/config/site.config";
 import type { ReactNode } from "react";
+import { siteConfig } from "@/config/site.config";
 import { env } from "@/lib/env";
 
 const notoSansJP = Noto_Sans_JP({
@@ -72,7 +72,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#2aa693",
+  themeColor: "#3559a0",
 };
 
 export default function RootLayout({
@@ -85,7 +85,7 @@ export default function RootLayout({
       <body
         className={`${notoSansJP.variable} ${lexendGiga.variable} font-sans antialiased bg-mirai-surface-light`}
       >
-        <NextTopLoader showSpinner={false} color="#2aa693" />
+        <NextTopLoader showSpinner={false} color="var(--primary)" />
         {children}
       </body>
     </html>

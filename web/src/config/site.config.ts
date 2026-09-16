@@ -22,7 +22,7 @@ export const siteConfig = {
     "https://www.city.shinjuku.lg.jp/kusei/kuseijoho01_001109_03.html",
   twitterHashtag: "みらい議会新宿区", // # なし
   externalLinks: {
-    report: "",
+    report: "https://github.com/OchiK/miraigikai-Shinjuku/issues/new",
     aboutNote: "",
     donation: "",
     teamAbout: "",
@@ -40,7 +40,7 @@ export const siteConfig = {
    */
   operator: {
     name: "OchiK" as string,
-    contactUrl: "https://github.com/OchiK/miraikaigi-Shinjuku" as string,
+    contactUrl: "https://github.com/OchiK/miraigikai-Shinjuku" as string,
     /** 利用規約の準拠法・管轄裁判所（第一審の専属的合意管轄） */
     jurisdiction: "東京地方裁判所" as string,
   },

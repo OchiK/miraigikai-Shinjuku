@@ -4,13 +4,13 @@ import { ArrowRight, LockOpen } from "lucide-react";
 import Image from "next/image";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { siteConfig } from "@/config/site.config";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { siteConfig } from "@/config/site.config";
 
 interface MakePublicModalProps {
   open: boolean;
@@ -60,7 +60,11 @@ export function MakePublicModal({
             さまざまな意見が公開されることで、より深い議案議論が実現できます。
           </CheckListItem>
           <p className="text-sm text-black">
-            非公開で提出した場合でも、ご意見は党内での政策検討に活用させていただきます。
+            非公開で提出した場合でも、ご意見は
+            {siteConfig.managingParty
+              ? `${siteConfig.managingParty}内での政策検討`
+              : "統計的な集計やサービス改善"}
+            に活用させていただきます。
           </p>
         </div>
 

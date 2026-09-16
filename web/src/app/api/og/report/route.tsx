@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
+import { siteConfig } from "@/config/site.config";
 import { getReportOgData } from "@/features/interview-report/server/loaders/get-report-og-data";
 import { truncateText } from "@/features/interview-report/shared/utils/truncate-text";
 
@@ -34,6 +35,8 @@ let cachedFontData: ArrayBuffer | null = null;
 let cachedLogoDataUrl: string | null = null;
 
 async function loadLogo(): Promise<string | null> {
+  // 非公式運営ではチームみらいのロゴを出さない（誤認防止）
+  if (!siteConfig.features.showTeamMiraiSection) return null;
   if (cachedLogoDataUrl) return cachedLogoDataUrl;
   try {
     const logoPath = join(process.cwd(), "public/img/ogp-logo.png");
@@ -203,7 +206,7 @@ export async function GET(request: Request) {
               letterSpacing: "0.03em",
             }}
           >
-            みらい議会
+            {siteConfig.siteName}
           </span>
         </div>
 
@@ -211,7 +214,7 @@ export async function GET(request: Request) {
         {logoDataUrl && (
           // biome-ignore lint/performance/noImgElement: ignore
           <img
-            alt="チームみらいロゴ"
+            alt={`${siteConfig.siteName}ロゴ`}
             src={logoDataUrl}
             width={189}
             height={160}

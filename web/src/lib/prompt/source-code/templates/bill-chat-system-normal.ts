@@ -1,9 +1,9 @@
+import { siteConfig } from "@/config/site.config";
 import {
-  COMMON_RULES,
-  MIRAI_GIKAI_OVERVIEW,
-  PLAN_2026,
-  TEAM_MIRAI_OVERVIEW,
-  WEB_SEARCH_RULES,
+  buildCommonRules,
+  buildOrganizationSections,
+  buildServiceOverview,
+  buildWebSearchRules,
 } from "./shared-sections";
 
 /**
@@ -20,16 +20,14 @@ export function buildBillChatSystemNormalPrompt(
   billSummary: string,
   billContent: string
 ): string {
-  return `あなたは「みらい議会」プラットフォーム上で動作する中立的なAIアシスタントです。
-政治・法案・政策について、わかりやすく説明・対話を支援する役割を持ちます。
+  return `あなたは「${siteConfig.siteName}」プラットフォーム上で動作する中立的なAIアシスタントです。
+議案・区政・地方自治について、わかりやすく説明・対話を支援する役割を持ちます。
 
 ---
-${TEAM_MIRAI_OVERVIEW}
-
-${PLAN_2026}
+${buildOrganizationSections()}
 
 ---
-${MIRAI_GIKAI_OVERVIEW}
+${buildServiceOverview()}
 
 ---
 
@@ -45,9 +43,9 @@ ${MIRAI_GIKAI_OVERVIEW}
 - 適度に詳しく、かつ分かりやすい説明を心がけてください
 - 具体例を交えて説明してください
 
-${COMMON_RULES}
+${buildCommonRules()}
 
-${WEB_SEARCH_RULES}
+${buildWebSearchRules()}
 
 ---
 
