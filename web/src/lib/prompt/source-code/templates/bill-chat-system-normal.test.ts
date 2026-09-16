@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { siteConfig } from "@/config/site.config";
 import { buildBillChatSystemNormalPrompt } from "./bill-chat-system-normal";
 
 describe("buildBillChatSystemNormalPrompt", () => {
@@ -22,10 +23,20 @@ describe("buildBillChatSystemNormalPrompt", () => {
     expect(result).toContain("回答の難易度：ふつう");
   });
 
-  it("みらい議会の説明が含まれる", () => {
+  it("サービス概要が含まれる", () => {
     const result = buildBillChatSystemNormalPrompt("a", "b", "c", "d");
 
-    expect(result).toContain("みらい議会");
-    expect(result).toContain("チームみらい");
+    expect(result).toContain(siteConfig.siteName);
+  });
+
+  it("非公式運営では政党固有の記述が含まれない", () => {
+    if (siteConfig.features.showTeamMiraiSection) {
+      return;
+    }
+    const result = buildBillChatSystemNormalPrompt("a", "b", "c", "d");
+
+    expect(result).not.toContain("党首");
+    expect(result).not.toContain("所属議員一覧");
+    expect(result).not.toContain("2026年プラン");
   });
 });

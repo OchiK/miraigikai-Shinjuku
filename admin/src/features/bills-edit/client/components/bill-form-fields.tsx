@@ -290,7 +290,7 @@ export function BillFormFields({
             <FormControl>
               <Input
                 type="url"
-                placeholder="https://www.city.kawasaki.jp/..."
+                placeholder="https://www.city.shinjuku.lg.jp/..."
                 {...field}
                 value={field.value ?? ""}
               />

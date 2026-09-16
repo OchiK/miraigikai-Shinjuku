@@ -1,5 +1,6 @@
 import "server-only";
 
+import { siteConfig } from "@/config/site.config";
 import { DEFAULT_INTERVIEW_CHAT_MODEL } from "@/lib/ai/models";
 import { DisclosureBreadcrumb } from "../../shared/components/disclosure-breadcrumb";
 import type { InterviewConfig } from "../loaders/get-interview-config";
@@ -36,7 +37,7 @@ function StaticDisclosureSection() {
           <div>
             <p className="font-bold">1. 実施目的</p>
             <p className="mt-1">
-              本インタビューを通じて収集された回答データは、今後の政策検討における基礎資料として活用いたします。個人の意見を特定の偏り（バイアス）なく集約し、客観性の高い政策立案に役立てることを目的としています。
+              本インタビューを通じて収集された回答データは、地域課題や区民意見の傾向把握・分析のための基礎資料として活用いたします。個人の意見を特定の偏り（バイアス）なく集約し、客観性の高い情報提供に役立てることを目的としています。
             </p>
           </div>
 
@@ -62,7 +63,7 @@ function StaticDisclosureSection() {
               </li>
               <li>
                 <span className="font-bold">活用の範囲：</span>
-                回答内容は、党内における政策検討、およびAIを用いた統計的分析に限定して活用いたします。
+                回答内容は、地域課題の集約・分析、およびAIを用いた統計的分析に限定して活用いたします。
               </li>
               <li>
                 <span className="font-bold">分析プロセスの透明化：</span>
@@ -75,11 +76,12 @@ function StaticDisclosureSection() {
               <ul className="mt-1 space-y-2 list-none">
                 <li>
                   <span className="font-bold">公開を希望しない場合：</span>
-                  回答者の承諾なく、原文や個人が特定できる形で外部公開されることはありません。ただし、統計的な集計結果、または個人を特定できない範囲に匿名化した上で、国会答弁等において引用・活用される場合があります。
+                  回答者の承諾なく、原文や個人が特定できる形で外部公開されることはありません。ただし、統計的な集計結果、または個人を特定できない範囲に匿名化した上で、分析資料や公開レポート等において引用・活用される場合があります。
                 </li>
                 <li>
                   <span className="font-bold">公開を希望する場合：</span>
-                  回答データは「みらい議会」上に掲載され、他のユーザーが閲覧可能な状態で公開されます。これにより、利用者間での意見の共有および議論の活性化を図ります。
+                  回答データは「{siteConfig.siteName}
+                  」上に掲載され、他のユーザーが閲覧可能な状態で公開されます。これにより、利用者間での意見の共有および議論の活性化を図ります。
                 </li>
               </ul>
             </div>

@@ -4,20 +4,22 @@
 
 目標: データはまだ川崎fixtureでもよいので、新宿区ブランドでローカル起動する。
 
-- [ ] 自分のpublic repository作成
-- [ ] Kawasaki forkから開始
-- [ ] upstream remote追加
-- [ ] `site.config.ts`変更
-- [ ] admin config変更
-- [ ] `manifest.json`変更
-- [ ] 川崎文字列をgrep
-- [ ] Team Mirai promotional UIを非表示/除去
-- [ ] branding差し替え
-- [ ] license/disclaimer
-- [ ] CI branch filter更新
+- [x] 自分のpublic repository作成
+- [x] Kawasaki forkから開始
+- [x] upstream remote追加
+- [x] `site.config.ts`変更
+- [x] admin config変更
+- [x] `manifest.json`変更
+- [x] 川崎文字列をgrep
+- [x] Team Mirai promotional UIを非表示/除去
+- [x] branding差し替え
+- [x] license/disclaimer
+- [x] CI branch filter更新
 
 Exit:
 `pnpm dev`で新宿区名のweb/adminが動く。
+
+2026-09-16: worktreeでweb/adminの起動・表示を確認済み。検証記録は[Phase 0検証](20260916_1310_phase0-verification.md)を参照。本番デプロイは未検証。
 
 ## Phase 1: 1会期を正しく入れる
 

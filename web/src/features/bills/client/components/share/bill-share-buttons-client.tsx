@@ -28,7 +28,11 @@ export function BillShareButtonsClient({
   };
 
   const handleReport = () => {
-    window.open(siteConfig.externalLinks.report, "_blank");
+    window.open(
+      siteConfig.externalLinks.report,
+      "_blank",
+      "noopener,noreferrer"
+    );
   };
 
   return (
