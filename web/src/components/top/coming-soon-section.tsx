@@ -1,8 +1,9 @@
-import type { Route } from "next";
 import { ExternalLink } from "lucide-react";
+import type { Route } from "next";
 import Link from "next/link";
 import { siteConfig } from "@/config/site.config";
 import type { ComingSoonBill } from "@/features/bills/shared/types";
+import { buildComingSoonBillHeading } from "@/features/bills/shared/utils/build-coming-soon-bill-heading";
 import { Card, CardContent } from "../ui/card";
 
 interface ComingSoonSectionProps {
@@ -55,10 +56,7 @@ export function ComingSoonSection({ bills }: ComingSoonSectionProps) {
 }
 
 function ComingSoonBillCard({ bill }: { bill: ComingSoonBill }) {
-  // タイトルがあればそれを表示、なければ正式名称を表示
-  const displayTitle = bill.title || bill.name;
-  // 正式名称（タイトルがある場合のみ別途表示）
-  const officialName = bill.title ? bill.name : null;
+  const { identifier, title, officialName } = buildComingSoonBillHeading(bill);
 
   const content = (
     <Card
@@ -70,8 +68,13 @@ function ComingSoonBillCard({ bill }: { bill: ComingSoonBill }) {
     >
       <CardContent className="flex items-center justify-between py-4 px-5">
         <div className="flex flex-col gap-1 min-w-0 pr-3">
+          {identifier && (
+            <p className="text-xs font-bold text-mirai-text-subtle">
+              {identifier}
+            </p>
+          )}
           <h3 className="font-bold text-base text-black leading-tight">
-            {displayTitle}
+            {title}
           </h3>
           {officialName && (
             <p className="text-xs text-mirai-text-subtle">{officialName}</p>

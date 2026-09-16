@@ -33,6 +33,12 @@ export type BillPublishStatus = "draft" | "published" | "coming_soon";
 export type ComingSoonBill = {
   id: string;
   name: string; // 正式名称
+  /**
+   * 公式の識別名（例:「第42号議案」「承認第2号」）。
+   * 件名は一意とは限らず、承認第2号・第3号はいずれも「専決処分の承認について」で
+   * 完全に一致する。識別名がないと一覧で区別できないため保持する。
+   */
+  bill_number: string | null;
   title: string | null; // わかりやすいタイトル（bill_contentsから）
   council_url: string | null;
   status: BillStatusEnum;
