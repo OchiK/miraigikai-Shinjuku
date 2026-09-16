@@ -90,6 +90,16 @@ Acceptance:
 
 ## P5
 
+### P5-0 bill_number のユニーク制約を会期スコープにする
+現状の `bills_bill_number_unique` は会期を含まないグローバルな部分ユニークインデックス。
+議案番号は会期ごとに振り直され `承認第N号` も毎年繰り返されるため、
+第3回定例会を投入した時点で必ず衝突する。
+
+Acceptance:
+- `(council_session_id, bill_number)` の複合ユニークへ移行する新規migration
+- 異なる会期で同一 `bill_number` を投入できる
+- 同一会期内の重複は引き続き拒否される
+
 ### P5-1 Automation
 Acceptance:
 new Shinjuku page/PDF change creates draft, never silently overwrites reviewed content.

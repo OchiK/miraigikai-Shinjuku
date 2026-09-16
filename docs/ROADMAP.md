@@ -21,19 +21,26 @@ Exit:
 
 ## Phase 1: 1会期を正しく入れる
 
-対象: 2026年第2回定例会
+対象: 2026年第2回定例会（令和8年第2回定例会）
 
-- [ ] session作成
-- [ ] bill metadata
-- [ ] official PDF URL
-- [ ] official overview URL
-- [ ] result status
-- [ ] source attribution
-- [ ] 3件程度だけ先行してend-to-end
-- [ ] 全議案へ拡張
+- [x] session作成（会期 2026-06-10〜2026-06-19、公式ページと一致）
+- [x] bill metadata（承認2件 + 第42〜62号議案の全23件）
+- [x] official PDF URL（全23件。実ファイルを取得し本文で内容確認済み）
+- [x] official overview URL（4種の概要PDFを本文から収録範囲を確認して対応付け）
+- [x] result status（原案可決21件 / 承認2件。承認案件の用語を区別）
+- [x] source attribution（全件に全文PDF・概要PDF・一覧ページ・議決結果ページのURL）
+- [x] 3件程度だけ先行してend-to-end
+- [x] 全議案へ拡張
 
 Exit:
 公式ページと照合して欠落・重複がない。
+→ **達成**。突合記録は `docs/20260916_1400_令和8年第2回定例会_公式突合記録.md`。
+
+未達（Phase 1 の Exit 条件外）:
+- 23件中18件は日本語解説が未整備のため `coming_soon` であり、公開表示はできない。
+- 委員会付託先・会派賛否・議案ごとの議決日は一次情報に記載がなく未取得。
+- `bills_bill_number_unique` が会期をまたいだグローバル制約のままであり、
+  Phase 5（第3回定例会）着手前に `(council_session_id, bill_number)` へ変更が必要。
 
 ## Phase 2: やさしい日本語
 

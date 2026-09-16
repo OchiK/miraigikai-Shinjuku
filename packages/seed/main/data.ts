@@ -1,4 +1,6 @@
 import type { Database } from "@mirai-gikai/supabase";
+import { type SeededBillRef, requireBillBySlug } from "./bill-ref";
+import { R8_2_SESSION, gianKey, toBillInserts } from "./shinjuku-r8-2-inventory";
 
 type BillInsert = Database["public"]["Tables"]["bills"]["Insert"];
 type FactionStanceInsert =
@@ -21,23 +23,17 @@ type InterviewReportInsert =
   Database["public"]["Tables"]["interview_report"]["Insert"];
 
 // 定例会データ
+// 会期は公式の提出議案ページ記載の「会期：…」をそのまま採用する。
 export const councilSessions: CouncilSessionInsert[] = [
-  {
-    name: "令和8年 第2回定例会",
-    slug: "r8-2",
-    council_url:
-      "https://www.city.shinjuku.lg.jp/kusei/kuseijoho01_001109_02.html",
-    start_date: "2026-06-05",
-    end_date: "2026-06-19",
-    is_active: true,
-  },
+  R8_2_SESSION,
   {
     name: "令和8年 第1回定例会",
     slug: "r8-1",
     council_url:
       "https://www.city.shinjuku.lg.jp/kusei/kuseijoho01_001109_01.html",
-    start_date: "2026-02-18",
-    end_date: "2026-03-23",
+    // 公式ページ記載: 「会期：2月17日～3月24日」
+    start_date: "2026-02-17",
+    end_date: "2026-03-24",
     is_active: false,
   },
 ];
@@ -127,94 +123,37 @@ export const tags: TagInsert[] = [
   },
 ];
 
-export const bills: BillInsert[] = [
-  {
-    name: "新宿区空き缶等の散乱及び路上喫煙による被害の防止に関する条例の一部を改正する条例",
-    bill_number: "第53号議案",
-    slug: "bill-r8-2-53",
-    status: "approved",
-    status_note: "本会議で原案可決",
-    published_at: "2026-06-19T10:00:00+09:00",
-    publish_status: "published",
-    is_featured: true,
-    thumbnail_url: "https://placehold.co/600x400",
-    pdf_url: "https://www.city.shinjuku.lg.jp/content/000457652.pdf",
-  },
-  {
-    name: "令和8年度新宿区一般会計補正予算（第2号）",
-    bill_number: "第42号議案",
-    slug: "bill-r8-2-42",
-    status: "approved",
-    status_note: "本会議で原案可決",
-    published_at: "2026-06-19T10:00:00+09:00",
-    publish_status: "published",
-    is_featured: true,
-    thumbnail_url: "https://placehold.co/600x400",
-    pdf_url: "https://www.city.shinjuku.lg.jp/content/000457639.pdf",
-  },
-  {
-    name: "新宿区印鑑条例等の一部を改正する条例",
-    bill_number: "第49号議案",
-    slug: "bill-r8-2-49",
-    status: "approved",
-    status_note: "本会議で原案可決",
-    published_at: "2026-06-19T10:00:00+09:00",
-    publish_status: "published",
-    is_featured: true,
-    thumbnail_url: "https://placehold.co/600x400",
-    pdf_url: "https://www.city.shinjuku.lg.jp/content/000457648.pdf",
-  },
-  {
-    name: "新宿区特定教育・保育施設及び特定地域型保育事業の運営に関する基準を定める条例の一部を改正する条例",
-    bill_number: "第51号議案",
-    slug: "bill-r8-2-51",
-    status: "approved",
-    status_note: "本会議で原案可決",
-    published_at: "2026-06-19T10:00:00+09:00",
-    publish_status: "published",
-    is_featured: false,
-    thumbnail_url: "https://placehold.co/600x400",
-    pdf_url: "https://www.city.shinjuku.lg.jp/content/000457650.pdf",
-  },
-  {
-    name: "新宿コズミックセンタープラネタリウム設備改修工事等委託契約",
-    bill_number: "第58号議案",
-    slug: "bill-r8-2-58",
-    status: "approved",
-    status_note: "本会議で原案可決",
-    published_at: "2026-06-19T10:00:00+09:00",
-    publish_status: "published",
-    is_featured: false,
-    thumbnail_url: "https://placehold.co/600x400",
-    pdf_url: "https://www.city.shinjuku.lg.jp/content/000457657.pdf",
-  },
-];
+// 議案データ
+// 令和8年第2回定例会の全23件（承認第2号・第3号 + 第42〜62号議案）を
+// 公式インベントリから生成する。個別の手書きは行わない。
+export const bills: BillInsert[] = toBillInserts();
 
 // 議案とタグの関連付け
+// タグは編集上の分類であり公式メタデータではないため、
+// 分類を確認済みの議案にのみ付与する。未確認の議案は意図的に未分類のままにする。
+const billTagsBySlug: Record<string, string[]> = {
+  [gianKey(53)]: ["まちづくり・環境"],
+  [gianKey(42)]: ["くらし・行財政"],
+  [gianKey(49)]: ["多文化共生・手続き"],
+  [gianKey(51)]: ["子育て・教育"],
+  [gianKey(58)]: ["文化・生涯学習"],
+};
+
 export function createBillsTags(
-  insertedBills: { id: string; name: string }[],
+  insertedBills: SeededBillRef[],
   insertedTags: { id: string; label: string }[]
 ): Omit<BillsTagsInsert, "id" | "created_at">[] {
-  const billTagMap: { [billName: string]: string[] } = {
-    "新宿区空き缶等の散乱及び路上喫煙による被害の防止に関する条例の一部を改正する条例": ["まちづくり・環境"],
-    "令和8年度新宿区一般会計補正予算（第2号）": ["くらし・行財政"],
-    "新宿区印鑑条例等の一部を改正する条例": ["多文化共生・手続き"],
-    "新宿区特定教育・保育施設及び特定地域型保育事業の運営に関する基準を定める条例の一部を改正する条例": ["子育て・教育"],
-    "新宿コズミックセンタープラネタリウム設備改修工事等委託契約": ["文化・生涯学習"],
-  };
-
   const billsTags: Omit<BillsTagsInsert, "id" | "created_at">[] = [];
 
-  for (const bill of insertedBills) {
-    const tagLabels = billTagMap[bill.name] || [];
+  for (const [slug, tagLabels] of Object.entries(billTagsBySlug)) {
+    const bill = requireBillBySlug(insertedBills, slug);
+
     for (const tagLabel of tagLabels) {
       const tag = insertedTags.find((t) => t.label === tagLabel);
-      if (tag) {
-        billsTags.push({
-          bill_id: bill.id,
-          tag_id: tag.id,
-        });
+      if (!tag) {
+        throw new Error(`Tag not found: ${tagLabel}`);
       }
+      billsTags.push({ bill_id: bill.id, tag_id: tag.id });
     }
   }
 
@@ -222,49 +161,55 @@ export function createBillsTags(
 }
 
 // 会派見解データ
-const factionStancesData: Omit<
-  FactionStanceInsert,
-  "bill_id" | "faction_id"
->[] = [
-  {
+// 注意: これはデモ用のサンプル見解であり、実際の会派の公式見解ではない。
+// slug で明示的に対応付けし、配列の並び順に依存させない。
+const factionStancesBySlug: Record<
+  string,
+  Omit<FactionStanceInsert, "bill_id" | "faction_id">
+> = {
+  [gianKey(53)]: {
     type: "for",
     comment: `繁華街をはじめとする区内全域での路上喫煙やテイクアウト容器等のポイ捨て防止を徹底し、清潔で安心なまちづくりを前進させる適切な改正です。`,
   },
-  {
+  [gianKey(42)]: {
     type: "for",
     comment: `物価高騰下における区民生活への緊急支援と地域防災の強化を迅速に進めるための追加予算として賛成します。`,
   },
-  {
+  [gianKey(49)]: {
     type: "for",
     comment: `在留カードとマイナンバーカードの一体化に対応し、外国人住民の証明書コンビニ交付の利便性を向上させる前向きな措置です。`,
   },
-  {
+  [gianKey(51)]: {
     type: "for",
     comment: `満3歳以上の小規模保育事業の基準を整備し、待機児童対策と質の高い保育環境の確保を両立させる改正として妥当です。`,
   },
-  {
+  [gianKey(58)]: {
     type: "for",
     comment: `子どもたちの科学への関心を育み、幅広い世代の区民に親しまれる教育・生涯学習拠点としての設備更新として賛成します。`,
   },
-];
+};
 
 export function createFactionStances(
-  insertedBills: { id: string; name: string }[],
+  insertedBills: SeededBillRef[],
   miraiFactionId: string
 ): FactionStanceInsert[] {
-  return factionStancesData.map((stance, index) => ({
+  return Object.entries(factionStancesBySlug).map(([slug, stance]) => ({
     ...stance,
-    bill_id: insertedBills[index]?.id || "",
+    bill_id: requireBillBySlug(insertedBills, slug).id,
     faction_id: miraiFactionId,
   }));
 }
 
 // インタビュー設定を作成（最初の議案用）
+// AIインタビューのデモ設定。knowledge_source の内容と対象議案がずれないよう、
+// 配列の先頭ではなく slug で対象議案を特定する。
+const INTERVIEW_DEMO_BILL_SLUG = gianKey(53);
+
 export function createInterviewConfig(
-  insertedBills: { id: string; name: string }[]
-): Omit<InterviewConfigInsert, "id" | "created_at" | "updated_at"> | null {
-  const targetBill = insertedBills[0];
-  if (!targetBill) return null;
+  insertedBills: SeededBillRef[]
+): Omit<InterviewConfigInsert, "id" | "created_at" | "updated_at"> {
+  // 対象議案は必ず存在すべき。見つからない場合は黙って設定を省略せず落とす。
+  const targetBill = requireBillBySlug(insertedBills, INTERVIEW_DEMO_BILL_SLUG);
 
   return {
     bill_id: targetBill.id,

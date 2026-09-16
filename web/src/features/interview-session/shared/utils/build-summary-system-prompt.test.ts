@@ -39,6 +39,9 @@ const makeBill = (
   tags: [],
   ...overrides,
   slug: overrides.slug ?? null,
+  overview_pdf_url: overrides.overview_pdf_url ?? null,
+  source_page_url: overrides.source_page_url ?? null,
+  decision_source_url: overrides.decision_source_url ?? null,
 });
 
 describe("buildSummarySystemPrompt", () => {

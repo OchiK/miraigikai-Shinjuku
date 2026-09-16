@@ -1,21 +1,27 @@
+import { type SeededBillRef, requireBillBySlug } from "./bill-ref";
+import { gianKey } from "./shinjuku-r8-2-inventory";
+
 type DifficultyLevel = "normal" | "hard";
 
-interface BillContentWithBillName {
-  bill_name: string;
+interface BillContentWithBillSlug {
+  /** 対象議案の安定識別子。件名は重複しうるため slug で突合する。 */
+  bill_slug: string;
   difficulty_level: DifficultyLevel;
   title: string;
   summary: string;
   content: string;
 }
 
-// 議案コンテンツのデータ（bill_nameで参照）
-export const billContentsWithBillName: BillContentWithBillName[] = [
+// 議案コンテンツのデータ（bill_slugで参照）
+//
+// 注意: 以下の解説は公式PDFをもとに生成した派生コンテンツであり、
+// まだ人手のレビューを経ていない（bills.is_review_completed = false）。
+export const billContentsWithBillSlug: BillContentWithBillSlug[] = [
   // =========================================================================
   // 1. 新宿区空き缶等の散乱及び路上喫煙による被害の防止に関する条例の一部を改正する条例 (第53号議案)
   // =========================================================================
   {
-    bill_name:
-      "新宿区空き缶等の散乱及び路上喫煙による被害の防止に関する条例の一部を改正する条例",
+    bill_slug: gianKey(53),
     difficulty_level: "normal",
     title: "ポイ捨て防止とマナー向上のための路上喫煙・散乱防止条例改正",
     summary:
@@ -67,8 +73,7 @@ export const billContentsWithBillName: BillContentWithBillName[] = [
    - ファストフード店やコンビニエンスストア等へのごみ箱適正管理・散乱防止啓発の協力要請。`,
   },
   {
-    bill_name:
-      "新宿区空き缶等の散乱及び路上喫煙による被害の防止に関する条例の一部を改正する条例",
+    bill_slug: gianKey(53),
     difficulty_level: "hard",
     title:
       "新宿区空き缶等の散乱及び路上喫煙による被害の防止に関する条例の一部を改正する条例案の解説",
@@ -120,7 +125,7 @@ export const billContentsWithBillName: BillContentWithBillName[] = [
   // 2. 令和8年度新宿区一般会計補正予算（第2号） (第42号議案)
   // =========================================================================
   {
-    bill_name: "令和8年度新宿区一般会計補正予算（第2号）",
+    bill_slug: gianKey(42),
     difficulty_level: "normal",
     title: "物価高騰対策と防災体制強化に向けた令和8年度一般会計補正予算（第2号）",
     summary:
@@ -169,7 +174,7 @@ export const billContentsWithBillName: BillContentWithBillName[] = [
 - 議決後速やかに対象世帯・事業者への申請受付および備蓄調達を開始`,
   },
   {
-    bill_name: "令和8年度新宿区一般会計補正予算（第2号）",
+    bill_slug: gianKey(42),
     difficulty_level: "hard",
     title: "令和8年度新宿区一般会計補正予算（第2号）の歳入歳出分析",
     summary:
@@ -213,7 +218,7 @@ export const billContentsWithBillName: BillContentWithBillName[] = [
   // 3. 新宿区印鑑条例等の一部を改正する条例 (第49号議案)
   // =========================================================================
   {
-    bill_name: "新宿区印鑑条例等の一部を改正する条例",
+    bill_slug: gianKey(49),
     difficulty_level: "normal",
     title: "特定在留カード等の創設に伴うコンビニ証明書交付サービスの拡充",
     summary:
@@ -251,7 +256,7 @@ export const billContentsWithBillName: BillContentWithBillName[] = [
 - 一体化カードの所持者は、カードの交付を受けたその日から全国のコンビニ等（セブン-イレブン、ファミリーマート、ローソン等）で証明書取得が可能となります。`,
   },
   {
-    bill_name: "新宿区印鑑条例等の一部を改正する条例",
+    bill_slug: gianKey(49),
     difficulty_level: "hard",
     title:
       "特定在留カード及び特定特別永住者証明書の創設に伴う新宿区関係条例の整備方針",
@@ -293,8 +298,7 @@ export const billContentsWithBillName: BillContentWithBillName[] = [
   // 4. 新宿区特定教育・保育施設及び特定地域型保育事業の運営に関する基準を定める条例の一部を改正する条例 (第51号議案)
   // =========================================================================
   {
-    bill_name:
-      "新宿区特定教育・保育施設及び特定地域型保育事業の運営に関する基準を定める条例の一部を改正する条例",
+    bill_slug: gianKey(51),
     difficulty_level: "normal",
     title: "満3歳以上児向け小規模保育事業の基準整備と保育の選択肢拡大",
     summary:
@@ -331,8 +335,7 @@ export const billContentsWithBillName: BillContentWithBillName[] = [
 - これにより、区内の多様な保育需要に弾力的に応じ、待機児童の未然防止と保護者の就労支援を強力に後押しします。`,
   },
   {
-    bill_name:
-      "新宿区特定教育・保育施設及び特定地域型保育事業の運営に関する基準を定める条例の一部を改正する条例",
+    bill_slug: gianKey(51),
     difficulty_level: "hard",
     title:
       "特定教育・保育施設及び特定地域型保育事業運営基準条例の一部改正に関する法規解説",
@@ -375,7 +378,7 @@ export const billContentsWithBillName: BillContentWithBillName[] = [
   // 5. 新宿コズミックセンタープラネタリウム設備改修工事等委託契約 (第58号議案)
   // =========================================================================
   {
-    bill_name: "新宿コズミックセンタープラネタリウム設備改修工事等委託契約",
+    bill_slug: gianKey(58),
     difficulty_level: "normal",
     title: "新宿コズミックセンター プラネタリウムの全面リニューアル契約",
     summary:
@@ -418,7 +421,7 @@ export const billContentsWithBillName: BillContentWithBillName[] = [
 - 高齢者から家族連れまで、世代を問わず快適に楽しめる新宿の文化拠点へ再生。`,
   },
   {
-    bill_name: "新宿コズミックセンタープラネタリウム設備改修工事等委託契約",
+    bill_slug: gianKey(58),
     difficulty_level: "hard",
     title:
       "新宿コズミックセンタープラネタリウム設備改修工事委託契約（随意契約）の審査解説",
@@ -461,15 +464,10 @@ export const billContentsWithBillName: BillContentWithBillName[] = [
   },
 ];
 
-// bill_nameをbill_idに変換する関数
-export function createBillContents(
-  insertedBills: { id: string; name: string }[]
-) {
-  return billContentsWithBillName.map((content) => {
-    const bill = insertedBills.find((b) => b.name === content.bill_name);
-    if (!bill) {
-      throw new Error(`Bill not found for content: ${content.bill_name}`);
-    }
+// bill_slug を bill_id に変換する関数
+export function createBillContents(insertedBills: SeededBillRef[]) {
+  return billContentsWithBillSlug.map((content) => {
+    const bill = requireBillBySlug(insertedBills, content.bill_slug);
 
     return {
       bill_id: bill.id,

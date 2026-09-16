@@ -11,6 +11,8 @@ type InterviewMessageInsert =
 type InterviewReportInsert =
   Database["public"]["Tables"]["interview_report"]["Insert"];
 
+// 上流（国会版）の fixture 用。新宿区のデータには存在しないため、
+// 以下のヘルパーは現状いずれも null / 空配列を返す。
 const SHIPPING_BILL_NAME = "船荷証券の電子化に関する法律案";
 
 /**

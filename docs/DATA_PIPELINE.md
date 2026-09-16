@@ -101,10 +101,15 @@ Supabaseへupsert。
 例:
 
 ```text
-shinjuku-2026-r2-bill-45
+shinjuku-2026-r2-gian-45     # 第45号議案
+shinjuku-2026-r2-shonin-2    # 承認第2号
 ```
 
-DB内部UUIDとは別にstable source keyを持つのが望ましい。
+案件種別（`gian` / `shonin`）を必ず含めること。
+承認第2号と承認第3号は件名がいずれも「専決処分の承認について」で一致するため、
+件名や番号だけでは一意に定まらない。
+
+令和8年第2回定例会では `bills.slug`（ユニークインデックスあり）をこのキーとして使用している。
 
 ## 将来自動化
 
