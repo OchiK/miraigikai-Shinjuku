@@ -1,13 +1,14 @@
 /**
  * サイト設定ファイル（Admin）
- * Fork して別の地方議会向けに使用する場合はこのファイルを変更してください。
+ * みらい議会＠新宿区
  */
 export const siteConfig = {
-  siteName: "みらい議会ー川崎版",
-  cityName: "川崎市",
-  councilName: "川崎市議会",
-  councilBaseUrl: "https://www.city.kawasaki.jp/",
-  councilBillsDetailUrl: "https://www.city.kawasaki.jp/470/cate101.html",
+  siteName: "みらい議会＠新宿区",
+  cityName: "新宿区",
+  councilName: "新宿区議会",
+  councilBaseUrl: "https://www.city.shinjuku.lg.jp/",
+  councilBillsDetailUrl:
+    "https://www.city.shinjuku.lg.jp/kusei/kuseijoho01_001109_03.html",
   councilFactionExamples:
-    "みらい川崎市議会、自由民主党川崎市議員団、公明党川崎市議員団等",
+    "自由民主党新宿区議会議員団、新宿区議会公明党、日本共産党新宿区議会議員団、立憲民主党・無所属クラブ等",
 } as const;

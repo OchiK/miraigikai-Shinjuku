@@ -1,7 +1,7 @@
 {
-  "name": "みらい議会ー川崎版",
-  "short_name": "みらい議会ー川崎版",
-  "description": "川崎市議会で今どんな議案が検討されているか、わかりやすく伝えるプラットフォーム",
+  "name": "みらい議会＠新宿区",
+  "short_name": "みらい議会新宿",
+  "description": "新宿区議会でどのような議案が検討されているかを、公式資料をもとにわかりやすく伝える非公式サイト",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#F7F4F0",

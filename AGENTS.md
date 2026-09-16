@@ -8,30 +8,30 @@
 変更作業は、**必ず git worktree を作成してから開始すること**。メインのリポジトリディレクトリでは直接変更を行わない。
 
 ```bash
-# 1. worktreeを作成（必ずkawasaki/developから分岐すること）
-git worktree add ../mirai-gikai-kawasaki-worktree/<branch-name> -b <branch-name> kawasaki/develop
+# 1. worktreeを作成（必ずmainから分岐すること）
+git worktree add ../miraikaigi-shinjuku-worktree/<branch-name> -b <branch-name> main
 
 # 2. settings.local.jsonをコピー（権限設定のため必須）
-mkdir -p ../mirai-gikai-kawasaki-worktree/<branch-name>/.claude
-cp .claude/settings.local.json ../mirai-gikai-kawasaki-worktree/<branch-name>/.claude/
+mkdir -p ../miraikaigi-shinjuku-worktree/<branch-name>/.claude
+cp .claude/settings.local.json ../miraikaigi-shinjuku-worktree/<branch-name>/.claude/
 
 # 3. .envをコピー（環境変数の引き継ぎ）
-cp .env ../mirai-gikai-kawasaki-worktree/<branch-name>/
+cp .env ../miraikaigi-shinjuku-worktree/<branch-name>/
 
 # 4. 依存パッケージをインストール
-cd ../mirai-gikai-kawasaki-worktree/<branch-name> && pnpm install --frozen-lockfile
+cd ../miraikaigi-shinjuku-worktree/<branch-name> && pnpm install --frozen-lockfile
 ```
 
-- **必ず `kawasaki/develop` から分岐する**: `git worktree add` の末尾に `kawasaki/develop` を指定すること。省略すると現在のブランチ（HEADが別ブランチを指している場合）から分岐し、無関係なコミットがPRに混入する原因になる。
-- **目的**: kawasaki/developブランチを常にクリーンに保ち、作業の分離と並列作業を容易にする
-- **重要**: worktreeは必ずプロジェクト外（`../mirai-gikai-kawasaki-worktree/`）に作成すること。プロジェクト内（`.claude/worktrees/` 等）に作成するとBiomeが「nested root configuration」エラーを起こす。
-- **kawasaki/developに変更が残っている場合のリカバリ**: worktreeを作成する前に、kawasaki/developブランチの変更を必ずクリーンアップすること。作業途中の変更をkawasaki/developに残したままworktreeを作成・作業することは禁止。
+- **必ず `main` から分岐する**: `git worktree add` の末尾に `main` を指定すること。省略すると現在のブランチ（HEADが別ブランチを指している場合）から分岐し、無関係なコミットがPRに混入する原因になる。
+- **目的**: mainブランチを常にクリーンに保ち、作業の分離と並列作業を容易にする
+- **重要**: worktreeは必ずプロジェクト外（`../miraikaigi-shinjuku-worktree/`）に作成すること。プロジェクト内（`.claude/worktrees/` 等）に作成するとBiomeが「nested root configuration」エラーを起こす。
+- **mainに変更が残っている場合のリカバリ**: worktreeを作成する前に、mainブランチの変更を必ずクリーンアップすること。作業途中の変更をmainに残したままworktreeを作成・作業することは禁止。
   ```bash
   # 変更を退避してからworktreeを作成
   git stash --include-untracked
-  git worktree add ../mirai-gikai-kawasaki-worktree/<branch-name> -b <branch-name> kawasaki/develop
+  git worktree add ../miraikaigi-shinjuku-worktree/<branch-name> -b <branch-name> main
   # worktreeに移動して退避した変更を適用
-  cd ../mirai-gikai-kawasaki-worktree/<branch-name>
+  cd ../miraikaigi-shinjuku-worktree/<branch-name>
   git stash pop
   ```
 
@@ -40,7 +40,7 @@ PR作成・マージ完了後は、不要になったworktreeを速やかに削�
 
 ```bash
 # 1. worktreeを削除
-git worktree remove ../mirai-gikai-kawasaki-worktree/<branch-name>
+git worktree remove ../miraikaigi-shinjuku-worktree/<branch-name>
 
 # 2. マージ済みブランチを削除
 git branch -d <branch-name>
@@ -52,9 +52,9 @@ git worktree prune
 ### 実装完了後は即PR作成
 実装完了後は「コミットしますか？」等の確認を挟まず、コミット → push → PR作成まで一気に進めること。ユーザーへの確認は不要。
 
-**ベースブランチは必ず `kawasaki/develop`**。`develop` や `main` へのPRは出さないこと。
+**ベースブランチは必ず `main`**。
 ```bash
-gh pr create --base kawasaki/develop ...
+gh pr create --base main ...
 ```
 
 ### セルフレビュー必須
