@@ -144,6 +144,30 @@ Repository レイヤーの詳細は [docs/repository-layer.md](docs/repository-l
 - 新しいページ（page.tsx）を追加したら `web/src/lib/routes.ts` にもルート関数を追加すること。テスト（routes.test.ts）が page.tsx との同期を検証する。
 - preview 付きリンク生成は `interview-links.ts` のラッパー関数を使用すること。
 
+## デザインシステム（Organic）
+
+このプロジェクトの見た目は **Organic** に統一する。温かいクリーム地・テラコッタ・セージ、丸い角、広い余白。行政色の青は使わない。
+
+**全文は [docs/20260917_1800_デザインシステム定義.md](docs/20260917_1800_デザインシステム定義.md)。UIを触る前に必ず読むこと。**
+
+### 守ること
+
+- **色は必ずトークン経由。** `globals.css` の `@theme inline` に定義済みのトークンのみを使う（`bg-mirai-surface`, `text-mirai-text-muted`, `bg-status-passed-bg` 等）。`text-[#xxx]` 等の arbitrary value と `style` 属性での直接指定は禁止。新しい色が必要なら、まず階調（`--color-neutral-*` / `--color-terracotta-*` / `--color-sage-*`）から取れないか確認し、取れない場合のみ `globals.css` にトークンを追加してから使う。
+- **白は使わない。** ページ地は `bg-background`（#f5ead8）、面は `bg-card`（#ebddc5）。`bg-white` は禁止。
+- **直角と細い枠線を作らない。** コンテナは `rounded-xl`（32px）、ボタン・タグ・入力は `rounded-full`。要素の区切りは枠線ではなく面の色と影（`shadow-mirai-sm/md/lg`）で行う。
+- **テラコッタ（`--color-mirai-accent`）は本文に使わない。** 地とのコントラストが約3:1しかない。本文サイズの文字は `text-mirai-accent-text`（terracotta-700, 約7:1）。
+- **議決ステータスは色とラベルの両方で示す。** `--color-status-*` を使い、色だけで可決／否決を区別しない。
+- **本文は16px / 行間1.9。** ルビ表示時は行間2.0。難易度を切り替えても行の高さは変えない。
+- **表示体（Caprasimo）は日本語に使わない。** 和文見出しは Zen Maru Gothic、和文本文は Zen Kaku Gothic New。`font-display` は英数字ラベル・会期年号のみ。
+- **タップ領域は最低44px。** 主要導線はスマートフォン片手操作を前提にする。
+- **絵文字をステータスや強調に使わない。** 「注目🔥」は `bg-mirai-featured` のタグに置き換える。
+- **AI生成文は一次資料と同じ見た目にしない。** 出典表示を必ず伴わせ、視覚的に区別する。
+- 既存ルールは継続：インラインSVG禁止（`lucide-react` を使う、stroke-width 2.75）、`<button>` 直書き禁止（`@/components/ui/button` の `Button`）。
+
+### 禁止トークン
+
+`--color-mirai-*` の旧定義（`#3559a0` 系の青、`--color-mirai-gradient-*`、`--color-stance-*`、`--color-mirai-highlight` #f4ff5f 等）は廃止済み。参照が残っていたら、対応表（設計書の §9）に従って置き換える。
+
 ## Testing Guidelines
 - Vitest の単体テストを `*.test.ts` として実装と同階層に配置し、AI コスト計算や Markdown 処理などデータ変換の変更時は必ず回帰テストを追加します。
 - **純粋関数にはテスト必須**: `utils/` に切り出した純粋関数は、新規作成時に必ず `*.test.ts` を同階層に作成してテストを書いてください。
