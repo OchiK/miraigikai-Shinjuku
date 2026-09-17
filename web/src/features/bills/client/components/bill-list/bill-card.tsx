@@ -59,7 +59,11 @@ export function BillCard({ bill }: BillCardProps) {
                 )}
               </CardTitle>
               <div className="flex flex-row gap-4">
-                <BillStatusBadge status={bill.status} className="w-fit" />
+                <BillStatusBadge
+                  status={bill.status}
+                  statusNote={bill.status_note}
+                  className="w-fit"
+                />
                 {/* published_at はサイト掲載日時であり、議案の提出日ではない */}
                 <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
                   {bill.published_at && (

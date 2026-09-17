@@ -58,6 +58,10 @@
     "./interview-prompts/summary": {
       "types": "./src/interview-prompts/summary.ts",
       "default": "./src/interview-prompts/summary.ts"
+    },
+    "./bills/decision-label": {
+      "types": "./src/bills/decision-label.ts",
+      "default": "./src/bills/decision-label.ts"
     }
   },
   "peerDependencies": {
