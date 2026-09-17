@@ -11,7 +11,7 @@ import {
 /**
  * プロンプトプロバイダーの作成処理
  *
- * 全チャットプロンプト（top-chat-system, bill-chat-system-normal, bill-chat-system-hard）は
+ * 全チャットプロンプト（bill-chat-system-normal, bill-chat-system-hard）は
  * SourceCodePromptProviderから取得する。
  * それ以外のプロンプトはLangfusePromptProviderにフォールバックする。
  */

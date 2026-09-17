@@ -21,18 +21,10 @@ const ANIMATION_DURATION = {
 } as const;
 
 interface ChatButtonProps {
-  billContext?: BillWithContent;
+  /** チャットは必ず1つの議案に紐づく（デザインシステム定義 §10） */
+  billContext: BillWithContent;
   hasInterviewConfig?: boolean;
   difficultyLevel: string;
-  pageContext?: {
-    type: "home" | "bill";
-    bills?: Array<{
-      name: string;
-      summary?: string;
-      tags?: string[];
-      isFeatured?: boolean;
-    }>;
-  };
 }
 
 export interface ChatButtonRef {
@@ -40,7 +32,7 @@ export interface ChatButtonRef {
 }
 
 export const ChatButton = forwardRef<ChatButtonRef, ChatButtonProps>(
-  ({ billContext, hasInterviewConfig, difficultyLevel, pageContext }, ref) => {
+  ({ billContext, hasInterviewConfig, difficultyLevel }, ref) => {
     const [isOpen, setIsOpen] = useState(false);
     const [isCompact, setIsCompact] = useState(false);
     const [showText, setShowText] = useState(true);
@@ -74,7 +66,6 @@ export const ChatButton = forwardRef<ChatButtonRef, ChatButtonProps>(
             billContext,
             hasInterviewConfig,
             difficultyLevel,
-            pageContext,
             sessionId,
           },
         });
@@ -174,7 +165,6 @@ export const ChatButton = forwardRef<ChatButtonRef, ChatButtonProps>(
             setIsOpen(false);
             setOpenedWithText(false);
           }}
-          pageContext={pageContext}
           disableAutoFocus={openedWithText}
           sessionId={sessionId}
         />
