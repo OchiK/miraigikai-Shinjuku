@@ -1,6 +1,6 @@
 import Image from "next/image";
-import { getDifficultyLevel } from "@/features/bill-difficulty/server/loaders/get-difficulty-level";
 import { DifficultySelector } from "@/features/bill-difficulty/client/components/difficulty-selector";
+import { getDifficultyLevel } from "@/features/bill-difficulty/server/loaders/get-difficulty-level";
 
 export async function DifficultyInfoCard() {
   const level = await getDifficultyLevel();
@@ -12,11 +12,9 @@ export async function DifficultyInfoCard() {
           <br className="pc:hidden" />
           いつでも切り替えられます
         </p>
-        <DifficultySelector
-          currentLevel={level}
-          labelStyle={{ fontSize: "16px" }}
-          maintainScrollFromBottom
-        />
+        <div className="mt-3">
+          <DifficultySelector currentLevel={level} maintainScrollFromBottom />
+        </div>
       </div>
       <div className="absolute right-6 top-6 w-[121px] h-[128px]">
         <Image

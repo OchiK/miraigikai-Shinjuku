@@ -30,8 +30,9 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const DIFFICULTY_LABELS: Record<string, string> = {
-  normal: "普通",
-  hard: "詳しく",
+  easy: "やさしい",
+  normal: "ふつう",
+  hard: "くわしく",
 };
 
 const STANCE_TYPE_LABELS: Record<string, string> = {

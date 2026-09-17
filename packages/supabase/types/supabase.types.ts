@@ -1173,7 +1173,7 @@ export type Database = {
         | "partially_adopted"
         | "reported"
       chat_role_enum: "user" | "system" | "assistant"
-      difficulty_level_enum: "normal" | "hard"
+      difficulty_level_enum: "easy" | "normal" | "hard"
       interview_config_status_enum: "public" | "closed"
       interview_feedback_tag_enum:
         | "irrelevant_questions"
@@ -1340,7 +1340,7 @@ export const Constants = {
         "reported",
       ],
       chat_role_enum: ["user", "system", "assistant"],
-      difficulty_level_enum: ["normal", "hard"],
+      difficulty_level_enum: ["easy", "normal", "hard"],
       interview_config_status_enum: ["public", "closed"],
       interview_feedback_tag_enum: [
         "irrelevant_questions",

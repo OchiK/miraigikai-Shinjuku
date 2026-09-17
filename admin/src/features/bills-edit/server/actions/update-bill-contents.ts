@@ -29,24 +29,24 @@ export async function updateBillContents(
     const validatedData = billContentsUpdateSchema.parse(input);
 
     // 各難易度レベルのupsertを並行実行
-    const upsertPromises = (["normal", "hard"] as DifficultyLevel[]).map(
-      async (difficulty) => {
-        const data = validatedData[difficulty];
+    const upsertPromises = (
+      ["easy", "normal", "hard"] as DifficultyLevel[]
+    ).map(async (difficulty) => {
+      const data = validatedData[difficulty];
 
-        // 空のコンテンツの場合はスキップ（削除も行わない）
-        if (!data.title && !data.summary && !data.content) {
-          return;
-        }
-
-        await upsertBillContent({
-          billId,
-          difficultyLevel: difficulty,
-          title: data.title || "",
-          summary: data.summary || "",
-          content: data.content || "",
-        });
+      // 空のコンテンツの場合はスキップ（削除も行わない）
+      if (!data.title && !data.summary && !data.content) {
+        return;
       }
-    );
+
+      await upsertBillContent({
+        billId,
+        difficultyLevel: difficulty,
+        title: data.title || "",
+        summary: data.summary || "",
+        content: data.content || "",
+      });
+    });
 
     await Promise.all(upsertPromises);
 

@@ -20,6 +20,7 @@ describe("CompositePromptProvider", () => {
   const sourceCodeProvider = createFakeProvider("source-code");
   const sourceCodeNames = new Set([
     "top-chat-system",
+    "bill-chat-system-easy",
     "bill-chat-system-normal",
     "bill-chat-system-hard",
   ]);
@@ -47,6 +48,16 @@ describe("CompositePromptProvider", () => {
     expect(result.content).toBe("source-code:bill-chat-system-normal");
   });
 
+  it("bill-chat-system-easy もsourceCodeProviderにルーティングされる", async () => {
+    const result = await composite.getPrompt("bill-chat-system-easy", {
+      billName: "test",
+      billTitle: "test",
+      billSummary: "test",
+      billContent: "test",
+    });
+    expect(result.content).toBe("source-code:bill-chat-system-easy");
+  });
+
   it("bill-chat-system-hard もsourceCodeProviderにルーティングされる", async () => {
     const result = await composite.getPrompt("bill-chat-system-hard", {
       billName: "test",
@@ -72,6 +83,7 @@ describe("CompositePromptProvider", () => {
       },
       new Set([
         "top-chat-system",
+        "bill-chat-system-easy",
         "bill-chat-system-normal",
         "bill-chat-system-hard",
       ])

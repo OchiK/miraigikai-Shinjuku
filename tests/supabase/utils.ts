@@ -192,7 +192,7 @@ export async function createTestInterviewData(userId: string) {
 export async function createTestBillContent(
   billId: string,
   overrides: Partial<{
-    difficulty_level: "normal" | "hard";
+    difficulty_level: "easy" | "normal" | "hard";
     title: string;
     summary: string;
     content: string;
