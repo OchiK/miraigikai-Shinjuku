@@ -10,8 +10,12 @@ describe("isValidDifficultyLevel", () => {
     expect(isValidDifficultyLevel("hard")).toBe(true);
   });
 
+  it("should return true for 'easy'", () => {
+    expect(isValidDifficultyLevel("easy")).toBe(true);
+  });
+
   it("should return false for invalid value", () => {
-    expect(isValidDifficultyLevel("easy")).toBe(false);
+    expect(isValidDifficultyLevel("very-hard")).toBe(false);
   });
 
   it("should return false for empty string", () => {

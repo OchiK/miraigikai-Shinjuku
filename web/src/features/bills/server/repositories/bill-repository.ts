@@ -2,6 +2,11 @@ import "server-only";
 import { createAdminClient } from "@mirai-gikai/supabase";
 import type { DifficultyLevelEnum } from "@/features/bill-difficulty/shared/types";
 import type { MiraiStance } from "../../shared/types";
+import { difficultyLevelsToFetch } from "../../shared/utils/difficulty-levels-to-fetch";
+import {
+  pickBillContent,
+  pickBillContentsForBills,
+} from "../../shared/utils/pick-bill-content";
 
 // ============================================================
 // Bills
@@ -32,14 +37,17 @@ export async function findPublishedBillsWithContents(
     `
     )
     .eq("publish_status", "published")
-    .eq("bill_contents.difficulty_level", difficultyLevel)
+    .in(
+      "bill_contents.difficulty_level",
+      difficultyLevelsToFetch(difficultyLevel)
+    )
     .order("published_at", { ascending: false });
 
   if (error) {
     throw new Error(`Failed to fetch bills: ${error.message}`);
   }
 
-  return data;
+  return pickBillContentsForBills(data, difficultyLevel);
 }
 
 /**
@@ -153,15 +161,14 @@ export async function findBillContentByDifficulty(
     .from("bill_contents")
     .select("*")
     .eq("bill_id", billId)
-    .eq("difficulty_level", difficultyLevel)
-    .single();
+    .in("difficulty_level", difficultyLevelsToFetch(difficultyLevel));
 
   if (error) {
     console.error(`Failed to fetch bill content: ${error.message}`);
     return null;
   }
 
-  return data;
+  return pickBillContent(data, difficultyLevel);
 }
 
 // ============================================================
@@ -224,7 +231,10 @@ export async function findPublishedBillsByDietSession(
     )
     .eq("council_session_id", councilSessionId)
     .eq("publish_status", "published")
-    .eq("bill_contents.difficulty_level", difficultyLevel)
+    .in(
+      "bill_contents.difficulty_level",
+      difficultyLevelsToFetch(difficultyLevel)
+    )
     .order("status_order", { ascending: true })
     .order("published_at", { ascending: false });
 
@@ -234,7 +244,7 @@ export async function findPublishedBillsByDietSession(
     );
   }
 
-  return data;
+  return pickBillContentsForBills(data, difficultyLevel);
 }
 
 /**
@@ -265,7 +275,10 @@ export async function findPreviousSessionBills(
     )
     .eq("council_session_id", councilSessionId)
     .eq("publish_status", "published")
-    .eq("bill_contents.difficulty_level", difficultyLevel)
+    .in(
+      "bill_contents.difficulty_level",
+      difficultyLevelsToFetch(difficultyLevel)
+    )
     .order("status_order", { ascending: true })
     .order("published_at", { ascending: false })
     .limit(limit);
@@ -275,7 +288,7 @@ export async function findPreviousSessionBills(
     return [];
   }
 
-  return data ?? [];
+  return pickBillContentsForBills(data ?? [], difficultyLevel);
 }
 
 /**
@@ -286,6 +299,8 @@ export async function countPublishedBillsByDietSession(
   difficultyLevel: DifficultyLevelEnum
 ): Promise<number> {
   const supabase = createAdminClient();
+  // 埋め込みの !inner は親行を複製しないため、難易度を複数指定しても
+  // 議案は重複して数えられない。表示できる議案の件数と一致する。
   const { count, error } = await supabase
     .from("bills")
     .select("*, bill_contents!inner(difficulty_level)", {
@@ -294,7 +309,10 @@ export async function countPublishedBillsByDietSession(
     })
     .eq("council_session_id", councilSessionId)
     .eq("publish_status", "published")
-    .eq("bill_contents.difficulty_level", difficultyLevel);
+    .in(
+      "bill_contents.difficulty_level",
+      difficultyLevelsToFetch(difficultyLevel)
+    );
 
   if (error) {
     console.error("Failed to count previous session bills:", error);
@@ -364,7 +382,10 @@ export async function findPublishedBillsByTag(
     )
     .eq("tag_id", tagId)
     .eq("bills.publish_status", "published")
-    .eq("bills.bill_contents.difficulty_level", difficultyLevel);
+    .in(
+      "bills.bill_contents.difficulty_level",
+      difficultyLevelsToFetch(difficultyLevel)
+    );
 
   if (councilSessionId) {
     query = query.eq("bills.council_session_id", councilSessionId);
@@ -377,7 +398,11 @@ export async function findPublishedBillsByTag(
     return null;
   }
 
-  return data;
+  // bills_tags の各行に議案が入れ子になっているので、議案ごとに絞り込む
+  return data.flatMap((row) => {
+    const [bill] = pickBillContentsForBills([row.bills], difficultyLevel);
+    return bill == null ? [] : [{ ...row, bills: bill }];
+  });
 }
 
 /**
@@ -412,7 +437,10 @@ export async function findFeaturedBillsWithContents(
     `
     )
     .eq("is_featured", true)
-    .eq("bill_contents.difficulty_level", difficultyLevel)
+    .in(
+      "bill_contents.difficulty_level",
+      difficultyLevelsToFetch(difficultyLevel)
+    )
     .order("published_at", { ascending: false });
 
   if (councilSessionId) {
@@ -426,7 +454,7 @@ export async function findFeaturedBillsWithContents(
     return [];
   }
 
-  return data ?? [];
+  return pickBillContentsForBills(data ?? [], difficultyLevel);
 }
 
 // ============================================================

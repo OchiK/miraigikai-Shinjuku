@@ -136,6 +136,8 @@ export const bills: BillInsert[] = toBillInserts();
 // 議案とタグの関連付け
 // タグは編集上の分類であり公式メタデータではないため、
 // 分類を確認済みの議案にのみ付与する。未確認の議案は意図的に未分類のままにする。
+// ステップ4の完了により令和8年第2回定例会の23件すべてが一次資料との突合を終えたため、
+// 全件に分類を付与している。
 const billTagsBySlug: Record<string, string[]> = {
   [gianKey(53)]: ["まちづくり・環境"],
   [gianKey(42)]: ["くらし・行財政"],
@@ -145,6 +147,21 @@ const billTagsBySlug: Record<string, string[]> = {
   [gianKey(43)]: ["くらし・行財政"],
   [gianKey(44)]: ["くらし・行財政"],
   [shoninKey(2)]: ["くらし・行財政"],
+  [shoninKey(3)]: ["くらし・行財政"],
+  [gianKey(45)]: ["多文化共生・手続き"],
+  [gianKey(46)]: ["くらし・行財政"],
+  [gianKey(47)]: ["くらし・行財政"],
+  [gianKey(48)]: ["くらし・行財政"],
+  [gianKey(50)]: ["子育て・教育"],
+  [gianKey(52)]: ["くらし・行財政"],
+  [gianKey(54)]: ["まちづくり・環境"],
+  [gianKey(55)]: ["子育て・教育"],
+  [gianKey(56)]: ["子育て・教育"],
+  [gianKey(57)]: ["文化・生涯学習"],
+  [gianKey(59)]: ["くらし・行財政"],
+  [gianKey(60)]: ["くらし・行財政"],
+  [gianKey(61)]: ["まちづくり・環境"],
+  [gianKey(62)]: ["文化・生涯学習"],
 };
 
 export function createBillsTags(

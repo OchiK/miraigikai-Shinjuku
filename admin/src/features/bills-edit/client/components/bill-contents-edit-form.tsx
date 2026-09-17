@@ -10,7 +10,6 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { routes } from "@/lib/routes";
 import {
   Form,
   FormControl,
@@ -23,6 +22,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { routes } from "@/lib/routes";
 import { enrichBillContents } from "../../actions/enrich-bill-contents";
 import { updateBillContents } from "../../server/actions/update-bill-contents";
 import type { Bill } from "../../shared/types";
@@ -68,6 +68,7 @@ export function BillContentsEditForm({
 
   // フォームのデフォルト値を生成
   const defaultValues = {
+    easy: getContentForDifficulty("easy"),
     normal: getContentForDifficulty("normal"),
     hard: getContentForDifficulty("hard"),
   };
@@ -179,7 +180,7 @@ export function BillContentsEditForm({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <Tabs defaultValue="normal" className="">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 {DIFFICULTY_LEVELS.map((level) => (
                   <TabsTrigger key={level.value} value={level.value}>
                     {level.label}

@@ -157,6 +157,8 @@ Repository レイヤーの詳細は [docs/repository-layer.md](docs/repository-l
 - **直角と細い枠線を作らない。** コンテナは `rounded-xl`（32px）、ボタン・タグ・入力は `rounded-full`。要素の区切りは枠線ではなく面の色と影（`shadow-mirai-sm/md/lg`）で行う。
 - **テラコッタ（`--color-mirai-accent`）は本文に使わない。** 地とのコントラストが約3:1しかない。本文サイズの文字は `text-mirai-accent-text`（terracotta-700, 約7:1）。
 - **議決ステータスは色とラベルの両方で示す。** `--color-status-*` を使い、色だけで可決／否決を区別しない。
+- **賛否の内訳に赤を使わない。** 議決結果のバーは `--color-mirai-vote-for` / `--color-mirai-vote-against`。`--color-status-rejected` の赤は「議案が否決された」ステータス表示にのみ使う。
+- **AIチャットは常に1つの議案に紐づける。** 全議案を横断する質問窓とトップのチャットは作らない。出典が出せない答えは返さない。
 - **本文は16px / 行間1.9。** ルビ表示時は行間2.0。難易度を切り替えても行の高さは変えない。
 - **表示体（Caprasimo）は日本語に使わない。** 和文見出しは Zen Maru Gothic、和文本文は Zen Kaku Gothic New。`font-display` は英数字ラベル・会期年号のみ。
 - **タップ領域は最低44px。** 主要導線はスマートフォン片手操作を前提にする。
@@ -166,7 +168,7 @@ Repository レイヤーの詳細は [docs/repository-layer.md](docs/repository-l
 
 ### 禁止トークン
 
-`--color-mirai-*` の旧定義（`#3559a0` 系の青、`--color-mirai-gradient-*`、`--color-stance-*`、`--color-mirai-highlight` #f4ff5f 等）は廃止済み。参照が残っていたら、対応表（設計書の §9）に従って置き換える。
+`--color-mirai-*` の旧定義（`#3559a0` 系の青、`--color-mirai-gradient-*`、`--color-stance-*`、`--color-mirai-highlight` #f4ff5f 等）は廃止済み。参照が残っていたら、対応表（設計書の §11）に従って置き換える。
 
 ## Testing Guidelines
 - Vitest の単体テストを `*.test.ts` として実装と同階層に配置し、AI コスト計算や Markdown 処理などデータ変換の変更時は必ず回帰テストを追加します。

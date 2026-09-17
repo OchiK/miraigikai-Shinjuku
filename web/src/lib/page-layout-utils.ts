@@ -1,9 +1,8 @@
 /**
  * ページレイアウトに関するユーティリティ
  *
- * TOPページと議案詳細ページは「メインページ」として扱い、
- * - DifficultySelectorを表示
- * - チャットサイドバー用のオフセットレイアウトを使用
+ * TOPページと議案詳細ページは「メインページ」として扱い、DifficultySelectorを表示する。
+ * チャットサイドバー用のオフセットは議案詳細ページのみ（デザインシステム定義 §5・§10）。
  */
 
 /** メインページ（TOP、議案詳細）かどうかを判定 */
@@ -13,6 +12,12 @@ export function isMainPage(pathname: string): boolean {
   // 議案詳細ページ（/bills/[id]）- サブパスは除外
   if (/\/bills\/[^/]+$/.test(pathname)) return true;
   return false;
+}
+
+/** チャットサイドバーを持つページ（議案詳細）かどうかを判定 */
+export function hasChatSidebar(pathname: string): boolean {
+  // 議案詳細ページ（/bills/[id]）- サブパスは除外
+  return /\/bills\/[^/]+$/.test(pathname);
 }
 
 /** インタビューチャットページかどうかを判定 */

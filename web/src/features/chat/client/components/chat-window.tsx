@@ -20,27 +20,25 @@ import {
   PromptInputTextarea,
 } from "@/components/ai-elements/prompt-input";
 import type { BillWithContent } from "@/features/bills/shared/types";
-import { siteConfig } from "@/config/site.config";
 import { useIsDesktop } from "@/hooks/use-is-desktop";
 import { useViewportHeight } from "@/hooks/use-viewport-height";
 import { SystemMessage } from "./system-message";
 import { UserMessage } from "./user-message";
+
+/** チャットは議案に紐づくため、質問例も議案についてのものだけを出す */
+const SAMPLE_QUESTIONS = [
+  "この議案のポイントは？",
+  "この議案は私にどんな影響がある？",
+] as const;
+
 interface ChatWindowProps {
-  billContext?: BillWithContent;
+  /** チャットは必ず1つの議案に紐づく（デザインシステム定義 §10） */
+  billContext: BillWithContent;
   hasInterviewConfig?: boolean;
   difficultyLevel: string;
   chatState: ReturnType<typeof import("@ai-sdk/react").useChat>;
   isOpen: boolean;
   onClose: () => void;
-  pageContext?: {
-    type: "home" | "bill";
-    bills?: Array<{
-      name: string;
-      summary?: string;
-      tags?: string[];
-      isFeatured?: boolean;
-    }>;
-  };
   disableAutoFocus?: boolean;
   sessionId: string;
 }
@@ -56,16 +54,14 @@ function ChatMessages({
   messages,
   sendMessage,
   status,
-  pageContext,
   sessionId,
 }: {
-  billContext?: BillWithContent;
+  billContext: BillWithContent;
   hasInterviewConfig?: boolean;
   difficultyLevel: string;
   messages: ChatWindowProps["chatState"]["messages"];
   sendMessage: ChatWindowProps["chatState"]["sendMessage"];
   status: ChatWindowProps["chatState"]["status"];
-  pageContext?: ChatWindowProps["pageContext"];
   sessionId: string;
 }) {
   const { scrollToBottom } = useStickToBottomContext();
@@ -85,25 +81,16 @@ function ChatMessages({
         {/* 初期メッセージ */}
         <div className="flex flex-col gap-1">
           <p className="text-sm font-bold leading-[1.8] text-mirai-text">
-            議会や議案について、気になることをAIに質問してください。
+            この議案について、気になることをAIに質問してください。
           </p>
-          {billContext && (
-            <p className="text-sm font-bold leading-[1.8] text-mirai-text">
-              本文中のテキストを選択すると簡単にAIに質問できます
-            </p>
-          )}
+          <p className="text-sm font-bold leading-[1.8] text-mirai-text">
+            本文中のテキストを選択すると簡単にAIに質問できます
+          </p>
         </div>
 
         {/* サンプル質問チップ */}
         <div className="flex flex-wrap gap-3">
-          {(billContext
-            ? [`この議案のポイントは？`, "この議案は私にどんな影響がある？"]
-            : [
-                `${siteConfig.siteName}って何？`,
-                `${siteConfig.councilName}って何をするところ？`,
-                "注目の議案について教えて",
-              ]
-          ).map((question) => {
+          {SAMPLE_QUESTIONS.map((question) => {
             return (
               <button
                 key={question}
@@ -117,7 +104,6 @@ function ChatMessages({
                       billContext,
                       hasInterviewConfig,
                       difficultyLevel,
-                      pageContext,
                       sessionId,
                     },
                   });
@@ -159,7 +145,6 @@ export function ChatWindow({
   chatState,
   isOpen,
   onClose,
-  pageContext,
   disableAutoFocus = false,
   sessionId,
 }: ChatWindowProps) {
@@ -208,7 +193,6 @@ export function ChatWindow({
         billContext,
         hasInterviewConfig,
         difficultyLevel,
-        pageContext,
         sessionId,
       },
     });
@@ -263,7 +247,6 @@ export function ChatWindow({
               messages={messages}
               sendMessage={sendMessage}
               status={status}
-              pageContext={pageContext}
               sessionId={sessionId}
             />
           </ConversationContent>

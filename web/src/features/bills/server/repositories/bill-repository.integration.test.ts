@@ -97,6 +97,62 @@ describe("bill-repository 統合テスト", () => {
       const found = result.find((b) => b.id === bill.id);
       expect(found).toBeUndefined();
     });
+
+    it("やさしい版が無い議案も一覧から消えず、ふつう版を返す", async () => {
+      const bill = await createTestBill({
+        publish_status: "published",
+        published_at: new Date().toISOString(),
+      });
+      billIds.push(bill.id);
+      await createTestBillContent(bill.id, {
+        difficulty_level: "normal",
+        title: "ふつうタイトル",
+      });
+
+      const result = await findPublishedBillsWithContents("easy");
+
+      const found = result.find((b) => b.id === bill.id);
+      expect(found).toBeDefined();
+      expect(found?.bill_contents).toHaveLength(1);
+      expect(found?.bill_contents[0].difficulty_level).toBe("normal");
+    });
+
+    it("やさしい版がある議案はやさしい版だけを返す", async () => {
+      const bill = await createTestBill({
+        publish_status: "published",
+        published_at: new Date().toISOString(),
+      });
+      billIds.push(bill.id);
+      await createTestBillContent(bill.id, {
+        difficulty_level: "easy",
+        title: "やさしいタイトル",
+      });
+      await createTestBillContent(bill.id, {
+        difficulty_level: "normal",
+        title: "ふつうタイトル",
+      });
+
+      const result = await findPublishedBillsWithContents("easy");
+
+      const found = result.find((b) => b.id === bill.id);
+      expect(found?.bill_contents).toHaveLength(1);
+      expect(found?.bill_contents[0].difficulty_level).toBe("easy");
+      expect(found?.bill_contents[0].title).toBe("やさしいタイトル");
+    });
+
+    it("くわしく版が無い議案はフォールバックせず一覧から外れる", async () => {
+      const bill = await createTestBill({
+        publish_status: "published",
+        published_at: new Date().toISOString(),
+      });
+      billIds.push(bill.id);
+      await createTestBillContent(bill.id, { difficulty_level: "normal" });
+
+      const result = await findPublishedBillsWithContents("hard");
+
+      const found = result.find((b) => b.id === bill.id);
+      expect(found).toBeUndefined();
+    });
   });
 
   // ============================================================
@@ -239,6 +295,48 @@ describe("bill-repository 統合テスト", () => {
       await createTestBillContent(bill.id, { difficulty_level: "normal" });
 
       const result = await findBillContentByDifficulty(bill.id, "hard");
+
+      expect(result).toBeNull();
+    });
+
+    it("やさしい版が無い場合はふつう版にフォールバックする", async () => {
+      const bill = await createTestBill();
+      billIds.push(bill.id);
+      await createTestBillContent(bill.id, {
+        difficulty_level: "normal",
+        title: "ふつうタイトル",
+      });
+
+      const result = await findBillContentByDifficulty(bill.id, "easy");
+
+      expect(result?.difficulty_level).toBe("normal");
+      expect(result?.title).toBe("ふつうタイトル");
+    });
+
+    it("やさしい版があればフォールバックしない", async () => {
+      const bill = await createTestBill();
+      billIds.push(bill.id);
+      await createTestBillContent(bill.id, {
+        difficulty_level: "easy",
+        title: "やさしいタイトル",
+      });
+      await createTestBillContent(bill.id, {
+        difficulty_level: "normal",
+        title: "ふつうタイトル",
+      });
+
+      const result = await findBillContentByDifficulty(bill.id, "easy");
+
+      expect(result?.difficulty_level).toBe("easy");
+      expect(result?.title).toBe("やさしいタイトル");
+    });
+
+    it("やさしい版もふつう版も無ければ null を返す", async () => {
+      const bill = await createTestBill();
+      billIds.push(bill.id);
+      await createTestBillContent(bill.id, { difficulty_level: "hard" });
+
+      const result = await findBillContentByDifficulty(bill.id, "easy");
 
       expect(result).toBeNull();
     });
