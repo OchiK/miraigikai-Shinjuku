@@ -109,7 +109,7 @@ function ChatMessages({
                 key={question}
                 type="button"
                 disabled={isResponding}
-                className="px-3 py-1 text-xs leading-[2] text-primary-accent border border-primary rounded-2xl hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-1 text-xs leading-[2] text-mirai-accent-text border border-primary rounded-2xl hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={() => {
                   sendMessage({
                     text: question,

@@ -27,7 +27,7 @@ function RatingPhase({
 }) {
   return (
     <>
-      <p className="text-[13px] font-medium leading-none text-primary-accent text-center">
+      <p className="text-[13px] font-medium leading-none text-mirai-accent-text text-center">
         AIインタビュー改善のためのアンケート
       </p>
       <p className="text-[13px] font-medium leading-none text-mirai-text text-center">
@@ -78,8 +78,8 @@ function FeedbackPhase({
             onClick={() => onToggleTag(tag)}
             className={`h-auto rounded-full border px-4 py-1 text-sm font-medium ${
               selectedTags.has(tag)
-                ? "border-primary bg-gradient-to-r from-mirai-gradient-start to-mirai-gradient-end text-mirai-text"
-                : "border-primary bg-white text-primary-accent"
+                ? "border-primary bg-mirai-featured text-mirai-featured-text"
+                : "border-primary bg-card text-mirai-accent-text"
             }`}
           >
             {FEEDBACK_TAG_LABELS[tag]}
@@ -91,7 +91,7 @@ function FeedbackPhase({
           variant="ghost"
           onClick={onSubmit}
           disabled={selectedTags.size === 0}
-          className="h-auto p-0 text-[13px] font-medium text-primary-accent hover:bg-transparent disabled:opacity-40"
+          className="h-auto p-0 text-[13px] font-medium text-mirai-accent-text hover:bg-transparent disabled:opacity-40"
         >
           送信
           <ArrowRight size={14} />

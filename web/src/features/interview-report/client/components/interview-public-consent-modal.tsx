@@ -44,7 +44,7 @@ export function InterviewPublicConsentModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="py-9">
         <DialogHeader>
-          <p className="text-center text-primary-accent font-bold">
+          <p className="text-center text-mirai-accent-text font-bold">
             あと少しです！
           </p>
           <DialogTitle className="text-[22px] font-bold text-center">
@@ -54,7 +54,7 @@ export function InterviewPublicConsentModal({
         </DialogHeader>
 
         <div className="space-y-6 mt-6">
-          <h3 className="text-lg font-bold text-primary-accent text-center leading-relaxed">
+          <h3 className="text-lg font-bold text-mirai-accent-text text-center leading-relaxed">
             インタビュー内容の公開を
             <br />
             許可しますか？

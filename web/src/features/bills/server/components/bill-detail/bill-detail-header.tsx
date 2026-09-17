@@ -103,7 +103,7 @@ export async function BillDetailHeader({
         {opinionCount != null && opinionCount > 0 && (
           <Link
             href={routes.billOpinions(bill.id) as Route}
-            className="flex items-center gap-1 mb-4 text-primary-accent hover:opacity-80"
+            className="flex items-center gap-1 mb-4 text-mirai-accent-text hover:opacity-80"
           >
             <MessageSquare className="size-4 relative top-[1px]" />
             <span className="text-[14px] font-bold leading-[14px] tracking-[0.14px]">

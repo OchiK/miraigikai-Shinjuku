@@ -37,7 +37,7 @@ describe("getStanceStyles", () => {
     const result = getStanceStyles(makeStance("for"), false);
     expect(result).toEqual({
       bg: "bg-stance-for-bg",
-      textColor: "text-primary-accent",
+      textColor: "text-mirai-accent-text",
       label: "賛成",
     });
   });
@@ -46,7 +46,7 @@ describe("getStanceStyles", () => {
     const result = getStanceStyles(makeStance("conditional_for"), false);
     expect(result).toEqual({
       bg: "bg-stance-for-bg",
-      textColor: "text-primary-accent",
+      textColor: "text-mirai-accent-text",
       label: "条件付き賛成",
     });
   });

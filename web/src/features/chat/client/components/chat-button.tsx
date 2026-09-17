@@ -10,6 +10,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { Button } from "@/components/ui/button";
 import type { BillWithContent } from "@/features/bills/shared/types";
 import { ChatWindow } from "./chat-window";
 
@@ -112,18 +113,18 @@ export const ChatButton = forwardRef<ChatButtonRef, ChatButtonProps>(
       <>
         <div className="fixed max-w-[460px] mx-auto left-6 right-6 bottom-4 z-50 md:bottom-8 flex justify-center pc:hidden">
           <div
-            className="relative rounded-[50px] bg-gradient-to-tr from-mirai-gradient-start to-mirai-gradient-end p-[2px] shadow-[2px_2px_2px_0px_rgba(0,0,0,0.25)] origin-center flex transition-[flex-basis] ease-in-out"
+            className="relative flex origin-center rounded-full bg-primary p-[2px] shadow-mirai-sm transition-[flex-basis] ease-in-out"
             style={{
               flexBasis: isCompact ? "120px" : "100%",
               transitionDuration: `${ANIMATION_DURATION.SIZE_TRANSITION}ms`,
             }}
           >
-            <button
-              type="button"
+            <Button
+              variant="ghost"
               onClick={() => setIsOpen(true)}
-              className={`relative bg-white rounded-[50px] hover:opacity-90 flex items-center w-full py-2 transition-all ease-in-out ${
+              className={`relative flex w-full items-center rounded-full bg-card py-2 hover:bg-card hover:opacity-90 transition-all ease-in-out ${
                 isCompact
-                  ? "h-[35px] px-4 justify-center gap-2.5"
+                  ? "h-11 px-4 justify-center gap-2.5"
                   : "h-14 justify-end pr-4 pl-6 gap-2.5"
               }`}
               style={{
@@ -160,7 +161,7 @@ export const ChatButton = forwardRef<ChatButtonRef, ChatButtonProps>(
                   />
                 </div>
               )}
-            </button>
+            </Button>
           </div>
         </div>
 

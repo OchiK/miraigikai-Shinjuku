@@ -121,7 +121,7 @@ export function ReportShareModal({
         <Button
           variant="ghost"
           onClick={onClose}
-          className="text-base font-bold text-primary-accent hover:bg-transparent"
+          className="text-base font-bold text-mirai-accent-text hover:bg-transparent"
         >
           閉じる
         </Button>

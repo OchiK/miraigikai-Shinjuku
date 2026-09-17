@@ -71,7 +71,7 @@ function _SortToggle({
             onClick={() => onChangeSort(sort)}
             className={cn(
               "!p-0 !h-auto rounded-none transition-colors",
-              activeSort === sort ? "text-primary-accent" : "text-mirai-text"
+              activeSort === sort ? "text-mirai-accent-text" : "text-mirai-text"
             )}
           >
             {sortOrderLabels[sort]}
