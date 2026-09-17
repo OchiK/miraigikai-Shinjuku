@@ -19,7 +19,7 @@ export function BillCard({ bill }: BillCardProps) {
   const summary = bill.bill_content?.summary;
 
   return (
-    <Card className="border-0 bg-card shadow-mirai-sm rounded-xl hover:bg-neutral-300 transition-colors relative overflow-hidden max-w-[634px]">
+    <Card className="border-0 bg-card shadow-(--shadow-mirai-sm) rounded-xl hover:bg-neutral-300 transition-colors relative overflow-hidden max-w-[634px]">
       <div className="flex flex-col">
         {/* 注目バッジエリア */}
         {bill.is_featured && (

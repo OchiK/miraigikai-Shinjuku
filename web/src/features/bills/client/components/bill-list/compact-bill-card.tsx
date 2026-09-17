@@ -21,7 +21,7 @@ export function CompactBillCard({ bill, className }: CompactBillCardProps) {
 
   return (
     <Card
-      className={`border-0 bg-card shadow-mirai-sm rounded-xl hover:bg-neutral-300 transition-colors overflow-hidden ${className ?? ""}`}
+      className={`border-0 bg-card shadow-(--shadow-mirai-sm) rounded-xl hover:bg-neutral-300 transition-colors overflow-hidden ${className ?? ""}`}
     >
       <div className="flex">
         {/* コンテンツエリア */}
