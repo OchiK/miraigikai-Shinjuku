@@ -1,7 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
-import Image from "next/image";
+import { Send, X } from "lucide-react";
 import type { ChangeEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -19,6 +18,7 @@ import {
   type PromptInputMessage,
   PromptInputTextarea,
 } from "@/components/ai-elements/prompt-input";
+import { Button } from "@/components/ui/button";
 import type { BillWithContent } from "@/features/bills/shared/types";
 import { useIsDesktop } from "@/hooks/use-is-desktop";
 import { useViewportHeight } from "@/hooks/use-viewport-height";
@@ -92,11 +92,11 @@ function ChatMessages({
         <div className="flex flex-wrap gap-3">
           {SAMPLE_QUESTIONS.map((question) => {
             return (
-              <button
+              <Button
                 key={question}
                 type="button"
                 disabled={isResponding}
-                className="px-3 py-1 text-xs leading-[2] text-mirai-accent-text border border-primary rounded-2xl hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="min-h-11 border border-primary bg-transparent px-4 text-mirai-accent-text text-xs leading-[1.75] hover:bg-terracotta-100"
                 onClick={() => {
                   sendMessage({
                     text: question,
@@ -108,9 +108,10 @@ function ChatMessages({
                     },
                   });
                 }}
+                variant="ghost"
               >
                 {question}
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -132,7 +133,7 @@ function ChatMessages({
         );
       })}
       {status === "submitted" && (
-        <span className="text-sm text-gray-500">考え中...</span>
+        <span className="text-mirai-text-muted text-sm">考え中...</span>
       )}
     </>
   );
@@ -205,21 +206,25 @@ export function ChatWindow({
     <>
       {/* オーバーレイ（1400px未満でのみ表示） */}
       {isOpen && (
-        <button
-          type="button"
-          className="fixed inset-0 z-40 bg-black/50 transition-opacity cursor-default pc:hidden"
-          onClick={onClose}
+        <Button
           aria-label="モーダルを閉じる"
+          className="fixed inset-0 z-40 h-auto w-auto rounded-none bg-mirai-text/50 p-0 hover:bg-mirai-text/50 pc:hidden"
+          onClick={onClose}
+          type="button"
+          variant="ghost"
         />
       )}
 
       {/* チャットウィンドウ */}
       <div
+        aria-hidden={!isDesktop && !isOpen}
+        aria-label="この議案について質問する"
+        aria-modal={!isDesktop && isOpen ? true : undefined}
         // xlサイズでは、横幅1180px（メイン + チャット）の中央寄せにする
         className={`fixed inset-x-0 bottom-0 z-50
-          bg-white shadow-md rounded-t-2xl flex flex-col
-          md:bottom-4 md:right-4 md:left-auto md:w-[450px] md:rounded-2xl
-					pc:visible pc:opacity-100 h-[80vh] pc:h-[70vh]
+          flex flex-col rounded-t-xl bg-card shadow-mirai-lg
+          md:bottom-4 md:right-4 md:left-auto md:w-[450px] md:rounded-xl
+						pc:visible pc:opacity-100 h-[80vh] pc:h-[70vh]
           xl:right-[calc(calc(100%-1180px)/2)]
 					${isOpen ? "visible opacity-100" : "invisible opacity-0 pc:visible pc:opacity-100"}
 				`}
@@ -228,15 +233,18 @@ export function ChatWindow({
             ? { maxHeight: `${viewportHeight}px` }
             : undefined
         }
+        role="dialog"
       >
-        <button
-          type="button"
-          className="pc:hidden self-end p-2 m-2 hover:bg-gray-100 rounded-full"
-          onClick={onClose}
+        <Button
           aria-label="モーダルを閉じる"
+          className="m-2 size-11 self-end text-mirai-text hover:bg-neutral-300 pc:hidden"
+          onClick={onClose}
+          size="icon"
+          type="button"
+          variant="ghost"
         >
-          <X className="h-5 w-5" />
-        </button>
+          <X aria-hidden="true" className="size-5" strokeWidth={2.75} />
+        </Button>
         {/* メッセージエリア（スクロール可能） */}
         <Conversation className="flex-1 min-h-0">
           <ConversationContent className="p-0 flex flex-col gap-3 pc:pt-6 pb-2 px-6">
@@ -256,8 +264,8 @@ export function ChatWindow({
         {/* 入力エリア（固定下部） */}
         <div className="px-6 pb-4 pt-2">
           <PromptInput
+            className="flex items-end gap-2.5 divide-y-0 rounded-full bg-mirai-surface-sunken py-2 pr-2 pl-6 shadow-mirai-sm"
             onSubmit={handleSubmit}
-            className="flex items-end gap-2.5 py-2 pl-6 pr-4 bg-white rounded-[50px] border-mirai-gradient divide-y-0"
           >
             <PromptInputBody className="flex-1">
               <PromptInputTextarea
@@ -271,19 +279,16 @@ export function ChatWindow({
                 className={`!min-h-0 min-w-0 wrap-anywhere text-sm font-medium leading-[1.5em] tracking-[0.01em] placeholder:text-mirai-text-placeholder placeholder:font-medium placeholder:leading-[1.5em] placeholder:tracking-[0.01em] placeholder:no-underline border-none focus:ring-0 bg-transparent shadow-none !py-2 !px-0`}
               />
             </PromptInputBody>
-            <button
-              type="submit"
+            <Button
+              aria-label="送信"
+              className="size-11 bg-primary text-primary-foreground hover:bg-primary-accent"
               disabled={!input || isResponding}
-              className="flex-shrink-0 w-10 h-10 disabled:opacity-50"
+              size="icon"
+              type="submit"
+              variant="ghost"
             >
-              <Image
-                src="/icons/send-button-icon.svg"
-                alt="送信"
-                width={40}
-                height={40}
-                className="w-full h-full"
-              />
-            </button>
+              <Send aria-hidden="true" className="size-5" strokeWidth={2.75} />
+            </Button>
           </PromptInput>
           <PromptInputError status={status} error={error} />
           {messages.length > 0 && <PromptInputHint />}

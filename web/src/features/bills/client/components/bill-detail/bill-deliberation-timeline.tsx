@@ -26,8 +26,8 @@ function labelClassName(state: BillTimelineEvent["state"]): string {
 /**
  * 審議の経過（デザインシステム定義 §9-7）。
  *
- * 出来事を縦並びで示す。bills テーブルは出来事ごとの日付を持たないため、
- * 推測した日付は置かず、到達状況と公式の議決用語だけを出す。
+ * 出来事を縦並びで示す。bills テーブルは出来事ごとの実日付を持たないため、
+ * 推測せず「日付未登録／日付未定」と明示する。
  */
 export function BillDeliberationTimeline({
   status,
@@ -65,6 +65,9 @@ export function BillDeliberationTimeline({
               </div>
 
               <div className={isLast ? "pb-0" : "pb-6"}>
+                <p className="text-mirai-text-muted text-sm leading-[1.75]">
+                  {event.dateLabel}
+                </p>
                 <p
                   className={`font-bold text-base leading-[1.9] ${labelClassName(event.state)}`}
                 >

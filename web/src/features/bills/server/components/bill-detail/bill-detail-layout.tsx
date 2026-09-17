@@ -63,16 +63,13 @@ export async function BillDetailLayout({
 
           <div className="flex flex-col gap-8">
             {/* 2〜4. 議決ステータス・議案番号 / 表題 / 分野タグ */}
-            <BillDetailHeader
-              bill={bill}
-              hasInterviewConfig={interviewConfig != null}
-              opinionCount={publicReportsResult.totalCount}
-            />
+            <BillDetailHeader bill={bill} />
 
             {/* 5. かんたん要約 */}
             <BillAiSummary
               summary={bill.bill_content?.summary}
               title={bill.bill_content?.title}
+              isReviewCompleted={bill.is_review_completed}
             />
 
             {/* 6. 議決結果 */}
@@ -96,25 +93,31 @@ export async function BillDetailLayout({
               </BillOriginalAccordion>
             )}
 
-            {publicReportsResult.totalCount > 0 && (
-              <BillInterviewOpinionsSection
-                billId={bill.id}
-                reports={publicReportsResult.reports}
-                totalCount={publicReportsResult.totalCount}
-              />
-            )}
-
-            {siteConfig.features.aiInterview && interviewConfig != null && (
-              <InterviewLandingSection billId={bill.id} />
-            )}
-
             {/* 9. 区議会の公式ページ（PDF） */}
             <BillSourceLinks bill={bill} />
 
-            {/* 10. この議案について質問する（追尾するボタンは置かない） */}
+            {/* 10. 質問・参加・共有（追尾するボタンは置かない） */}
             <BillChatCtaBanner />
 
-            <BillShareButtons bill={bill} />
+            <div
+              aria-label="この議案への参加と共有"
+              className="flex flex-col gap-8"
+              role="group"
+            >
+              {publicReportsResult.totalCount > 0 && (
+                <BillInterviewOpinionsSection
+                  billId={bill.id}
+                  reports={publicReportsResult.reports}
+                  totalCount={publicReportsResult.totalCount}
+                />
+              )}
+
+              {siteConfig.features.aiInterview && interviewConfig != null && (
+                <InterviewLandingSection billId={bill.id} />
+              )}
+
+              <BillShareButtons bill={bill} />
+            </div>
 
             {/* 11. 免責 */}
             <BillDisclaimer />

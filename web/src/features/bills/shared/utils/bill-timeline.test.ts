@@ -12,6 +12,7 @@ describe("buildBillTimeline", () => {
       "decision",
     ]);
     expect(timeline.every((e) => e.state === "upcoming")).toBe(true);
+    expect(timeline.every((e) => e.dateLabel === "日付未定")).toBe(true);
   });
 
   it("委員会審査中は、通過済みを done、現在地を current にする", () => {
@@ -22,6 +23,12 @@ describe("buildBillTimeline", () => {
       "current",
       "upcoming",
       "upcoming",
+    ]);
+    expect(timeline.map((e) => e.dateLabel)).toEqual([
+      "日付未登録",
+      "日付未登録",
+      "日付未定",
+      "日付未定",
     ]);
   });
 
@@ -43,6 +50,7 @@ describe("buildBillTimeline", () => {
     expect(decision?.state).toBe("current");
     expect(decision?.label).toBe("承認");
     expect(decision?.detail).toBe("本会議で承認");
+    expect(decision?.dateLabel).toBe("日付未登録");
   });
 
   it("否決の議案を可決と表示しない", () => {

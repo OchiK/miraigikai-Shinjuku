@@ -1,9 +1,12 @@
 import "server-only";
 
+import { Info } from "lucide-react";
+
 interface BillAiSummaryProps {
   /** AIが付けた読みやすい題名。正式名称は表題として別に出す */
   title?: string | null;
   summary?: string | null;
+  isReviewCompleted: boolean;
 }
 
 /**
@@ -13,7 +16,11 @@ interface BillAiSummaryProps {
  * `AI` ラベルと注意書きを必ず併記して、原文と見分けられるようにする。
  * 読みやすい題名もAI生成のため、正式名称の表題とは分けてこの地色の上に置く。
  */
-export function BillAiSummary({ title, summary }: BillAiSummaryProps) {
+export function BillAiSummary({
+  title,
+  summary,
+  isReviewCompleted,
+}: BillAiSummaryProps) {
   const readableTitle = title?.trim();
   const text = summary?.trim();
 
@@ -51,6 +58,19 @@ export function BillAiSummary({ title, summary }: BillAiSummaryProps) {
       <p className="mt-4 text-sm leading-[1.9]">
         AIによる要約です。正確な内容は原文をご確認ください。
       </p>
+
+      {!isReviewCompleted && (
+        <div className="mt-4 flex items-start gap-2 rounded-md bg-terracotta-200 px-4 py-3">
+          <Info
+            aria-hidden="true"
+            className="mt-1 size-4 shrink-0"
+            strokeWidth={2.75}
+          />
+          <p className="text-sm leading-[1.9]">
+            この記事はAI生成による下書きを含みます。公式一次資料との照合を進めているため、内容が変更されることがあります。
+          </p>
+        </div>
+      )}
     </section>
   );
 }

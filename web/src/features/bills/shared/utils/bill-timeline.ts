@@ -15,8 +15,8 @@ export interface BillTimelineInput {
  * 審議の経過（縦並びタイムライン）の1件分。
  *
  * デザインシステム定義 §9-7 の「日付＋出来事の縦並び」に対応する。
- * ただし bills テーブルは上程日・付託日といった出来事ごとの日付を持たないため、
- * 日付を推測して置かず、出来事と到達状況だけを返す。
+ * bills テーブルは上程日・付託日といった出来事ごとの日付を持たないため、
+ * 日付を推測せず、到達済みなら「日付未登録」、未到達なら「日付未定」と明示する。
  */
 export type BillTimelineEventState = "done" | "current" | "upcoming";
 
@@ -24,6 +24,8 @@ export interface BillTimelineEvent {
   /** レンダリング時の key。ステップ順に固定の識別子を振る */
   key: "submitted" | "in_committee" | "plenary_session" | "decision";
   label: string;
+  /** 実日付が保存されていないことを利用者に伝える表示ラベル */
+  dateLabel: "日付未登録" | "日付未定";
   /** 補足（議決済みの場合の status_note など）。無ければ undefined */
   detail?: string;
   state: BillTimelineEventState;
@@ -47,6 +49,12 @@ function resolveState(
   return "upcoming";
 }
 
+function resolveDateLabel(
+  state: BillTimelineEventState
+): BillTimelineEvent["dateLabel"] {
+  return state === "upcoming" ? "日付未定" : "日付未登録";
+}
+
 /**
  * 議案のステータスから審議の経過を組み立てる。
  *
@@ -60,11 +68,16 @@ export function buildBillTimeline(
   const decision = getDecisionStepLabel(input);
 
   const events: BillTimelineEvent[] = PRE_DECISION_EVENTS.map(
-    ({ key, label }, index) => ({
-      key,
-      label,
-      state: resolveState(index + 1, currentStep),
-    })
+    ({ key, label }, index) => {
+      const state = resolveState(index + 1, currentStep);
+
+      return {
+        key,
+        label,
+        dateLabel: resolveDateLabel(state),
+        state,
+      };
+    }
   );
 
   const decisionStep = PRE_DECISION_EVENTS.length + 1;
@@ -77,6 +90,7 @@ export function buildBillTimeline(
       ? getBillStatusLabel(input)
       : `${decision.positive}／${decision.negative}`,
     detail: isDecided ? input.statusNote?.trim() || undefined : undefined,
+    dateLabel: resolveDateLabel(decisionState),
     state: decisionState,
   });
 
