@@ -315,11 +315,21 @@
   }
 
   /* ── 旧グラデーションの暫定エイリアス（設計書 §9）──────────────────
-     参照の置き換えが済んだ時点で削除する。新規実装では使わない。 */
-  .bg-mirai-gradient,
+     参照の置き換えが済んだ時点で削除する。新規実装では使わない。
+
+     .bg-mirai-gradient は既定のボタン（components/ui/button.tsx）・主導線・
+     選択中タブ・フッターの地として30箇所以上で使われている。中立の階調に
+     向けると地（#f5ead8）との比が 1.03:1 になり導線が消えるため、旧実装の
+     水色（旧地に対し 1.33:1）と同等の見え方になるテラコッタの淡色に向ける。 */
+  .bg-mirai-gradient {
+    background-image: none;
+    background-color: var(--color-terracotta-300); /* 地に対し 1.27:1 */
+  }
+
+  /* こちらは広い面（LPの地・吹き出し・バナー）に敷かれるため、より淡い段に向ける。 */
   .bg-mirai-light-gradient {
     background-image: none;
-    background-color: var(--color-mirai-tag);
+    background-color: var(--color-terracotta-100);
   }
 
   .bg-mirai-white-fade {
