@@ -74,6 +74,18 @@ export type FeaturedTag = {
   priority: number;
 };
 
+/**
+ * 議案が属する定例会のうち、詳細ページの戻り導線に必要な最小限の情報。
+ *
+ * council_sessions の表示名の列は `name`（例:「令和8年第2回定例会」）。
+ */
+export type BillCouncilSession = {
+  id: string;
+  name: string;
+  slug: string | null;
+  council_url: string | null;
+};
+
 export type BillWithContent = Bill & {
   bill_content?: BillContent;
   faction_stances?: FactionStance[];
@@ -81,6 +93,7 @@ export type BillWithContent = Bill & {
   tags: BillTag[];
   featured_tag?: FeaturedTag;
   hasPublicInterview?: boolean;
+  council_session?: BillCouncilSession | null;
 };
 
 // タグごとにグループ化された議案

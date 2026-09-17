@@ -5,12 +5,16 @@ import { InterviewLandingSection } from "@/features/interview-config/client/comp
 import { getInterviewConfig } from "@/features/interview-config/server/loaders/get-interview-config";
 import { BillInterviewOpinionsSection } from "@/features/interview-report/server/components/bill-interview-opinions-section";
 import { getPublicReportsByBillId } from "@/features/interview-report/server/loaders/get-public-reports-by-bill-id";
+import { BillChatCtaBanner } from "../../../client/components/bill-detail/bill-chat-cta-banner";
+import { BillDeliberationTimeline } from "../../../client/components/bill-detail/bill-deliberation-timeline";
 import { BillDetailClient } from "../../../client/components/bill-detail/bill-detail-client";
+import { BillDetailNav } from "../../../client/components/bill-detail/bill-detail-nav";
 import { BillDisclaimer } from "../../../client/components/bill-detail/bill-disclaimer";
-import { BillStatusProgress } from "../../../client/components/bill-detail/bill-status-progress";
+import { BillOriginalAccordion } from "../../../client/components/bill-detail/bill-original-accordion";
 import { FactionStanceCard } from "../../../client/components/bill-detail/faction-stance-card";
 import type { BillWithContent } from "../../../shared/types";
 import { BillShareButtons } from "../share/bill-share-buttons";
+import { BillAiSummary } from "./bill-ai-summary";
 import { BillContent } from "./bill-content";
 import { BillDetailHeader } from "./bill-detail-header";
 import { BillSourceLinks } from "./bill-source-links";
@@ -20,6 +24,17 @@ interface BillDetailLayoutProps {
   currentDifficulty: DifficultyLevelEnum;
 }
 
+/**
+ * 議案詳細ページ（デザインシステム定義 §9）。
+ *
+ * 順序は固定で、原文より要約を上に置く。
+ * 1. 上部ナビ / 2. 議決ステータス+議案番号 / 3. 表題 / 4. 分野タグ /
+ * 5. かんたん要約 / 6. 議決結果 / 7. 審議の経過 / 8. 議案の原文 /
+ * 9. 区議会の公式ページ / 10. 質問する / 11. 免責
+ *
+ * テキスト選択とチャットの状態は BillDetailClient が持つ。中身は Server Component の
+ * まま children として渡し、SSRによる初期レンダリングを保つ。
+ */
 export async function BillDetailLayout({
   bill,
   currentDifficulty,
@@ -33,71 +48,82 @@ export async function BillDetailLayout({
     getPublicReportsByBillId(bill.id),
   ]);
 
+  // サイトヘッダーは fixed top-4。md 未満では MainLayout の mt-24 が効かないため、
+  // 上部ナビがヘッダーに潜らないようここで逃がす。
   return (
-    <div className="container mx-auto pb-8 max-w-4xl">
-      {/*
-        テキスト選択機能とチャット連携の実装パターン:
-        - BillContentはServer Componentのまま保持（SSRによる高速な初期レンダリング）
-        - BillDetailClientでクライアントサイド機能（テキスト選択、チャット連携）を提供
-        - このパターンによりSSRを保持しつつインタラクティブ機能を実装
-      */}
+    <div className="bg-background pt-20 pb-12 md:pt-0">
       <BillDetailClient
         bill={bill}
         currentDifficulty={currentDifficulty}
         hasInterviewConfig={interviewConfig != null}
       >
-        <BillDetailHeader
-          bill={bill}
-          hasInterviewConfig={interviewConfig != null}
-          opinionCount={publicReportsResult.totalCount}
-        />
         <Container>
-          {/* 議案ステータス進捗 */}
-          <div className="my-8">
-            <BillStatusProgress
+          {/* 1. 上部ナビゲーション */}
+          <BillDetailNav councilSession={bill.council_session} />
+
+          <div className="flex flex-col gap-8">
+            {/* 2〜4. 議決ステータス・議案番号 / 表題 / 分野タグ */}
+            <BillDetailHeader bill={bill} />
+
+            {/* 5. かんたん要約 */}
+            <BillAiSummary
+              summary={bill.bill_content?.summary}
+              title={bill.bill_content?.title}
+              isReviewCompleted={bill.is_review_completed}
+            />
+
+            {/* 6. 議決結果 */}
+            {showStances && (
+              <FactionStanceCard
+                billStatus={bill.status}
+                stances={bill.faction_stances ?? []}
+              />
+            )}
+
+            {/* 7. 審議の経過 */}
+            <BillDeliberationTimeline
               status={bill.status}
               statusNote={bill.status_note}
             />
-          </div>
 
-          <BillContent bill={bill} />
+            {/* 8. 議案の原文（既定では開かない） */}
+            {bill.bill_content?.content && (
+              <BillOriginalAccordion>
+                <BillContent bill={bill} />
+              </BillOriginalAccordion>
+            )}
+
+            {/* 9. 区議会の公式ページ（PDF） */}
+            <BillSourceLinks bill={bill} />
+
+            {/* 10. 質問・参加・共有（追尾するボタンは置かない） */}
+            <BillChatCtaBanner />
+
+            <div
+              aria-label="この議案への参加と共有"
+              className="flex flex-col gap-8"
+              role="group"
+            >
+              {publicReportsResult.totalCount > 0 && (
+                <BillInterviewOpinionsSection
+                  billId={bill.id}
+                  reports={publicReportsResult.reports}
+                  totalCount={publicReportsResult.totalCount}
+                />
+              )}
+
+              {siteConfig.features.aiInterview && interviewConfig != null && (
+                <InterviewLandingSection billId={bill.id} />
+              )}
+
+              <BillShareButtons bill={bill} />
+            </div>
+
+            {/* 11. 免責 */}
+            <BillDisclaimer />
+          </div>
         </Container>
       </BillDetailClient>
-
-      <Container>
-        {publicReportsResult.totalCount > 0 && (
-          <div className="my-8">
-            <BillInterviewOpinionsSection
-              billId={bill.id}
-              reports={publicReportsResult.reports}
-              totalCount={publicReportsResult.totalCount}
-            />
-          </div>
-        )}
-        {siteConfig.features.aiInterview && interviewConfig != null && (
-          <div className="my-8">
-            <InterviewLandingSection billId={bill.id} />
-          </div>
-        )}
-        {showStances && (
-          <div className="my-8">
-            <FactionStanceCard
-              stances={bill.faction_stances ?? []}
-              billStatus={bill.status}
-            />
-          </div>
-        )}
-        {/* シェアボタン */}
-        <div className="my-8">
-          <BillShareButtons bill={bill} />
-        </div>
-
-        {/* データの出典と免責事項 */}
-        <div className="my-8 space-y-6">
-          <BillSourceLinks bill={bill} />
-          <BillDisclaimer />
-        </div>
-      </Container>
     </div>
   );
 }

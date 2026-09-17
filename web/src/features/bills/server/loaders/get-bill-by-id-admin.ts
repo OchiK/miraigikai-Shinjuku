@@ -43,8 +43,11 @@ export async function getBillByIdAdmin(
       .filter((tag): tag is { id: string; label: string } => tag !== null) ??
     [];
 
+  const { council_sessions, ...billColumns } = bill;
+
   return {
-    ...bill,
+    ...billColumns,
+    council_session: council_sessions ?? null,
     faction_stances: factionStances.length > 0 ? factionStances : undefined,
     bill_content: billContent || undefined,
     tags,
