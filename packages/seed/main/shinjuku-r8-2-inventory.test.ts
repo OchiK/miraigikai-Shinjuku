@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   R8_2_DECISIONS_URL,
   R8_2_OFFICIAL_LABELS,
+  R8_2_PUBLISHED_AT,
   R8_2_SESSION,
   R8_2_SUBMISSIONS_URL,
   type ShinjukuSessionItem,
@@ -225,28 +226,20 @@ describe("公開可否", () => {
     }
   });
 
-  it("published_at は会期末日であり、時刻付きの議決日時を作らない", () => {
-    const published = toBillInserts().filter((b) => b.published_at != null);
-    expect(published).not.toHaveLength(0);
-    for (const bill of published) {
-      expect(bill.published_at).toBe("2026-06-19T00:00:00+09:00");
-    }
+  it("公開時に使う published_at は会期末日であり、議決日時を推定しない", () => {
+    expect(R8_2_PUBLISHED_AT).toBe("2026-06-19T00:00:00+09:00");
+    expect(toBillInserts().every((bill) => bill.published_at === null)).toBe(
+      true
+    );
   });
 
-  it("公開対象はステップ3で監査した5件のみ", () => {
-    // ステップ4パイロットの3件（第43・44号議案、承認第2号）は解説を持つが、
-    // 公開レビュー担当が未確定のため published にしていない。
-    // 解説の件数だけで一括して公開に切り替えないよう、slug を明示して固定する。
+  it("公開レビュー未了の全23件を coming_soon に留める", () => {
+    // 全件が解説を持つが、公開レビュー担当が未確定のため published にしない。
+    // 解説の件数だけで一括して公開へ切り替えないことを固定する。
     const published = toBillInserts().filter(
       (b) => b.publish_status === "published"
     );
-    expect(published.map((b) => b.slug).sort()).toEqual([
-      "shinjuku-2026-r2-gian-42",
-      "shinjuku-2026-r2-gian-49",
-      "shinjuku-2026-r2-gian-51",
-      "shinjuku-2026-r2-gian-53",
-      "shinjuku-2026-r2-gian-58",
-    ]);
+    expect(published).toEqual([]);
   });
 
   it("承認第2号・第3号はいずれも coming_soon で、slug で区別できる", () => {
