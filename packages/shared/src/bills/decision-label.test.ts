@@ -25,13 +25,51 @@ describe("resolveOfficialDecisionTerm", () => {
     ).toBe("原案可決");
   });
 
-  it("「不採択」を「採択」より先に判定する", () => {
+  it.each([
+    ["本会議で不採択", "不採択"],
+    ["本会議で不承認", "不承認"],
+    ["本会議で不同意", "不同意"],
+    ["本会議で不認定", "不認定"],
+  ])(
+    "否定形を肯定形として拾わない: %s",
+    (statusNote, expected) => {
+      expect(
+        resolveOfficialDecisionTerm({ status: "rejected", statusNote })?.term
+      ).toBe(expected);
+    }
+  );
+
+  it.each([
+    ["本会議で不承認", "dark"],
+    ["本会議で不同意", "dark"],
+    ["本会議で不認定", "dark"],
+    ["本会議で不採択", "dark"],
+  ])("否定形の variant は否決側にする: %s", (statusNote, expected) => {
     expect(
-      resolveOfficialDecisionTerm({
+      resolveOfficialDecisionTerm({ status: "rejected", statusNote })?.variant
+    ).toBe(expected);
+  });
+
+  it("肯定形と否定形が同じラベルにならない", () => {
+    const pairs: [string, string][] = [
+      ["本会議で承認", "本会議で不承認"],
+      ["本会議で同意", "本会議で不同意"],
+      ["本会議で認定", "本会議で不認定"],
+      ["本会議で採択", "本会議で不採択"],
+    ];
+
+    for (const [positive, negative] of pairs) {
+      const positiveTerm = resolveOfficialDecisionTerm({
+        status: "approved",
+        statusNote: positive,
+      });
+      const negativeTerm = resolveOfficialDecisionTerm({
         status: "rejected",
-        statusNote: "本会議で不採択",
-      })?.term
-    ).toBe("不採択");
+        statusNote: negative,
+      });
+
+      expect(positiveTerm?.label).not.toBe(negativeTerm?.label);
+    }
   });
 
   it("審議中のステータスでは status_note を参照しない", () => {
@@ -63,6 +101,12 @@ describe("resolveOfficialDecisionTerm", () => {
 });
 
 describe("getBillStatusLabel", () => {
+  it("不承認を「承認」と表示しない", () => {
+    expect(
+      getBillStatusLabel({ status: "rejected", statusNote: "本会議で不承認" })
+    ).toBe("不承認");
+  });
+
   it("専決処分の承認を「可決」ではなく「承認」と表示する", () => {
     expect(
       getBillStatusLabel({ status: "approved", statusNote: "本会議で承認" })

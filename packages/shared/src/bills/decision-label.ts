@@ -50,8 +50,11 @@ interface OfficialDecisionTerm {
 /**
  * 認識する公式の議決用語。
  *
- * 前方の要素から順に部分一致を見るため、長い用語を先に置くこと
- *（「原案可決」より先に「可決」を置くと「原案可決」を拾えない）。
+ * 否決側の用語（不承認・不同意・不認定・不採択）は、肯定側の用語を部分文字列として
+ * 含む。「不承認」に「承認」が含まれるため、単純な部分一致では否決を可決側として
+ * 表示してしまう。これを配列の記述順で避けるのは壊れやすいので、
+ * 実際の判定では用語の長い順に並べ替えて最長一致を採る（MATCHED_TERMS を参照）。
+ * ここでの記述順は表示上の意味を持たない。
  *
  * 「原案可決」の表示は「可決」のままにしている。公式用語をそのまま出すと
  * 大半の議案が「原案可決」になり、やさしい言葉で伝えるという本サイトの方針から
@@ -60,15 +63,29 @@ interface OfficialDecisionTerm {
 const OFFICIAL_DECISION_TERMS: OfficialDecisionTerm[] = [
   { term: "原案可決", label: "可決", variant: "default" },
   { term: "修正可決", label: "修正可決", variant: "default" },
+  { term: "可決", label: "可決", variant: "default" },
+  { term: "否決", label: "否決", variant: "dark" },
+  { term: "承認", label: "承認", variant: "default" },
+  { term: "不承認", label: "不承認", variant: "dark" },
+  { term: "同意", label: "同意", variant: "default" },
+  { term: "不同意", label: "不同意", variant: "dark" },
+  { term: "認定", label: "認定", variant: "default" },
+  { term: "不認定", label: "不認定", variant: "dark" },
+  { term: "採択", label: "採択", variant: "default" },
   { term: "趣旨採択", label: "趣旨採択", variant: "default" },
   { term: "不採択", label: "不採択", variant: "dark" },
-  { term: "承認", label: "承認", variant: "default" },
-  { term: "同意", label: "同意", variant: "default" },
-  { term: "認定", label: "認定", variant: "default" },
-  { term: "採択", label: "採択", variant: "default" },
-  { term: "否決", label: "否決", variant: "dark" },
-  { term: "可決", label: "可決", variant: "default" },
 ];
+
+/**
+ * 判定に使う用語一覧。長い用語を先に見ることで最長一致にする。
+ *
+ * 「不承認」(3文字) は「承認」(2文字) より先に評価されるため、
+ * 否定形を肯定形として拾うことがない。用語を追加するときも記述順を
+ * 気にしなくてよい。
+ */
+const MATCHED_TERMS: readonly OfficialDecisionTerm[] = [
+  ...OFFICIAL_DECISION_TERMS,
+].sort((a, b) => b.term.length - a.term.length);
 
 /**
  * 議決が済んだステータス。
@@ -98,7 +115,7 @@ export function resolveOfficialDecisionTerm({
     return null;
   }
 
-  return OFFICIAL_DECISION_TERMS.find((d) => note.includes(d.term)) ?? null;
+  return MATCHED_TERMS.find((d) => note.includes(d.term)) ?? null;
 }
 
 /** 列挙から引く詳細ラベル（議決用語が取れない場合のフォールバック） */
