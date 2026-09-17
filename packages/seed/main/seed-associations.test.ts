@@ -77,13 +77,51 @@ describe("createBillContents", () => {
     }
   });
 
-  it("解説が付くのは第42・49・51・53・58号議案のみ", () => {
+  it("解説が付くのは出典突合を終えた8件のみ", () => {
+    // ステップ3の5件 + ステップ4パイロットの3件（第43・44号議案、承認第2号）。
+    // 残る15件は一次資料との突合が未了のため、解説を持たない。
     expect([...new Set(billContentsWithBillSlug.map((c) => c.bill_slug))].sort()).toEqual([
       "shinjuku-2026-r2-gian-42",
+      "shinjuku-2026-r2-gian-43",
+      "shinjuku-2026-r2-gian-44",
       "shinjuku-2026-r2-gian-49",
       "shinjuku-2026-r2-gian-51",
       "shinjuku-2026-r2-gian-53",
       "shinjuku-2026-r2-gian-58",
+      "shinjuku-2026-r2-shonin-2",
+    ]);
+  });
+
+  it("解説を持つ議案はすべて normal と hard の2種をそろえる", () => {
+    // 片方だけだと難易度切り替えで空表示になる。
+    const byBill = new Map<string, Set<string>>();
+    for (const c of billContentsWithBillSlug) {
+      const levels = byBill.get(c.bill_slug) ?? new Set<string>();
+      levels.add(c.difficulty_level);
+      byBill.set(c.bill_slug, levels);
+    }
+
+    for (const [slug, levels] of byBill) {
+      expect([...levels].sort(), slug).toEqual(["hard", "normal"]);
+    }
+  });
+
+  it("(bill_slug, difficulty_level) の組に重複がない", () => {
+    const keys = billContentsWithBillSlug.map(
+      (c) => `${c.bill_slug}:${c.difficulty_level}`
+    );
+    expect(new Set(keys).size).toBe(keys.length);
+  });
+
+  it("承認案件の解説は承認の slug に付く（件名が重複するため slug でのみ特定できる）", () => {
+    const shoninContents = billContentsWithBillSlug.filter((c) =>
+      c.bill_slug.startsWith("shinjuku-2026-r2-shonin-")
+    );
+    expect(
+      shoninContents.map((c) => [c.bill_slug, c.difficulty_level])
+    ).toEqual([
+      ["shinjuku-2026-r2-shonin-2", "normal"],
+      ["shinjuku-2026-r2-shonin-2", "hard"],
     ]);
   });
 
@@ -111,12 +149,15 @@ describe("createBillsTags", () => {
       "shinjuku-2026-r2-gian-49": "多文化共生・手続き",
       "shinjuku-2026-r2-gian-51": "子育て・教育",
       "shinjuku-2026-r2-gian-58": "文化・生涯学習",
+      "shinjuku-2026-r2-gian-43": "くらし・行財政",
+      "shinjuku-2026-r2-gian-44": "くらし・行財政",
+      "shinjuku-2026-r2-shonin-2": "くらし・行財政",
     });
   });
 
   it("タグ未設定の議案には bills_tags を作らない", () => {
     const billsTags = createBillsTags(insertedBills, insertedTags);
-    expect(billsTags).toHaveLength(5);
+    expect(billsTags).toHaveLength(8);
   });
 });
 

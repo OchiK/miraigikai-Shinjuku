@@ -1,5 +1,7 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, it, test } from "vitest";
 import {
+  buildBillProgressStatusMessage,
+  buildBillProgressSteps,
   calculateProgressWidth,
   getCurrentStep,
   getOrderedSteps,
@@ -124,5 +126,83 @@ describe("getCurrentStep", () => {
 
   test("rejected は 4", () => {
     expect(getCurrentStep("rejected")).toBe(4);
+  });
+});
+
+describe("buildBillProgressSteps", () => {
+  it("原案可決の議案は最終ステップが「可決／否決」", () => {
+    const steps = buildBillProgressSteps({
+      status: "approved",
+      statusNote: "本会議で原案可決",
+    });
+    expect(steps).toHaveLength(4);
+    expect(steps.at(-1)?.label).toBe("可決\n/否決");
+  });
+
+  it("専決処分の承認は最終ステップが「承認／不承認」", () => {
+    // 承認案件に「可決／否決」を出すと、存在しない議決の選択肢を並べることになる。
+    const steps = buildBillProgressSteps({
+      status: "approved",
+      statusNote: "本会議で承認",
+    });
+    expect(steps.at(-1)?.label).toBe("承認\n/不承認");
+  });
+
+  it("status_note が無ければ「可決／否決」にフォールバックする", () => {
+    expect(buildBillProgressSteps({ status: "approved" }).at(-1)?.label).toBe(
+      "可決\n/否決"
+    );
+  });
+
+  it("議決前の3ステップは議決用語に関わらず同じ", () => {
+    const gian = buildBillProgressSteps({
+      status: "approved",
+      statusNote: "本会議で原案可決",
+    });
+    const shonin = buildBillProgressSteps({
+      status: "approved",
+      statusNote: "本会議で承認",
+    });
+    expect(gian.slice(0, 3)).toEqual(shonin.slice(0, 3));
+    expect(gian.slice(0, 3).map((s) => s.label)).toEqual([
+      "議案\n上程",
+      "委員会\n審査",
+      "本会議\n採決",
+    ]);
+  });
+});
+
+describe("buildBillProgressStatusMessage", () => {
+  it("専決処分の承認は「承認」", () => {
+    expect(
+      buildBillProgressStatusMessage({
+        status: "approved",
+        statusNote: "本会議で承認",
+      })
+    ).toBe("承認");
+  });
+
+  it("原案可決の議案は「可決」", () => {
+    expect(
+      buildBillProgressStatusMessage({
+        status: "approved",
+        statusNote: "本会議で原案可決",
+      })
+    ).toBe("可決");
+  });
+
+  it("上程前は共有ラベルの「準備中」ではなく「議案上程前」", () => {
+    expect(buildBillProgressStatusMessage({ status: "preparing" })).toBe(
+      "議案上程前"
+    );
+  });
+
+  it("審議中のステータスは列挙のラベルを返す", () => {
+    expect(buildBillProgressStatusMessage({ status: "in_committee" })).toBe(
+      "委員会審査中"
+    );
+    expect(buildBillProgressStatusMessage({ status: "submitted" })).toBe(
+      "上程済み"
+    );
   });
 });

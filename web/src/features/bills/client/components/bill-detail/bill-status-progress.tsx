@@ -1,5 +1,7 @@
 import type { BillStatusEnum } from "../../../shared/types";
 import {
+  buildBillProgressStatusMessage,
+  buildBillProgressSteps,
   calculateProgressWidth,
   getCurrentStep,
   getOrderedSteps,
@@ -21,27 +23,6 @@ interface ProgressStepProps {
   isActive: boolean;
   isPreparing: boolean;
 }
-
-// 基本ステップ定義（地方議会: 一院制）
-const BASE_STEPS = [
-  { label: "議案\n上程" },
-  { label: "委員会\n審査" },
-  { label: "本会議\n採決" },
-  { label: "可決\n/否決" },
-] as const;
-
-// ステータスラベル
-const STATUS_LABELS: Record<BillStatusEnum, string> = {
-  preparing: "議案上程前",
-  submitted: "上程済み",
-  in_committee: "委員会審査中",
-  plenary_session: "本会議採決中",
-  approved: "可決",
-  rejected: "否決",
-  adopted: "採択",
-  partially_adopted: "趣旨採択",
-  reported: "専決処分報告",
-};
 
 // ステータスバッジコンポーネント
 function StatusBadge({ message }: StatusBadgeProps) {
@@ -109,14 +90,17 @@ export function BillStatusProgress({
 }: BillStatusProgressProps) {
   const isPreparing = status === "preparing";
   const currentStep = getCurrentStep(status);
-  const statusMessage = STATUS_LABELS[status] ?? "";
+  // 議決用語は status_note から取る。status 列挙だけでは、専決処分の承認
+  // （status = approved）を「可決」と誤表示する。
+  const statusMessage = buildBillProgressStatusMessage({ status, statusNote });
+  const baseSteps = buildBillProgressSteps({ status, statusNote });
 
   const getStepState = (stepNumber: number): "active" | "inactive" => {
     if (isPreparing) return "inactive";
     return stepNumber <= currentStep ? "active" : "inactive";
   };
 
-  const orderedSteps = getOrderedSteps(BASE_STEPS);
+  const orderedSteps = getOrderedSteps(baseSteps);
   const progressWidth = calculateProgressWidth(currentStep);
 
   return (

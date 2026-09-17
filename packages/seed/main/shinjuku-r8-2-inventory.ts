@@ -115,7 +115,7 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000457641"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "承認",
-    hasPublishableContent: false,
+    hasPublishableContent: true,
     isFeatured: false,
   },
   {
@@ -148,7 +148,7 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000457640"),
     overviewPdfUrl: OVERVIEW_BUDGET_3,
     decision: "原案可決",
-    hasPublishableContent: false,
+    hasPublishableContent: true,
     isFeatured: false,
   },
   {
@@ -159,7 +159,7 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000457643"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    hasPublishableContent: false,
+    hasPublishableContent: true,
     isFeatured: false,
   },
   {

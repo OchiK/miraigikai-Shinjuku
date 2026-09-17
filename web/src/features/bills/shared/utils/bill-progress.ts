@@ -1,3 +1,8 @@
+import type { BillDecisionInput } from "@mirai-gikai/shared/bills/decision-label";
+import {
+  getBillStatusLabel,
+  getDecisionStepLabel,
+} from "@mirai-gikai/shared/bills/decision-label";
 import type { BillStatusEnum } from "../types";
 
 // ステップ番号マッピング（地方議会: 一院制）
@@ -61,4 +66,45 @@ export function calculateProgressWidth(currentStep: number): number {
  */
 export function getCurrentStep(status: BillStatusEnum): number {
   return STATUS_TO_STEP[status] ?? 0;
+}
+
+/**
+ * 議決前の3ステップ（地方議会: 一院制）。
+ *
+ * 最終ステップの見出しは議決用語によって変わるため、ここには含めない。
+ */
+const PRE_DECISION_STEP_LABELS = [
+  "議案\n上程",
+  "委員会\n審査",
+  "本会議\n採決",
+] as const;
+
+/**
+ * 進捗表示のステップ一覧を組み立てる。
+ *
+ * 最終ステップを「可決／否決」で固定すると、専決処分の承認（承認第2号・第3号）の
+ * 詳細ページに、存在しない議決の選択肢が並ぶ。議決用語は status_note から取る。
+ */
+export function buildBillProgressSteps(
+  input: BillDecisionInput
+): { label: string }[] {
+  const decision = getDecisionStepLabel(input);
+
+  return [
+    ...PRE_DECISION_STEP_LABELS.map((label) => ({ label })),
+    { label: `${decision.positive}\n/${decision.negative}` },
+  ];
+}
+
+/**
+ * 進捗表示のバッジに出す文言。
+ *
+ * 上程前だけは、この進捗表示では共有ラベルの「準備中」ではなく
+ * 「議案上程前」と呼んできたので、従来の文言を維持する。
+ */
+export function buildBillProgressStatusMessage(
+  input: BillDecisionInput
+): string {
+  if (input.status === "preparing") return "議案上程前";
+  return getBillStatusLabel(input);
 }

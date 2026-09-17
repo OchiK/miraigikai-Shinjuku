@@ -120,8 +120,11 @@ export function BillListWithStatusFilter({
     label: string;
   }[] = [
     { key: "all", label: "ALL" },
-    { key: "approved", label: "可決" },
-    { key: "rejected", label: "否決" },
+    // status 列挙での絞り込みであり、approved には原案可決の議案と
+    // 専決処分の承認（承認第2号・第3号）が混在する。「可決」だけを掲げると
+    // 承認案件を可決と呼ぶことになるため、両方の用語を label に出す。
+    { key: "approved", label: "可決・承認" },
+    { key: "rejected", label: "否決・不承認" },
     { key: "other", label: "その他" },
   ];
 

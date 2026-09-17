@@ -39,12 +39,31 @@ export interface BillDecisionInput {
   statusNote?: string | null;
 }
 
+/**
+ * 進捗表示の最終ステップに出す、肯定形と否定形の組。
+ *
+ * 議案は可決／否決だが、専決処分の承認は承認／不承認であり、請願は採択／不採択である。
+ * 固定文言にすると、その議案では起こりえない議決の選択肢を並べることになる。
+ */
+export interface DecisionStepLabel {
+  positive: string;
+  negative: string;
+}
+
+const KAKETSU: DecisionStepLabel = { positive: "可決", negative: "否決" };
+const SHONIN: DecisionStepLabel = { positive: "承認", negative: "不承認" };
+const DOI: DecisionStepLabel = { positive: "同意", negative: "不同意" };
+const NINTEI: DecisionStepLabel = { positive: "認定", negative: "不認定" };
+const SAITAKU: DecisionStepLabel = { positive: "採択", negative: "不採択" };
+
 interface OfficialDecisionTerm {
   /** status_note の中から探す公式用語 */
   term: string;
   /** 画面に出すラベル */
   label: string;
   variant: BillStatusVariant;
+  /** 進捗表示の最終ステップに出す組。用語ごとに1か所で決める */
+  stepPair: DecisionStepLabel;
 }
 
 /**
@@ -61,19 +80,29 @@ interface OfficialDecisionTerm {
  * 離れるため。区別が必要なのは可決と承認のように意味の異なる用語である。
  */
 const OFFICIAL_DECISION_TERMS: OfficialDecisionTerm[] = [
-  { term: "原案可決", label: "可決", variant: "default" },
-  { term: "修正可決", label: "修正可決", variant: "default" },
-  { term: "可決", label: "可決", variant: "default" },
-  { term: "否決", label: "否決", variant: "dark" },
-  { term: "承認", label: "承認", variant: "default" },
-  { term: "不承認", label: "不承認", variant: "dark" },
-  { term: "同意", label: "同意", variant: "default" },
-  { term: "不同意", label: "不同意", variant: "dark" },
-  { term: "認定", label: "認定", variant: "default" },
-  { term: "不認定", label: "不認定", variant: "dark" },
-  { term: "採択", label: "採択", variant: "default" },
-  { term: "趣旨採択", label: "趣旨採択", variant: "default" },
-  { term: "不採択", label: "不採択", variant: "dark" },
+  { term: "原案可決", label: "可決", variant: "default", stepPair: KAKETSU },
+  {
+    term: "修正可決",
+    label: "修正可決",
+    variant: "default",
+    stepPair: KAKETSU,
+  },
+  { term: "可決", label: "可決", variant: "default", stepPair: KAKETSU },
+  { term: "否決", label: "否決", variant: "dark", stepPair: KAKETSU },
+  { term: "承認", label: "承認", variant: "default", stepPair: SHONIN },
+  { term: "不承認", label: "不承認", variant: "dark", stepPair: SHONIN },
+  { term: "同意", label: "同意", variant: "default", stepPair: DOI },
+  { term: "不同意", label: "不同意", variant: "dark", stepPair: DOI },
+  { term: "認定", label: "認定", variant: "default", stepPair: NINTEI },
+  { term: "不認定", label: "不認定", variant: "dark", stepPair: NINTEI },
+  { term: "採択", label: "採択", variant: "default", stepPair: SAITAKU },
+  {
+    term: "趣旨採択",
+    label: "趣旨採択",
+    variant: "default",
+    stepPair: SAITAKU,
+  },
+  { term: "不採択", label: "不採択", variant: "dark", stepPair: SAITAKU },
 ];
 
 /**
@@ -205,4 +234,16 @@ export function getBillStatusVariant(
     default:
       return "muted";
   }
+}
+
+/**
+ * 審議ステータスの進捗表示で、最終ステップに出す見出しを返す。
+ *
+ * status_note から公式の議決用語が取れる場合は、その用語に対応する組を返す。
+ * 取れない場合（審議中、status_note が空、未知の用語）は「可決／否決」を返す。
+ */
+export function getDecisionStepLabel(
+  input: BillDecisionInput
+): DecisionStepLabel {
+  return resolveOfficialDecisionTerm(input)?.stepPair ?? KAKETSU;
 }
