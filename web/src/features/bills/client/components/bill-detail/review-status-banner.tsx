@@ -43,7 +43,7 @@ function ReviewCheckIcon({
  */
 export function ReviewInProgressBanner() {
   return (
-    <div className="flex gap-2 items-center rounded-2xl bg-mirai-surface-gray px-4 py-2">
+    <div className="flex gap-2 items-center rounded-2xl bg-neutral-200 px-4 py-2">
       <Info className="size-5 shrink-0 text-mirai-text" />
       <p className="text-[13px] font-medium leading-[1.5] text-mirai-text">
         この記事はAI生成による要約・下書きを含みます。公式一次資料との照合を順次進めており、今後内容が変更されることがあります。
@@ -116,7 +116,7 @@ export function ReviewCompleteBadge({
       <TooltipContent
         side="bottom"
         align="start"
-        className="bg-mirai-surface-gray text-mirai-text font-medium text-xs rounded-lg px-4 py-2"
+        className="bg-neutral-200 text-mirai-text font-medium text-xs rounded-lg px-4 py-2"
       >
         この記事は公式一次資料との照合および
         <br />

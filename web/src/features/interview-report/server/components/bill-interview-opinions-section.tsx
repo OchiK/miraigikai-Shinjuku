@@ -59,7 +59,7 @@ export async function BillInterviewOpinionsSection({
 
           {/* もっと読むリンク（グラデーションオーバーレイ付き） */}
           {totalCount > reports.length && (
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[164px] bg-mirai-white-fade rounded-b-2xl z-10">
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[164px] bg-mirai-warm-fade rounded-b-2xl z-10">
               <div className="absolute inset-x-0 bottom-6 flex justify-center pointer-events-auto">
                 <Button
                   variant="outline"

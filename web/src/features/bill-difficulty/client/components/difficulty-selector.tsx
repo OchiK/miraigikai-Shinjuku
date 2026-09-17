@@ -78,7 +78,7 @@ export function DifficultySelector({
 
   return (
     <div
-      className="flex shrink-0 items-center gap-0.5 rounded-full bg-mirai-surface-muted p-0.5 md:gap-1 md:p-1"
+      className="flex shrink-0 items-center gap-0.5 rounded-full bg-neutral-200 p-0.5 md:gap-1 md:p-1"
       role="group"
       aria-label="説明の詳しさを切り替え"
     >

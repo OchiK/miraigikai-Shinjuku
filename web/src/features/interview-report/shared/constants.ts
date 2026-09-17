@@ -14,18 +14,18 @@ export const stanceLabels: Record<string, string> = {
  * スタンスのテキストカラーマッピング（Tailwind CSS クラス）
  */
 export const stanceTextColors: Record<string, string> = {
-  for: "text-mirai-accent-text",
-  against: "text-stance-against-light",
-  neutral: "text-stance-neutral",
+  for: "text-mirai-vote-for-text",
+  against: "text-mirai-vote-against-text",
+  neutral: "text-status-continued",
 };
 
 /**
  * スタンスバッジの背景スタイルマッピング
  */
 export const stanceBadgeBgStyles: Record<string, string> = {
-  for: "bg-linear-to-b from-stance-for-badge-start to-stance-for-badge-end",
-  against: "bg-stance-against-badge-bg",
-  neutral: "bg-stance-neutral-badge-bg",
+  for: "bg-mirai-vote-for-bg",
+  against: "bg-mirai-vote-against-bg",
+  neutral: "bg-status-continued-bg",
 };
 
 /**

@@ -17,7 +17,7 @@ export function getStanceStyles(
 ): StanceStyles {
   if (isPreparing) {
     return {
-      bg: "bg-white",
+      bg: "bg-card",
       border: "border-mirai-text-muted",
       textColor: "text-mirai-text-muted",
       label: "議案提出前",
@@ -28,21 +28,21 @@ export function getStanceStyles(
     case "for":
     case "conditional_for":
       return {
-        bg: "bg-stance-for-bg",
-        textColor: "text-mirai-accent-text",
+        bg: "bg-mirai-vote-for-bg",
+        textColor: "text-mirai-vote-for-text",
         label: STANCE_LABELS[stance.type],
       };
     case "against":
     case "conditional_against":
       return {
-        bg: "bg-stance-against-bg",
-        textColor: "text-stance-against",
+        bg: "bg-mirai-vote-against-bg",
+        textColor: "text-mirai-vote-against-text",
         label: STANCE_LABELS[stance.type],
       };
     default:
       return {
-        bg: "bg-mirai-surface-muted",
-        textColor: "text-black",
+        bg: "bg-status-review-bg",
+        textColor: "text-mirai-text",
         label: stance != null ? STANCE_LABELS[stance.type] : "中立",
       };
   }

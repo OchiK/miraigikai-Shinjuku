@@ -200,11 +200,11 @@ function ChatMessage({ message }: ChatMessageProps) {
       id={`message-${message.id}`}
       className="flex flex-col items-end gap-2 scroll-mt-24"
     >
-      <div className="w-9 h-9 rounded-full bg-mirai-light-gradient flex items-center justify-center">
-        <UserRound size={20} className="text-gray-600" />
+      <div className="w-9 h-9 rounded-full bg-mirai-chat-self flex items-center justify-center">
+        <UserRound size={20} className="text-mirai-chat-self-text" />
       </div>
-      <div className="bg-mirai-light-gradient rounded-2xl px-4 py-3 max-w-[85%]">
-        <p className="text-sm font-medium leading-relaxed whitespace-pre-wrap text-gray-800">
+      <div className="bg-mirai-chat-self rounded-2xl px-4 py-3 max-w-[85%]">
+        <p className="text-sm font-medium leading-relaxed whitespace-pre-wrap text-mirai-chat-self-text">
           {message.content}
         </p>
       </div>

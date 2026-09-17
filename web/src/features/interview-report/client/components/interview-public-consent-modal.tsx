@@ -50,7 +50,7 @@ export function InterviewPublicConsentModal({
           <DialogTitle className="text-[22px] font-bold text-center">
             公開設定
           </DialogTitle>
-          <div className="h-[1px] bg-mirai-gradient mt-4" />
+          <div className="h-[1px] bg-mirai-border mt-4" />
         </DialogHeader>
 
         <div className="space-y-6 mt-6">

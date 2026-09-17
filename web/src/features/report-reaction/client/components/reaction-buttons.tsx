@@ -61,13 +61,13 @@ export function ReactionButtons({
                   size={20}
                   className={`transition-colors ${
                     isActive
-                      ? "text-mirai-reaction-active fill-mirai-reaction-active"
+                      ? "text-status-rejected fill-status-rejected"
                       : "text-gray-800"
                   }`}
                 />
                 <span
                   className={`text-[15px] font-bold transition-colors ${
-                    isActive ? "text-mirai-reaction-active" : "text-gray-800"
+                    isActive ? "text-status-rejected" : "text-gray-800"
                   }`}
                 >
                   参考になる
@@ -75,7 +75,7 @@ export function ReactionButtons({
                 {data.counts.helpful > 0 && (
                   <span
                     className={`text-[15px] font-bold transition-colors ${
-                      isActive ? "text-mirai-reaction-active" : "text-gray-800"
+                      isActive ? "text-status-rejected" : "text-gray-800"
                     }`}
                   >
                     {data.counts.helpful}

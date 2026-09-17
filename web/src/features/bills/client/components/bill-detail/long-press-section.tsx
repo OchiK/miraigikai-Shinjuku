@@ -17,7 +17,7 @@ export function LongPressSection() {
           <p className="text-mirai-text text-base font-medium leading-[1.2] font-noto-sans !mt-0 !mb-0">
             <span className="inline-block px-1">わからない言葉を</span>
             <br className="pc:hidden" />
-            <span className="inline-block bg-mirai-info-blue px-1">
+            <span className="inline-block bg-sage-200 px-1">
               <span className="pc:hidden">
                 <ManualRuby ruby="なが">長</ManualRuby>押しで
               </span>

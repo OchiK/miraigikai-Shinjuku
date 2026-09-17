@@ -142,8 +142,8 @@ export function BillListWithStatusFilter({
             onClick={() => setActiveStatusFilter(filter.key)}
             className={`h-[29px] px-4 py-1.5 rounded-full text-sm font-bold transition-colors ${
               activeStatusFilter === filter.key
-                ? "bg-mirai-gradient text-black hover:bg-mirai-gradient"
-                : "bg-mirai-surface-grouped text-mirai-text-muted hover:bg-mirai-surface-muted"
+                ? "bg-primary text-primary-foreground hover:bg-primary-accent hover:text-primary-foreground"
+                : "bg-neutral-200 text-mirai-text-muted hover:bg-neutral-300 hover:text-mirai-text-muted"
             }`}
           >
             {filter.label}
@@ -159,8 +159,8 @@ export function BillListWithStatusFilter({
             onClick={() => setActiveTagId(null)}
             className={`h-[29px] px-4 py-1.5 rounded-full text-xs font-bold transition-colors ${
               activeTagId === null
-                ? "bg-mirai-gradient text-black hover:bg-mirai-gradient"
-                : "bg-mirai-surface-grouped text-mirai-text-muted hover:bg-mirai-surface-muted"
+                ? "bg-primary text-primary-foreground hover:bg-primary-accent hover:text-primary-foreground"
+                : "bg-neutral-200 text-mirai-text-muted hover:bg-neutral-300 hover:text-mirai-text-muted"
             }`}
           >
             すべてのタグ
@@ -172,8 +172,8 @@ export function BillListWithStatusFilter({
               onClick={() => setActiveTagId(tag.id)}
               className={`h-[29px] px-4 py-1.5 rounded-full text-xs font-bold transition-colors ${
                 activeTagId === tag.id
-                  ? "bg-mirai-gradient text-black hover:bg-mirai-gradient"
-                  : "bg-mirai-surface-grouped text-mirai-text-muted hover:bg-mirai-surface-muted"
+                  ? "bg-primary text-primary-foreground hover:bg-primary-accent hover:text-primary-foreground"
+                  : "bg-neutral-200 text-mirai-text-muted hover:bg-neutral-300 hover:text-mirai-text-muted"
               }`}
             >
               {tag.label}
@@ -220,7 +220,7 @@ export function BillListWithStatusFilter({
                       <CardContent className="flex items-center justify-between py-4 px-5">
                         <div className="flex flex-col gap-1 min-w-0">
                           {identifier && (
-                            <p className="text-xs font-bold text-mirai-text-subtle">
+                            <p className="text-xs font-bold text-mirai-text-muted">
                               {identifier}
                             </p>
                           )}
@@ -228,7 +228,7 @@ export function BillListWithStatusFilter({
                             {title}
                           </h4>
                           {officialName && (
-                            <p className="text-xs text-mirai-text-subtle">
+                            <p className="text-xs text-mirai-text-muted">
                               {officialName}
                             </p>
                           )}

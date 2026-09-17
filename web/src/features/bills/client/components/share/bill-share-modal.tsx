@@ -9,6 +9,7 @@ import {
   shareOnThreads,
   shareOnTwitter,
 } from "@/features/bills/client/utils/share-handlers";
+import { Button } from "@/components/ui/button";
 
 interface BillShareModalProps {
   isOpen: boolean;
@@ -130,13 +131,14 @@ export function BillShareModal({
         </div>
 
         {/* 閉じるボタン */}
-        <button
+        <Button
           type="button"
+          variant="outline"
           onClick={onClose}
-          className="w-[287px] max-w-full rounded-full px-6 py-3 font-bold text-base bg-mirai-gradient text-gray-800 border border-gray-800"
+          className="w-[287px] max-w-full rounded-full px-6 py-3 h-auto font-bold text-base"
         >
           このまま閉じる
-        </button>
+        </Button>
       </div>
     </div>
   );

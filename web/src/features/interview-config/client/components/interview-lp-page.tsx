@@ -320,7 +320,7 @@ export function InterviewLPPage({
   userReports,
 }: InterviewLPPageProps) {
   return (
-    <div className="flex flex-col gap-8 pb-8 bg-mirai-light-gradient">
+    <div className="flex flex-col gap-8 pb-8 bg-background">
       <_InterviewLPHeader bill={bill} />
       <div className="flex flex-col items-center gap-8 px-4">
         <_InterviewLPHero

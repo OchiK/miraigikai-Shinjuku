@@ -91,7 +91,7 @@ export function ReportCard({ report, children, href }: ReportCardProps) {
                 </span>
               )}
               {roleLabel && (
-                <div className="flex items-center gap-1 text-mirai-text-subtle flex-shrink-0">
+                <div className="flex items-center gap-1 text-mirai-text-muted flex-shrink-0">
                   {RoleIcon && <RoleIcon size={16} className="flex-shrink-0" />}
                   <span className="text-xs leading-3">{roleLabel}</span>
                 </div>

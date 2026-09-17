@@ -45,7 +45,7 @@ function RatingPhase({
             <Star
               className={`size-6 ${
                 selectedRating !== null && star <= selectedRating
-                  ? "fill-mirai-star text-mirai-star"
+                  ? "fill-terracotta-500 text-terracotta-500"
                   : "fill-white text-mirai-text-muted stroke-[0.5]"
               }`}
             />
@@ -207,7 +207,7 @@ export function InterviewRatingWidget({
         variant="ghost"
         size="icon"
         onClick={phase === "feedback" ? handleDismissToThankYou : onDismiss}
-        className="absolute right-2 top-2 h-[22px] w-[22px] p-0 text-mirai-text-close hover:bg-transparent hover:text-gray-500"
+        className="absolute right-2 top-2 h-[22px] w-[22px] p-0 text-mirai-text-muted hover:bg-transparent hover:text-gray-500"
         aria-label="閉じる"
       >
         <X size={11} strokeWidth={2} />
