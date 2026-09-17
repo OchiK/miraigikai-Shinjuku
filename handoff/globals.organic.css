@@ -1,0 +1,229 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   Organic tokens for みらい議会＠新宿区
+   Drop-in replacement for the token sections of web/src/app/globals.css.
+
+   Replace:
+     1. the `--color-mirai-*` block inside `@theme inline`
+     2. the whole `:root { ... }` block
+     3. the `@layer components` gradient helpers
+   Keep everything else (imports, @custom-variant, breakpoints, @layer base).
+
+   Rule (AGENTS.md): never write a hex inline. Every colour a component uses
+   must exist here first as a token.
+   ───────────────────────────────────────────────────────────────────────── */
+
+@theme inline {
+  /* --- breakpoints: unchanged --- */
+  --breakpoint-sm: 500px;
+  --breakpoint-md: 700px;
+  --breakpoint-pc: 1000px;
+  --breakpoint-pcl: 1400px;
+
+  /* --- type ---------------------------------------------------------------
+     Caprasimo has no Japanese glyphs. Latin display stays Caprasimo; Japanese
+     headings fall through to Zen Maru Gothic in the same stack.
+     Wire these in web/src/app/layout.tsx with next/font/google — see
+     docs/20260917_1800_デザインシステム定義.md.
+     ---------------------------------------------------------------------- */
+  --font-sans: var(--font-figtree), var(--font-zen-kaku-gothic-new), system-ui, sans-serif;
+  --font-heading: var(--font-caprasimo), var(--font-zen-maru-gothic), system-ui, sans-serif;
+  --font-display: var(--font-caprasimo), system-ui, sans-serif;
+
+  /* --- radius: over-rounded. Controls are pills. ------------------------ */
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 28px;
+  --radius-xl: 32px;  /* cards */
+  --radius-pill: 999px;
+
+  /* --- elevation: three steps, tuned to the cream ground ---------------- */
+  --shadow-mirai-sm: 0 1px 2px color-mix(in srgb, #2e2b25 14%, transparent);
+  --shadow-mirai-md: 0 3px 10px color-mix(in srgb, #2e2b25 16%, transparent);
+  --shadow-mirai-lg: 0 12px 32px color-mix(in srgb, #2e2b25 22%, transparent);
+
+  /* ══ Tonal ramps ════════════════════════════════════════════════════════
+     Generated in OKLCH on one shared lightness scale, so step N of any ramp
+     carries the same visual weight. 100–300 = tinted fills / hovers / soft
+     borders. 500 = the role's base. 700–900 = text on tinted fills, pressed.
+     Take every colour from these. Do not add ad-hoc color-mix().
+     ═══════════════════════════════════════════════════════════════════════ */
+
+  --color-neutral-100: #f9f4ed;
+  --color-neutral-200: #eee7db;
+  --color-neutral-300: #dcd3c4;
+  --color-neutral-400: #c0b6a5;
+  --color-neutral-500: #a19786;
+  --color-neutral-600: #82796a;
+  --color-neutral-700: #645c50;
+  --color-neutral-800: #474238;
+  --color-neutral-900: #2e2b25;
+
+  --color-terracotta-100: #fff2eb;
+  --color-terracotta-200: #ffe1d0;
+  --color-terracotta-300: #ffc6a5;
+  --color-terracotta-400: #f6a06b;
+  --color-terracotta-500: #d67f48;
+  --color-terracotta-600: #b2622d;
+  --color-terracotta-700: #8c491a;
+  --color-terracotta-800: #643312;
+  --color-terracotta-900: #402310;
+
+  --color-sage-100: #f0fae1;
+  --color-sage-200: #e1eecc;
+  --color-sage-300: #ccdbb2;
+  --color-sage-400: #aebf92;
+  --color-sage-500: #8fa073;
+  --color-sage-600: #728157;
+  --color-sage-700: #56633f;
+  --color-sage-800: #3d472b;
+  --color-sage-900: #272e1b;
+
+  /* ══ Roles ══════════════════════════════════════════════════════════════ */
+
+  /* Ground & surface — no pure white anywhere on the site */
+  --color-mirai-ground: #f5ead8;        /* page background */
+  --color-mirai-surface: #ebddc5;       /* cards, inputs, dialogs */
+  --color-mirai-surface-sunken: var(--color-neutral-200); /* archive / past sessions */
+
+  /* Ink */
+  --color-mirai-text: #201e1d;
+  --color-mirai-text-secondary: var(--color-neutral-800);
+  --color-mirai-text-muted: var(--color-neutral-700);      /* 4.5:1 on ground */
+  --color-mirai-text-placeholder: var(--color-neutral-500);
+
+  /* Accents */
+  --color-mirai-accent: #c67139;           /* 3:1 on ground — chrome, icons, large type only */
+  --color-mirai-accent-hover: var(--color-terracotta-600);
+  --color-mirai-accent-pressed: var(--color-terracotta-700);
+  --color-mirai-accent-text: var(--color-terracotta-700);  /* accent-coloured body copy */
+  --color-mirai-accent-2: #7a8a5e;
+  --color-mirai-accent-2-text: var(--color-sage-700);
+
+  /* Borders — used sparingly; surfaces separate by fill, not by rule */
+  --color-mirai-border: var(--color-neutral-300);
+  --color-mirai-border-strong: var(--color-neutral-400);
+
+  /* ══ Bill status ════════════════════════════════════════════════════════
+     The only colours not in the base system: Organic ships no red, and a
+     council site must distinguish 可決 from 否決. Derived to sit on the same
+     OKLCH lightness scale as the ramps.
+     Always paired with a text label — never colour alone.
+     ═══════════════════════════════════════════════════════════════════════ */
+  --color-status-passed: var(--color-sage-700);
+  --color-status-passed-bg: var(--color-sage-200);
+  --color-status-rejected: #9c3527;
+  --color-status-rejected-bg: #fae0da;
+  --color-status-continued: var(--color-terracotta-700);
+  --color-status-continued-bg: var(--color-terracotta-200);
+  --color-status-review: var(--color-neutral-700);
+  --color-status-review-bg: var(--color-neutral-200);
+
+  /* ══ Reading level / language chrome ════════════════════════════════════ */
+  --color-mirai-level-active: var(--color-mirai-accent);
+  --color-mirai-level-active-fg: var(--color-mirai-ground);
+  --color-mirai-tag: var(--color-neutral-200);
+  --color-mirai-tag-text: var(--color-neutral-800);
+  --color-mirai-featured: var(--color-terracotta-200);
+  --color-mirai-featured-text: var(--color-terracotta-800);
+
+  /* ══ shadcn/ui bridge ═══════════════════════════════════════════════════ */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-accent: var(--primary-accent);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+:root {
+  --radius: 1rem;
+
+  --background: #f5ead8;
+  --foreground: #201e1d;
+
+  --card: #ebddc5;
+  --card-foreground: #201e1d;
+  --popover: #ebddc5;
+  --popover-foreground: #201e1d;
+
+  --primary: #c67139;
+  --primary-accent: #b2622d;
+  --primary-foreground: #f5ead8;
+
+  --secondary: #eee7db;
+  --secondary-foreground: #2e2b25;
+
+  --muted: #eee7db;
+  --muted-foreground: #645c50;
+
+  --accent: #ffe1d0;
+  --accent-foreground: #8c491a;
+
+  --destructive: #9c3527;
+
+  --border: #dcd3c4;
+  --input: #dcd3c4;
+  --ring: #c67139;
+
+  /* Japanese body copy needs more air than the base system's 1.55. */
+  --leading-relaxed: 1.9;
+  --leading-ruby: 2;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground;
+    font-size: 16px;      /* was 15px — Japanese glyphs run larger */
+    line-height: 1.9;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+  }
+
+  /* Ruby (ふりがな) must not compress the line box. */
+  ruby { line-height: var(--leading-ruby); }
+
+  *:focus-visible,
+  button:focus-visible,
+  a:focus-visible {
+    outline: 2px solid var(--color-mirai-accent);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--color-mirai-accent) 30%, transparent);
+  }
+}
+
+@layer components {
+  /* The old blue gradients are removed. Warmth replaces them. */
+  .bg-mirai-warm-fade {
+    background-image: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-mirai-ground) 0%, transparent) 0%,
+      var(--color-mirai-ground) 62%
+    );
+  }
+
+  /* Photographs sit back into the page rather than on top of it. */
+  .washed {
+    filter: saturate(0.6) contrast(0.85) brightness(1.1) opacity(0.94);
+  }
+}
