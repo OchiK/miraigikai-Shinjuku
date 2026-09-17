@@ -51,13 +51,29 @@ export async function findPublishedBillsWithContents(
 }
 
 /**
+ * 議案詳細で使う select 句。
+ *
+ * 議案詳細の先頭に「← 令和8年 第2回定例会」の戻り導線を出すため、議案が属する
+ * 定例会の slug と名称も一緒に取る（デザインシステム定義 §9-1）。
+ */
+const BILL_WITH_SESSION_SELECT = `
+  *,
+  council_sessions (
+    id,
+    name,
+    slug,
+    council_url
+  )
+` as const;
+
+/**
  * 公開済み議案を1件取得
  */
 export async function findPublishedBillById(id: string) {
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("bills")
-    .select("*")
+    .select(BILL_WITH_SESSION_SELECT)
     .eq("id", id)
     .eq("publish_status", "published")
     .single();
@@ -76,7 +92,7 @@ export async function findBillById(id: string) {
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("bills")
-    .select("*")
+    .select(BILL_WITH_SESSION_SELECT)
     .eq("id", id)
     .single();
 

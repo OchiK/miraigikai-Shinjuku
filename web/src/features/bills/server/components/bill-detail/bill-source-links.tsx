@@ -20,24 +20,36 @@ export function BillSourceLinks({ bill }: BillSourceLinksProps) {
   }
 
   return (
-    <div className="space-y-3">
-      <h3 className="text-sm font-bold text-mirai-text">この議案の出典</h3>
-      <ul className="space-y-2">
+    <section
+      aria-labelledby="bill-source-links-heading"
+      className="rounded-xl bg-card p-6 shadow-mirai-sm"
+    >
+      <h2
+        className="mb-4 font-bold font-heading text-lg text-mirai-text"
+        id="bill-source-links-heading"
+      >
+        区議会の公式ページ
+      </h2>
+      <ul className="space-y-1">
         {links.map((link) => (
           <li key={link.kind}>
             <a
+              className="inline-flex min-h-11 items-center gap-1.5 text-mirai-accent-text text-sm underline underline-offset-[3px] hover:opacity-70"
               href={link.url}
-              target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs leading-relaxed text-mirai-text-note underline underline-offset-[3px] hover:opacity-70"
+              target="_blank"
             >
               {link.label}
-              <ExternalLink aria-hidden="true" className="h-3 w-3 shrink-0" />
+              <ExternalLink
+                aria-hidden="true"
+                className="size-4 shrink-0"
+                strokeWidth={2.75}
+              />
               <span className="sr-only">（新しいタブで開きます）</span>
             </a>
           </li>
         ))}
       </ul>
-    </div>
+    </section>
   );
 }
