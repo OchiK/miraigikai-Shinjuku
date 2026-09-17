@@ -20,12 +20,20 @@ import { buildItemKey, r8SecondSessionItems } from "./shinjuku-r8-2-inventory";
  *   2. 台帳の該当行と `reviewed_content_sha256` を更新する
  * の順で対応すること。ハッシュだけ書き換えてはならない。
  *
- * 台帳はステップごとに分かれている。両方を読み、突合済みの全変種を対象とする。
+ * 台帳はステップごとに分かれている。すべてを読み、突合済みの全変種を対象とする。
  */
 const CLAIM_LEDGER_PATHS = [
+  "../../../docs/verification/20260917_1200_final-content-ledger-r8-2.csv",
   "../../../docs/verification/20260917_1500_claim-ledger-step4-pilot.csv",
   "../../../docs/verification/20260917_2000_claim-ledger-step4-rest.csv",
 ].map((relative) => fileURLToPath(new URL(relative, import.meta.url)));
+
+const ORIGINAL_CLAIM_LEDGER_PATH = fileURLToPath(
+  new URL(
+    "../../../docs/verification/20260917_1000_claim-ledger-r8-2.csv",
+    import.meta.url
+  )
+);
 
 type ClaimLedgerRow = {
   item_key: string;
@@ -82,29 +90,19 @@ describe("ステップ4の解説の内容ハッシュ", () => {
     expect(actual).toEqual(reviewedContentSha256);
   });
 
-  it("ハッシュ固定の対象外は既存5件の10変種だけ", () => {
+  it("46変種すべてがハッシュ固定されている", () => {
     // 台帳に載っている変種だけを突き合わせると、
     // 「台帳に行を書かずに解説だけ足す」と全テストが通ってしまう。
     // 対象外の集合を明示的に固定し、新しい解説が黙って素通りしないようにする。
     //
-    // 現在の対象外はステップ3の5件（第42・49・51・53・58号議案）のみ。
-    // これらの台帳（20260917_1000 / 20260917_1200）は reviewed_content_sha256 列を
-    // 持たず reviewed_revision にブランチ名を入れているため、本テストで読めない。
-    // 当該5件の台帳にハッシュ列を追加すれば、この期待値は [] になる。
     const pinned = reviewedContentHashesFromLedger();
     const unpinned = billContentsWithBillSlug
       .map((c) => `${c.bill_slug}:${c.difficulty_level}`)
       .filter((key) => !(key in pinned))
       .sort();
 
-    expect(unpinned).toEqual(
-      [42, 49, 51, 53, 58]
-        .flatMap((n) => [
-          `shinjuku-2026-r2-gian-${n}:normal`,
-          `shinjuku-2026-r2-gian-${n}:hard`,
-        ])
-        .sort()
-    );
+    expect(unpinned).toEqual([]);
+    expect(Object.keys(pinned)).toHaveLength(46);
   });
 
   it("台帳に載っている変種はすべて実在する", () => {
@@ -120,11 +118,52 @@ describe("ステップ4の解説の内容ハッシュ", () => {
   });
 });
 
+describe("主張台帳の監査証跡", () => {
+  it("改訂前台帳の全行に出典・ハッシュ・位置・証拠がある", () => {
+    const rows = parse(readFileSync(ORIGINAL_CLAIM_LEDGER_PATH, "utf8"), {
+      bom: true,
+      columns: true,
+      skip_empty_lines: true,
+    }) as Record<string, string>[];
+
+    const incomplete = rows
+      .filter(
+        (row) =>
+          !row.source_url ||
+          !row.source_sha256 ||
+          !row.page_or_section ||
+          !row.evidence_excerpt
+      )
+      .map((row) => row.claim_id);
+
+    expect(incomplete).toEqual([]);
+  });
+
+  it("最終稿台帳の全行に有効な本文ハッシュがある", () => {
+    const invalid: string[] = [];
+
+    for (const ledgerPath of CLAIM_LEDGER_PATHS) {
+      const rows = parse(readFileSync(ledgerPath, "utf8"), {
+        bom: true,
+        columns: true,
+        skip_empty_lines: true,
+      }) as Record<string, string>[];
+      for (const row of rows) {
+        if (!/^[0-9a-f]{64}$/.test(row.reviewed_content_sha256 ?? "")) {
+          invalid.push(row.claim_id);
+        }
+      }
+    }
+
+    expect(invalid).toEqual([]);
+  });
+});
+
 describe("ステップ4残り15件の主張台帳の構造", () => {
   // ハッシュは台帳の1列を書き換えるだけで通ってしまう。
   // 台帳そのものの不変条件を別に固定し、ハッシュとは独立した歯止めを置く。
   const rows = parse(
-    readFileSync(CLAIM_LEDGER_PATHS[1], "utf8"),
+    readFileSync(CLAIM_LEDGER_PATHS[2], "utf8"),
     { bom: true, columns: true, skip_empty_lines: true }
   ) as Record<string, string>[];
 

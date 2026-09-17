@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { SeededBillRef } from "./bill-ref";
 import { createBillContents, billContentsWithBillSlug } from "./bill-contents-data";
 import { bills, createBillsTags, createFactionStances, createInterviewConfig, tags } from "./data";
-import { buildItemKey, gianKey, r8SecondSessionItems } from "./shinjuku-r8-2-inventory";
+import { buildItemKey, r8SecondSessionItems } from "./shinjuku-r8-2-inventory";
 
 /** DB投入後に返ってくる { id, name, slug } を再現する */
 const insertedBills: SeededBillRef[] = bills.map((b, i) => ({
@@ -54,21 +54,8 @@ describe("公開状態と解説の整合", () => {
   it("公開レビュー未了の解説は coming_soon に留める", () => {
     // ステップ4の完了により23件すべてが出典突合済みの解説を持つ。
     // 解説ができた時点で自動的に公開へ切り替わらないことを固定する。
-    // 公開中の議案を列挙する形にしているのは、coming_soon 側を列挙すると
-    // 議案が増えるたびに期待値を足す必要があり、抜けても気付けないため。
-    const slugsWithContent = new Set(
-      billContentsWithBillSlug.map((c) => c.bill_slug)
-    );
-    const publishedWithContent = bills
-      .filter((b) => b.publish_status === "published")
-      .map((b) => b.slug ?? "")
-      .filter((slug) => slugsWithContent.has(slug))
-      .sort();
-
-    // ステップ3以前から公開している5件のみ。ステップ4で追加した解説は含まない。
-    expect(publishedWithContent).toEqual(
-      [42, 49, 51, 53, 58].map(gianKey).sort()
-    );
+    expect(bills.filter((b) => b.publish_status === "published")).toEqual([]);
+    expect(bills.filter((b) => b.publish_status === "coming_soon")).toHaveLength(23);
   });
 
   it("解説の対象議案はすべてインベントリに存在する", () => {

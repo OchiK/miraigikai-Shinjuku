@@ -79,7 +79,7 @@ export interface ShinjukuSessionItem {
    * valid and reviewed for publication」）。
    *
    * ステップ4の完了により23件すべてが出典突合済みの解説を保有するが、
-   * 公開レビューの担当者が未確定のため、既存5件を除き false のままにしている。
+   * 公開レビューの担当者が未確定のため、全件 false のままにしている。
    * 担当者が決まりレビューが済んだら、当該案件をここで true にし、
    * bills.is_review_completed も併せて更新すること。
    */
@@ -146,7 +146,7 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000457639"),
     overviewPdfUrl: OVERVIEW_BUDGET_2,
     decision: "原案可決",
-    hasPublishableContent: true,
+    hasPublishableContent: false,
     isFeatured: true,
   },
   {
@@ -226,7 +226,7 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000457648"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    hasPublishableContent: true,
+    hasPublishableContent: false,
     isFeatured: true,
   },
   {
@@ -250,7 +250,7 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000457650"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    hasPublishableContent: true,
+    hasPublishableContent: false,
     isFeatured: false,
   },
   {
@@ -274,7 +274,7 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000457652"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    hasPublishableContent: true,
+    hasPublishableContent: false,
     isFeatured: true,
   },
   {
@@ -332,7 +332,7 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000457657"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    hasPublishableContent: true,
+    hasPublishableContent: false,
     isFeatured: false,
   },
   {
