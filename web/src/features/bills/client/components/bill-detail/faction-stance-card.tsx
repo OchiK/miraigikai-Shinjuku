@@ -4,6 +4,7 @@ import type {
   StanceTypeEnum,
 } from "../../../shared/types";
 import { STANCE_LABELS } from "../../../shared/types";
+import { hasFinalVoteResult } from "../../../shared/utils/bill-vote-status";
 import { summarizeFactionVotes } from "../../../shared/utils/summarize-faction-votes";
 
 /**
@@ -128,6 +129,7 @@ export function FactionStanceCard({
   billStatus,
 }: FactionStanceCardProps) {
   const isPreparing = billStatus === "preparing";
+  const isVoteFinal = hasFinalVoteResult(billStatus);
 
   if (!isPreparing && stances.length === 0) {
     return null;
@@ -139,11 +141,11 @@ export function FactionStanceCard({
         className="mb-4 font-bold font-heading text-mirai-text text-xl"
         id="bill-vote-result-heading"
       >
-        議決結果
+        {isVoteFinal ? "議決結果" : "会派の賛否"}
       </h2>
 
       <div className="flex flex-col gap-4">
-        <FactionVoteBar stances={stances} />
+        {isVoteFinal && <FactionVoteBar stances={stances} />}
 
         <div className="rounded-xl bg-card px-6 py-2 shadow-mirai-sm">
           {isPreparing && stances.length === 0 ? (

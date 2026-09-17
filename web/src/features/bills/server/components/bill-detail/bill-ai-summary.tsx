@@ -9,6 +9,24 @@ interface BillAiSummaryProps {
   isReviewCompleted: boolean;
 }
 
+function ReviewInProgressNotice({ className = "" }: { className?: string }) {
+  return (
+    <div
+      className={`flex items-start gap-2 rounded-xl bg-terracotta-200 px-4 py-3 text-mirai-ai-text ${className}`}
+      role="status"
+    >
+      <Info
+        aria-hidden="true"
+        className="mt-1 size-4 shrink-0"
+        strokeWidth={2.75}
+      />
+      <p className="text-sm leading-[1.9]">
+        この記事はAI生成による下書きを含みます。公式一次資料との照合を進めているため、内容が変更されることがあります。
+      </p>
+    </div>
+  );
+}
+
 /**
  * かんたん要約（デザインシステム定義 §9-5）。
  *
@@ -25,7 +43,7 @@ export function BillAiSummary({
   const text = summary?.trim();
 
   if (!readableTitle && !text) {
-    return null;
+    return isReviewCompleted ? null : <ReviewInProgressNotice />;
   }
 
   return (
@@ -59,18 +77,7 @@ export function BillAiSummary({
         AIによる要約です。正確な内容は原文をご確認ください。
       </p>
 
-      {!isReviewCompleted && (
-        <div className="mt-4 flex items-start gap-2 rounded-md bg-terracotta-200 px-4 py-3">
-          <Info
-            aria-hidden="true"
-            className="mt-1 size-4 shrink-0"
-            strokeWidth={2.75}
-          />
-          <p className="text-sm leading-[1.9]">
-            この記事はAI生成による下書きを含みます。公式一次資料との照合を進めているため、内容が変更されることがあります。
-          </p>
-        </div>
-      )}
+      {!isReviewCompleted && <ReviewInProgressNotice className="mt-4" />}
     </section>
   );
 }
