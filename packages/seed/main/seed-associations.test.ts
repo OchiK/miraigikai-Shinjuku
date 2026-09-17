@@ -34,29 +34,42 @@ describe("bills seed", () => {
 });
 
 describe("公開状態と解説の整合", () => {
-  // hasPublishableContent（インベントリ側）と解説の実在（bill-contents-data 側）が
-  // 食い違うと、解説ゼロの議案が published になって詳細ページが空になる。
-  it("published の議案と解説を持つ議案が完全に一致する", () => {
-    const publishedSlugs = bills
+  // 「解説を持つ」と「公開してよい」は別である。
+  // 前者だけを根拠に published にすると、公開レビュー未了の解説が公開ページに出る。
+  // 逆に解説を持たない議案が published になると、詳細ページが空になる。
+  // したがって published ⊆ 解説あり を検証する（一致ではなく包含）。
+  it("published の議案は必ず解説を持つ", () => {
+    const slugsWithContent = new Set(
+      billContentsWithBillSlug.map((c) => c.bill_slug)
+    );
+
+    const publishedWithoutContent = bills
       .filter((b) => b.publish_status === "published")
-      .map((b) => b.slug)
-      .sort();
+      .filter((b) => !slugsWithContent.has(b.slug ?? ""))
+      .map((b) => b.slug);
 
-    const slugsWithContent = [
-      ...new Set(billContentsWithBillSlug.map((c) => c.bill_slug)),
-    ].sort();
-
-    expect(publishedSlugs).toEqual(slugsWithContent);
+    expect(publishedWithoutContent).toEqual([]);
   });
 
-  it("coming_soon の議案は解説を持たない", () => {
+  it("公開レビュー未了の解説は coming_soon に留める", () => {
+    // 第43・44号議案と承認第2号は出典突合済みの解説を持つが、
+    // 公開判断を行うレビュー担当が未確定のため coming_soon のままにしている。
+    // 解説ができた時点で自動的に公開へ切り替わらないことを固定する。
     const comingSoonSlugs = new Set(
       bills.filter((b) => b.publish_status === "coming_soon").map((b) => b.slug)
     );
 
-    for (const content of billContentsWithBillSlug) {
-      expect(comingSoonSlugs.has(content.bill_slug)).toBe(false);
-    }
+    const heldBack = [
+      ...new Set(billContentsWithBillSlug.map((c) => c.bill_slug)),
+    ]
+      .filter((slug) => comingSoonSlugs.has(slug))
+      .sort();
+
+    expect(heldBack).toEqual([
+      "shinjuku-2026-r2-gian-43",
+      "shinjuku-2026-r2-gian-44",
+      "shinjuku-2026-r2-shonin-2",
+    ]);
   });
 
   it("解説の対象議案はすべてインベントリに存在する", () => {
