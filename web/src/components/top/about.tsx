@@ -17,7 +17,7 @@ export function About() {
               priority
             />
           </h2>
-          <p className="text-sm font-bold text-primary-accent">
+          <p className="text-sm font-bold text-mirai-accent-text">
             {siteConfig.siteName}とは
           </p>
         </div>

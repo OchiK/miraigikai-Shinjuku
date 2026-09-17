@@ -47,7 +47,7 @@ export function PreviousSessionSection({
             priority
           />
         </h2>
-        <p className="text-sm font-bold text-primary-accent">
+        <p className="text-sm font-bold text-mirai-accent-text">
           過去の定例会に上程された議案
         </p>
       </div>

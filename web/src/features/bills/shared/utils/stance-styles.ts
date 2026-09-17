@@ -29,7 +29,7 @@ export function getStanceStyles(
     case "conditional_for":
       return {
         bg: "bg-stance-for-bg",
-        textColor: "text-primary-accent",
+        textColor: "text-mirai-accent-text",
         label: STANCE_LABELS[stance.type],
       };
     case "against":

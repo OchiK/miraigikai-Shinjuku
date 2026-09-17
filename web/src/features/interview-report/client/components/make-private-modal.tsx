@@ -44,7 +44,7 @@ export function MakePrivateModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="py-9">
         <DialogHeader>
-          <DialogTitle className="text-lg font-bold text-primary-accent text-center leading-relaxed">
+          <DialogTitle className="text-lg font-bold text-mirai-accent-text text-center leading-relaxed">
             インタビュー内容を
             <br />
             非公開に切り替えますか？

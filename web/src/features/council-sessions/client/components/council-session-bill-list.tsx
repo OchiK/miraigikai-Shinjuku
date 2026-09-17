@@ -36,7 +36,7 @@ export function CouncilSessionBillList({
             priority
           />
         </h1>
-        <p className="text-sm font-bold text-primary-accent">
+        <p className="text-sm font-bold text-mirai-accent-text">
           {session.name}に上程された議案
         </p>
       </div>

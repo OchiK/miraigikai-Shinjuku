@@ -52,7 +52,7 @@ export function PublicStatusSection({
         <Button
           variant="link"
           onClick={() => setIsModalOpen(true)}
-          className={`text-sm ${isPublic ? "text-gray-500" : "text-primary-accent"}`}
+          className={`text-sm ${isPublic ? "text-gray-500" : "text-mirai-accent-text"}`}
         >
           {isPublic ? "非公開に変更する" : "公開に変更する"}
         </Button>

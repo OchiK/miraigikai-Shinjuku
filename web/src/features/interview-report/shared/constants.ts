@@ -14,7 +14,7 @@ export const stanceLabels: Record<string, string> = {
  * スタンスのテキストカラーマッピング（Tailwind CSS クラス）
  */
 export const stanceTextColors: Record<string, string> = {
-  for: "text-primary-accent",
+  for: "text-mirai-accent-text",
   against: "text-stance-against-light",
   neutral: "text-stance-neutral",
 };

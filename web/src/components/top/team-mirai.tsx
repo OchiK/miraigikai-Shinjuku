@@ -30,7 +30,7 @@ export function TeamMirai() {
               priority
             />
           </h2>
-          <p className="text-sm font-bold text-primary-accent">
+          <p className="text-sm font-bold text-mirai-accent-text">
             チームみらいについて
           </p>
         </div>

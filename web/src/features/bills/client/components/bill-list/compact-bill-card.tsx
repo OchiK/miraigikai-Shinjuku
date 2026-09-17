@@ -21,12 +21,12 @@ export function CompactBillCard({ bill, className }: CompactBillCardProps) {
 
   return (
     <Card
-      className={`border-[0.5px] border-mirai-text-placeholder rounded-2xl shadow-none hover:bg-muted/50 transition-colors overflow-hidden ${className ?? ""}`}
+      className={`border-0 bg-card shadow-(--shadow-mirai-sm) rounded-xl hover:bg-neutral-300 transition-colors overflow-hidden ${className ?? ""}`}
     >
       <div className="flex">
         {/* コンテンツエリア */}
         <div className="flex-1 p-4 flex flex-col gap-2">
-          <h3 className="font-bold text-[15px] leading-[1.6] line-clamp-2">
+          <h3 className="font-heading font-bold text-[15px] leading-[1.5] line-clamp-2 text-mirai-text">
             {displayTitle}
             {bill.is_review_completed && (
               <>
@@ -42,7 +42,7 @@ export function CompactBillCard({ bill, className }: CompactBillCardProps) {
               className="w-fit"
             />
             {bill.published_at && (
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-mirai-text-muted">
                 {formatDateJST(bill.published_at)} {statusLabel}
               </span>
             )}
@@ -56,7 +56,7 @@ export function CompactBillCard({ bill, className }: CompactBillCardProps) {
               src={bill.thumbnail_url}
               alt={bill.name}
               fill
-              className="object-cover"
+              className="object-cover washed"
               sizes="96px"
             />
           </div>

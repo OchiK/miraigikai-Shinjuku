@@ -95,7 +95,7 @@ export function ExpertRegistrationModal({
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent className="max-w-md py-9">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold text-primary-accent text-center leading-relaxed">
+            <DialogTitle className="text-lg font-bold text-mirai-accent-text text-center leading-relaxed">
               登録ありがとうございました。
             </DialogTitle>
           </DialogHeader>
@@ -116,7 +116,7 @@ export function ExpertRegistrationModal({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-md py-9">
         <DialogHeader>
-          <DialogTitle className="text-lg font-bold text-primary-accent text-center leading-relaxed">
+          <DialogTitle className="text-lg font-bold text-mirai-accent-text text-center leading-relaxed">
             有識者リストに登録する
           </DialogTitle>
         </DialogHeader>
