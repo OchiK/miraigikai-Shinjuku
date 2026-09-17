@@ -118,6 +118,25 @@
   --color-status-review: var(--color-neutral-700);
   --color-status-review-bg: var(--color-neutral-200);
 
+  /* ══ AI-generated content ══════════════════════════════════════
+     Every AI-written passage sits on this ground, never on --card, so a
+     reader can tell machine text from a quoted primary source at a glance.
+     Always paired with an AI label and a caveat line.
+     ══════════════════════════════════════════════════════════════════ */
+  --color-mirai-ai-bg: var(--color-terracotta-100);
+  --color-mirai-ai-text: var(--color-terracotta-900);
+  --color-mirai-ai-border: var(--color-terracotta-400);
+
+  /* ══ Vote bar ═════════════════════════════════════════════════════
+     No red on the 反対 side — opposition is not an error state.
+     ══════════════════════════════════════════════════════════════════ */
+  --color-mirai-vote-for: var(--color-sage-500);
+  --color-mirai-vote-against: var(--color-neutral-300);
+  --color-mirai-chat-self: var(--color-sage-200);
+  --color-mirai-chat-self-text: var(--color-sage-900);
+  --color-mirai-source-chip: var(--color-neutral-200);
+  --color-mirai-source-chip-text: var(--color-neutral-800);
+
   /* ══ Reading level / language chrome ════════════════════════════════════ */
   --color-mirai-level-active: var(--color-mirai-accent);
   --color-mirai-level-active-fg: var(--color-mirai-ground);
