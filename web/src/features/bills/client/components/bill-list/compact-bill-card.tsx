@@ -16,7 +16,8 @@ interface CompactBillCardProps {
  */
 export function CompactBillCard({ bill, className }: CompactBillCardProps) {
   const displayTitle = bill.bill_content?.title || bill.name;
-  const statusLabel = "提出";
+  // published_at はサイト掲載日時であり、議案の提出日ではない
+  const statusLabel = "掲載";
 
   return (
     <Card
@@ -35,7 +36,11 @@ export function CompactBillCard({ bill, className }: CompactBillCardProps) {
             )}
           </h3>
           <div className="flex items-center gap-3">
-            <BillStatusBadge status={bill.status} className="w-fit" />
+            <BillStatusBadge
+              status={bill.status}
+              statusNote={bill.status_note}
+              className="w-fit"
+            />
             {bill.published_at && (
               <span className="text-xs text-muted-foreground">
                 {formatDateJST(bill.published_at)} {statusLabel}

@@ -27,6 +27,14 @@ describe("getBillStatusLabel", () => {
     expect(getBillStatusLabel("rejected")).toBe("否決");
   });
 
+  it("status_note に承認があれば「承認」を返す", () => {
+    expect(getBillStatusLabel("approved", "本会議で承認")).toBe("承認");
+  });
+
+  it("status_note が原案可決なら「可決」のままにする", () => {
+    expect(getBillStatusLabel("approved", "本会議で原案可決")).toBe("可決");
+  });
+
   it("returns the status string as-is for unknown status", () => {
     // biome-ignore lint/suspicious/noExplicitAny: テスト用に未知のステータスを渡す
     expect(getBillStatusLabel("unknown_status" as any)).toBe("unknown_status");

@@ -4,7 +4,6 @@ import { Calendar, Edit, FileText, MessageCircle, Users } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
-import { routes } from "@/lib/routes";
 import {
   Card,
   CardContent,
@@ -12,6 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { routes } from "@/lib/routes";
 import { BILL_STATUS_CONFIG } from "../../../shared/constants/bill-config";
 import type { BillPublishStatus, BillStatus } from "../../../shared/types";
 import { getBillStatusLabel } from "../../../shared/types";
@@ -20,7 +20,13 @@ import { PreviewButton } from "./preview-button";
 import { PublishStatusBadge } from "./publish-status-badge";
 import { ViewButton } from "./view-button";
 
-function StatusBadge({ status }: { status: BillStatus }) {
+function StatusBadge({
+  status,
+  statusNote,
+}: {
+  status: BillStatus;
+  statusNote: string | null;
+}) {
   const config = BILL_STATUS_CONFIG[status];
   const Icon = config.icon;
 
@@ -29,7 +35,7 @@ function StatusBadge({ status }: { status: BillStatus }) {
       className={`inline-flex items-center gap-1.5 py-1 rounded-full text-sm font-bold`}
     >
       <Icon className="h-4 w-4" />
-      <span>{getBillStatusLabel(status)}</span>
+      <span>{getBillStatusLabel(status, statusNote)}</span>
     </div>
   );
 }
@@ -73,7 +79,7 @@ export function BillCard({ bill }: BillCardProps) {
       <CardContent>
         <div className="text-sm">
           <div className="mb-2 flex items-center gap-2">
-            <StatusBadge status={bill.status} />
+            <StatusBadge status={bill.status} statusNote={bill.status_note} />
             <div className="font-medium text-gray-900">
               {bill.status_note || "-"}
             </div>

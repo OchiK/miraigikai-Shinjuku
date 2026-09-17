@@ -44,3 +44,17 @@ describe("getStatusVariant", () => {
     expect(getStatusVariant("preparing")).toBe("muted");
   });
 });
+
+describe("議決用語（status_note）の反映", () => {
+  it("専決処分の承認を「可決」ではなく「承認」と表示する", () => {
+    expect(getCardStatusLabel("approved", "本会議で承認")).toBe("承認");
+  });
+
+  it("原案可決は従来どおり「可決」と表示する", () => {
+    expect(getCardStatusLabel("approved", "本会議で原案可決")).toBe("可決");
+  });
+
+  it("承認の variant は可決と同じ", () => {
+    expect(getStatusVariant("approved", "本会議で承認")).toBe("default");
+  });
+});

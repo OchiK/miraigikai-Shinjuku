@@ -13,6 +13,7 @@ import type { BillWithContent } from "../../../shared/types";
 import { BillShareButtons } from "../share/bill-share-buttons";
 import { BillContent } from "./bill-content";
 import { BillDetailHeader } from "./bill-detail-header";
+import { BillSourceLinks } from "./bill-source-links";
 
 interface BillDetailLayoutProps {
   bill: BillWithContent;
@@ -92,7 +93,8 @@ export async function BillDetailLayout({
         </div>
 
         {/* データの出典と免責事項 */}
-        <div className="my-8">
+        <div className="my-8 space-y-6">
+          <BillSourceLinks bill={bill} />
           <BillDisclaimer />
         </div>
       </Container>

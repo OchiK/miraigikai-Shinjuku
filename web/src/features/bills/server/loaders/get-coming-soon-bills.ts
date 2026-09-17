@@ -54,6 +54,7 @@ const _getCachedComingSoonBills = unstable_cache(
       return {
         id: bill.id,
         name: bill.name,
+        bill_number: bill.bill_number,
         title: preferredContent?.title || fallbackContent?.title || null,
         council_url: bill.council_sessions?.council_url ?? null,
         status: bill.status,

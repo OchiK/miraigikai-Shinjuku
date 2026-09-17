@@ -444,6 +444,7 @@ export async function findComingSoonBills(councilSessionId: string | null) {
       `
       id,
       name,
+      bill_number,
       status,
       bill_contents (
         title,

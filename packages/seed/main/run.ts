@@ -194,12 +194,13 @@ async function seedDatabase() {
     const targetFaction = insertedFactions[0];
     let insertedStancesCount = 0;
 
-    if (targetFaction) {
-      const factionStances = createFactionStances(
-        insertedBills,
-        targetFaction.id
-      );
+    const factionStances = targetFaction
+      ? createFactionStances(insertedBills, targetFaction.id)
+      : [];
 
+    // 出典のある会派見解が用意できるまで factionStances は空になる。
+    // 空配列を insert すると不要なリクエストになるため、その場合は投入をスキップする。
+    if (factionStances.length > 0) {
       const { data: insertedStances, error: stancesError } = await supabase
         .from("faction_stances")
         .insert(factionStances)

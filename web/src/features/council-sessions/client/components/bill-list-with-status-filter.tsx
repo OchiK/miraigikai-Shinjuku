@@ -1,16 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { CompactBillCard } from "@/features/bills/client/components/bill-list/compact-bill-card";
 import type {
   BillTag,
   BillWithContent,
   ComingSoonBill,
 } from "@/features/bills/shared/types";
-import { CompactBillCard } from "@/features/bills/client/components/bill-list/compact-bill-card";
+import { buildComingSoonBillHeading } from "@/features/bills/shared/utils/build-coming-soon-bill-heading";
 
 type StatusFilterType = "all" | "approved" | "rejected" | "other";
 
@@ -207,22 +208,32 @@ export function BillListWithStatusFilter({
                 </p>
               </div>
               <div className="flex flex-col gap-3">
-                {filteredComingSoon.map((bill) => (
-                  <Card key={bill.id} className="border border-black">
-                    <CardContent className="flex items-center justify-between py-4 px-5">
-                      <div className="flex flex-col gap-1 min-w-0">
-                        <h4 className="font-bold text-base text-black leading-tight">
-                          {bill.title || bill.name}
-                        </h4>
-                        {bill.title && bill.title !== bill.name && (
-                          <p className="text-xs text-mirai-text-subtle">
-                            {bill.name}
-                          </p>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                {filteredComingSoon.map((bill) => {
+                  const { identifier, title, officialName } =
+                    buildComingSoonBillHeading(bill);
+
+                  return (
+                    <Card key={bill.id} className="border border-black">
+                      <CardContent className="flex items-center justify-between py-4 px-5">
+                        <div className="flex flex-col gap-1 min-w-0">
+                          {identifier && (
+                            <p className="text-xs font-bold text-mirai-text-subtle">
+                              {identifier}
+                            </p>
+                          )}
+                          <h4 className="font-bold text-base text-black leading-tight">
+                            {title}
+                          </h4>
+                          {officialName && (
+                            <p className="text-xs text-mirai-text-subtle">
+                              {officialName}
+                            </p>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             </div>
           )}

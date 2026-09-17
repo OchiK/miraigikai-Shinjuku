@@ -1,21 +1,12 @@
 "use client";
 
-import type { Route } from "next";
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
+import type { Route } from "next";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { routes } from "@/lib/routes";
 import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { BillActionsMenu } from "../bill-actions-menu/bill-actions-menu";
-import { PreviewButton } from "./preview-button";
-import { PublishStatusBadge } from "./publish-status-badge";
-import { FeaturedFilter } from "./featured-filter";
-import { PublishStatusFilter } from "./publish-status-filter";
-import { ReviewStatusFilter } from "./review-status-filter";
-import { SessionFilter } from "./session-filter";
-import { TagFilter } from "./tag-filter";
-import { ViewButton } from "./view-button";
+import { routes } from "@/lib/routes";
 import { BILL_STATUS_CONFIG } from "../../../shared/constants/bill-config";
 import type {
   BillSortConfig,
@@ -24,6 +15,15 @@ import type {
   BillWithCouncilSession,
 } from "../../../shared/types";
 import { getBillStatusLabel } from "../../../shared/types";
+import { BillActionsMenu } from "../bill-actions-menu/bill-actions-menu";
+import { FeaturedFilter } from "./featured-filter";
+import { PreviewButton } from "./preview-button";
+import { PublishStatusBadge } from "./publish-status-badge";
+import { PublishStatusFilter } from "./publish-status-filter";
+import { ReviewStatusFilter } from "./review-status-filter";
+import { SessionFilter } from "./session-filter";
+import { TagFilter } from "./tag-filter";
+import { ViewButton } from "./view-button";
 
 type Session = { id: string; name: string };
 type Tag = { id: string; label: string };
@@ -50,13 +50,19 @@ const COLUMNS: ColumnConfig[] = [
   { key: "actions", defaultWidth: 50, minWidth: 50, resizable: false },
 ];
 
-function StatusBadge({ status }: { status: BillStatus }) {
+function StatusBadge({
+  status,
+  statusNote,
+}: {
+  status: BillStatus;
+  statusNote: string | null;
+}) {
   const config = BILL_STATUS_CONFIG[status];
   const Icon = config.icon;
   return (
     <div className="inline-flex items-center gap-1.5 py-1 rounded-full text-sm font-bold">
       <Icon className="h-4 w-4" />
-      <span>{getBillStatusLabel(status)}</span>
+      <span>{getBillStatusLabel(status, statusNote)}</span>
     </div>
   );
 }
@@ -314,7 +320,7 @@ function BillRow({ bill }: { bill: BillWithCouncilSession }) {
         </div>
       </td>
       <td className="p-2 align-middle overflow-hidden">
-        <StatusBadge status={bill.status} />
+        <StatusBadge status={bill.status} statusNote={bill.status_note} />
       </td>
       <td className="p-2 align-middle overflow-hidden">
         <span className="block truncate text-gray-600">
