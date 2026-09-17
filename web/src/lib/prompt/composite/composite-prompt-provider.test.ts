@@ -19,7 +19,6 @@ function createFakeProvider(label: string): {
 describe("CompositePromptProvider", () => {
   const sourceCodeProvider = createFakeProvider("source-code");
   const sourceCodeNames = new Set([
-    "top-chat-system",
     "bill-chat-system-normal",
     "bill-chat-system-hard",
   ]);
@@ -31,13 +30,6 @@ describe("CompositePromptProvider", () => {
   );
 
   it("ソースコード管理のプロンプト名はsourceCodeProviderにルーティングされる", async () => {
-    const result = await composite.getPrompt("top-chat-system", {
-      billSummary: "test",
-    });
-    expect(result.content).toBe("source-code:top-chat-system");
-  });
-
-  it("bill-chat-system-normal もsourceCodeProviderにルーティングされる", async () => {
     const result = await composite.getPrompt("bill-chat-system-normal", {
       billName: "test",
       billTitle: "test",
@@ -70,16 +62,9 @@ describe("CompositePromptProvider", () => {
         factoryCalled = true;
         return createFakeProvider("langfuse");
       },
-      new Set([
-        "top-chat-system",
-        "bill-chat-system-normal",
-        "bill-chat-system-hard",
-      ])
+      new Set(["bill-chat-system-normal", "bill-chat-system-hard"])
     );
 
-    await lazyComposite.getPrompt("top-chat-system", {
-      billSummary: "test",
-    });
     await lazyComposite.getPrompt("bill-chat-system-normal", {
       billName: "test",
       billTitle: "test",
