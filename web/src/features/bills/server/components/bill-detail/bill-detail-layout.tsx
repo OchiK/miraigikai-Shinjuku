@@ -48,8 +48,10 @@ export async function BillDetailLayout({
     getPublicReportsByBillId(bill.id),
   ]);
 
+  // サイトヘッダーは fixed top-4。md 未満では MainLayout の mt-24 が効かないため、
+  // 上部ナビがヘッダーに潜らないようここで逃がす。
   return (
-    <div className="bg-background pb-12">
+    <div className="bg-background pt-20 pb-12 md:pt-0">
       <BillDetailClient
         bill={bill}
         currentDifficulty={currentDifficulty}
