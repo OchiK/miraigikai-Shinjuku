@@ -131,7 +131,11 @@
      No red on the 反対 side — opposition is not an error state.
      ══════════════════════════════════════════════════════════════════ */
   --color-mirai-vote-for: var(--color-sage-500);
+  --color-mirai-vote-for-bg: var(--color-sage-200);
+  --color-mirai-vote-for-text: var(--color-sage-700);
   --color-mirai-vote-against: var(--color-neutral-300);
+  --color-mirai-vote-against-bg: var(--color-neutral-200);
+  --color-mirai-vote-against-text: var(--color-neutral-800);
   --color-mirai-chat-self: var(--color-sage-200);
   --color-mirai-chat-self-text: var(--color-sage-900);
   --color-mirai-source-chip: var(--color-neutral-200);
