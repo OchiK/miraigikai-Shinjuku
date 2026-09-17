@@ -105,7 +105,7 @@ export function BillStatusProgress({
 
   return (
     <>
-      <h2 className="text-[22px] font-bold mb-4">👉 審議のステータス</h2>
+      <h2 className="text-[22px] font-bold mb-4">審議のステータス</h2>
       <div className="bg-white rounded-lg border p-6">
         <div className="flex flex-col items-center gap-7">
           {/* ステータスメッセージバッジ */}
