@@ -14,171 +14,231 @@
   --breakpoint-pc: 1000px;
   --breakpoint-pcl: 1400px;
 
+  /* --- 書体 ---------------------------------------------------------------
+     Caprasimo に和文グリフはない。欧文の表示体は Caprasimo、和文見出しは
+     同じスタックの Zen Maru Gothic に落ちる。
+     実体は web/src/app/layout.tsx で next/font/google から注入する。
+     ---------------------------------------------------------------------- */
+  --font-sans:
+    var(--font-figtree), var(--font-zen-kaku-gothic-new), system-ui, sans-serif;
+  --font-heading:
+    var(--font-caprasimo), var(--font-zen-maru-gothic), system-ui, sans-serif;
+  --font-display: var(--font-caprasimo), system-ui, sans-serif;
+
+  /* --- 角丸: 丸め強め。コントロールはピル形。 -------------------------- */
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 28px;
+  --radius-xl: 32px; /* カード */
+  --radius-pill: 999px;
+
+  /* --- 影: クリーム地に合わせた3段 ------------------------------------- */
+  --shadow-mirai-sm: 0 1px 2px color-mix(in srgb, #2e2b25 14%, transparent);
+  --shadow-mirai-md: 0 3px 10px color-mix(in srgb, #2e2b25 16%, transparent);
+  --shadow-mirai-lg: 0 12px 32px color-mix(in srgb, #2e2b25 22%, transparent);
+
+  /* ══ 階調 ════════════════════════════════════════════════════════════════
+     OKLCH の共通明度スケール上で生成しているため、どの系統でも段Nは同じ
+     視覚的な重さになる。100–300 = 塗り／ホバー／弱い境界。500 = 役割の基準。
+     700–900 = 塗りの上の文字、押下時。色はすべてここから取る。
+     ═══════════════════════════════════════════════════════════════════════ */
+
+  --color-neutral-100: #f9f4ed;
+  --color-neutral-200: #eee7db;
+  --color-neutral-300: #dcd3c4;
+  --color-neutral-400: #c0b6a5;
+  --color-neutral-500: #a19786;
+  --color-neutral-600: #82796a;
+  --color-neutral-700: #645c50;
+  --color-neutral-800: #474238;
+  --color-neutral-900: #2e2b25;
+
+  --color-terracotta-100: #fff2eb;
+  --color-terracotta-200: #ffe1d0;
+  --color-terracotta-300: #ffc6a5;
+  --color-terracotta-400: #f6a06b;
+  --color-terracotta-500: #d67f48;
+  --color-terracotta-600: #b2622d;
+  --color-terracotta-700: #8c491a;
+  --color-terracotta-800: #643312;
+  --color-terracotta-900: #402310;
+
+  --color-sage-100: #f0fae1;
+  --color-sage-200: #e1eecc;
+  --color-sage-300: #ccdbb2;
+  --color-sage-400: #aebf92;
+  --color-sage-500: #8fa073;
+  --color-sage-600: #728157;
+  --color-sage-700: #56633f;
+  --color-sage-800: #3d472b;
+  --color-sage-900: #272e1b;
+
+  /* ══ 役割 ══════════════════════════════════════════════════════════════ */
+
+  /* 地と面 — サイト内に純白は置かない */
+  --color-mirai-ground: #f5ead8; /* ページ地 */
+  --color-mirai-surface: #ebddc5; /* カード・入力・ダイアログ */
+  --color-mirai-surface-sunken: var(--color-neutral-200); /* 過去定例会など */
+
+  /* 文字 */
+  --color-mirai-text: #201e1d;
+  --color-mirai-text-secondary: var(--color-neutral-800);
+  --color-mirai-text-muted: var(--color-neutral-700); /* 地に対し 4.5:1 */
+  --color-mirai-text-placeholder: var(--color-neutral-500);
+
+  /* アクセント */
+  --color-mirai-accent: #c67139; /* 地に対し 3:1 — 装飾・アイコン・大きな文字のみ */
+  --color-mirai-accent-hover: var(--color-terracotta-600);
+  --color-mirai-accent-pressed: var(--color-terracotta-700);
+  --color-mirai-accent-text: var(--color-terracotta-700); /* 本文サイズの強調 */
+  --color-mirai-accent-2: #7a8a5e;
+  --color-mirai-accent-2-text: var(--color-sage-700);
+
+  /* 境界 — 区切りは原則として面の色で行い、線は控えめに使う */
+  --color-mirai-border: var(--color-neutral-300);
+  --color-mirai-border-strong: var(--color-neutral-400);
+
+  /* ══ 議決ステータス ══════════════════════════════════════════════════════
+     Organic に赤はないが、議会サイトは可決と否決を区別しなければならない。
+     階調と同じ OKLCH 明度スケール上に導出している。
+     必ずラベルと併用し、色だけで区別しない。
+     ═══════════════════════════════════════════════════════════════════════ */
+  --color-status-passed: var(--color-sage-700);
+  --color-status-passed-bg: var(--color-sage-200);
+  --color-status-rejected: #9c3527;
+  --color-status-rejected-bg: #fae0da;
+  --color-status-continued: var(--color-terracotta-700);
+  --color-status-continued-bg: var(--color-terracotta-200);
+  --color-status-review: var(--color-neutral-700);
+  --color-status-review-bg: var(--color-neutral-200);
+
+  /* ══ 難易度・言語まわりの装飾 ═══════════════════════════════════════════ */
+  --color-mirai-level-active: var(--color-mirai-accent);
+  --color-mirai-level-active-fg: var(--color-mirai-ground);
+  --color-mirai-tag: var(--color-neutral-200);
+  --color-mirai-tag-text: var(--color-neutral-800);
+  --color-mirai-featured: var(--color-terracotta-200);
+  --color-mirai-featured-text: var(--color-terracotta-800);
+
+  /* ══ 旧トークンの暫定エイリアス ═════════════════════════════════════════
+     設計書 §9 の対応表に沿って旧名を Organic の値へ向けている。
+     参照の置き換えが済んだ時点でこのブロックごと削除する。
+     新規実装でこれらを使ってはいけない。
+     ═══════════════════════════════════════════════════════════════════════ */
+  --color-mirai-text-note: var(--color-neutral-700);
+  --color-mirai-text-subtle: var(--color-neutral-700);
+  --color-mirai-text-close: var(--color-neutral-700);
+  --color-mirai-surface-light: var(--color-neutral-200);
+  --color-mirai-surface-grouped: var(--color-neutral-200);
+  --color-mirai-surface-muted: var(--color-neutral-200);
+  --color-mirai-surface-gray: var(--color-neutral-200);
+  --color-mirai-surface-tag: var(--color-mirai-tag);
+  --color-mirai-surface-warm: var(--color-mirai-surface-sunken);
+  --color-mirai-border-light: var(--color-mirai-border-strong);
+  --color-mirai-border-muted: var(--color-mirai-border);
+  --color-stance-for-bg: var(--color-status-passed-bg);
+  --color-stance-for-badge-start: var(--color-status-passed-bg);
+  --color-stance-for-badge-end: var(--color-status-passed-bg);
+  --color-stance-against: var(--color-status-rejected);
+  --color-stance-against-light: var(--color-status-rejected);
+  --color-stance-against-bg: var(--color-status-rejected-bg);
+  --color-stance-against-badge-bg: var(--color-status-rejected-bg);
+  --color-stance-neutral: var(--color-status-review);
+  --color-stance-neutral-badge-bg: var(--color-status-review-bg);
+  --color-mirai-highlight: var(--color-mirai-featured);
+  --color-mirai-badge-yellow: var(--color-mirai-featured);
+  --color-mirai-star: var(--color-terracotta-500);
+  --color-mirai-info-blue: var(--color-sage-200);
+  --color-mirai-progress-track: var(--color-neutral-300);
+  --color-mirai-progress-fill: var(--color-sage-400);
+  --color-mirai-reaction-active: var(--color-status-rejected);
+  --color-mirai-reaction-inactive: var(--color-mirai-text-muted);
+  --color-gray-300: var(--color-neutral-300);
+  --font-lexend: var(--font-caprasimo), system-ui, sans-serif;
+
+  /* ══ shadcn/ui ブリッジ ═════════════════════════════════════════════════ */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-noto-sans-jp);
-  --font-lexend: var(--font-lexend-giga);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-accent: var(--primary-accent);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-
-  --color-gray-300: #c7c7cc;
-
-  /* --- Mirai Design System Color Tokens --- */
-
-  /* Text */
-  --color-mirai-text: #1f2937;
-  --color-mirai-text-secondary: #404040;
-  --color-mirai-text-muted: #8e8e93;
-  --color-mirai-text-placeholder: #aeaeb2;
-  --color-mirai-text-note: #4c4c4c;
-  --color-mirai-text-subtle: #666666;
-  --color-mirai-text-close: #9f9b9b;
-
-  /* Surface / Background */
-  --color-mirai-surface: #f7f4f0;
-  --color-mirai-surface-light: #eeeeee;
-  --color-mirai-surface-grouped: #f2f2f7;
-  --color-mirai-surface-muted: #e5e5ea;
-  --color-mirai-surface-tag: #e8e8e8;
-  --color-mirai-surface-warm: #eae6dd;
-  --color-mirai-surface-gray: #f6f6f6;
-
-  /* Border */
-  --color-mirai-border: #d2d2d2;
-  --color-mirai-border-light: #b1b1b1;
-  --color-mirai-border-muted: #bebcbc;
-
-  /* Stance semantic colors */
-  --color-stance-for-bg: #ecfcf1;
-  --color-stance-for-badge-start: #e2f6f3;
-  --color-stance-for-badge-end: #eef6e2;
-  --color-stance-against: #c9272a;
-  --color-stance-against-light: #d23c3f;
-  --color-stance-against-bg: #fff1f1;
-  --color-stance-against-badge-bg: #ffeaea;
-  --color-stance-neutral: #805f34;
-  --color-stance-neutral-badge-bg: #f7e8db;
-
-  /* Reaction */
-  --color-mirai-reaction-active: #dd425f;
-  --color-mirai-reaction-inactive: var(--color-mirai-text-muted);
-
-  /* Accent */
-  --color-mirai-star: #ff9500;
-  --color-mirai-highlight: #f4ff5f;
-  --color-mirai-badge-yellow: #fffd96;
-  --color-mirai-info-blue: #b2d3e8;
-
-  /* Progress */
-  --color-mirai-progress-track: #d9d9d9;
-  --color-mirai-progress-fill: #a9e89d;
-
-  /* Gradient endpoints */
-  --color-mirai-gradient-start: #c8d6f0;
-  --color-mirai-gradient-end: #e1e7f4;
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: #f7f4ee;
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: #3559a0;
-  --primary-accent: #254477;
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.656 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-  --leading-relaxed: 1.875;
-}
+  --radius: 1rem;
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.608 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #f5ead8;
+  --foreground: #201e1d;
+
+  --card: #ebddc5;
+  --card-foreground: #201e1d;
+  --popover: #ebddc5;
+  --popover-foreground: #201e1d;
+
+  --primary: #c67139;
+  --primary-accent: #b2622d;
+  --primary-foreground: #f5ead8;
+
+  --secondary: #eee7db;
+  --secondary-foreground: #2e2b25;
+
+  --muted: #eee7db;
+  --muted-foreground: #645c50;
+
+  --accent: #ffe1d0;
+  --accent-foreground: #8c491a;
+
+  --destructive: #9c3527;
+
+  --border: #dcd3c4;
+  --input: #dcd3c4;
+  --ring: #c67139;
+
+  --chart-1: #c67139;
+  --chart-2: #7a8a5e;
+  --chart-3: #b2622d;
+  --chart-4: #aebf92;
+  --chart-5: #82796a;
+
+  --sidebar: #ebddc5;
+  --sidebar-foreground: #201e1d;
+  --sidebar-primary: #c67139;
+  --sidebar-primary-foreground: #f5ead8;
+  --sidebar-accent: #eee7db;
+  --sidebar-accent-foreground: #2e2b25;
+  --sidebar-border: #dcd3c4;
+  --sidebar-ring: #c67139;
+
+  /* 和文の本文は基準の 1.55 より広い行間を要する。 */
+  --leading-relaxed: 1.9;
+  --leading-ruby: 2;
 }
 
 @layer base {
@@ -191,82 +251,91 @@
     outline: none;
   }
 
-  *:focus-visible {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
-  }
-
-  /* ボタンのフォーカス - キーボードのみ */
   button:focus {
     outline: none;
   }
 
-  button:focus-visible {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
-  }
-
-  /* リンクのフォーカス - キーボードのみ */
   a:focus {
     outline: none;
   }
 
-  a:focus-visible {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
-  }
-
-  /* テーブルのフォーカス - キーボードのみ */
   table:focus {
     outline: none;
   }
 
+  *:focus-visible,
+  button:focus-visible,
+  a:focus-visible,
   table:focus-visible {
-    outline: 2px solid var(--primary);
+    outline: 2px solid var(--color-mirai-accent);
     outline-offset: 2px;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--color-mirai-accent) 30%, transparent);
   }
 
   body {
     @apply bg-background text-foreground;
+    font-size: 16px; /* 和文グリフは大きく見えるため 15px から引き上げ */
+    line-height: 1.9;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+  }
+
+  /* ルビ（ふりがな）で行が詰まらないようにする。 */
+  ruby {
+    line-height: var(--leading-ruby);
   }
 }
 
 @layer components {
-  .bg-mirai-gradient {
+  /* 青のグラデーションは廃止。ぼかしが要る箇所は温かい地に向けて落とす。 */
+  .bg-mirai-warm-fade {
     background-image: linear-gradient(
-      to bottom right,
-      var(--color-mirai-gradient-start),
-      var(--color-mirai-gradient-end)
+      180deg,
+      color-mix(in srgb, var(--color-mirai-ground) 0%, transparent) 0%,
+      var(--color-mirai-ground) 62%
     );
   }
 
+  /* 写真はページの上に乗るのではなく、地に沈める。 */
+  .washed {
+    filter: saturate(0.6) contrast(0.85) brightness(1.1) opacity(0.94);
+  }
+
+  /* ── 旧グラデーションの暫定エイリアス（設計書 §9）──────────────────
+     参照の置き換えが済んだ時点で削除する。新規実装では使わない。 */
+  .bg-mirai-gradient,
   .bg-mirai-light-gradient {
-    background-image: linear-gradient(to bottom, #e2f6f3, #eef6e2);
+    background-image: none;
+    background-color: var(--color-mirai-tag);
   }
 
   .bg-mirai-white-fade {
     background-image: linear-gradient(
       180deg,
-      rgba(255, 255, 255, 0.3) 0%,
-      rgb(255, 255, 255) 62%
+      color-mix(in srgb, var(--color-mirai-ground) 0%, transparent) 0%,
+      var(--color-mirai-ground) 62%
     );
   }
 
   .border-mirai-gradient {
-    border: 2px solid transparent;
-    background-image:
-      linear-gradient(white, white),
-      linear-gradient(
-        -45deg,
-        var(--color-mirai-gradient-end) 0%,
-        var(--color-mirai-gradient-start) 100%
-      );
-    background-origin: border-box;
-    background-clip: padding-box, border-box;
+    border: 2px solid var(--color-mirai-border-strong);
   }
 
   .font-lexend {
-    font-family: var(--font-lexend-giga), system-ui, sans-serif;
+    font-family: var(--font-display);
   }
 }
 

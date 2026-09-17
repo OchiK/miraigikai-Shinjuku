@@ -1,21 +1,38 @@
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
-import { Lexend_Giga, Noto_Sans_JP } from "next/font/google";
+import {
+  Caprasimo,
+  Figtree,
+  Zen_Kaku_Gothic_New,
+  Zen_Maru_Gothic,
+} from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
 import type { ReactNode } from "react";
 import { siteConfig } from "@/config/site.config";
 import { env } from "@/lib/env";
 
-const notoSansJP = Noto_Sans_JP({
-  variable: "--font-noto-sans-jp",
+const figtree = Figtree({
+  variable: "--font-figtree",
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
+});
+
+const zenKaku = Zen_Kaku_Gothic_New({
+  variable: "--font-zen-kaku-gothic-new",
   subsets: ["latin"],
   weight: ["400", "500", "700"],
 });
 
-const lexendGiga = Lexend_Giga({
-  variable: "--font-lexend-giga",
+const zenMaru = Zen_Maru_Gothic({
+  variable: "--font-zen-maru-gothic",
   subsets: ["latin"],
-  weight: ["400", "500", "700", "800", "900"],
+  weight: ["400", "500", "700", "900"],
+});
+
+const caprasimo = Caprasimo({
+  variable: "--font-caprasimo",
+  subsets: ["latin"],
+  weight: ["400"],
 });
 
 const isDev = process.env.NODE_ENV === "development";
@@ -72,7 +89,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#3559a0",
+  themeColor: "#c67139",
 };
 
 export default function RootLayout({
@@ -83,7 +100,7 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body
-        className={`${notoSansJP.variable} ${lexendGiga.variable} font-sans antialiased bg-mirai-surface-light`}
+        className={`${figtree.variable} ${zenKaku.variable} ${zenMaru.variable} ${caprasimo.variable} font-sans antialiased`}
       >
         <NextTopLoader showSpinner={false} color="var(--primary)" />
         {children}
