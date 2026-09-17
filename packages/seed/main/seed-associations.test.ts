@@ -52,24 +52,10 @@ describe("公開状態と解説の整合", () => {
   });
 
   it("公開レビュー未了の解説は coming_soon に留める", () => {
-    // 第43・44号議案と承認第2号は出典突合済みの解説を持つが、
-    // 公開判断を行うレビュー担当が未確定のため coming_soon のままにしている。
+    // ステップ4の完了により23件すべてが出典突合済みの解説を持つ。
     // 解説ができた時点で自動的に公開へ切り替わらないことを固定する。
-    const comingSoonSlugs = new Set(
-      bills.filter((b) => b.publish_status === "coming_soon").map((b) => b.slug)
-    );
-
-    const heldBack = [
-      ...new Set(billContentsWithBillSlug.map((c) => c.bill_slug)),
-    ]
-      .filter((slug) => comingSoonSlugs.has(slug))
-      .sort();
-
-    expect(heldBack).toEqual([
-      "shinjuku-2026-r2-gian-43",
-      "shinjuku-2026-r2-gian-44",
-      "shinjuku-2026-r2-shonin-2",
-    ]);
+    expect(bills.filter((b) => b.publish_status === "published")).toEqual([]);
+    expect(bills.filter((b) => b.publish_status === "coming_soon")).toHaveLength(23);
   });
 
   it("解説の対象議案はすべてインベントリに存在する", () => {
@@ -90,19 +76,30 @@ describe("createBillContents", () => {
     }
   });
 
-  it("解説が付くのは出典突合を終えた8件のみ", () => {
-    // ステップ3の5件 + ステップ4パイロットの3件（第43・44号議案、承認第2号）。
-    // 残る15件は一次資料との突合が未了のため、解説を持たない。
-    expect([...new Set(billContentsWithBillSlug.map((c) => c.bill_slug))].sort()).toEqual([
-      "shinjuku-2026-r2-gian-42",
-      "shinjuku-2026-r2-gian-43",
-      "shinjuku-2026-r2-gian-44",
-      "shinjuku-2026-r2-gian-49",
-      "shinjuku-2026-r2-gian-51",
-      "shinjuku-2026-r2-gian-53",
-      "shinjuku-2026-r2-gian-58",
-      "shinjuku-2026-r2-shonin-2",
-    ]);
+  it("入力順が変わっても解説は正しい議案に結び付く", () => {
+    // 実装計画の受入条件「Normal/hard content joins to the intended bill
+    // even when input order changes」に対応する。
+    // 位置ベースで結び付けていると、並びを変えた瞬間に別の議案に付く。
+    const reversed = [...insertedBills].reverse();
+    const byOriginal = createBillContents(insertedBills);
+    const byReversed = createBillContents(reversed);
+
+    expect(byReversed).toEqual(byOriginal);
+    for (const [i, content] of byReversed.entries()) {
+      expect(content.bill_id).toBe(
+        billBySlug(billContentsWithBillSlug[i].bill_slug).id
+      );
+    }
+  });
+
+  it("令和8年第2回定例会の23件すべてが解説を持つ", () => {
+    // ステップ3の5件 + ステップ4パイロットの3件 + ステップ4残り15件 = 23件。
+    // インベントリの全件と一致することを確かめる（取りこぼしと余剰の双方を検出する）。
+    // 期待値は令和8年第2回定例会のインベントリから導出する。
+    // bills 全件と比べると、別会期の議案を seed に足した瞬間に無関係な理由で落ちる。
+    expect([...new Set(billContentsWithBillSlug.map((c) => c.bill_slug))].sort()).toEqual(
+      r8SecondSessionItems.map(buildItemKey).sort()
+    );
   });
 
   it("解説を持つ議案はすべて normal と hard の2種をそろえる", () => {
@@ -135,6 +132,8 @@ describe("createBillContents", () => {
     ).toEqual([
       ["shinjuku-2026-r2-shonin-2", "normal"],
       ["shinjuku-2026-r2-shonin-2", "hard"],
+      ["shinjuku-2026-r2-shonin-3", "normal"],
+      ["shinjuku-2026-r2-shonin-3", "hard"],
     ]);
   });
 
@@ -165,12 +164,37 @@ describe("createBillsTags", () => {
       "shinjuku-2026-r2-gian-43": "くらし・行財政",
       "shinjuku-2026-r2-gian-44": "くらし・行財政",
       "shinjuku-2026-r2-shonin-2": "くらし・行財政",
+      "shinjuku-2026-r2-shonin-3": "くらし・行財政",
+      "shinjuku-2026-r2-gian-45": "多文化共生・手続き",
+      "shinjuku-2026-r2-gian-46": "くらし・行財政",
+      "shinjuku-2026-r2-gian-47": "くらし・行財政",
+      "shinjuku-2026-r2-gian-48": "くらし・行財政",
+      "shinjuku-2026-r2-gian-50": "子育て・教育",
+      "shinjuku-2026-r2-gian-52": "くらし・行財政",
+      "shinjuku-2026-r2-gian-54": "まちづくり・環境",
+      "shinjuku-2026-r2-gian-55": "子育て・教育",
+      "shinjuku-2026-r2-gian-56": "子育て・教育",
+      "shinjuku-2026-r2-gian-57": "文化・生涯学習",
+      "shinjuku-2026-r2-gian-59": "くらし・行財政",
+      "shinjuku-2026-r2-gian-60": "くらし・行財政",
+      "shinjuku-2026-r2-gian-61": "まちづくり・環境",
+      "shinjuku-2026-r2-gian-62": "文化・生涯学習",
     });
   });
 
   it("タグ未設定の議案には bills_tags を作らない", () => {
-    const billsTags = createBillsTags(insertedBills, insertedTags);
-    expect(billsTags).toHaveLength(8);
+    // 現在は23件すべてにタグを付けているため、インベントリだけを渡すと
+    // 未設定の経路を一度も通らず、このテストが空振りする。
+    // タグ表に無い議案を明示的に混ぜて、その議案に関連付けが作られないことを見る。
+    const unmapped: SeededBillRef = {
+      id: "00000000-0000-0000-0000-0000000000ff",
+      name: "タグ表に無い議案",
+      slug: "not-in-tag-map",
+    };
+    const billsTags = createBillsTags([...insertedBills, unmapped], insertedTags);
+
+    expect(billsTags.some((bt) => bt.bill_id === unmapped.id)).toBe(false);
+    expect(billsTags).toHaveLength(23);
   });
 });
 

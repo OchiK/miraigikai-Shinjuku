@@ -12,6 +12,7 @@ import {
   handleChatRequest,
   type ChatMessageMetadata,
 } from "./handle-chat-request";
+import type { BillWithContent } from "@/features/bills/shared/types";
 import { ChatError, ChatErrorCode } from "@/features/chat/shared/types/errors";
 import { recordChatUsage } from "./cost-tracker";
 
@@ -33,6 +34,23 @@ async function consumeResponseStream(response: Response): Promise<string> {
 }
 
 /**
+ * テスト用の議案コンテキスト。
+ * プロンプト組み立てに使う項目のみ持たせ、Row の全カラムは再現しない。
+ */
+function createTestBill(): BillWithContent {
+  return {
+    id: "test-bill-1",
+    name: "議案第1号",
+    bill_content: {
+      title: "テスト議案のタイトル",
+      summary: "テスト議案の要約",
+      content: "テスト議案の本文",
+    },
+    tags: [],
+  } as unknown as BillWithContent;
+}
+
+/**
  * テスト用メッセージを作成するヘルパー
  */
 function createTestMessages(
@@ -44,6 +62,7 @@ function createTestMessages(
       role: "user",
       parts: [{ type: "text", text: "テスト質問です" }],
       metadata: {
+        billContext: createTestBill(),
         difficultyLevel: "normal",
         sessionId: "",
         ...overrides,
@@ -94,18 +113,19 @@ describe("handleChatRequest 統合テスト", () => {
         "請求書チャット用システムプロンプト"
       );
       const receivedPromptNames: string[] = [];
+      const receivedVariables: (Record<string, string> | undefined)[] = [];
 
-      // getPrompt が呼ばれた際にプロンプト名を記録するカスタムプロバイダー
+      // getPrompt が呼ばれた際にプロンプト名と変数を記録するカスタムプロバイダー
       const trackingPromptProvider = {
         getPrompt: async (name: string, variables?: Record<string, string>) => {
           receivedPromptNames.push(name);
+          receivedVariables.push(variables);
           return promptProvider.getPrompt(name, variables);
         },
       };
 
       const mockModel = createStreamMock(["テスト応答"]);
       const messages = createTestMessages({
-        pageContext: { type: "bill" },
         difficultyLevel: "normal",
       });
 
@@ -119,24 +139,47 @@ describe("handleChatRequest 統合テスト", () => {
 
       expect(receivedPromptNames).toHaveLength(1);
       expect(receivedPromptNames[0]).toBe("bill-chat-system-normal");
+      // billContext の内容がそのままプロンプト変数に渡る
+      expect(receivedVariables[0]).toEqual({
+        billName: "議案第1号",
+        billTitle: "テスト議案のタイトル",
+        billSummary: "テスト議案の要約",
+        billContent: "テスト議案の本文",
+      });
     });
 
-    it("pageContext.type が home の場合は top-chat-system プロンプトが選択される", async () => {
+    it("billContext を持たないメッセージは BILL_CONTEXT_REQUIRED で拒否される", async () => {
+      const mockModel = createStreamMock(["テスト応答"]);
+      const mockPromptProvider = createMockPromptProvider();
+      const messages = createTestMessages();
+      // 議案に紐づかないチャットは受け付けない（デザインシステム定義 §10）
+      messages[0].metadata = {
+        difficultyLevel: "normal",
+        sessionId: "",
+      } as unknown as ChatMessageMetadata;
+
+      await expect(
+        handleChatRequest({
+          messages,
+          userId: testUser.id,
+          deps: { model: mockModel, promptProvider: mockPromptProvider },
+        })
+      ).rejects.toMatchObject({
+        code: ChatErrorCode.BILL_CONTEXT_REQUIRED,
+      });
+    });
+
+    it("難易度に応じた bill-chat-system プロンプトが選択される", async () => {
       const receivedPromptNames: string[] = [];
       const trackingPromptProvider = {
         getPrompt: async (name: string) => {
           receivedPromptNames.push(name);
-          return { content: "ホームチャット用プロンプト", metadata: "{}" };
+          return { content: "議案チャット用プロンプト", metadata: "{}" };
         },
       };
 
       const mockModel = createStreamMock(["テスト応答"]);
-      const messages = createTestMessages({
-        pageContext: {
-          type: "home",
-          bills: [{ id: "bill-1", name: "テスト法案" }],
-        },
-      });
+      const messages = createTestMessages({ difficultyLevel: "hard" });
 
       const response = await handleChatRequest({
         messages,
@@ -146,7 +189,7 @@ describe("handleChatRequest 統合テスト", () => {
 
       await consumeResponseStream(response);
 
-      expect(receivedPromptNames[0]).toBe("top-chat-system");
+      expect(receivedPromptNames[0]).toBe("bill-chat-system-hard");
     });
   });
 
@@ -177,6 +220,10 @@ describe("handleChatRequest 統合テスト", () => {
       expect(usageEvents).toHaveLength(1);
       expect(usageEvents?.[0].user_id).toBe(testUser.id);
       expect(usageEvents?.[0].session_id).toBe(sessionId);
+      expect(usageEvents?.[0].metadata).toMatchObject({
+        pageType: "bill",
+        billId: "test-bill-1",
+      });
     });
 
     it("sessionId が空の場合は session_id が null として保存される", async () => {

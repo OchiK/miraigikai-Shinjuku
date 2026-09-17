@@ -31,12 +31,9 @@ import {
 } from "./system-cost-guard";
 
 export type ChatMessageMetadata = {
-  billContext?: BillWithContent;
+  /** チャットは必ず1つの議案に紐づく（デザインシステム定義 §10） */
+  billContext: BillWithContent;
   hasInterviewConfig?: boolean;
-  pageContext?: {
-    type: "home" | "bill";
-    bills?: Array<{ id: string; name: string; summary?: string }>;
-  };
   difficultyLevel: DifficultyLevelEnum;
   sessionId: string;
 };
@@ -107,12 +104,9 @@ export async function handleChatRequest({
   );
 
   // Build system prompt with interview suggestion instructions
-  const pageType =
-    context.pageContext?.type ?? (context.billContext ? "bill" : undefined);
   const systemPrompt = buildSystemPromptWithInterviewInstructions(
     promptResult.content,
-    shouldSuggestInterview,
-    pageType
+    shouldSuggestInterview
   );
 
   // Build tools configuration
@@ -166,10 +160,14 @@ function extractChatContext(
 ): ChatMessageMetadata {
   const metadata = messages[0]?.metadata;
 
+  // 議案に紐づかないチャットは受け付けない
+  if (!metadata?.billContext) {
+    throw new ChatError(ChatErrorCode.BILL_CONTEXT_REQUIRED);
+  }
+
   return {
-    billContext: metadata?.billContext,
+    billContext: metadata.billContext,
     hasInterviewConfig: metadata?.hasInterviewConfig,
-    pageContext: metadata?.pageContext,
     difficultyLevel: (metadata?.difficultyLevel ||
       "normal") as DifficultyLevelEnum,
     sessionId: metadata?.sessionId || "",
@@ -184,21 +182,15 @@ async function buildPrompt(
   promptProvider: PromptProvider
 ) {
   // Determine prompt name
-  const promptName =
-    context.pageContext?.type === "home"
-      ? "top-chat-system"
-      : `bill-chat-system-${context.difficultyLevel}`;
+  const promptName = `bill-chat-system-${context.difficultyLevel}`;
 
   // Prepare prompt variables
-  const variables: Record<string, string> =
-    context.pageContext?.type === "home"
-      ? { billSummary: JSON.stringify(context.pageContext.bills ?? "") }
-      : {
-          billName: context.billContext?.name ?? "",
-          billTitle: context.billContext?.bill_content?.title ?? "",
-          billSummary: context.billContext?.bill_content?.summary ?? "",
-          billContent: context.billContext?.bill_content?.content ?? "",
-        };
+  const variables: Record<string, string> = {
+    billName: context.billContext.name,
+    billTitle: context.billContext.bill_content?.title ?? "",
+    billSummary: context.billContext.bill_content?.summary ?? "",
+    billContent: context.billContext.bill_content?.content ?? "",
+  };
 
   // Fetch prompt from Langfuse
   try {
@@ -223,8 +215,8 @@ function buildTelemetryMetadata(
 ) {
   return {
     langfusePrompt: promptResult.metadata,
-    billId: context.billContext?.id || "",
-    pageType: context.pageContext?.type || "bill",
+    billId: context.billContext.id,
+    pageType: "bill",
     difficultyLevel: context.difficultyLevel,
     userId,
     sessionId: context.sessionId,
@@ -244,9 +236,9 @@ function buildUsageMetadata(
     : 0;
 
   return {
-    pageType: context.pageContext?.type ?? null,
+    pageType: "bill",
     difficultyLevel: context.difficultyLevel,
-    billId: context.billContext?.id ?? null,
+    billId: context.billContext.id,
     finishReason,
     stepCount,
   };
@@ -281,10 +273,6 @@ const INTERVIEW_AWARENESS_PROMPT_BILL = `${INTERVIEW_AWARENESS_BASE}
 この議案のインタビュー機能が現在利用可能かどうかは状況によって異なります。インタビューについて質問された場合は、この機能の存在を説明した上で、議案詳細ページでインタビューへの案内が表示されているか確認するよう案内してください。
 `;
 
-const INTERVIEW_AWARENESS_PROMPT_HOME = `${INTERVIEW_AWARENESS_BASE}
-インタビューについて質問された場合は、この機能の存在を説明した上で、利用可否は議案ごとに異なるため、興味のある議案の詳細ページでインタビューへの案内が表示されているか確認するよう案内してください。
-`;
-
 const INTERVIEW_SUGGESTION_PROMPT = `
 
 ## AIインタビュー提案について
@@ -317,7 +305,7 @@ async function determineShouldSuggestInterview(
   context: ChatMessageMetadata,
   messages: UIMessage<ChatMessageMetadata>[]
 ): Promise<boolean> {
-  if (!siteConfig.features.aiInterview || !context.billContext) {
+  if (!siteConfig.features.aiInterview) {
     return false;
   }
 
@@ -353,16 +341,9 @@ function hasExistingSuggestInterview(
  */
 function buildSystemPromptWithInterviewInstructions(
   basePrompt: string,
-  shouldSuggestInterview: boolean,
-  pageType: "home" | "bill" | undefined
+  shouldSuggestInterview: boolean
 ): string {
   if (!siteConfig.features.aiInterview) {
-    return basePrompt;
-  }
-  if (pageType === "home") {
-    return basePrompt + INTERVIEW_AWARENESS_PROMPT_HOME;
-  }
-  if (pageType !== "bill") {
     return basePrompt;
   }
   let prompt = basePrompt + INTERVIEW_AWARENESS_PROMPT_BILL;

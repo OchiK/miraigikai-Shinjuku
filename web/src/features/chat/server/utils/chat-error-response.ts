@@ -14,6 +14,11 @@ export function chatErrorToResponse(error: unknown): Response {
           "本日の利用上限に達しました。明日0時以降に再度お試しください。",
           429
         );
+      case ChatErrorCode.BILL_CONTEXT_REQUIRED:
+        return textResponse(
+          "議案が指定されていません。議案のページから質問してください。",
+          400
+        );
       case ChatErrorCode.SYSTEM_MONTHLY_COST_LIMIT_REACHED:
         return textResponse(
           "今月の利用上限に達しました。来月1日以降に再度お試しください。",
