@@ -1,5 +1,6 @@
 import type { PromptProvider } from "../interface/prompt-provider";
 import type { CompiledPrompt, PromptVariables } from "../interface/types";
+import { buildBillChatSystemEasyPrompt } from "./templates/bill-chat-system-easy";
 import { buildBillChatSystemHardPrompt } from "./templates/bill-chat-system-hard";
 import { buildBillChatSystemNormalPrompt } from "./templates/bill-chat-system-normal";
 
@@ -23,6 +24,15 @@ function validateBillVariables(v: PromptVariables, promptName: string): void {
 /** プロンプト名からビルド関数へのマップ */
 const PROMPT_BUILDERS: Record<string, (variables: PromptVariables) => string> =
   {
+    "bill-chat-system-easy": (v) => {
+      validateBillVariables(v, "bill-chat-system-easy");
+      return buildBillChatSystemEasyPrompt(
+        v.billName,
+        v.billTitle,
+        v.billSummary,
+        v.billContent
+      );
+    },
     "bill-chat-system-normal": (v) => {
       validateBillVariables(v, "bill-chat-system-normal");
       return buildBillChatSystemNormalPrompt(

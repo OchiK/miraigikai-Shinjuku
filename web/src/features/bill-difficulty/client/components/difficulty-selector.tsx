@@ -1,40 +1,46 @@
 "use client";
 
-import type { CSSProperties } from "react";
-import { useId, useState } from "react";
-import { Switch } from "@/components/ui/switch";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { setDifficultyLevel } from "../../server/actions/set-difficulty-level";
+import {
+  DIFFICULTY_LABELS,
+  type DifficultyLevelEnum,
+  VALID_DIFFICULTY_LEVELS,
+} from "../../shared/types";
 import {
   saveScrollDistanceFromBottom,
   useRestoreScrollFromBottom,
 } from "../hooks/use-scroll-from-bottom";
-import type { DifficultyLevelEnum } from "../../shared/types";
 
 interface DifficultySelectorProps {
   currentLevel: DifficultyLevelEnum;
-  label?: string;
-  labelStyle?: CSSProperties;
   scrollToTop?: boolean;
   maintainScrollFromBottom?: boolean;
 }
 
+/**
+ * やさしい / ふつう / くわしく の3択セグメント。
+ * デザインシステム定義 §6 に従い、位置と形をどの画面でも変えない。
+ */
 export function DifficultySelector({
   currentLevel,
-  label,
-  labelStyle,
   scrollToTop,
   maintainScrollFromBottom,
 }: DifficultySelectorProps) {
   const [selectedLevel, setSelectedLevel] =
     useState<DifficultyLevelEnum>(currentLevel);
-  const uniqueId = useId();
   const [isChanging, setIsChanging] = useState(false);
 
   // ページロード時にスクロール位置を復元
   useRestoreScrollFromBottom(maintainScrollFromBottom ?? false);
 
-  const handleToggle = async (checked: boolean) => {
-    const newLevel = checked ? "hard" : "normal";
+  const handleSelect = async (newLevel: DifficultyLevelEnum) => {
+    if (newLevel === selectedLevel || isChanging) {
+      return;
+    }
+
     setIsChanging(true);
     setSelectedLevel(newLevel);
 
@@ -71,23 +77,33 @@ export function DifficultySelector({
   };
 
   return (
-    <div className="flex items-center gap-2">
-      <span className="text-sm font-bold" style={labelStyle}>
-        {label != null ? (
-          label
-        ) : (
-          <span>
-            <span className="hidden md:inline-block">説明をもっと</span>詳しく
-          </span>
-        )}
-      </span>
-      <Switch
-        id={`${uniqueId}-difficulty-toggle`}
-        checked={selectedLevel === "hard"}
-        onCheckedChange={handleToggle}
-        disabled={isChanging}
-        aria-label="難易度を切り替え"
-      />
+    <div
+      className="flex shrink-0 items-center gap-0.5 rounded-full bg-mirai-surface-muted p-0.5 md:gap-1 md:p-1"
+      role="group"
+      aria-label="説明の詳しさを切り替え"
+    >
+      {VALID_DIFFICULTY_LEVELS.map((level) => {
+        const isSelected = level === selectedLevel;
+
+        return (
+          <Button
+            key={level}
+            type="button"
+            variant="ghost"
+            disabled={isChanging}
+            aria-pressed={isSelected}
+            onClick={() => handleSelect(level)}
+            className={cn(
+              "h-11 px-1.5 text-xs md:px-3 md:text-sm",
+              isSelected
+                ? "bg-primary text-primary-foreground hover:bg-primary-accent hover:text-primary-foreground"
+                : "text-mirai-text-secondary"
+            )}
+          >
+            {DIFFICULTY_LABELS[level]}
+          </Button>
+        );
+      })}
     </div>
   );
 }

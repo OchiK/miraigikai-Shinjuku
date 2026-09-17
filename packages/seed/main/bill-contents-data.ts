@@ -1,7 +1,9 @@
 import { type SeededBillRef, requireBillBySlug } from "./bill-ref";
 import { gianKey, shoninKey } from "./shinjuku-r8-2-inventory";
 
-type DifficultyLevel = "normal" | "hard";
+// やさしい日本語版（easy）は公式一次資料をもとに別途整備する。
+// 未整備の議案は表示時に「ふつう」へフォールバックする。
+type DifficultyLevel = "easy" | "normal" | "hard";
 
 interface BillContentWithBillSlug {
   /** 対象議案の安定識別子。件名は重複しうるため slug で突合する。 */
