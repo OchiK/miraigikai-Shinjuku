@@ -112,6 +112,32 @@
   --color-status-review: var(--color-neutral-700);
   --color-status-review-bg: var(--color-neutral-200);
 
+  /* ══ AI生成コンテンツ ════════════════════════════════════════════════════
+     AIが書いた文章はこの地色に置き、一次資料の引用と見分けられるようにする。
+     必ず AI ラベルと注意書きを併用する。
+     ═══════════════════════════════════════════════════════════════════════ */
+  --color-mirai-ai-bg: var(--color-terracotta-100);
+  --color-mirai-ai-text: var(--color-terracotta-900);
+  --color-mirai-ai-border: var(--color-terracotta-400);
+
+  /* ══ 議決結果の賛否 ══════════════════════════════════════════════════════
+     反対に赤を使わない。反対は異常ではない。
+     --color-status-rejected の赤は「議案が否決された」ステータスにのみ使う。
+     -bg / -text は会派別の賛否バッジ用。必ずラベルと併用する。
+     ═══════════════════════════════════════════════════════════════════════ */
+  --color-mirai-vote-for: var(--color-sage-500);
+  --color-mirai-vote-for-bg: var(--color-sage-200);
+  --color-mirai-vote-for-text: var(--color-sage-700);
+  --color-mirai-vote-against: var(--color-neutral-300);
+  --color-mirai-vote-against-bg: var(--color-neutral-200);
+  --color-mirai-vote-against-text: var(--color-neutral-800);
+
+  /* ══ AIチャット ═════════════════════════════════════════════════════════ */
+  --color-mirai-chat-self: var(--color-sage-200);
+  --color-mirai-chat-self-text: var(--color-sage-900);
+  --color-mirai-source-chip: var(--color-neutral-200);
+  --color-mirai-source-chip-text: var(--color-neutral-800);
+
   /* ══ 難易度・言語まわりの装飾 ═══════════════════════════════════════════ */
   --color-mirai-level-active: var(--color-mirai-accent);
   --color-mirai-level-active-fg: var(--color-mirai-ground);
