@@ -16,7 +16,7 @@ export const stanceLabels: Record<string, string> = {
 export const stanceTextColors: Record<string, string> = {
   for: "text-mirai-vote-for-text",
   against: "text-mirai-vote-against-text",
-  neutral: "text-status-continued",
+  neutral: "text-status-review",
 };
 
 /**
@@ -25,7 +25,7 @@ export const stanceTextColors: Record<string, string> = {
 export const stanceBadgeBgStyles: Record<string, string> = {
   for: "bg-mirai-vote-for-bg",
   against: "bg-mirai-vote-against-bg",
-  neutral: "bg-status-continued-bg",
+  neutral: "bg-status-review-bg",
 };
 
 /**

@@ -53,7 +53,7 @@ export function InterviewSuggestionBanner({
         </div>
         <Button
           asChild
-          className="rounded-full h-9 px-4 font-medium text-sm gap-2.5"
+          className="rounded-full h-11 px-4 font-medium text-sm gap-2.5"
         >
           <Link href={getInterviewLPLink(billId) as Route}>
             <span>AIインタビューを受ける</span>

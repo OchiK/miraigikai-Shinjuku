@@ -64,7 +64,7 @@ function ComingSoonBillCard({ bill }: { bill: ComingSoonBill }) {
     <Card
       className={`border border-black ${
         bill.council_url
-          ? "hover:bg-gray-50 transition-colors cursor-pointer"
+          ? "hover:bg-neutral-200 transition-colors cursor-pointer"
           : ""
       }`}
     >
@@ -83,7 +83,7 @@ function ComingSoonBillCard({ bill }: { bill: ComingSoonBill }) {
           )}
         </div>
         {bill.council_url && (
-          <ExternalLink className="h-5 w-5 text-gray-400 flex-shrink-0" />
+          <ExternalLink className="h-5 w-5 text-mirai-text-placeholder flex-shrink-0" />
         )}
       </CardContent>
     </Card>

@@ -83,9 +83,9 @@ export function BillShareModal({
       onKeyDown={handleBackgroundKeyDown}
       tabIndex={-1}
     >
-      <div className="bg-white rounded-2xl p-7 w-[370px] max-w-full flex flex-col items-center gap-9">
+      <div className="bg-card rounded-2xl p-7 w-[370px] max-w-full flex flex-col items-center gap-9">
         {/* タイトル */}
-        <h2 className="text-xl font-bold text-gray-800 text-center w-full">
+        <h2 className="text-xl font-bold text-mirai-text text-center w-full">
           記事を共有する
         </h2>
 
@@ -103,7 +103,7 @@ export function BillShareModal({
 
         {/* シェアセクション */}
         <div className="flex flex-col items-center gap-4 w-full">
-          <p className="text-base font-bold text-gray-800 text-center">
+          <p className="text-base font-bold text-mirai-text text-center">
             シェアして議会の議論をオープンに
           </p>
 

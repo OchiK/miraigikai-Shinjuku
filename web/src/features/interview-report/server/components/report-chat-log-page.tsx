@@ -71,7 +71,7 @@ export async function ReportChatLogPage({
       <div className="px-4 pt-8 pb-8">
         <div className="flex flex-col items-center">
           {/* Title */}
-          <h1 className="text-2xl font-bold text-center text-gray-800">
+          <h1 className="text-2xl font-bold text-center text-mirai-text">
             実際のインタビュー
           </h1>
 
@@ -103,10 +103,10 @@ export async function ReportChatLogPage({
         <div className="flex flex-col gap-9">
           {/* Chat Log Section */}
           <div className="flex flex-col gap-4">
-            <h2 className="text-xl font-bold text-gray-800">
+            <h2 className="text-xl font-bold text-mirai-text">
               🎤すべての会話ログ
             </h2>
-            <div className="bg-white rounded-2xl p-6">
+            <div className="bg-card rounded-2xl p-6">
               <div className="flex flex-col gap-4">
                 {messages.map((message) => (
                   <ChatMessage key={message.id} message={message} />
@@ -184,10 +184,10 @@ function ChatMessage({ message }: ChatMessageProps) {
         id={`message-${message.id}`}
         className="flex flex-col items-start gap-2 scroll-mt-24"
       >
-        <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center">
-          <Bot size={24} className="text-gray-600" />
+        <div className="w-9 h-9 rounded-full bg-neutral-200 flex items-center justify-center">
+          <Bot size={24} className="text-mirai-text-muted" />
         </div>
-        <p className="text-sm font-medium leading-relaxed whitespace-pre-wrap text-gray-800">
+        <p className="text-sm font-medium leading-relaxed whitespace-pre-wrap text-mirai-text">
           {displayText}
         </p>
       </div>

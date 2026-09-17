@@ -46,7 +46,7 @@ function RatingPhase({
               className={`size-6 ${
                 selectedRating !== null && star <= selectedRating
                   ? "fill-terracotta-500 text-terracotta-500"
-                  : "fill-white text-mirai-text-muted stroke-[0.5]"
+                  : "fill-card text-mirai-text-muted stroke-[0.5]"
               }`}
             />
           </Button>
@@ -189,7 +189,7 @@ export function InterviewRatingWidget({
   }, [phase, onDismiss]);
 
   return (
-    <div className="relative mx-4 rounded-xl bg-gray-100 px-6 py-4">
+    <div className="relative mx-4 rounded-xl bg-neutral-200 px-6 py-4">
       <div className="flex flex-col gap-2.5">
         {phase === "rating" && (
           <RatingPhase selectedRating={selectedRating} onRate={handleRate} />
@@ -207,7 +207,7 @@ export function InterviewRatingWidget({
         variant="ghost"
         size="icon"
         onClick={phase === "feedback" ? handleDismissToThankYou : onDismiss}
-        className="absolute right-2 top-2 h-[22px] w-[22px] p-0 text-mirai-text-muted hover:bg-transparent hover:text-gray-500"
+        className="absolute right-2 top-2 h-[22px] w-[22px] p-0 text-mirai-text-muted hover:bg-transparent hover:text-mirai-text-muted"
         aria-label="閉じる"
       >
         <X size={11} strokeWidth={2} />

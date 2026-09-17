@@ -90,7 +90,7 @@ export function InterviewPublicConsentModal({
             variant="ghost"
             onClick={() => onSubmit(false)}
             disabled={isSubmitting}
-            className="w-full text-gray-500"
+            className="w-full text-mirai-text-muted"
           >
             非公開で提出する
           </Button>

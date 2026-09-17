@@ -59,7 +59,7 @@ export function InterviewConsentModal({
         </DialogHeader>
 
         <div className="flex flex-col gap-6 mt-6">
-          <ul className="flex flex-col gap-3 list-disc pl-5 text-sm font-bold text-gray-800 leading-[22px]">
+          <ul className="flex flex-col gap-3 list-disc pl-5 text-sm font-bold text-mirai-text leading-[22px]">
             <li>
               {siteConfig.managingParty
                 ? `回答データは${siteConfig.managingParty}内での政策検討に利用します。`

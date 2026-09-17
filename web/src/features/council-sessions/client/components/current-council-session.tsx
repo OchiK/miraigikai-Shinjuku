@@ -10,7 +10,7 @@ export function CurrentCouncilSession({ session }: CurrentCouncilSessionProps) {
     <div className="w-full bg-mirai-surface-sunken px-6 py-6">
       <div className="flex items-center gap-5">
         <div className="flex items-center gap-4 flex-1">
-          <h2 className="text-xl font-bold text-gray-800 leading-[0.9]">
+          <h2 className="text-xl font-bold text-mirai-text leading-[0.9]">
             本日は
           </h2>
           <div

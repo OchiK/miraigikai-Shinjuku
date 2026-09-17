@@ -41,7 +41,7 @@ function _FilterChip({
       type="button"
       onClick={onClick}
       className={cn(
-        "inline-flex items-center gap-1 px-3 py-1.5 rounded-[50px] h-[29px] text-sm font-bold transition-colors",
+        "inline-flex items-center gap-1 px-3 py-1.5 rounded-full h-11 text-sm font-bold transition-colors",
         isActive
           ? "bg-primary text-primary-foreground"
           : "bg-card text-mirai-text-muted"

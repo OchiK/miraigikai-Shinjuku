@@ -140,7 +140,7 @@ export function BillListWithStatusFilter({
             key={filter.key}
             variant="ghost"
             onClick={() => setActiveStatusFilter(filter.key)}
-            className={`h-[29px] px-4 py-1.5 rounded-full text-sm font-bold transition-colors ${
+            className={`h-11 px-4 py-1.5 rounded-full text-sm font-bold transition-colors ${
               activeStatusFilter === filter.key
                 ? "bg-primary text-primary-foreground hover:bg-primary-accent hover:text-primary-foreground"
                 : "bg-neutral-200 text-mirai-text-muted hover:bg-neutral-300 hover:text-mirai-text-muted"
@@ -157,7 +157,7 @@ export function BillListWithStatusFilter({
           <Button
             variant="ghost"
             onClick={() => setActiveTagId(null)}
-            className={`h-[29px] px-4 py-1.5 rounded-full text-xs font-bold transition-colors ${
+            className={`h-11 px-4 py-1.5 rounded-full text-xs font-bold transition-colors ${
               activeTagId === null
                 ? "bg-primary text-primary-foreground hover:bg-primary-accent hover:text-primary-foreground"
                 : "bg-neutral-200 text-mirai-text-muted hover:bg-neutral-300 hover:text-mirai-text-muted"
@@ -170,7 +170,7 @@ export function BillListWithStatusFilter({
               key={tag.id}
               variant="ghost"
               onClick={() => setActiveTagId(tag.id)}
-              className={`h-[29px] px-4 py-1.5 rounded-full text-xs font-bold transition-colors ${
+              className={`h-11 px-4 py-1.5 rounded-full text-xs font-bold transition-colors ${
                 activeTagId === tag.id
                   ? "bg-primary text-primary-foreground hover:bg-primary-accent hover:text-primary-foreground"
                   : "bg-neutral-200 text-mirai-text-muted hover:bg-neutral-300 hover:text-mirai-text-muted"
