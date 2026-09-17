@@ -70,9 +70,17 @@ export interface ShinjukuSessionItem {
   /** 公式議決結果 */
   decision: ShinjukuDecision;
   /**
-   * レビュー済みの日本語解説（bill_contents）を保有し、
-   * 公開表示してよい案件かどうか。
-   * 解説が未整備の案件は coming_soon として扱い、内容を創作しない。
+   * 公開表示してよい案件かどうか。`published` / `coming_soon` に直結する。
+   *
+   * 「解説が存在すること」と「公開してよいこと」は別である。
+   * 解説が未整備の案件を coming_soon にするのは当然として、
+   * 解説が出典突合済みでも、公開判断を行うレビューが済むまでは false に留める
+   * （実装計画ステップ4「Keep an item coming_soon until the required content is
+   * valid and reviewed for publication」）。
+   *
+   * 第43・44号議案と承認第2号は解説を保有するが、公開レビューの担当者が
+   * 未確定のため false のままにしている。担当者が決まりレビューが済んだら、
+   * 当該案件をここで true にし、bills.is_review_completed も併せて更新すること。
    */
   hasPublishableContent: boolean;
   /** トップページ等での注目表示 */

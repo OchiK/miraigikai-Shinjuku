@@ -34,29 +34,42 @@ describe("bills seed", () => {
 });
 
 describe("公開状態と解説の整合", () => {
-  // hasPublishableContent（インベントリ側）と解説の実在（bill-contents-data 側）が
-  // 食い違うと、解説ゼロの議案が published になって詳細ページが空になる。
-  it("published の議案と解説を持つ議案が完全に一致する", () => {
-    const publishedSlugs = bills
+  // 「解説を持つ」と「公開してよい」は別である。
+  // 前者だけを根拠に published にすると、公開レビュー未了の解説が公開ページに出る。
+  // 逆に解説を持たない議案が published になると、詳細ページが空になる。
+  // したがって published ⊆ 解説あり を検証する（一致ではなく包含）。
+  it("published の議案は必ず解説を持つ", () => {
+    const slugsWithContent = new Set(
+      billContentsWithBillSlug.map((c) => c.bill_slug)
+    );
+
+    const publishedWithoutContent = bills
       .filter((b) => b.publish_status === "published")
-      .map((b) => b.slug)
-      .sort();
+      .filter((b) => !slugsWithContent.has(b.slug ?? ""))
+      .map((b) => b.slug);
 
-    const slugsWithContent = [
-      ...new Set(billContentsWithBillSlug.map((c) => c.bill_slug)),
-    ].sort();
-
-    expect(publishedSlugs).toEqual(slugsWithContent);
+    expect(publishedWithoutContent).toEqual([]);
   });
 
-  it("coming_soon の議案は解説を持たない", () => {
+  it("公開レビュー未了の解説は coming_soon に留める", () => {
+    // 第43・44号議案と承認第2号は出典突合済みの解説を持つが、
+    // 公開判断を行うレビュー担当が未確定のため coming_soon のままにしている。
+    // 解説ができた時点で自動的に公開へ切り替わらないことを固定する。
     const comingSoonSlugs = new Set(
       bills.filter((b) => b.publish_status === "coming_soon").map((b) => b.slug)
     );
 
-    for (const content of billContentsWithBillSlug) {
-      expect(comingSoonSlugs.has(content.bill_slug)).toBe(false);
-    }
+    const heldBack = [
+      ...new Set(billContentsWithBillSlug.map((c) => c.bill_slug)),
+    ]
+      .filter((slug) => comingSoonSlugs.has(slug))
+      .sort();
+
+    expect(heldBack).toEqual([
+      "shinjuku-2026-r2-gian-43",
+      "shinjuku-2026-r2-gian-44",
+      "shinjuku-2026-r2-shonin-2",
+    ]);
   });
 
   it("解説の対象議案はすべてインベントリに存在する", () => {
@@ -77,13 +90,51 @@ describe("createBillContents", () => {
     }
   });
 
-  it("解説が付くのは第42・49・51・53・58号議案のみ", () => {
+  it("解説が付くのは出典突合を終えた8件のみ", () => {
+    // ステップ3の5件 + ステップ4パイロットの3件（第43・44号議案、承認第2号）。
+    // 残る15件は一次資料との突合が未了のため、解説を持たない。
     expect([...new Set(billContentsWithBillSlug.map((c) => c.bill_slug))].sort()).toEqual([
       "shinjuku-2026-r2-gian-42",
+      "shinjuku-2026-r2-gian-43",
+      "shinjuku-2026-r2-gian-44",
       "shinjuku-2026-r2-gian-49",
       "shinjuku-2026-r2-gian-51",
       "shinjuku-2026-r2-gian-53",
       "shinjuku-2026-r2-gian-58",
+      "shinjuku-2026-r2-shonin-2",
+    ]);
+  });
+
+  it("解説を持つ議案はすべて normal と hard の2種をそろえる", () => {
+    // 片方だけだと難易度切り替えで空表示になる。
+    const byBill = new Map<string, Set<string>>();
+    for (const c of billContentsWithBillSlug) {
+      const levels = byBill.get(c.bill_slug) ?? new Set<string>();
+      levels.add(c.difficulty_level);
+      byBill.set(c.bill_slug, levels);
+    }
+
+    for (const [slug, levels] of byBill) {
+      expect([...levels].sort(), slug).toEqual(["hard", "normal"]);
+    }
+  });
+
+  it("(bill_slug, difficulty_level) の組に重複がない", () => {
+    const keys = billContentsWithBillSlug.map(
+      (c) => `${c.bill_slug}:${c.difficulty_level}`
+    );
+    expect(new Set(keys).size).toBe(keys.length);
+  });
+
+  it("承認案件の解説は承認の slug に付く（件名が重複するため slug でのみ特定できる）", () => {
+    const shoninContents = billContentsWithBillSlug.filter((c) =>
+      c.bill_slug.startsWith("shinjuku-2026-r2-shonin-")
+    );
+    expect(
+      shoninContents.map((c) => [c.bill_slug, c.difficulty_level])
+    ).toEqual([
+      ["shinjuku-2026-r2-shonin-2", "normal"],
+      ["shinjuku-2026-r2-shonin-2", "hard"],
     ]);
   });
 
@@ -111,12 +162,15 @@ describe("createBillsTags", () => {
       "shinjuku-2026-r2-gian-49": "多文化共生・手続き",
       "shinjuku-2026-r2-gian-51": "子育て・教育",
       "shinjuku-2026-r2-gian-58": "文化・生涯学習",
+      "shinjuku-2026-r2-gian-43": "くらし・行財政",
+      "shinjuku-2026-r2-gian-44": "くらし・行財政",
+      "shinjuku-2026-r2-shonin-2": "くらし・行財政",
     });
   });
 
   it("タグ未設定の議案には bills_tags を作らない", () => {
     const billsTags = createBillsTags(insertedBills, insertedTags);
-    expect(billsTags).toHaveLength(5);
+    expect(billsTags).toHaveLength(8);
   });
 });
 

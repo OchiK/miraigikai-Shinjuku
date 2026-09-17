@@ -233,7 +233,10 @@ describe("公開可否", () => {
     }
   });
 
-  it("公開対象は解説済みの5件のみ", () => {
+  it("公開対象はステップ3で監査した5件のみ", () => {
+    // ステップ4パイロットの3件（第43・44号議案、承認第2号）は解説を持つが、
+    // 公開レビュー担当が未確定のため published にしていない。
+    // 解説の件数だけで一括して公開に切り替えないよう、slug を明示して固定する。
     const published = toBillInserts().filter(
       (b) => b.publish_status === "published"
     );
@@ -243,6 +246,19 @@ describe("公開可否", () => {
       "shinjuku-2026-r2-gian-51",
       "shinjuku-2026-r2-gian-53",
       "shinjuku-2026-r2-gian-58",
+    ]);
+  });
+
+  it("承認第2号・第3号はいずれも coming_soon で、slug で区別できる", () => {
+    // 件名が完全に一致する2件を、件数ではなく slug で区別できることを固定する。
+    const shonin = toBillInserts().filter((b) =>
+      b.slug?.startsWith("shinjuku-2026-r2-shonin-")
+    );
+    expect(
+      shonin.map((b) => [b.slug, b.publish_status] as const).sort()
+    ).toEqual([
+      ["shinjuku-2026-r2-shonin-2", "coming_soon"],
+      ["shinjuku-2026-r2-shonin-3", "coming_soon"],
     ]);
   });
 });

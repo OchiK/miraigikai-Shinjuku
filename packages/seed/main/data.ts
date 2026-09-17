@@ -1,6 +1,11 @@
 import type { Database } from "@mirai-gikai/supabase";
 import { type SeededBillRef, requireBillBySlug } from "./bill-ref";
-import { R8_2_SESSION, gianKey, toBillInserts } from "./shinjuku-r8-2-inventory";
+import {
+  R8_2_SESSION,
+  gianKey,
+  shoninKey,
+  toBillInserts,
+} from "./shinjuku-r8-2-inventory";
 
 type BillInsert = Database["public"]["Tables"]["bills"]["Insert"];
 type FactionStanceInsert =
@@ -137,6 +142,9 @@ const billTagsBySlug: Record<string, string[]> = {
   [gianKey(49)]: ["多文化共生・手続き"],
   [gianKey(51)]: ["子育て・教育"],
   [gianKey(58)]: ["文化・生涯学習"],
+  [gianKey(43)]: ["くらし・行財政"],
+  [gianKey(44)]: ["くらし・行財政"],
+  [shoninKey(2)]: ["くらし・行財政"],
 };
 
 export function createBillsTags(

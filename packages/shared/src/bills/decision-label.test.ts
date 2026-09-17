@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   getBillCardStatusLabel,
   getBillStatusLabel,
+  getDecisionStepLabel,
   getBillStatusVariant,
   resolveOfficialDecisionTerm,
 } from "./decision-label";
@@ -182,5 +183,79 @@ describe("getBillStatusVariant", () => {
     ["preparing", "muted"],
   ])("status_note が無ければ列挙から引く: %s", (status, expected) => {
     expect(getBillStatusVariant({ status })).toBe(expected);
+  });
+});
+
+describe("getDecisionStepLabel", () => {
+  it("専決処分の承認は「承認／不承認」を返す", () => {
+    expect(
+      getDecisionStepLabel({ status: "approved", statusNote: "本会議で承認" })
+    ).toEqual({ positive: "承認", negative: "不承認" });
+  });
+
+  it("不承認でも「承認／不承認」の組を返す（否定形を肯定形として拾わない）", () => {
+    expect(
+      getDecisionStepLabel({ status: "rejected", statusNote: "本会議で不承認" })
+    ).toEqual({ positive: "承認", negative: "不承認" });
+  });
+
+  it("原案可決の議案は従来どおり「可決／否決」を返す", () => {
+    expect(
+      getDecisionStepLabel({
+        status: "approved",
+        statusNote: "本会議で原案可決",
+      })
+    ).toEqual({ positive: "可決", negative: "否決" });
+  });
+
+  it("status_note が無ければ「可決／否決」にフォールバックする", () => {
+    expect(getDecisionStepLabel({ status: "approved" })).toEqual({
+      positive: "可決",
+      negative: "否決",
+    });
+    expect(
+      getDecisionStepLabel({ status: "approved", statusNote: "   " })
+    ).toEqual({ positive: "可決", negative: "否決" });
+  });
+
+  it("専決処分報告は「可決／否決」にフォールバックする（現状の挙動を固定）", () => {
+    // reported は現在のデータには存在しない。専決処分の「報告」は議決を伴わないため
+    // 本来は可決／否決のいずれでもないが、専用の文言は決まっていない。
+    // 意図せず変わらないよう、現状のフォールバックをここで固定しておく。
+    expect(
+      getDecisionStepLabel({ status: "reported", statusNote: "専決処分報告" })
+    ).toEqual({ positive: "可決", negative: "否決" });
+  });
+
+  it("審議中は status_note に用語があってもフォールバックする", () => {
+    expect(
+      getDecisionStepLabel({ status: "in_committee", statusNote: "承認予定" })
+    ).toEqual({ positive: "可決", negative: "否決" });
+  });
+
+  it("趣旨採択は「採択／不採択」を返す（修正可決は「可決／否決」）", () => {
+    // 用語ごとに組を持たせているので、ラベルが「趣旨採択」「修正可決」のように
+    // 肯定形そのものでない用語でも、正しい対に落ちる。
+    expect(
+      getDecisionStepLabel({
+        status: "partially_adopted",
+        statusNote: "本会議で趣旨採択",
+      })
+    ).toEqual({ positive: "採択", negative: "不採択" });
+    expect(
+      getDecisionStepLabel({ status: "approved", statusNote: "本会議で修正可決" })
+    ).toEqual({ positive: "可決", negative: "否決" });
+  });
+
+  it("採択・同意・認定もそれぞれの組を返す", () => {
+    expect(
+      getDecisionStepLabel({ status: "adopted", statusNote: "本会議で採択" })
+    ).toEqual({ positive: "採択", negative: "不採択" });
+    expect(
+      getDecisionStepLabel({ status: "approved", statusNote: "本会議で同意" })
+    ).toEqual({ positive: "同意", negative: "不同意" });
+    expect(
+      getDecisionStepLabel({ status: "approved", statusNote: "本会議で認定" })
+    ).toEqual({ positive: "認定", negative: "不認定" });
   });
 });
