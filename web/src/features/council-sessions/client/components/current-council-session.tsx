@@ -16,7 +16,7 @@ export function CurrentCouncilSession({ session }: CurrentCouncilSessionProps) {
           <div
             className={`
             inline-flex items-center justify-center px-5 py-1.5 rounded-[50px]  shrink-0
-            ${session == null ? "bg-mirai-border" : "bg-primary text-primary-foreground"}
+            ${session == null ? "bg-mirai-border" : "bg-primary text-mirai-text"}
             `}
           >
             <span className="text-base font-bold leading-[1.48]">

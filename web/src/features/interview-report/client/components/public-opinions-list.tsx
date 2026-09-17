@@ -43,7 +43,7 @@ function _FilterChip({
       className={cn(
         "inline-flex items-center gap-1 px-3 py-1.5 rounded-full h-11 text-sm font-bold transition-colors",
         isActive
-          ? "bg-primary text-primary-foreground"
+          ? "bg-primary text-mirai-text"
           : "bg-card text-mirai-text-muted"
       )}
     >

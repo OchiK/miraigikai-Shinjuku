@@ -96,7 +96,7 @@ export function DifficultySelector({
             className={cn(
               "h-11 px-1.5 text-xs md:px-3 md:text-sm",
               isSelected
-                ? "bg-primary text-primary-foreground hover:bg-primary-accent hover:text-primary-foreground"
+                ? "bg-primary text-mirai-text hover:bg-primary-accent hover:text-mirai-text"
                 : "text-mirai-text-secondary"
             )}
           >

@@ -10,7 +10,7 @@ export function BackToReportButton({ href }: BackToReportButtonProps) {
   return (
     <Link
       href={href as Route}
-      className="flex items-center justify-center gap-2.5 px-6 py-3 rounded-full bg-primary text-primary-foreground"
+      className="flex items-center justify-center gap-2.5 px-6 py-3 rounded-full bg-primary text-mirai-text"
     >
       <Undo2 className="w-5 h-5" />
       <span className="text-base font-bold">レポートに戻る</span>
