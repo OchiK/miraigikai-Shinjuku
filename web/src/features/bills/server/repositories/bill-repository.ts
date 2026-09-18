@@ -452,6 +452,7 @@ export async function findFeaturedBillsWithContents(
       )
     `
     )
+    .eq("publish_status", "published")
     .eq("is_featured", true)
     .in(
       "bill_contents.difficulty_level",
