@@ -33,6 +33,29 @@ export function stripMarkup(line: string): string {
     .trim();
 }
 
+/**
+ * アンカー保持プロトコルの記法を、正式名称だけに畳む。
+ *
+ * やさしい日本語（行政文書）では、公式用語の初出を
+ * `【正式名称】［ふりがな］（＝やさしい言いかえ）` の形で書く。
+ * ふりがなと言いかえは読み手を助けるメタ情報であり、
+ * 【】もその範囲を示す記号にすぎない。
+ * これらを文の長さに数えると、アンカーを付けるほど
+ * 「1文40字以内」を満たせなくなり、規約が公式名称を消す圧力に変わる。
+ *
+ * そこで長さの検査では、アンカーを正式名称そのものに畳んでから数える。
+ * 2回目以降の `【正式名称】` だけの表記も同じく畳む。
+ *
+ * 言いかえの中に丸かっこは入れない前提で書いている（入れ子は畳めない）。
+ * prompts/easy_ja.md も言いかえを20字程度・定義文にしないと定めている。
+ */
+export function stripAnchorGloss(line: string): string {
+  return line.replace(
+    /【([^】]+)】(?:［[^］]*］)?(?:（＝[^）]*）)?/g,
+    (_match, officialName: string) => officialName
+  );
+}
+
 /** 表の行はセルごとの文章として検査する。 */
 function splitTableCells(line: string): string[] {
   const trimmed = line.trim();
@@ -53,6 +76,7 @@ export function splitIntoSentences(markdown: string): string[] {
     .filter((line) => !isExcludedLine(line))
     .flatMap(splitTableCells)
     .map(stripMarkup)
+    .map(stripAnchorGloss)
     .flatMap((line) => line.split(/[。！？]/))
     .map((sentence) => sentence.trim())
     .filter((sentence) => sentence.length > 0);

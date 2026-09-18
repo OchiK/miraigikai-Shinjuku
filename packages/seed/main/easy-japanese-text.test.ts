@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   isExcludedLine,
   splitIntoSentences,
+  stripAnchorGloss,
   stripMarkup,
 } from "./easy-japanese-text";
 
@@ -45,6 +46,43 @@ describe("stripMarkup", () => {
 
   it("文中のハイフンは落とさない", () => {
     expect(stripMarkup("第18条の2-1について")).toBe("第18条の2-1について");
+  });
+});
+
+describe("stripAnchorGloss", () => {
+  it("初出のアンカーを正式名称だけに畳む", () => {
+    expect(
+      stripAnchorGloss("【補正予算】［ほせいよさん］（＝あとから 足す お金）を 出します")
+    ).toBe("補正予算を 出します");
+  });
+
+  it("2回目以降の【正式名称】だけの表記も畳む", () => {
+    expect(stripAnchorGloss("【補正予算】は 区議会が 決めます")).toBe(
+      "補正予算は 区議会が 決めます"
+    );
+  });
+
+  it("1行に複数のアンカーがあっても畳む", () => {
+    expect(
+      stripAnchorGloss(
+        "【繰入金】［くりいれきん］（＝貯金を くずす お金）と【特別区債】［とくべつくさい］（＝区の 借金）"
+      )
+    ).toBe("繰入金と特別区債");
+  });
+
+  it("ふりがなだけ・言いかえだけのアンカーも畳む", () => {
+    expect(stripAnchorGloss("【原案可決】［げんあんかけつ］です")).toBe(
+      "原案可決です"
+    );
+    expect(stripAnchorGloss("【原案可決】（＝出した 通りで 決まること）です")).toBe(
+      "原案可決です"
+    );
+  });
+
+  it("アンカーでない丸かっこは残す", () => {
+    expect(stripAnchorGloss("道路の 工事（第Ⅰ期）です")).toBe(
+      "道路の 工事（第Ⅰ期）です"
+    );
   });
 });
 
@@ -106,5 +144,13 @@ describe("splitIntoSentences", () => {
     const long = "あ".repeat(41);
 
     expect(splitIntoSentences(`${long}。`)).toEqual([long]);
+  });
+
+  it("アンカーのふりがなと言いかえは文の長さに数えない", () => {
+    expect(
+      splitIntoSentences(
+        "今回は【補正予算】［ほせいよさん］（＝あとから 足す お金）です。"
+      )
+    ).toEqual(["今回は補正予算です"]);
   });
 });
