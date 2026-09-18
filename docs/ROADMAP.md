@@ -50,11 +50,18 @@ Exit:
 - [ ] shared type/UI selector更新
 - [ ] Admin編集対応
 - [ ] prompt作成
-- [ ] 3議案で品質確認
+- [x] 3議案で品質確認
 - [ ] easy/normal/hard切替
 
 Exit:
 easyが単なる短縮ではなく、行政日本語の平易化になっている。
+
+2026-09-18: 第42・43・44号議案の3件にやさしい日本語版を整備した。
+1文40字以内・行政用語の言い換え・数値の非改変は
+`packages/seed/main/easy-japanese-validation.test.ts` で機械的に検証する。
+出典は normal 版と同じ一次資料の同じ箇所を引き継ぎ、
+`docs/verification/20260918_0930_claim-ledger-phase2-easy.csv` に台帳化した。
+残る20件は未整備で、表示時は `pickBillContent` が「ふつう」へフォールバックする。
 
 ## Phase 3: 多言語基盤
 

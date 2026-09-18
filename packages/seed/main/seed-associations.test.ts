@@ -104,6 +104,9 @@ describe("createBillContents", () => {
 
   it("解説を持つ議案はすべて normal と hard の2種をそろえる", () => {
     // 片方だけだと難易度切り替えで空表示になる。
+    // easy は Phase 2 で順次整備する段であり、無い議案は normal に
+    // フォールバックする（pickBillContent）。ここでは「easy があっても
+    // normal と hard は必ず残る」ことを押さえる。
     const byBill = new Map<string, Set<string>>();
     for (const c of billContentsWithBillSlug) {
       const levels = byBill.get(c.bill_slug) ?? new Set<string>();
@@ -112,7 +115,12 @@ describe("createBillContents", () => {
     }
 
     for (const [slug, levels] of byBill) {
-      expect([...levels].sort(), slug).toEqual(["hard", "normal"]);
+      // easy を除くと必ず normal と hard の2種。
+      // 「normal か hard が欠けている」と「未知の段が増えた」を同時に弾く。
+      expect([...levels].filter((l) => l !== "easy").sort(), slug).toEqual([
+        "hard",
+        "normal",
+      ]);
     }
   });
 
