@@ -80,6 +80,11 @@ export interface ShinjukuSessionItem {
    *
    * ステップ4と公開レビューの完了により、23件すべてが出典突合済みの
    * easy / normal / hard 解説を保有し、公開可能になっている。
+   *
+   * この値は bills.is_review_completed も兼ねる。同列が false の議案には
+   * 詳細ページで「レビュー中」バナーが出る（migration のカラムコメント参照）。
+   * つまり「公開はするがレビュー中バナーは残す」状態はここからは作れない。
+   * 必要になったら is_review_completed を別のフィールドに分ける。
    */
   hasPublishableContent: boolean;
   /** トップページ等での注目表示 */

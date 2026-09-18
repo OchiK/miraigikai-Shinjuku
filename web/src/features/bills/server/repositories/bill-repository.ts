@@ -13,13 +13,32 @@ import {
 // ============================================================
 
 /**
+ * 議案一覧の並びを議案番号順に確定させる。
+ *
+ * 同一会期の議案は published_at が全件同一（会期末日）になるため、
+ * published_at だけでは並びが Postgres の物理行順に委ねられる。
+ * LIMIT 付きのクエリでは、どの議案が返るかまで不定になる。
+ *
+ * bill_number の一意制約は会期スコープのため、会期をまたぐ一覧では
+ * 番号が重なりうる。最後に id を足して並びを完全に確定させる。
+ */
+function orderByBillNumber<
+  T extends { order(column: string, options: { ascending: boolean }): T },
+>(query: T): T {
+  return query
+    .order("bill_number_order", { ascending: true })
+    .order("bill_number", { ascending: true })
+    .order("id", { ascending: true });
+}
+
+/**
  * 公開済み議案を難易度コンテンツ付きで取得
  */
 export async function findPublishedBillsWithContents(
   difficultyLevel: DifficultyLevelEnum
 ) {
   const supabase = createAdminClient();
-  const { data, error } = await supabase
+  const query = supabase
     .from("bills")
     .select(
       `
@@ -43,6 +62,7 @@ export async function findPublishedBillsWithContents(
     )
     .order("published_at", { ascending: false });
 
+  const { data, error } = await orderByBillNumber(query);
   if (error) {
     throw new Error(`Failed to fetch bills: ${error.message}`);
   }
@@ -228,7 +248,7 @@ export async function findPublishedBillsByDietSession(
   difficultyLevel: DifficultyLevelEnum
 ) {
   const supabase = createAdminClient();
-  const { data, error } = await supabase
+  const query = supabase
     .from("bills")
     .select(
       `
@@ -254,6 +274,7 @@ export async function findPublishedBillsByDietSession(
     .order("status_order", { ascending: true })
     .order("published_at", { ascending: false });
 
+  const { data, error } = await orderByBillNumber(query);
   if (error) {
     throw new Error(
       `Failed to fetch bills by council session: ${error.message}`
@@ -272,7 +293,7 @@ export async function findPreviousSessionBills(
   limit: number
 ) {
   const supabase = createAdminClient();
-  const { data, error } = await supabase
+  const query = supabase
     .from("bills")
     .select(
       `
@@ -296,8 +317,10 @@ export async function findPreviousSessionBills(
       difficultyLevelsToFetch(difficultyLevel)
     )
     .order("status_order", { ascending: true })
-    .order("published_at", { ascending: false })
-    .limit(limit);
+    .order("published_at", { ascending: false });
+
+  // 並びを確定させてから件数を絞る。順序が不定だと、返る議案そのものが変わる。
+  const { data, error } = await orderByBillNumber(query).limit(limit);
 
   if (error) {
     console.error("Failed to fetch previous session bills:", error);
@@ -464,7 +487,7 @@ export async function findFeaturedBillsWithContents(
     query = query.eq("council_session_id", councilSessionId);
   }
 
-  const { data, error } = await query;
+  const { data, error } = await orderByBillNumber(query);
 
   if (error) {
     console.error("Failed to fetch featured bills:", error);
@@ -501,13 +524,14 @@ export async function findComingSoonBills(councilSessionId: string | null) {
     `
     )
     .eq("publish_status", "coming_soon")
+    // 一括投入した議案は created_at が同一になりうる
     .order("created_at", { ascending: false });
 
   if (councilSessionId) {
     query = query.eq("council_session_id", councilSessionId);
   }
 
-  const { data, error } = await query;
+  const { data, error } = await orderByBillNumber(query);
 
   if (error) {
     console.error("Failed to fetch coming soon bills:", error);

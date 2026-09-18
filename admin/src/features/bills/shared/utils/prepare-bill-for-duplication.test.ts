@@ -27,17 +27,20 @@ const baseBill: Bill = {
   status_note: null,
   status_order: BILL_STATUS_ORDER.preparing,
   publish_status_order: 2,
+  bill_number_order: 2147483647,
   thumbnail_url: null,
   slug: null,
 };
 
 describe("prepareBillForDuplication", () => {
-  it("id, created_at, updated_at, status_order, publish_status_orderを除去する", () => {
+  it("id, created_at, updated_at, generated column を除去する", () => {
     const result = prepareBillForDuplication(baseBill);
     expect(result).not.toHaveProperty("id");
     expect(result).not.toHaveProperty("created_at");
     expect(result).not.toHaveProperty("updated_at");
     expect(result).not.toHaveProperty("status_order");
+    // generated column に値を渡すと INSERT 自体が失敗する
+    expect(result).not.toHaveProperty("bill_number_order");
     expect(result).not.toHaveProperty("publish_status_order");
   });
 

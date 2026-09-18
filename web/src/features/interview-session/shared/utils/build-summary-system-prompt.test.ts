@@ -10,6 +10,7 @@ const makeBill = (
 ): BillWithContent => ({
   id: "bill-1",
   bill_number: "",
+  bill_number_order: 2147483647,
   name: "テスト議案",
   is_featured: false,
   is_review_completed: true,
