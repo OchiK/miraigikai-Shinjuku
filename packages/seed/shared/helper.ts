@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@mirai-gikai/supabase";
+import { assertDestructiveSeedAllowed } from "./destructive-seed-guard";
 
 export type AdminClient = ReturnType<typeof createAdminClient>;
 
@@ -27,7 +28,15 @@ const TABLES_TO_CLEAR = [
   "council_sessions",
 ] as const;
 
+/**
+ * 利用者データを含む全行を削除する。
+ *
+ * ガードは呼び出し元ではなくここに置く。run.ts と csv/import-csv.ts の
+ * 両方が呼んでおり、今後呼び出し元が増えても漏れないようにするため。
+ */
 export async function clearAllData(supabase: AdminClient) {
+  assertDestructiveSeedAllowed();
+
   console.log("🧹 Clearing existing data...");
 
   for (const table of TABLES_TO_CLEAR) {

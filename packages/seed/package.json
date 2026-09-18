@@ -6,6 +6,8 @@
   "scripts": {
     "seed": "tsx main/run.ts",
     "seed:csv": "tsx csv/import-csv.ts",
+    "import:production": "tsx production/import.ts",
+    "import:production:dry-run": "tsx production/import.ts --dry-run",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
