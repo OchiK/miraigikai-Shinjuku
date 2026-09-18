@@ -10,7 +10,6 @@ import {
   findDuplicates,
   r8SecondSessionItems,
   reconcileInventory,
-  toBillInsert,
   toBillInserts,
   toBillStatus,
 } from "./shinjuku-r8-2-inventory";
@@ -201,22 +200,21 @@ describe("出典", () => {
 });
 
 describe("公開可否", () => {
-  it("解説が未整備の案件は published にせず coming_soon とする", () => {
-    for (const source of r8SecondSessionItems) {
-      const bill = toBillInsert(source);
-      if (source.hasPublishableContent) {
-        expect(bill.publish_status).toBe("published");
-        expect(bill.published_at).not.toBeNull();
-      } else {
-        expect(bill.publish_status).toBe("coming_soon");
-        expect(bill.published_at).toBeNull();
-      }
-    }
+  it("全23件を published として会期末日に公開する", () => {
+    const bills = toBillInserts();
+
+    expect(bills).toHaveLength(23);
+    expect(bills.every((bill) => bill.publish_status === "published")).toBe(
+      true
+    );
+    expect(
+      bills.every((bill) => bill.published_at === R8_2_PUBLISHED_AT)
+    ).toBe(true);
   });
 
-  it("全件がレビュー未完了として扱われる", () => {
+  it("全23件をレビュー完了として扱う", () => {
     for (const bill of toBillInserts()) {
-      expect(bill.is_review_completed).toBe(false);
+      expect(bill.is_review_completed).toBe(true);
     }
   });
 
@@ -228,21 +226,20 @@ describe("公開可否", () => {
 
   it("公開時に使う published_at は会期末日であり、議決日時を推定しない", () => {
     expect(R8_2_PUBLISHED_AT).toBe("2026-06-19T00:00:00+09:00");
-    expect(toBillInserts().every((bill) => bill.published_at === null)).toBe(
-      true
-    );
+    expect(
+      toBillInserts().every(
+        (bill) => bill.published_at === R8_2_PUBLISHED_AT
+      )
+    ).toBe(true);
   });
 
-  it("公開レビュー未了の全23件を coming_soon に留める", () => {
-    // 全件が解説を持つが、公開レビュー担当が未確定のため published にしない。
-    // 解説の件数だけで一括して公開へ切り替えないことを固定する。
-    const published = toBillInserts().filter(
-      (b) => b.publish_status === "published"
-    );
-    expect(published).toEqual([]);
+  it("coming_soon の案件を残さない", () => {
+    expect(
+      toBillInserts().filter((b) => b.publish_status === "coming_soon")
+    ).toEqual([]);
   });
 
-  it("承認第2号・第3号はいずれも coming_soon で、slug で区別できる", () => {
+  it("承認第2号・第3号はいずれも published で、slug で区別できる", () => {
     // 件名が完全に一致する2件を、件数ではなく slug で区別できることを固定する。
     const shonin = toBillInserts().filter((b) =>
       b.slug?.startsWith("shinjuku-2026-r2-shonin-")
@@ -250,8 +247,8 @@ describe("公開可否", () => {
     expect(
       shonin.map((b) => [b.slug, b.publish_status] as const).sort()
     ).toEqual([
-      ["shinjuku-2026-r2-shonin-2", "coming_soon"],
-      ["shinjuku-2026-r2-shonin-3", "coming_soon"],
+      ["shinjuku-2026-r2-shonin-2", "published"],
+      ["shinjuku-2026-r2-shonin-3", "published"],
     ]);
   });
 });

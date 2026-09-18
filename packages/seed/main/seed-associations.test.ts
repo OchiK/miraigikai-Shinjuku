@@ -34,10 +34,7 @@ describe("bills seed", () => {
 });
 
 describe("公開状態と解説の整合", () => {
-  // 「解説を持つ」と「公開してよい」は別である。
-  // 前者だけを根拠に published にすると、公開レビュー未了の解説が公開ページに出る。
-  // 逆に解説を持たない議案が published になると、詳細ページが空になる。
-  // したがって published ⊆ 解説あり を検証する（一致ではなく包含）。
+  // 公開レビューを完了した23件すべてについて、3難易度の解説がそろうことを固定する。
   it("published の議案は必ず解説を持つ", () => {
     const slugsWithContent = new Set(
       billContentsWithBillSlug.map((c) => c.bill_slug)
@@ -51,11 +48,29 @@ describe("公開状態と解説の整合", () => {
     expect(publishedWithoutContent).toEqual([]);
   });
 
-  it("公開レビュー未了の解説は coming_soon に留める", () => {
-    // ステップ4の完了により23件すべてが出典突合済みの解説を持つ。
-    // 解説ができた時点で自動的に公開へ切り替わらないことを固定する。
-    expect(bills.filter((b) => b.publish_status === "published")).toEqual([]);
-    expect(bills.filter((b) => b.publish_status === "coming_soon")).toHaveLength(23);
+  it("全23件を published とし、coming_soon を残さない", () => {
+    expect(bills.filter((b) => b.publish_status === "published")).toHaveLength(
+      23
+    );
+    expect(bills.filter((b) => b.publish_status === "coming_soon")).toEqual(
+      []
+    );
+  });
+
+  it("published の全議案に easy / normal / hard の解説がそろう", () => {
+    const levelsBySlug = new Map<string, Set<string>>();
+    for (const content of billContentsWithBillSlug) {
+      const levels = levelsBySlug.get(content.bill_slug) ?? new Set<string>();
+      levels.add(content.difficulty_level);
+      levelsBySlug.set(content.bill_slug, levels);
+    }
+
+    for (const bill of bills.filter((b) => b.publish_status === "published")) {
+      expect(
+        [...(levelsBySlug.get(bill.slug ?? "") ?? [])].sort(),
+        bill.slug ?? "slug missing"
+      ).toEqual(["easy", "hard", "normal"]);
+    }
   });
 
   it("解説の対象議案はすべてインベントリに存在する", () => {
@@ -104,9 +119,7 @@ describe("createBillContents", () => {
 
   it("解説を持つ議案はすべて normal と hard の2種をそろえる", () => {
     // 片方だけだと難易度切り替えで空表示になる。
-    // easy は Phase 2 で順次整備する段であり、無い議案は normal に
-    // フォールバックする（pickBillContent）。ここでは「easy があっても
-    // normal と hard は必ず残る」ことを押さえる。
+    // easy の全件整備後も、従来の normal と hard は必ず残ることを押さえる。
     const byBill = new Map<string, Set<string>>();
     for (const c of billContentsWithBillSlug) {
       const levels = byBill.get(c.bill_slug) ?? new Set<string>();

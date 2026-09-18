@@ -74,8 +74,8 @@ interface BillContentWithBillSlug {
 //           docs/verification/20260917_1500_claim-ledger-step4-pilot.csv（パイロット3件）
 //           docs/verification/20260917_2000_claim-ledger-step4-rest.csv（残り15件）
 //
-// 注意: 出典突合は済んでいるが、公開判断を伴う人手のレビューは未了である
-//（bills.is_review_completed = false）。
+// 出典突合と公開レビューは全69変種で完了している。
+// 内容ハッシュは bill-contents-revision.test.ts で固定する。
 export const billContentsWithBillSlug: BillContentWithBillSlug[] = [
   // =========================================================================
   // 第42号議案 令和8年度新宿区一般会計補正予算（第2号）
