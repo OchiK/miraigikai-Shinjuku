@@ -190,7 +190,10 @@ describe("やさしい日本語版が一次資料の数値を保っている", (
     ],
     [gianKey(50)]: [
       "平成26年 新宿区条例 第28号",
+      "平成26年 厚生労働省令 第61号",
       "第6条の3 第10項 第3号",
+      "第1号と 第2号に 限ります",
+      "第2号の 次に 第3号を 足します",
       "原案可決",
     ],
     [gianKey(51)]: [
@@ -314,7 +317,7 @@ describe("やさしい日本語版が日付を西暦で示している", () => {
 
   /** 法令番号・条例番号の一部か。 */
   function isStatuteNumber(haystack: string, end: number): boolean {
-    return /^\s*(?:新宿区条例|東京都条例|条例|法律|政令|省令)/.test(
+    return /^\s*(?:新宿区条例|東京都条例|条例|法律|政令|[\p{Script=Han}]+省令)/u.test(
       haystack.slice(end)
     );
   }
@@ -351,6 +354,7 @@ describe("やさしい日本語版が日付を西暦で示している", () => {
     expect(bareEraDates("2026年（令和8年）6月10日（水）に 出しました")).toEqual([]);
     expect(bareEraDates("平成19年 新宿区条例 第61号です")).toEqual([]);
     expect(bareEraDates("都市計画法（昭和43年法律第100号）")).toEqual([]);
+    expect(bareEraDates("平成26年 厚生労働省令 第61号です")).toEqual([]);
     expect(bareEraDates("令和8年6月10日に 出しました")).toEqual(["令和8年6月10日"]);
     expect(bareEraDates("2026年（令和8年）と 令和9年度")).toEqual(["令和9年度"]);
     expect(bareEraDates("2026年度（令和8年度）の 終わり")).toEqual([]);
@@ -467,6 +471,12 @@ describe("やさしい日本語版が行政用語のアンカーを保ってい�
     },
     {
       slug: shoninKey(2),
+      term: "地方自治法",
+      yomi: "ちほうじちほう",
+      gloss: "自治体の 基本の 法律",
+    },
+    {
+      slug: shoninKey(2),
       term: "軽自動車税",
       yomi: "けいじどうしゃぜい",
       gloss: "軽自動車に かかる 税金",
@@ -488,6 +498,12 @@ describe("やさしい日本語版が行政用語のアンカーを保ってい�
       term: "専決処分",
       yomi: "せんけつしょぶん",
       gloss: "区長が 先に 決めること",
+    },
+    {
+      slug: shoninKey(3),
+      term: "地方自治法",
+      yomi: "ちほうじちほう",
+      gloss: "自治体の 基本の 法律",
     },
     {
       slug: shoninKey(3),
@@ -532,16 +548,52 @@ describe("やさしい日本語版が行政用語のアンカーを保ってい�
       gloss: "在留カードと 一体の カード",
     },
     {
+      slug: gianKey(49),
+      term: "出入国管理及び難民認定法",
+      yomi: "しゅつにゅうこくかんりおよびなんみんにんていほう",
+      gloss: "入国や 在留の 決まり",
+    },
+    {
       slug: gianKey(50),
       term: "満3歳以上限定小規模保育事業",
       yomi: "まんさんさいいじょうげんていしょうきぼほいくじぎょう",
       gloss: "3歳以上だけを あずかる 小さい 保育",
     },
     {
+      slug: gianKey(50),
+      term: "児童福祉法",
+      yomi: "じどうふくしほう",
+      gloss: "子どもの 福祉の 法律",
+    },
+    {
+      slug: gianKey(50),
+      term: "内閣府令",
+      yomi: "ないかくふれい",
+      gloss: "国が 決める 細かい ルール",
+    },
+    {
+      slug: gianKey(50),
+      term: "家庭的保育事業等の設備及び運営に関する基準",
+      yomi: "かていてきほいくじぎょうとうのせつびおよびうんえいにかんするきじゅん",
+      gloss: "国の 保育事業の 基準",
+    },
+    {
       slug: gianKey(51),
       term: "満3歳以上限定小規模保育事業",
       yomi: "まんさんさいいじょうげんていしょうきぼほいくじぎょう",
       gloss: "3歳以上だけを あずかる 小さい 保育",
+    },
+    {
+      slug: gianKey(51),
+      term: "内閣府令",
+      yomi: "ないかくふれい",
+      gloss: "国が 決める 細かい ルール",
+    },
+    {
+      slug: gianKey(51),
+      term: "児童福祉法",
+      yomi: "じどうふくしほう",
+      gloss: "子どもの 福祉の 法律",
     },
     {
       slug: gianKey(53),
