@@ -146,42 +146,6 @@
   --color-mirai-featured: var(--color-terracotta-200);
   --color-mirai-featured-text: var(--color-terracotta-800);
 
-  /* ══ 旧トークンの暫定エイリアス ═════════════════════════════════════════
-     設計書 §9 の対応表に沿って旧名を Organic の値へ向けている。
-     参照の置き換えが済んだ時点でこのブロックごと削除する。
-     新規実装でこれらを使ってはいけない。
-     ═══════════════════════════════════════════════════════════════════════ */
-  --color-mirai-text-note: var(--color-neutral-700);
-  --color-mirai-text-subtle: var(--color-neutral-700);
-  --color-mirai-text-close: var(--color-neutral-700);
-  --color-mirai-surface-light: var(--color-neutral-200);
-  --color-mirai-surface-grouped: var(--color-neutral-200);
-  --color-mirai-surface-muted: var(--color-neutral-200);
-  --color-mirai-surface-gray: var(--color-neutral-200);
-  --color-mirai-surface-tag: var(--color-mirai-tag);
-  --color-mirai-surface-warm: var(--color-mirai-surface-sunken);
-  --color-mirai-border-light: var(--color-mirai-border-strong);
-  --color-mirai-border-muted: var(--color-mirai-border);
-  --color-stance-for-bg: var(--color-status-passed-bg);
-  --color-stance-for-badge-start: var(--color-status-passed-bg);
-  --color-stance-for-badge-end: var(--color-status-passed-bg);
-  --color-stance-against: var(--color-status-rejected);
-  --color-stance-against-light: var(--color-status-rejected);
-  --color-stance-against-bg: var(--color-status-rejected-bg);
-  --color-stance-against-badge-bg: var(--color-status-rejected-bg);
-  --color-stance-neutral: var(--color-status-review);
-  --color-stance-neutral-badge-bg: var(--color-status-review-bg);
-  --color-mirai-highlight: var(--color-mirai-featured);
-  --color-mirai-badge-yellow: var(--color-mirai-featured);
-  --color-mirai-star: var(--color-terracotta-500);
-  --color-mirai-info-blue: var(--color-sage-200);
-  --color-mirai-progress-track: var(--color-neutral-300);
-  --color-mirai-progress-fill: var(--color-sage-400);
-  --color-mirai-reaction-active: var(--color-status-rejected);
-  --color-mirai-reaction-inactive: var(--color-mirai-text-muted);
-  --color-gray-300: var(--color-neutral-300);
-  --font-lexend: var(--font-caprasimo), system-ui, sans-serif;
-
   /* ══ shadcn/ui ブリッジ ═════════════════════════════════════════════════ */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -338,40 +302,6 @@
   /* 写真はページの上に乗るのではなく、地に沈める。 */
   .washed {
     filter: saturate(0.6) contrast(0.85) brightness(1.1) opacity(0.94);
-  }
-
-  /* ── 旧グラデーションの暫定エイリアス（設計書 §9）──────────────────
-     参照の置き換えが済んだ時点で削除する。新規実装では使わない。
-
-     .bg-mirai-gradient は既定のボタン（components/ui/button.tsx）・主導線・
-     選択中タブ・フッターの地として30箇所以上で使われている。中立の階調に
-     向けると地（#f5ead8）との比が 1.03:1 になり導線が消えるため、旧実装の
-     水色（旧地に対し 1.33:1）と同等の見え方になるテラコッタの淡色に向ける。 */
-  .bg-mirai-gradient {
-    background-image: none;
-    background-color: var(--color-terracotta-300); /* 地に対し 1.27:1 */
-  }
-
-  /* こちらは広い面（LPの地・吹き出し・バナー）に敷かれるため、より淡い段に向ける。 */
-  .bg-mirai-light-gradient {
-    background-image: none;
-    background-color: var(--color-terracotta-100);
-  }
-
-  .bg-mirai-white-fade {
-    background-image: linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--color-mirai-ground) 0%, transparent) 0%,
-      var(--color-mirai-ground) 62%
-    );
-  }
-
-  .border-mirai-gradient {
-    border: 2px solid var(--color-mirai-border-strong);
-  }
-
-  .font-lexend {
-    font-family: var(--font-display);
   }
 }
 

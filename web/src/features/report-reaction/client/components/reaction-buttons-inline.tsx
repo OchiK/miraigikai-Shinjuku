@@ -55,8 +55,8 @@ function InlineReactionButton({
 }: InlineReactionButtonProps) {
   const Icon = Lightbulb;
   const colorClass = isActive
-    ? "text-mirai-reaction-active"
-    : "text-mirai-reaction-inactive";
+    ? "text-status-rejected"
+    : "text-mirai-text-muted";
 
   return (
     <Button

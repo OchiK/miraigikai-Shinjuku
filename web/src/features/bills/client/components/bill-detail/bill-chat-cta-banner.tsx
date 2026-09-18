@@ -37,7 +37,7 @@ export function BillChatCtaBanner() {
         </div>
 
         <Button
-          className="min-h-11 shrink-0 bg-primary text-primary-foreground hover:opacity-90"
+          className="min-h-11 shrink-0 bg-primary text-mirai-text hover:opacity-90"
           onClick={chat.open}
           type="button"
           variant="ghost"

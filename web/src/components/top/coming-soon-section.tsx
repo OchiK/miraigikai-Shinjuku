@@ -27,7 +27,9 @@ export function ComingSoonSection({ bills }: ComingSoonSectionProps) {
       {bills.length === 0 ? (
         <Card>
           <CardContent className="flex items-center justify-center py-20">
-            <p className="text-2xl font-bold text-gray-300">Coming soon</p>
+            <p className="text-2xl font-bold text-mirai-text-placeholder">
+              Coming soon
+            </p>
           </CardContent>
         </Card>
       ) : (
@@ -62,14 +64,14 @@ function ComingSoonBillCard({ bill }: { bill: ComingSoonBill }) {
     <Card
       className={`border border-black ${
         bill.council_url
-          ? "hover:bg-gray-50 transition-colors cursor-pointer"
+          ? "hover:bg-neutral-200 transition-colors cursor-pointer"
           : ""
       }`}
     >
       <CardContent className="flex items-center justify-between py-4 px-5">
         <div className="flex flex-col gap-1 min-w-0 pr-3">
           {identifier && (
-            <p className="text-xs font-bold text-mirai-text-subtle">
+            <p className="text-xs font-bold text-mirai-text-muted">
               {identifier}
             </p>
           )}
@@ -77,11 +79,11 @@ function ComingSoonBillCard({ bill }: { bill: ComingSoonBill }) {
             {title}
           </h3>
           {officialName && (
-            <p className="text-xs text-mirai-text-subtle">{officialName}</p>
+            <p className="text-xs text-mirai-text-muted">{officialName}</p>
           )}
         </div>
         {bill.council_url && (
-          <ExternalLink className="h-5 w-5 text-gray-400 flex-shrink-0" />
+          <ExternalLink className="h-5 w-5 text-mirai-text-placeholder flex-shrink-0" />
         )}
       </CardContent>
     </Card>

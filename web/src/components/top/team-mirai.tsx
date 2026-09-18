@@ -91,7 +91,7 @@ export function TeamMirai() {
                     height={48}
                     className={
                       sns.hasBorder
-                        ? "rounded-full border border-mirai-border-light"
+                        ? "rounded-full border border-mirai-border-strong"
                         : ""
                     }
                   />

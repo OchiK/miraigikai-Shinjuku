@@ -23,7 +23,7 @@ function getCheckPoints(): string[] {
 function _InterviewBadge() {
   return (
     <div className="flex">
-      <div className="inline-flex items-center justify-center gap-2 px-3 py-1 bg-mirai-surface-tag rounded-2xl">
+      <div className="inline-flex items-center justify-center gap-2 px-3 py-1 bg-mirai-tag rounded-2xl">
         <span className="text-[11px] font-medium text-black leading-[1.09]">
           議案の当事者の方へ
         </span>
@@ -55,7 +55,7 @@ function _CheckPointsList() {
 function _InterviewCTAButton({ billId }: { billId: string }) {
   return (
     <Link href={routes.interviewLP(billId) as Route}>
-      <Button className="w-[224px] bg-mirai-gradient text-black border border-black rounded-3xl h-[42px] px-5 font-bold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-1">
+      <Button className="w-[224px] rounded-full h-11 px-5 font-bold text-sm gap-1">
         <span>AIインタビューを受ける</span>
         <ArrowRight className="size-4" />
       </Button>
@@ -81,7 +81,7 @@ export function InterviewLandingSection({
   billId,
 }: InterviewLandingSectionProps) {
   return (
-    <div className="relative overflow-hidden rounded-xl bg-white p-6 mx-auto">
+    <div className="relative overflow-hidden rounded-xl bg-card p-6 mx-auto">
       <_InterviewIllustration />
 
       <div className="relative z-1 flex flex-col gap-2">

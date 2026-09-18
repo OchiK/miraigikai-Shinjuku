@@ -78,7 +78,7 @@ export function DifficultySelector({
 
   return (
     <div
-      className="flex shrink-0 items-center gap-0.5 rounded-full bg-mirai-surface-muted p-0.5 md:gap-1 md:p-1"
+      className="flex shrink-0 items-center gap-0.5 rounded-full bg-neutral-200 p-0.5 md:gap-1 md:p-1"
       role="group"
       aria-label="説明の詳しさを切り替え"
     >
@@ -96,7 +96,7 @@ export function DifficultySelector({
             className={cn(
               "h-11 px-1.5 text-xs md:px-3 md:text-sm",
               isSelected
-                ? "bg-primary text-primary-foreground hover:bg-primary-accent hover:text-primary-foreground"
+                ? "bg-primary text-mirai-text hover:bg-primary-accent hover:text-mirai-text"
                 : "text-mirai-text-secondary"
             )}
           >

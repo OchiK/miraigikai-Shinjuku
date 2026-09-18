@@ -67,7 +67,7 @@ function _InterviewLPHeader({ bill }: { bill: BillWithContent }) {
           priority
         />
       ) : (
-        <div className="w-full h-full bg-gray-100" />
+        <div className="w-full h-full bg-neutral-200" />
       )}
     </div>
   );
@@ -98,7 +98,7 @@ function _InterviewLPHero({
           議案についてのAIインタビュー
         </h1>
         <Link href={billLink as Route}>
-          <div className="inline-flex items-center justify-center gap-2.5 px-4 py-2 bg-white rounded-xl hover:bg-gray-50 transition-opacity cursor-pointer">
+          <div className="inline-flex items-center justify-center gap-2.5 px-4 py-2 bg-card rounded-xl hover:bg-neutral-200 transition-opacity cursor-pointer">
             <span className="text-[13px] font-medium text-black leading-[1.87]">
               {bill.bill_content?.title ?? bill.name}
             </span>
@@ -110,7 +110,7 @@ function _InterviewLPHero({
       <div className="flex flex-col gap-4 w-full max-w-[334px] pl-4">
         {FEATURES.map((feature) => (
           <div key={feature.text} className="flex items-center gap-4">
-            <div className="flex-shrink-0 w-[54px] h-[54px] bg-white rounded-[30px] flex items-center justify-center">
+            <div className="flex-shrink-0 w-[54px] h-[54px] bg-card rounded-[30px] flex items-center justify-center">
               <Image
                 src={feature.iconSrc}
                 alt=""
@@ -150,7 +150,7 @@ function _InterviewOverviewSection({
   const billLink = getBillDetailLink(billId, previewToken);
 
   return (
-    <div className="w-full max-w-[560px] mx-auto bg-white rounded-2xl p-6 space-y-4">
+    <div className="w-full max-w-[560px] mx-auto bg-card rounded-2xl p-6 space-y-4">
       <h2 className="text-[22px] font-bold text-black leading-[1.64]">
         インタビュー概要
       </h2>
@@ -197,7 +197,7 @@ function _InterviewDurationSection({
   }
 
   return (
-    <div className="w-full max-w-[560px] mx-auto bg-white rounded-2xl p-6 space-y-2">
+    <div className="w-full max-w-[560px] mx-auto bg-card rounded-2xl p-6 space-y-2">
       <h2 className="text-[22px] font-bold text-black leading-[1.64]">
         予定時間
       </h2>
@@ -218,7 +218,7 @@ function _InterviewThemesSection({
   }
 
   return (
-    <div className="w-full max-w-[560px] mx-auto bg-white rounded-2xl p-6 space-y-4">
+    <div className="w-full max-w-[560px] mx-auto bg-card rounded-2xl p-6 space-y-4">
       <h2 className="text-[22px] font-bold text-black leading-[1.64]">
         質問テーマ
       </h2>
@@ -246,7 +246,7 @@ function _InterviewThemesSection({
 
 function _InterviewNoticeSection() {
   return (
-    <div className="w-full max-w-[560px] mx-auto bg-white rounded-2xl p-6 space-y-4">
+    <div className="w-full max-w-[560px] mx-auto bg-card rounded-2xl p-6 space-y-4">
       <h2 className="text-[22px] font-bold text-black leading-[1.64]">
         注意事項
       </h2>
@@ -320,7 +320,7 @@ export function InterviewLPPage({
   userReports,
 }: InterviewLPPageProps) {
   return (
-    <div className="flex flex-col gap-8 pb-8 bg-mirai-light-gradient">
+    <div className="flex flex-col gap-8 pb-8 bg-background">
       <_InterviewLPHeader bill={bill} />
       <div className="flex flex-col items-center gap-8 px-4">
         <_InterviewLPHero

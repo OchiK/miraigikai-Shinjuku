@@ -49,7 +49,7 @@ export function ReportCard({ report, children, href }: ReportCardProps) {
   const summary = report.summary || "";
 
   return (
-    <article className="relative bg-white rounded-lg p-4 hover:bg-gray-50 transition-colors">
+    <article className="relative bg-card rounded-lg p-4 hover:bg-neutral-200 transition-colors">
       <Link
         href={(href ?? getPublicReportLink(report.id)) as Route}
         prefetch={false}
@@ -91,7 +91,7 @@ export function ReportCard({ report, children, href }: ReportCardProps) {
                 </span>
               )}
               {roleLabel && (
-                <div className="flex items-center gap-1 text-mirai-text-subtle flex-shrink-0">
+                <div className="flex items-center gap-1 text-mirai-text-muted flex-shrink-0">
                   {RoleIcon && <RoleIcon size={16} className="flex-shrink-0" />}
                   <span className="text-xs leading-3">{roleLabel}</span>
                 </div>

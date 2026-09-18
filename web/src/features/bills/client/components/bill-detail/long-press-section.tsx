@@ -8,7 +8,7 @@ export function LongPressSection() {
     return null;
   }
   return (
-    <section className="relative bg-white rounded-2xl !px-3 !py-10 overflow-hidden">
+    <section className="relative bg-card rounded-2xl !px-3 !py-10 overflow-hidden">
       {/* コンテンツエリア */}
       <div className="relative h-full flex items-center justify-between px-3 gap-6">
         {/* 左側：テキストコンテンツ */}
@@ -17,7 +17,7 @@ export function LongPressSection() {
           <p className="text-mirai-text text-base font-medium leading-[1.2] font-noto-sans !mt-0 !mb-0">
             <span className="inline-block px-1">わからない言葉を</span>
             <br className="pc:hidden" />
-            <span className="inline-block bg-mirai-info-blue px-1">
+            <span className="inline-block bg-sage-200 px-1">
               <span className="pc:hidden">
                 <ManualRuby ruby="なが">長</ManualRuby>押しで
               </span>
@@ -28,7 +28,7 @@ export function LongPressSection() {
 
           {/* 3行目 */}
           <div className="flex items-start gap-2 pt-2">
-            <div className="inline-flex items-center gap-1 bg-white border border-mirai-border rounded-lg px-1.5 py-1 shadow-[0px_0px_4px_0px_rgba(0,0,0,0.2)]">
+            <div className="inline-flex items-center gap-1 bg-card border border-mirai-border rounded-lg px-1.5 py-1 shadow-[0px_0px_4px_0px_rgba(0,0,0,0.2)]">
               <MessageCircleQuestion className={`h-4 w-4`} />
               <span className="text-mirai-text text-sm font-medium leading-[1.43] font-noto-sans text-center">
                 AIに質問
