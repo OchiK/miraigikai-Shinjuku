@@ -6,22 +6,24 @@ import {
 } from "./easy-japanese-text";
 
 describe("isExcludedLine", () => {
-  it("見出し・表・引用・コードフェンスを除外する", () => {
+  it("見出し・表の区切り行・コードフェンスを除外する", () => {
     expect(isExcludedLine("# 見出し")).toBe(true);
     expect(isExcludedLine("### 小見出し")).toBe(true);
-    expect(isExcludedLine("| 項目 | 内容 |")).toBe(true);
-    expect(isExcludedLine("> 条文の引用")).toBe(true);
+    expect(isExcludedLine("|------|------|")).toBe(true);
+    expect(isExcludedLine("| :--- | ---: |")).toBe(true);
     expect(isExcludedLine("```ts")).toBe(true);
   });
 
   it("行頭の空白があっても除外する", () => {
-    expect(isExcludedLine("   > 引用")).toBe(true);
-    expect(isExcludedLine("  | セル |")).toBe(true);
+    expect(isExcludedLine("  | --- | --- |")).toBe(true);
+    expect(isExcludedLine("   ```ts")).toBe(true);
   });
 
-  it("地の文と箇条書きは除外しない", () => {
+  it("地の文・箇条書き・表のセル・引用は除外しない", () => {
     expect(isExcludedLine("区の お金を 足します。")).toBe(false);
     expect(isExcludedLine("- 道路を 直す 工事: 1億881万6千円")).toBe(false);
+    expect(isExcludedLine("| 項目 | 内容 |")).toBe(false);
+    expect(isExcludedLine("> 条文の引用")).toBe(false);
     expect(isExcludedLine("")).toBe(false);
   });
 });
@@ -35,6 +37,10 @@ describe("stripMarkup", () => {
 
   it("強調記号を落とす", () => {
     expect(stripMarkup("**新宿区基本構想**")).toBe("新宿区基本構想");
+  });
+
+  it("引用記号を落とす", () => {
+    expect(stripMarkup("> 条文の 引用です。")).toBe("条文の 引用です。");
   });
 
   it("文中のハイフンは落とさない", () => {
@@ -65,17 +71,31 @@ describe("splitIntoSentences", () => {
     expect(splitIntoSentences("あい、うえ、おか。")).toEqual(["あい、うえ、おか"]);
   });
 
-  it("見出し・表・引用を数えない", () => {
+  it("見出しと表の区切り行を数えず、表のセルと引用は数える", () => {
     const markdown = [
       "# 見出しは とても とても とても 長くても 数えない",
       "",
       "地の文です。",
-      "| 表 | の | 行 |",
+      "| 項目 | 内容 |",
+      "|------|------|",
       "> 条文の 引用は そのまま 残す",
       "- 箇条書きです",
     ].join("\n");
 
-    expect(splitIntoSentences(markdown)).toEqual(["地の文です", "箇条書きです"]);
+    expect(splitIntoSentences(markdown)).toEqual([
+      "地の文です",
+      "項目",
+      "内容",
+      "条文の 引用は そのまま 残す",
+      "箇条書きです",
+    ]);
+  });
+
+  it("表の長いセルと長い引用を検査対象に残す", () => {
+    const long = "あ".repeat(41);
+
+    expect(splitIntoSentences(`| 項目 | ${long} |`)).toContain(long);
+    expect(splitIntoSentences(`> ${long}`)).toContain(long);
   });
 
   it("空行・空文は落とす", () => {

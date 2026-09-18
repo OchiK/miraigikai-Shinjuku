@@ -10,28 +10,37 @@
  * 文長の検査対象にならない行かどうか。
  *
  * - 見出し（`#`）: 文ではなく見出しであり、句点で終わらない
- * - 表（`|`）: セル区切りであり、1行=1文ではない
- * - 引用（`>`）: 条文・提案理由の原文引用。やさしく言い換えた文を
- *   直後に必ず添えるが、引用そのものを短く書き換えると
- *   「原文を改変しない」という出典の原則に反するため除外する
+ * - 表の区切り行（`|---|`）: 読者に見せる文章ではない
  * - コードフェンス（```）
+ *
+ * 表のセルと引用は読者に見える文章なので除外しない。
  */
 export function isExcludedLine(line: string): boolean {
   const trimmed = line.trim();
   return (
     trimmed.startsWith("#") ||
-    trimmed.startsWith("|") ||
-    trimmed.startsWith(">") ||
+    /^\|(?:\s*:?-+:?\s*\|)+$/.test(trimmed) ||
     trimmed.startsWith("```")
   );
 }
 
-/** 箇条書き記号・強調記号など、文の長さに数えない装飾を落とす。 */
+/** 箇条書き・引用・強調など、文の長さに数えない装飾を落とす。 */
 export function stripMarkup(line: string): string {
   return line
     .replace(/^\s*[-*]\s+/, "")
+    .replace(/^\s*>\s?/, "")
     .replace(/\*\*/g, "")
     .trim();
+}
+
+/** 表の行はセルごとの文章として検査する。 */
+function splitTableCells(line: string): string[] {
+  const trimmed = line.trim();
+  if (!trimmed.startsWith("|") || !trimmed.endsWith("|")) {
+    return [line];
+  }
+
+  return trimmed.slice(1, -1).split("|");
 }
 
 /**
@@ -42,6 +51,7 @@ export function splitIntoSentences(markdown: string): string[] {
   return markdown
     .split("\n")
     .filter((line) => !isExcludedLine(line))
+    .flatMap(splitTableCells)
     .map(stripMarkup)
     .flatMap((line) => line.split(/[。！？]/))
     .map((sentence) => sentence.trim())
