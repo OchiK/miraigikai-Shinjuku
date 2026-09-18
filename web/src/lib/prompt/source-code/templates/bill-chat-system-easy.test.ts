@@ -29,6 +29,37 @@ describe("buildBillChatSystemEasyPrompt", () => {
     expect(result).toContain("40字以内");
   });
 
+  it("アンカー保持プロトコルの指示が含まれる", () => {
+    const result = buildBillChatSystemEasyPrompt("a", "b", "c", "d");
+
+    expect(result).toContain("【正式名称】［ふりがな］（＝やさしい言いかえ）");
+    expect(result).toContain(
+      "【補正予算】［ほせいよさん］（＝あとから 足す お金）"
+    );
+  });
+
+  it("元号を西暦と曜日に直す指示が含まれる", () => {
+    const result = buildBillChatSystemEasyPrompt("a", "b", "c", "d");
+
+    expect(result).toContain("2026年（令和8年）6月10日（水）");
+  });
+
+  it("義務を弱めない指示が含まれる", () => {
+    // 「しなければならない」を「したほうがいい」に緩めると、
+    // 読み手が義務を任意と誤解する。難易度を下げる圧力への歯止め。
+    const result = buildBillChatSystemEasyPrompt("a", "b", "c", "d");
+
+    expect(result).toContain(
+      "「しなければならない」を「したほうが いいです」にしないでください"
+    );
+  });
+
+  it("議案に書いていないことを足さない指示が含まれる", () => {
+    const result = buildBillChatSystemEasyPrompt("a", "b", "c", "d");
+
+    expect(result).toContain("この議案には 書いて ありません");
+  });
+
   it("サービス概要が含まれる", () => {
     const result = buildBillChatSystemEasyPrompt("a", "b", "c", "d");
 
