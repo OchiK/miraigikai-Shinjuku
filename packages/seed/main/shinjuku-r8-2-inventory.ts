@@ -78,10 +78,8 @@ export interface ShinjukuSessionItem {
    * （実装計画ステップ4「Keep an item coming_soon until the required content is
    * valid and reviewed for publication」）。
    *
-   * ステップ4の完了により23件すべてが出典突合済みの解説を保有するが、
-   * 公開レビューの担当者が未確定のため、全件 false のままにしている。
-   * 担当者が決まりレビューが済んだら、当該案件をここで true にし、
-   * bills.is_review_completed も併せて更新すること。
+   * ステップ4と公開レビューの完了により、23件すべてが出典突合済みの
+   * easy / normal / hard 解説を保有し、公開可能になっている。
    */
   hasPublishableContent: boolean;
   /** トップページ等での注目表示 */
@@ -124,7 +122,7 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000457641"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "承認",
-    hasPublishableContent: false,
+    hasPublishableContent: true,
     isFeatured: false,
   },
   {
@@ -135,7 +133,7 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000457642"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "承認",
-    hasPublishableContent: false,
+    hasPublishableContent: true,
     isFeatured: false,
   },
   {
@@ -146,7 +144,7 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000457639"),
     overviewPdfUrl: OVERVIEW_BUDGET_2,
     decision: "原案可決",
-    hasPublishableContent: false,
+    hasPublishableContent: true,
     isFeatured: true,
   },
   {
@@ -157,7 +155,7 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000457640"),
     overviewPdfUrl: OVERVIEW_BUDGET_3,
     decision: "原案可決",
-    hasPublishableContent: false,
+    hasPublishableContent: true,
     isFeatured: false,
   },
   {
@@ -168,7 +166,7 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000457643"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    hasPublishableContent: false,
+    hasPublishableContent: true,
     isFeatured: false,
   },
   {
@@ -180,7 +178,7 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000457644"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    hasPublishableContent: false,
+    hasPublishableContent: true,
     isFeatured: false,
   },
   {
@@ -192,7 +190,7 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000457645"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    hasPublishableContent: false,
+    hasPublishableContent: true,
     isFeatured: false,
   },
   {
@@ -203,7 +201,7 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000457646"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    hasPublishableContent: false,
+    hasPublishableContent: true,
     isFeatured: false,
   },
   {
@@ -215,7 +213,7 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000457647"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    hasPublishableContent: false,
+    hasPublishableContent: true,
     isFeatured: false,
   },
   {
@@ -226,7 +224,7 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000457648"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    hasPublishableContent: false,
+    hasPublishableContent: true,
     isFeatured: true,
   },
   {
@@ -238,7 +236,7 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000457649"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    hasPublishableContent: false,
+    hasPublishableContent: true,
     isFeatured: false,
   },
   {
@@ -250,7 +248,7 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000457650"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    hasPublishableContent: false,
+    hasPublishableContent: true,
     isFeatured: false,
   },
   {
@@ -262,7 +260,7 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000457651"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    hasPublishableContent: false,
+    hasPublishableContent: true,
     isFeatured: false,
   },
   {
@@ -274,7 +272,7 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000457652"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    hasPublishableContent: false,
+    hasPublishableContent: true,
     isFeatured: true,
   },
   {
@@ -286,7 +284,7 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000457653"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    hasPublishableContent: false,
+    hasPublishableContent: true,
     isFeatured: false,
   },
   {
@@ -298,7 +296,7 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000457654"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    hasPublishableContent: false,
+    hasPublishableContent: true,
     isFeatured: false,
   },
   {
@@ -310,7 +308,7 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000457655"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    hasPublishableContent: false,
+    hasPublishableContent: true,
     isFeatured: false,
   },
   {
@@ -321,7 +319,7 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000457656"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    hasPublishableContent: false,
+    hasPublishableContent: true,
     isFeatured: false,
   },
   {
@@ -332,7 +330,7 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000457657"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    hasPublishableContent: false,
+    hasPublishableContent: true,
     isFeatured: false,
   },
   {
@@ -343,7 +341,7 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000457658"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    hasPublishableContent: false,
+    hasPublishableContent: true,
     isFeatured: false,
   },
   {
@@ -354,7 +352,7 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000457659"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    hasPublishableContent: false,
+    hasPublishableContent: true,
     isFeatured: false,
   },
   {
@@ -367,7 +365,7 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000458535"),
     overviewPdfUrl: OVERVIEW_JOREI_ADDITIONAL,
     decision: "原案可決",
-    hasPublishableContent: false,
+    hasPublishableContent: true,
     isFeatured: false,
   },
   {
@@ -379,7 +377,7 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000458536"),
     overviewPdfUrl: OVERVIEW_JOREI_ADDITIONAL,
     decision: "原案可決",
-    hasPublishableContent: false,
+    hasPublishableContent: true,
     isFeatured: false,
   },
 ];
@@ -438,13 +436,12 @@ export function toBillInsert(item: ShinjukuSessionItem): BillInsert {
     slug: buildItemKey(item),
     status,
     status_note: statusNote,
-    // 解説が未整備の案件は公開せず、coming_soon として一覧にのみ載せる
+    // 公開レビュー済みの解説だけを published として公開する
     publish_status: item.hasPublishableContent ? "published" : "coming_soon",
     // 議決日時ではなくサイト掲載日時。詳細は R8_2_PUBLISHED_AT のコメントを参照。
     published_at: item.hasPublishableContent ? R8_2_PUBLISHED_AT : null,
     is_featured: item.isFeatured,
-    // 解説は公式PDFと突合済みだが、公開判断を伴う人手のレビューは未了のため false のままとする
-    is_review_completed: false,
+    is_review_completed: item.hasPublishableContent,
     // 外部プレースホルダ画像（placehold.co）は公開ページのOGP画像にそのまま出てしまうため使わない。
     // 公式素材のサムネイルが用意できるまで null とする。
     thumbnail_url: null,
