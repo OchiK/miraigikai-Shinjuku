@@ -29,7 +29,6 @@ import type {
 
 type DraftReviewProps = {
   run: CollectionRun;
-  existingBillNumbers: string[];
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -156,8 +155,8 @@ function buildInitialOverride(diffs: DiffItem[]): OverrideState {
   };
 }
 
-export function DraftReview({ run, existingBillNumbers }: DraftReviewProps) {
-  const existingSet = new Set(existingBillNumbers);
+export function DraftReview({ run }: DraftReviewProps) {
+  const existingSet = new Set(run.existingBillNumbers ?? []);
 
   const newBills = run.bills.filter(
     (b) => !b.billNumber || !existingSet.has(b.billNumber)
@@ -206,7 +205,11 @@ export function DraftReview({ run, existingBillNumbers }: DraftReviewProps) {
       try {
         const [details, matchStatuses] = await Promise.all([
           existingBills.length > 0
-            ? getExistingBillsDetail(existingBills.map((b) => b.title))
+            ? getExistingBillsDetail(
+                existingBills.map((b) => b.title),
+                run.startDate,
+                run.endDate
+              )
             : Promise.resolve([]),
           run.factionStances.length > 0
             ? getFactionMatchStatus([

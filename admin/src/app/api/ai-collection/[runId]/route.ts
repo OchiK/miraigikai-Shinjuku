@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { getCouncilSessionForPeriod } from "@/features/ai-collection/server/loaders/get-council-session-for-period";
+import { getExistingBillNumbers } from "@/features/ai-collection/server/loaders/get-existing-bill-names";
 import { buildPrompt } from "@/features/ai-collection/server/utils/build-prompt";
 import {
   ClaudeUsageLimitError,
@@ -16,6 +18,7 @@ import type {
   DraftBill,
   DraftFactionStance,
 } from "@/features/ai-collection/shared/types";
+import { getCouncilSessionResolutionError } from "@/features/ai-collection/shared/utils/council-session-resolution";
 
 export async function GET(
   _request: Request,
@@ -66,15 +69,33 @@ export async function POST(
       );
     }
 
+    const sessionResolution = await getCouncilSessionForPeriod(
+      run.startDate,
+      run.endDate
+    );
+    const resolutionError = getCouncilSessionResolutionError(sessionResolution);
+    if (resolutionError) {
+      return NextResponse.json({ error: resolutionError }, { status: 400 });
+    }
+
+    const existingBillNumbers =
+      run.existingBillNumbers ??
+      (await getExistingBillNumbers(run.startDate, run.endDate));
     const resumedRun: CollectionRun = {
       ...run,
       status: "running",
       error: null,
+      existingBillNumbers,
     };
     await saveRun(resumedRun);
 
     // Fire-and-forget: re-run Claude in background
-    runClaudeInBackground(runId, run.startDate, run.endDate);
+    runClaudeInBackground(
+      runId,
+      run.startDate,
+      run.endDate,
+      existingBillNumbers
+    );
 
     return NextResponse.json({ runId });
   } catch (error) {
@@ -89,12 +110,18 @@ export async function POST(
 async function runClaudeInBackground(
   runId: string,
   startDate: string,
-  endDate: string
+  endDate: string,
+  existingBillNumbers: string[]
 ): Promise<void> {
   const outputFilePath = getTempOutputPath(runId);
 
   try {
-    const prompt = buildPrompt(startDate, endDate, outputFilePath);
+    const prompt = buildPrompt(
+      startDate,
+      endDate,
+      outputFilePath,
+      existingBillNumbers
+    );
 
     await executeClaudeToFile(prompt, outputFilePath);
 

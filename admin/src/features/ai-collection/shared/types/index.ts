@@ -68,6 +68,7 @@ export type CollectionRun = {
   createdAt: string;
   completedAt: string | null;
   error: string | null;
+  existingBillNumbers?: string[];
   bills: DraftBill[];
   factionStances: DraftFactionStance[];
   sources: string[];
