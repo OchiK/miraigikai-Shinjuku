@@ -665,10 +665,22 @@ describe("bill-repository 統合テスト", () => {
 
       const result = await findFeaturedBillsWithContents("normal", null);
 
-      expect(
-        result.find((bill) => bill.id === comingSoonBill.id)
-      ).toBeUndefined();
-      expect(result.find((bill) => bill.id === publishedBill.id)).toBeDefined();
+      expect(result.find((b) => b.id === comingSoonBill.id)).toBeUndefined();
+      expect(result.find((b) => b.id === publishedBill.id)).toBeDefined();
+    });
+
+    it("draftの注目議案は含まれない", async () => {
+      const bill = await createTestBill({
+        publish_status: "draft",
+        is_featured: true,
+      });
+      billIds.push(bill.id);
+      await createTestBillContent(bill.id, { difficulty_level: "normal" });
+
+      const result = await findFeaturedBillsWithContents("normal", null);
+
+      const found = result.find((b) => b.id === bill.id);
+      expect(found).toBeUndefined();
     });
 
     it("councilSessionIdがnullの場合は全会期から取得できる", async () => {
