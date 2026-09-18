@@ -643,6 +643,46 @@ describe("bill-repository 統合テスト", () => {
       expect(found).toBeUndefined();
     });
 
+    it("coming_soonの注目議案は含まれず、publishedのみ取得できる", async () => {
+      const comingSoonBill = await createTestBill({
+        publish_status: "coming_soon",
+        is_featured: true,
+      });
+      billIds.push(comingSoonBill.id);
+      await createTestBillContent(comingSoonBill.id, {
+        difficulty_level: "normal",
+      });
+
+      const publishedBill = await createTestBill({
+        publish_status: "published",
+        is_featured: true,
+        published_at: new Date().toISOString(),
+      });
+      billIds.push(publishedBill.id);
+      await createTestBillContent(publishedBill.id, {
+        difficulty_level: "normal",
+      });
+
+      const result = await findFeaturedBillsWithContents("normal", null);
+
+      expect(result.find((b) => b.id === comingSoonBill.id)).toBeUndefined();
+      expect(result.find((b) => b.id === publishedBill.id)).toBeDefined();
+    });
+
+    it("draftの注目議案は含まれない", async () => {
+      const bill = await createTestBill({
+        publish_status: "draft",
+        is_featured: true,
+      });
+      billIds.push(bill.id);
+      await createTestBillContent(bill.id, { difficulty_level: "normal" });
+
+      const result = await findFeaturedBillsWithContents("normal", null);
+
+      const found = result.find((b) => b.id === bill.id);
+      expect(found).toBeUndefined();
+    });
+
     it("councilSessionIdがnullの場合は全会期から取得できる", async () => {
       const bill = await createTestBill({
         publish_status: "published",
