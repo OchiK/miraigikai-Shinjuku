@@ -4,14 +4,13 @@ import { Loader2, PauseCircle } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import type { CollectionRun } from "../../shared/types";
 import { CollectionForm } from "./collection-form";
 import { DraftReview } from "./draft-review";
 import { RunHistory } from "./run-history";
-import type { CollectionRun } from "../../shared/types";
 
 type AiCollectionPageProps = {
   initialRuns: CollectionRun[];
-  existingBillNumbers: string[];
 };
 
 const POLL_INTERVAL_MS = 3000;
@@ -37,10 +36,7 @@ function formatElapsed(seconds: number): string {
   return m > 0 ? `${m}分${s}秒` : `${s}秒`;
 }
 
-export function AiCollectionPage({
-  initialRuns,
-  existingBillNumbers,
-}: AiCollectionPageProps) {
+export function AiCollectionPage({ initialRuns }: AiCollectionPageProps) {
   const [runs, setRuns] = useState<CollectionRun[]>(initialRuns);
   const [activeRunId, setActiveRunId] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -230,12 +226,7 @@ export function AiCollectionPage({
             </div>
           )}
 
-          {activeRun.status === "completed" && (
-            <DraftReview
-              run={activeRun}
-              existingBillNumbers={existingBillNumbers}
-            />
-          )}
+          {activeRun.status === "completed" && <DraftReview run={activeRun} />}
         </section>
       )}
 

@@ -15,18 +15,20 @@ export default async function AiCollectionRoute() {
     );
   }
 
-  const [runs, existingBillNumbers] = await Promise.all([
-    getRuns(),
-    getExistingBillNumbers(),
-  ]);
+  const storedRuns = await getRuns();
+  const runs = await Promise.all(
+    storedRuns.map(async (run) => ({
+      ...run,
+      existingBillNumbers:
+        run.existingBillNumbers ??
+        (await getExistingBillNumbers(run.startDate, run.endDate)),
+    }))
+  );
 
   return (
     <div className="container mx-auto py-8">
       <h1 className="mb-8 text-2xl font-bold">AI情報収集</h1>
-      <AiCollectionPage
-        initialRuns={runs}
-        existingBillNumbers={existingBillNumbers}
-      />
+      <AiCollectionPage initialRuns={runs} />
     </div>
   );
 }

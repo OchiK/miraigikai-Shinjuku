@@ -3,19 +3,26 @@
 import { createAdminClient } from "@mirai-gikai/supabase";
 import { requireAdmin } from "@/features/auth/server/lib/auth-server";
 import type { ExistingBillDetail } from "../../shared/types";
+import { getCouncilSessionForPeriod } from "../loaders/get-council-session-for-period";
 
 export async function getExistingBillsDetail(
-  billNames: string[]
+  billNames: string[],
+  startDate: string,
+  endDate: string
 ): Promise<ExistingBillDetail[]> {
   await requireAdmin();
 
   if (billNames.length === 0) return [];
+
+  const { sessionId } = await getCouncilSessionForPeriod(startDate, endDate);
+  if (!sessionId) return [];
 
   const supabase = createAdminClient();
 
   const { data: bills } = await supabase
     .from("bills")
     .select("id, name, status")
+    .eq("council_session_id", sessionId)
     .in("name", billNames);
 
   if (!bills || bills.length === 0) return [];

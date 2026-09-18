@@ -10,14 +10,16 @@
 import { createAdminClient } from "@mirai-gikai/supabase";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/features/auth/server/lib/auth-server";
-import { invalidateWebCache } from "@/lib/utils/cache-invalidation";
 import { routes } from "@/lib/routes";
-import { loadRun } from "../utils/storage";
-import {
-  findFactionByName,
-  type FactionRecord,
-} from "../utils/faction-matching";
+import { invalidateWebCache } from "@/lib/utils/cache-invalidation";
 import type { BillFieldOverride, DraftBill } from "../../shared/types";
+import { getCouncilSessionResolutionError } from "../../shared/utils/council-session-resolution";
+import { getCouncilSessionForPeriod } from "../loaders/get-council-session-for-period";
+import {
+  type FactionRecord,
+  findFactionByName,
+} from "../utils/faction-matching";
+import { loadRun } from "../utils/storage";
 
 type ApplyDraftsInput = {
   runId: string;
@@ -61,6 +63,23 @@ export async function applyDrafts(
     const warnings: string[] = [];
     let appliedCount = 0;
 
+    const sessionResolution = await getCouncilSessionForPeriod(
+      run.startDate,
+      run.endDate
+    );
+    const runCouncilSessionId = sessionResolution.sessionId;
+    const sessionResolutionError =
+      getCouncilSessionResolutionError(sessionResolution);
+
+    if (!runCouncilSessionId || sessionResolutionError) {
+      return {
+        success: false,
+        appliedCount: 0,
+        warnings: [],
+        error: `収集期間（${run.startDate}〜${run.endDate}）の${sessionResolutionError ?? "会期を特定できません"}`,
+      };
+    }
+
     // 全会派を一括取得（display_name・alternative_names でマッチングするため）
     const { data: allFactions } = await supabase
       .from("factions")
@@ -82,6 +101,7 @@ export async function applyDrafts(
           status: mapBillStatus(draft.status),
           status_note: draft.statusNote || null,
           published_at: run.startDate,
+          council_session_id: runCouncilSessionId,
           is_featured: false,
           publish_status: "draft",
         })
@@ -131,14 +151,34 @@ export async function applyDrafts(
 
       if (!hasAnyUpdate) continue;
 
-      const { data: existing } = await supabase
+      const { data: existingCandidates, error: existingError } = await supabase
         .from("bills")
-        .select("id")
-        .eq("bill_number", draft.billNumber ?? "")
-        .maybeSingle();
+        .select("id, council_session_id")
+        .eq("bill_number", draft.billNumber ?? "");
+
+      if (existingError) {
+        warnings.push(
+          `議案「${draft.title}」の検索に失敗しました: ${existingError.message}`
+        );
+        continue;
+      }
+
+      const scopedCandidates = (existingCandidates ?? []).filter(
+        (bill) => bill.council_session_id === runCouncilSessionId
+      );
+
+      if (scopedCandidates.length > 1) {
+        warnings.push(
+          `議案「${draft.title}」の候補が複数見つかったため、更新をスキップしました`
+        );
+        continue;
+      }
+
+      const existing = scopedCandidates[0];
 
       if (!existing) {
-        warnings.push(`議案「${draft.title}」が見つかりません`);
+        const sessionNote = runCouncilSessionId ? "（同一会期内）" : "";
+        warnings.push(`議案「${draft.title}」${sessionNote}が見つかりません`);
         continue;
       }
 

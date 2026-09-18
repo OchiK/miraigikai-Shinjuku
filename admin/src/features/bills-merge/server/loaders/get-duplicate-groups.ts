@@ -59,12 +59,17 @@ export async function getDuplicateGroups(): Promise<DuplicateGroup[]> {
 
   if (error || !bills) return [];
 
-  // Group by bill_number and keep only groups with 2+ bills
+  // Group by council session and bill_number, then keep groups with 2+ bills.
+  // An unassigned bill is intentionally scoped with other unassigned bills.
   const grouped = new Map<string, typeof bills>();
   for (const bill of bills) {
-    const list = grouped.get(bill.bill_number) ?? [];
+    const groupKey = JSON.stringify([
+      bill.council_session_id,
+      bill.bill_number,
+    ]);
+    const list = grouped.get(groupKey) ?? [];
     list.push(bill);
-    grouped.set(bill.bill_number, list);
+    grouped.set(groupKey, list);
   }
 
   const duplicateGroups = [...grouped.entries()].filter(
@@ -88,8 +93,8 @@ export async function getDuplicateGroups(): Promise<DuplicateGroup[]> {
       .in("bill_id", allIds),
   ]);
 
-  return duplicateGroups.map(([billNumber, list]) => ({
-    billNumber,
+  return duplicateGroups.map(([, list]) => ({
+    billNumber: list[0].bill_number,
     bills: list.map((b) => ({
       ...b,
       contents: (allContents ?? [])

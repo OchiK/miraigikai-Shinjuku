@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getBillsInPeriod } from "@/features/ai-collection/server/loaders/get-bills-in-period";
+import { getCouncilSessionForPeriod } from "@/features/ai-collection/server/loaders/get-council-session-for-period";
 import { buildStatusCheckPrompt } from "@/features/ai-collection/server/utils/build-status-check-prompt";
 import {
   ClaudeUsageLimitError,
@@ -17,6 +18,7 @@ import type {
   DraftBill,
   DraftFactionStance,
 } from "@/features/ai-collection/shared/types";
+import { getCouncilSessionResolutionError } from "@/features/ai-collection/shared/utils/council-session-resolution";
 
 export async function POST(request: Request) {
   try {
@@ -31,6 +33,15 @@ export async function POST(request: Request) {
         { error: "startDate と endDate は必須です" },
         { status: 400 }
       );
+    }
+
+    const sessionResolution = await getCouncilSessionForPeriod(
+      startDate,
+      endDate
+    );
+    const resolutionError = getCouncilSessionResolutionError(sessionResolution);
+    if (resolutionError) {
+      return NextResponse.json({ error: resolutionError }, { status: 400 });
     }
 
     const bills = await getBillsInPeriod(startDate, endDate);
@@ -57,6 +68,7 @@ export async function POST(request: Request) {
       createdAt: now,
       completedAt: null,
       error: null,
+      existingBillNumbers: bills.map((bill) => bill.billNumber),
       bills: [],
       factionStances: [],
       sources: [],

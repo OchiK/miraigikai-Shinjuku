@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
-import { buildPrompt } from "@/features/ai-collection/server/utils/build-prompt";
+import { getCouncilSessionForPeriod } from "@/features/ai-collection/server/loaders/get-council-session-for-period";
 import { getExistingBillNumbers } from "@/features/ai-collection/server/loaders/get-existing-bill-names";
+import { collectWithOpenAi } from "@/features/ai-collection/server/services/collect-with-openai";
+import { buildPrompt } from "@/features/ai-collection/server/utils/build-prompt";
 import {
   ClaudeUsageLimitError,
   cleanupTempFile,
@@ -8,9 +10,6 @@ import {
   getTempOutputPath,
   readCollectionOutput,
 } from "@/features/ai-collection/server/utils/execute-claude";
-import { collectWithOpenAi } from "@/features/ai-collection/server/services/collect-with-openai";
-import { getAiModel } from "@/features/ai-settings/server/loaders/get-ai-model";
-import { isClaudeCliModel } from "@/features/ai-settings/shared/ai-model-options";
 import {
   loadRun,
   saveRun,
@@ -20,6 +19,9 @@ import type {
   DraftBill,
   DraftFactionStance,
 } from "@/features/ai-collection/shared/types";
+import { getCouncilSessionResolutionError } from "@/features/ai-collection/shared/utils/council-session-resolution";
+import { getAiModel } from "@/features/ai-settings/server/loaders/get-ai-model";
+import { isClaudeCliModel } from "@/features/ai-settings/shared/ai-model-options";
 
 export async function POST(request: Request) {
   try {
@@ -36,8 +38,21 @@ export async function POST(request: Request) {
       );
     }
 
+    const sessionResolution = await getCouncilSessionForPeriod(
+      startDate,
+      endDate
+    );
+    const resolutionError = getCouncilSessionResolutionError(sessionResolution);
+    if (resolutionError) {
+      return NextResponse.json({ error: resolutionError }, { status: 400 });
+    }
+
     const runId = crypto.randomUUID();
     const now = new Date().toISOString();
+    const existingBillNumbers = await getExistingBillNumbers(
+      startDate,
+      endDate
+    );
 
     const initialRun: CollectionRun = {
       id: runId,
@@ -47,6 +62,7 @@ export async function POST(request: Request) {
       createdAt: now,
       completedAt: null,
       error: null,
+      existingBillNumbers,
       bills: [],
       factionStances: [],
       sources: [],
@@ -55,8 +71,6 @@ export async function POST(request: Request) {
     await saveRun(initialRun);
 
     const modelId = await getAiModel("ai-collection", "anthropic/claude-cli");
-
-    const existingBillNumbers = await getExistingBillNumbers();
 
     if (isClaudeCliModel(modelId)) {
       // Claude CLI で実行
