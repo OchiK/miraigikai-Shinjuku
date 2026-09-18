@@ -51,6 +51,7 @@ Exit:
 - [ ] Admin編集対応
 - [ ] prompt作成
 - [x] 3議案で品質確認
+- [x] 全23案件の easy 本文整備
 - [ ] easy/normal/hard切替
 
 Exit:
@@ -61,7 +62,12 @@ easyが単なる短縮ではなく、行政日本語の平易化になってい�
 `packages/seed/main/easy-japanese-validation.test.ts` で機械的に検証する。
 出典は normal 版と同じ一次資料の同じ箇所を引き継ぎ、
 `docs/verification/20260918_0930_claim-ledger-phase2-easy.csv` に台帳化した。
-残る20件は未整備で、表示時は `pickBillContent` が「ふつう」へフォールバックする。
+2026-09-18: 残る20件（承認第2・3号、第45〜62号議案）も同じ基準で整備し、
+令和8年第2回定例会の全23案件に easy 版がそろった。
+アンカー保持プロトコル（初出は【正式名称】［ふりがな］（＝言いかえ）、
+2回目以降は【正式名称】のみ）は、初出位置そのものを検証するテストで固定した。
+内容ハッシュは 69変種（23案件 × 3難易度）を
+`packages/seed/main/bill-contents-revision.test.ts` で固定している。
 
 ## Phase 3: 多言語基盤
 

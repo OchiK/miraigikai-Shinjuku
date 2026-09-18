@@ -122,7 +122,7 @@ describe("解説の内容ハッシュ", () => {
     expect(actual).toEqual(reviewedContentSha256);
   });
 
-  it("49変種すべてがハッシュ固定されている", () => {
+  it("69変種すべてがハッシュ固定されている", () => {
     // 台帳に載っている変種だけを突き合わせると、
     // 「台帳に行を書かずに解説だけ足す」と全テストが通ってしまう。
     // 対象外の集合を明示的に固定し、新しい解説が黙って素通りしないようにする。
@@ -134,7 +134,7 @@ describe("解説の内容ハッシュ", () => {
       .sort();
 
     expect(unpinned).toEqual([]);
-    expect(Object.keys(pinned)).toHaveLength(49);
+    expect(Object.keys(pinned)).toHaveLength(69);
   });
 
   it("台帳に載っている変種はすべて実在する", () => {
@@ -324,7 +324,7 @@ describe("やさしい日本語版の主張台帳の構造", () => {
       .sort();
 
     expect(incomplete).toEqual([]);
-    expect(byVariant.size).toBe(3);
+    expect(byVariant.size).toBe(23);
   });
 
   it("出典とハッシュが同じ議案の normal 版台帳と整合する", () => {
