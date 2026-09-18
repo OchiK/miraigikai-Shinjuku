@@ -9,14 +9,18 @@ import { findActiveCouncilSession } from "../repositories/council-session-reposi
  * アクティブな会期がない場合は null を返す
  */
 export async function getActiveCouncilSession(): Promise<CouncilSession | null> {
-  return _getCachedActiveCouncilSession();
+  const cached = await _getCachedActiveCouncilSession();
+  if (cached) {
+    return cached;
+  }
+  return findActiveCouncilSession();
 }
 
 const _getCachedActiveCouncilSession = unstable_cache(
   async (): Promise<CouncilSession | null> => {
     return findActiveCouncilSession();
   },
-  ["active-council-session"],
+  ["active-council-session-v2"],
   {
     revalidate: 3600, // 1 hour
     tags: [CACHE_TAGS.COUNCIL_SESSIONS],

@@ -16,14 +16,18 @@ export async function getCurrentCouncilSession(
   const day = String(date.getDate()).padStart(2, "0");
   const targetDate = `${year}-${month}-${day}`;
 
-  return _getCachedCurrentCouncilSession(targetDate);
+  const cached = await _getCachedCurrentCouncilSession(targetDate);
+  if (cached) {
+    return cached;
+  }
+  return findCurrentCouncilSession(targetDate);
 }
 
 const _getCachedCurrentCouncilSession = unstable_cache(
   async (targetDate: string): Promise<CouncilSession | null> => {
     return findCurrentCouncilSession(targetDate);
   },
-  ["current-council-session"],
+  ["current-council-session-v2"],
   {
     revalidate: 3600, // 1時間（3600秒）
     tags: [CACHE_TAGS.COUNCIL_SESSIONS],
