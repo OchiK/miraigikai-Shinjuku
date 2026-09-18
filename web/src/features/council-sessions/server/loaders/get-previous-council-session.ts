@@ -17,14 +17,20 @@ export async function getPreviousCouncilSession(): Promise<CouncilSession | null
     return null;
   }
 
-  return _getCachedPreviousCouncilSession(activeSession.start_date);
+  const cached = await _getCachedPreviousCouncilSession(
+    activeSession.start_date
+  );
+  if (cached) {
+    return cached;
+  }
+  return findPreviousCouncilSession(activeSession.start_date);
 }
 
 const _getCachedPreviousCouncilSession = unstable_cache(
   async (activeStartDate: string): Promise<CouncilSession | null> => {
     return findPreviousCouncilSession(activeStartDate);
   },
-  ["previous-council-session"],
+  ["previous-council-session-v2"],
   {
     revalidate: 3600, // 1時間
     tags: [CACHE_TAGS.COUNCIL_SESSIONS],
