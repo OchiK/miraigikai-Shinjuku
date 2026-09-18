@@ -2,15 +2,20 @@ import type { Bill, BillInsert } from "../types";
 
 /**
  * 議案データから複製用のinsertデータを生成する
- * ID・タイムスタンプを除去し、名前に「(複製)」を付与、ステータスをdraftに設定
+ * ID・タイムスタンプ・generated column を除去し、
+ * 名前に「(複製)」を付与、ステータスをdraftに設定
+ *
+ * status_order / publish_status_order / bill_number_order は
+ * GENERATED ALWAYS のため、値を渡すと INSERT がエラーになる。
  */
 export function prepareBillForDuplication(originalBill: Bill): BillInsert {
   const {
-    id: _,
-    created_at: __,
-    updated_at: ___,
-    status_order: ____,
-    publish_status_order: _____,
+    id: _id,
+    created_at: _createdAt,
+    updated_at: _updatedAt,
+    status_order: _statusOrder,
+    publish_status_order: _publishStatusOrder,
+    bill_number_order: _billNumberOrder,
     ...billWithoutId
   } = originalBill;
 

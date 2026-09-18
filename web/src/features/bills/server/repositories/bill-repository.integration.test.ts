@@ -53,6 +53,34 @@ describe("bill-repository 統合テスト", () => {
   // ============================================================
 
   describe("findPublishedBillsWithContents", () => {
+    it("published_at が同一の議案を議案番号順に並べる", async () => {
+      // 会期をまたぐ一覧のため、他のテストデータを除いてから順序を確認する。
+      const session = await createTestDietSession();
+      councilSessionIds.push(session.id);
+
+      const publishedAt = new Date().toISOString();
+      const created: string[] = [];
+      for (const billNumber of ["第10号議案", "第2号議案", "第42号議案"]) {
+        const bill = await createTestBill({
+          publish_status: "published",
+          council_session_id: session.id,
+          published_at: publishedAt,
+          bill_number: billNumber,
+        });
+        billIds.push(bill.id);
+        created.push(bill.id);
+        await createTestBillContent(bill.id, { difficulty_level: "normal" });
+      }
+
+      const result = await findPublishedBillsWithContents("normal");
+
+      expect(
+        result
+          .filter((bill) => created.includes(bill.id))
+          .map((bill) => bill.bill_number)
+      ).toEqual(["第2号議案", "第10号議案", "第42号議案"]);
+    });
+
     it("公開済み議案を難易度コンテンツ付きで取得できる", async () => {
       const bill = await createTestBill({
         publish_status: "published",
@@ -424,6 +452,36 @@ describe("bill-repository 統合テスト", () => {
 
       expect(result).toHaveLength(0);
     });
+
+    it("published_at が同一の議案を議案番号順に並べる", async () => {
+      // 会期内の議案はサイト掲載日時が全件同一になるため、
+      // published_at だけでは並びが決まらず物理行順に委ねられる。
+      const session = await createTestDietSession();
+      councilSessionIds.push(session.id);
+
+      const publishedAt = new Date().toISOString();
+      for (const billNumber of ["第56号議案", "承認第2号", "第7号議案"]) {
+        const bill = await createTestBill({
+          publish_status: "published",
+          council_session_id: session.id,
+          published_at: publishedAt,
+          bill_number: billNumber,
+        });
+        billIds.push(bill.id);
+        await createTestBillContent(bill.id, { difficulty_level: "normal" });
+      }
+
+      const result = await findPublishedBillsByDietSession(
+        session.id,
+        "normal"
+      );
+
+      expect(result.map((bill) => bill.bill_number)).toEqual([
+        "承認第2号",
+        "第7号議案",
+        "第56号議案",
+      ]);
+    });
   });
 
   // ============================================================
@@ -461,6 +519,33 @@ describe("bill-repository 統合テスト", () => {
       const result = await findPreviousSessionBills(session.id, "normal", 10);
 
       expect(result).toEqual([]);
+    });
+
+    it("published_at が同一でも議案番号の小さい順に件数制限がかかる", async () => {
+      // 同一会期の議案は published_at が全件同一（会期末日）になる。
+      // 番号順の並びがないと、取得できる件数だけでなく
+      // どの議案が返るかまで不定になる。
+      const session = await createTestDietSession();
+      councilSessionIds.push(session.id);
+
+      const publishedAt = new Date().toISOString();
+      for (const billNumber of ["第10号議案", "第2号議案", "第42号議案"]) {
+        const bill = await createTestBill({
+          publish_status: "published",
+          council_session_id: session.id,
+          published_at: publishedAt,
+          bill_number: billNumber,
+        });
+        billIds.push(bill.id);
+        await createTestBillContent(bill.id, { difficulty_level: "normal" });
+      }
+
+      const result = await findPreviousSessionBills(session.id, "normal", 2);
+
+      expect(result.map((bill) => bill.bill_number)).toEqual([
+        "第2号議案",
+        "第10号議案",
+      ]);
     });
   });
 
@@ -643,6 +728,32 @@ describe("bill-repository 統合テスト", () => {
       expect(found).toBeUndefined();
     });
 
+    it("published_at が同一の注目議案を議案番号順に並べる", async () => {
+      const session = await createTestDietSession();
+      councilSessionIds.push(session.id);
+
+      const publishedAt = new Date().toISOString();
+      for (const billNumber of ["第56号議案", "承認第1号", "第7号議案"]) {
+        const bill = await createTestBill({
+          publish_status: "published",
+          is_featured: true,
+          council_session_id: session.id,
+          published_at: publishedAt,
+          bill_number: billNumber,
+        });
+        billIds.push(bill.id);
+        await createTestBillContent(bill.id, { difficulty_level: "normal" });
+      }
+
+      const result = await findFeaturedBillsWithContents("normal", session.id);
+
+      expect(result.map((bill) => bill.bill_number)).toEqual([
+        "承認第1号",
+        "第7号議案",
+        "第56号議案",
+      ]);
+    });
+
     it("coming_soonの注目議案は含まれず、publishedのみ取得できる", async () => {
       const comingSoonBill = await createTestBill({
         publish_status: "coming_soon",
@@ -750,6 +861,28 @@ describe("bill-repository 統合テスト", () => {
 
       const found = result.find((b) => b.id === bill.id);
       expect(found).toBeUndefined();
+    });
+
+    it("一括投入で created_at が並んでも議案番号順に並ぶ", async () => {
+      // シードは全議案を1回のINSERTで入れるため created_at が同一になりうる。
+      const session = await createTestDietSession();
+      councilSessionIds.push(session.id);
+
+      for (const billNumber of ["第10号議案", "第2号議案"]) {
+        const bill = await createTestBill({
+          publish_status: "coming_soon",
+          council_session_id: session.id,
+          bill_number: billNumber,
+        });
+        billIds.push(bill.id);
+      }
+
+      const result = await findComingSoonBills(session.id);
+
+      expect(result.map((bill) => bill.bill_number)).toEqual([
+        "第2号議案",
+        "第10号議案",
+      ]);
     });
   });
 

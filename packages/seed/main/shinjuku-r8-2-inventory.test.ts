@@ -10,6 +10,7 @@ import {
   findDuplicates,
   r8SecondSessionItems,
   reconcileInventory,
+  toBillInsert,
   toBillInserts,
   toBillStatus,
 } from "./shinjuku-r8-2-inventory";
@@ -216,6 +217,21 @@ describe("公開可否", () => {
     for (const bill of toBillInserts()) {
       expect(bill.is_review_completed).toBe(true);
     }
+  });
+
+  it("公開レビュー未了の案件は coming_soon に留める", () => {
+    // 令和8年第2回定例会は全件が公開済みだが、次の会期の案件は
+    // hasPublishableContent: false から始まる。
+    // 未公開側の分岐が壊れても全件 published のテストでは気づけないため、
+    // フォールバックをここで押さえる。
+    const bill = toBillInsert({
+      ...r8SecondSessionItems[0],
+      hasPublishableContent: false,
+    });
+
+    expect(bill.publish_status).toBe("coming_soon");
+    expect(bill.published_at).toBeNull();
+    expect(bill.is_review_completed).toBe(false);
   });
 
   it("外部プレースホルダ画像をサムネイルに設定しない", () => {
