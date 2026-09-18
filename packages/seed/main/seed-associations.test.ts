@@ -138,8 +138,10 @@ describe("createBillContents", () => {
     expect(
       shoninContents.map((c) => [c.bill_slug, c.difficulty_level])
     ).toEqual([
+      ["shinjuku-2026-r2-shonin-2", "easy"],
       ["shinjuku-2026-r2-shonin-2", "normal"],
       ["shinjuku-2026-r2-shonin-2", "hard"],
+      ["shinjuku-2026-r2-shonin-3", "easy"],
       ["shinjuku-2026-r2-shonin-3", "normal"],
       ["shinjuku-2026-r2-shonin-3", "hard"],
     ]);

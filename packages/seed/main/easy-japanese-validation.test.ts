@@ -4,7 +4,12 @@ import {
   splitIntoSentences,
   stripAnchorGloss,
 } from "./easy-japanese-text";
-import { gianKey } from "./shinjuku-r8-2-inventory";
+import {
+  buildItemKey,
+  gianKey,
+  r8SecondSessionItems,
+  shoninKey,
+} from "./shinjuku-r8-2-inventory";
 
 /**
  * やさしい日本語版（difficulty_level: "easy"）の機械的な検証。
@@ -22,18 +27,22 @@ import { gianKey } from "./shinjuku-r8-2-inventory";
 /** easy 段の1文の上限（デザインシステム定義 §3）。 */
 const EASY_MAX_SENTENCE_LENGTH = 40;
 
-/** Phase 2 で先行整備するパイロット3議案。 */
-const PILOT_BILL_SLUGS = [gianKey(42), gianKey(43), gianKey(44)];
+/**
+ * 令和8年第2回定例会の全23案件。
+ * Phase 2 のパイロット3議案（第42・43・44号議案）に続き、
+ * 承認第2・3号と第45〜62号議案の easy 版を整備して全件を満たした。
+ */
+const ALL_BILL_SLUGS = r8SecondSessionItems.map(buildItemKey);
 
 const easyContents = billContentsWithBillSlug.filter(
   (content) => content.difficulty_level === "easy"
 );
 
 describe("やさしい日本語版の整備状況", () => {
-  it("パイロット3議案すべてに easy 版がある", () => {
+  it("全23案件に easy 版がある", () => {
     const slugs = easyContents.map((content) => content.bill_slug);
 
-    expect(slugs.sort()).toEqual([...PILOT_BILL_SLUGS].sort());
+    expect(slugs.sort()).toEqual([...ALL_BILL_SLUGS].sort());
   });
 
   it("同じ議案に easy 版が重複しない", () => {
@@ -42,7 +51,7 @@ describe("やさしい日本語版の整備状況", () => {
     expect(new Set(slugs).size).toBe(slugs.length);
   });
 
-  it.each(PILOT_BILL_SLUGS)("%s には normal 版も残っている", (slug) => {
+  it.each(ALL_BILL_SLUGS)("%s には normal 版も残っている", (slug) => {
     const normal = billContentsWithBillSlug.find(
       (content) =>
         content.bill_slug === slug && content.difficulty_level === "normal"
@@ -124,6 +133,150 @@ describe("やさしい日本語版が一次資料の数値を保っている", (
       "平成19年 新宿区条例 第61号",
       "第96条 第2項",
       "公布の日",
+      "原案可決",
+    ],
+    [shoninKey(2)]: [
+      "昭和39年 新宿区条例 第57号",
+      "2026年（令和8年）3月31日（火）",
+      "新宿区告示 第202号",
+      "2028年度（令和10年度）",
+      "2030年（令和12年）12月31日（火）",
+      "2029年度（令和11年度）",
+      "承認しました",
+    ],
+    [shoninKey(3)]: [
+      "昭和28年 新宿区条例 第8号",
+      "新宿区告示 第203号",
+      "2026年4月1日（水）",
+      "承認しました",
+    ],
+    [gianKey(45)]: [
+      "平成27年 新宿区条例 第47号",
+      "1年10か月",
+      "原案可決",
+    ],
+    [gianKey(46)]: [
+      "平成10年 新宿区条例 第11号",
+      "第9条の6",
+      "2026年（令和8年）10月1日（木）",
+      "原案可決",
+    ],
+    [gianKey(47)]: [
+      "昭和39年 新宿区条例 第57号",
+      "2027年（令和9年）1月1日（金）",
+      "900万円以下",
+      "95万円以下",
+      "第24条の3",
+      "原案可決",
+    ],
+    [gianKey(48)]: [
+      "9,700円",
+      "10,000円",
+      "14,500円",
+      "15,000円",
+      "383円",
+      "433円",
+      "31万5,000円",
+      "33万円",
+      "2026年6月1日（月）",
+      "原案可決",
+    ],
+    [gianKey(49)]: [
+      "昭和50年 新宿区条例 第17号",
+      "平成12年 新宿区条例 第5号",
+      "平成14年 新宿区条例 第48号",
+      "51,870人",
+      "原案可決",
+    ],
+    [gianKey(50)]: [
+      "平成26年 新宿区条例 第28号",
+      "第6条の3 第10項 第3号",
+      "原案可決",
+    ],
+    [gianKey(51)]: [
+      "第37条 第3項",
+      "第39条 第3項",
+      "第42条 第8項",
+      "第51条の2",
+      "原案可決",
+    ],
+    [gianKey(52)]: [
+      "平成14年 新宿区条例 第43号",
+      "厚生労働省令 第69号",
+      "原案可決",
+    ],
+    [gianKey(53)]: [
+      "平成8年 新宿区条例 第43号",
+      "2026年（令和8年）10月1日（木）",
+      "原案可決",
+    ],
+    [gianKey(54)]: [
+      "平成19年 新宿区条例 第57号",
+      "新宿区告示 第275号",
+      "新宿区告示 第262号",
+      "原案可決",
+    ],
+    [gianKey(55)]: [
+      "平成12年 新宿区条例 第58号",
+      "第11条の5",
+      "2026年（令和8年）10月1日（木）",
+      "原案可決",
+    ],
+    [gianKey(56)]: [
+      "14,175円",
+      "14,397円",
+      "15,198円",
+      "16,467円",
+      "17,259円",
+      "17,496円",
+      "17,937円",
+      "2026年6月1日（月）",
+      "原案可決",
+    ],
+    [gianKey(57)]: [
+      "2億5,850万円",
+      "長永スポーツ工業株式会社",
+      "8,000万円",
+      "2027年（令和9年）3月15日（月）",
+      "原案可決",
+    ],
+    [gianKey(58)]: [
+      "3億8,489万円",
+      "株式会社五藤光学研究所",
+      "5,000万円",
+      "2027年（令和9年）6月30日（水）",
+      "原案可決",
+    ],
+    [gianKey(59)]: [
+      "7,513万3,509円",
+      "160,000食",
+      "51,000枚",
+      "2,000缶",
+      "5,100パック",
+      "3億91万5,000円",
+      "原案可決",
+    ],
+    [gianKey(60)]: [
+      "7,930万7,800円",
+      "737基",
+      "30基",
+      "767基",
+      "1,000万円",
+      "原案可決",
+    ],
+    [gianKey(61)]: [
+      "2億4,685万9,800円",
+      "常盤工業株式会社",
+      "1億円",
+      "2027年（令和9年）3月29日（月）",
+      "原案可決",
+    ],
+    [gianKey(62)]: [
+      "6億3,140万円",
+      "6億4,068万4,000円",
+      "928万4,000円",
+      "4.5%",
+      "2025年6月20日（金）",
       "原案可決",
     ],
   };
@@ -306,6 +459,138 @@ describe("やさしい日本語版が行政用語のアンカーを保ってい�
       yomi: "こうふのひ",
       gloss: "決まりを 区民に 知らせる 日",
     },
+    {
+      slug: shoninKey(2),
+      term: "専決処分",
+      yomi: "せんけつしょぶん",
+      gloss: "区長が 先に 決めること",
+    },
+    {
+      slug: shoninKey(2),
+      term: "軽自動車税",
+      yomi: "けいじどうしゃぜい",
+      gloss: "軽自動車に かかる 税金",
+    },
+    {
+      slug: shoninKey(2),
+      term: "環境性能割",
+      yomi: "かんきょうせいのうわり",
+      gloss: "買う ときに かかる 分",
+    },
+    {
+      slug: shoninKey(2),
+      term: "住宅ローン控除",
+      yomi: "じゅうたくろーんこうじょ",
+      gloss: "家を 買った 人の 税金を 安く する しくみ",
+    },
+    {
+      slug: shoninKey(3),
+      term: "専決処分",
+      yomi: "せんけつしょぶん",
+      gloss: "区長が 先に 決めること",
+    },
+    {
+      slug: shoninKey(3),
+      term: "承認",
+      yomi: "しょうにん",
+      gloss: "区長の 決定を 議会が 認めること",
+    },
+    {
+      slug: gianKey(45),
+      term: "個人番号",
+      yomi: "こじんばんごう",
+      gloss: "一人ひとりの 番号",
+    },
+    {
+      slug: gianKey(46),
+      term: "早出遅出勤務",
+      yomi: "はやででおそでできんむ",
+      gloss: "朝 早く または 夕方 おそく 働く しくみ",
+    },
+    {
+      slug: gianKey(46),
+      term: "時差通勤制度",
+      yomi: "じさつうきんせいど",
+      gloss: "職員の 希望で 働く 時間を 決める しくみ",
+    },
+    {
+      slug: gianKey(47),
+      term: "スイッチOTC医薬品",
+      yomi: "すいっちおーてぃーしーいやくひん",
+      gloss: "病院の 薬から 市販薬に なった 薬",
+    },
+    {
+      slug: gianKey(48),
+      term: "補償基礎額",
+      yomi: "ほしょうきそがく",
+      gloss: "お金の もとに なる 額",
+    },
+    {
+      slug: gianKey(49),
+      term: "特定在留カード",
+      yomi: "とくていざいりゅうかーど",
+      gloss: "在留カードと 一体の カード",
+    },
+    {
+      slug: gianKey(50),
+      term: "満3歳以上限定小規模保育事業",
+      yomi: "まんさんさいいじょうげんていしょうきぼほいくじぎょう",
+      gloss: "3歳以上だけを あずかる 小さい 保育",
+    },
+    {
+      slug: gianKey(51),
+      term: "満3歳以上限定小規模保育事業",
+      yomi: "まんさんさいいじょうげんていしょうきぼほいくじぎょう",
+      gloss: "3歳以上だけを あずかる 小さい 保育",
+    },
+    {
+      slug: gianKey(53),
+      term: "責務",
+      yomi: "せきむ",
+      gloss: "しなければ ならない こと",
+    },
+    {
+      slug: gianKey(54),
+      term: "地区計画",
+      yomi: "ちくけいかく",
+      gloss: "まちづくりの 細かい 計画",
+    },
+    {
+      slug: gianKey(55),
+      term: "早出遅出勤務",
+      yomi: "はやででおそでできんむ",
+      gloss: "朝 早く または 夕方 おそく 働く しくみ",
+    },
+    {
+      slug: gianKey(56),
+      term: "補償基礎額",
+      yomi: "ほしょうきそがく",
+      gloss: "お金の もとに なる 額",
+    },
+    {
+      slug: gianKey(57),
+      term: "仮契約",
+      yomi: "かりけいやく",
+      gloss: "議決の 前に 結ぶ 約束",
+    },
+    {
+      slug: gianKey(58),
+      term: "随意契約",
+      yomi: "ずいいけいやく",
+      gloss: "入札を しないで 相手を 選ぶ 方法",
+    },
+    {
+      slug: gianKey(59),
+      term: "指名競争入札",
+      yomi: "しめいきょうそうにゅうさつ",
+      gloss: "区が 選んだ 会社だけの 入札",
+    },
+    {
+      slug: gianKey(62),
+      term: "公共工事設計労務単価",
+      yomi: "こうきょうこうじせっけいろうむたんか",
+      gloss: "工事で 働く人の 賃金の 基準",
+    },
   ];
 
   function countOccurrences(haystack: string, needle: string): number {
@@ -325,16 +610,59 @@ describe("やさしい日本語版が行政用語のアンカーを保ってい�
     return content;
   }
 
+  /**
+   * h1 は title の再掲であり、本文の書き出しではない。
+   * 表題に公式名称を出すと「初出」が必ず見出しになってしまい、
+   * 見出しにアンカーを埋めるか表題から公式名称を消すかの二択になる。
+   * どちらも読み手の役に立たないので、初出は h1 を除いた本文で数える。
+   * h1 にアンカーを置く抜け道は「見出しに【】を使わない」で別に塞いでいる。
+   */
+  function bodyWithoutHeading(content: string): string {
+    return content.replace(/^#[^\n]*\n/, "");
+  }
+
+  /** 本文に現れる【】で囲まれた用語を、重複なく拾う。 */
+  function bracketedTerms(body: string): string[] {
+    return [
+      ...new Set([...body.matchAll(/【([^】]+)】/g)].map((match) => match[1])),
+    ];
+  }
+
+  /** 初出のアンカー記法【正式名称】［ふりがな］（＝言いかえ）にあたる正規表現。 */
+  function anchorPattern(term: string): RegExp {
+    return new RegExp(`【${escapeForRegExp(term)}】［[^］]+］（＝[^）]+）`);
+  }
+
+  /**
+   * 自分を部分文字列として含む長い用語を伏せた本文。
+   *
+   * ある用語が別の用語の一部になっていることがある
+   * （第45号議案の「個人番号」と
+   * 「新宿区における個人番号の利用及び特定個人情報の提供に関する条例」）。
+   * 長いほうのアンカーの内側に現れた分まで初出と数えると、
+   * 本文が正しくても段落の順番だけでテストが落ちる。
+   * そこで、自分を含む長い用語を伏せてから探す。
+   */
+  function maskLongerTerms(body: string, term: string, terms: string[]): string {
+    let masked = body;
+    for (const other of terms) {
+      if (other === term || !other.includes(term)) continue;
+      masked = masked.split(other).join("\u0000".repeat(other.length));
+    }
+
+    return masked;
+  }
+
   it.each(anchoredTerms)(
     "$slug の $term は初出が【正式名称】［ふりがな］（＝言いかえ）である",
     ({ slug, term, yomi, gloss }) => {
-      const { content } = findEasyContent(slug);
+      const body = bodyWithoutHeading(findEasyContent(slug).content);
       const anchor = `【${term}】［${yomi}］（＝${gloss}）`;
 
-      expect(countOccurrences(content, anchor)).toBe(1);
+      expect(countOccurrences(body, anchor)).toBe(1);
       // 正式名称の初出が、アンカーの中の1文字目（【の次）であることを見る。
       // 言いかえだけを先に出して正式名称を後回しにすると落ちる。
-      expect(content.indexOf(term)).toBe(content.indexOf(anchor) + 1);
+      expect(body.indexOf(term)).toBe(body.indexOf(anchor) + 1);
     }
   );
 
@@ -353,23 +681,83 @@ describe("やさしい日本語版が行政用語のアンカーを保ってい�
       // 上のリストは「この用語は必ずアンカーであること」を固定する。
       // こちらは逆向きに、本文に現れた【】を総当たりで見る。
       // 議案を足したときにリストの更新漏れがあっても規約が効く。
-      const terms = [
-        ...new Set(
-          [...content.content.matchAll(/【([^】]+)】/g)].map(
-            (match) => match[1]
-          )
-        ),
-      ];
-      const withoutAnchor = terms.filter(
-        (term) =>
-          !new RegExp(
-            `【${escapeForRegExp(term)}】［[^］]+］（＝[^）]+）`
-          ).test(content.content)
-      );
+      const body = bodyWithoutHeading(content.content);
+      const terms = bracketedTerms(body);
 
-      expect(withoutAnchor).toEqual([]);
+      expect(terms.length).toBeGreaterThan(0);
+      expect(terms.filter((term) => !anchorPattern(term).test(body))).toEqual(
+        []
+      );
     }
   );
+
+  it.each(easyContents)(
+    "$bill_slug の【】で囲んだ用語は初出そのものがアンカーである",
+    (content) => {
+      // アンカーが本文のどこかにありさえすればよい、とすると
+      // 言いかえを先に出して公式名称を後回しにする書き方が通ってしまう。
+      // 窓口の看板と突合できるのは「最初に見た形」なので、
+      // 初出の位置そのものを固定する。
+      const body = bodyWithoutHeading(content.content);
+      const terms = bracketedTerms(body);
+
+      expect(terms.length).toBeGreaterThan(0);
+      const notFirst = terms.filter((term) => {
+        const anchor = anchorPattern(term).exec(body);
+        if (anchor == null) return true;
+
+        const masked = maskLongerTerms(body, term, terms);
+
+        return masked.indexOf(term) !== anchor.index + 1;
+      });
+
+      expect(notFirst).toEqual([]);
+    }
+  );
+
+  it.each(easyContents)(
+    "$bill_slug の【】で囲んだ用語のふりがなと言いかえは1回だけ",
+    (content) => {
+      // 2回目以降は【正式名称】だけ、という規約の裏返し。
+      // アンカーを繰り返すと本文が読めなくなり、
+      // 「初出」という概念そのものが意味を失う。
+      const body = bodyWithoutHeading(content.content);
+      const terms = bracketedTerms(body);
+
+      expect(terms.length).toBeGreaterThan(0);
+      const repeated = terms.filter(
+        (term) => countOccurrences(body, `【${term}】［`) !== 1
+      );
+
+      expect(repeated).toEqual([]);
+    }
+  );
+
+  it.each(easyContents)(
+    "$bill_slug の言いかえに丸かっこが入っていない",
+    (content) => {
+      // stripAnchorGloss は入れ子の丸かっこを畳めない。
+      // 言いかえの中に（）が入ると、文長の検査が静かに壊れる。
+      // これだけは h1 を含む本文全体を見る。
+      // 壊れかたが「初出かどうか」と無関係で、どこにあっても効くため。
+      const nested = [
+        ...content.content.matchAll(/【[^】]+】［[^］]*］（＝([^）]*)）/g),
+      ]
+        .map((match) => match[1])
+        .filter((gloss) => gloss.includes("（"));
+
+      expect(nested).toEqual([]);
+    }
+  );
+
+  it.each(easyContents)("$bill_slug の見出しに【】を使わない", (content) => {
+    // 初出は h1 を除いた本文で数えている。
+    // h1 にアンカーを置かれるとその用語だけ検査から外れるので、
+    // 見出しに【】を持ち込ませない。
+    const heading = content.content.match(/^#[^\n]*/)?.[0] ?? "";
+
+    expect(heading).not.toContain("【");
+  });
 
   it.each(anchoredTerms)(
     "$slug の $term のふりがなと言いかえは初出の1回だけ",
