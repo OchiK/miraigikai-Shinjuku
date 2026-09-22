@@ -9,8 +9,8 @@ import {
   type FieldSpec,
   type ImportReport,
   type TableDiff,
-  type UserDataCount,
   diffTable,
+  hasChanges,
   normalizeTimestamp,
 } from "./diff";
 
@@ -60,22 +60,8 @@ export interface ImportOptions {
 /** 各ステップが共有する実行文脈 */
 interface ImportContext {
   supabase: AdminClient;
-  dryRun: boolean;
   dataset: ImportDataset;
 }
-
-/**
- * 件数だけを確認する利用者データ層。
- *
- * インポーターはこれらの行を作成・更新・削除しない。
- * 本文や個人データを読み出さないよう、件数のみを取得する（`head: true`）。
- */
-const USER_DATA_TABLES = [
-  "interview_sessions",
-  "interview_messages",
-  "interview_report",
-  "chats",
-] as const;
 
 /**
  * PostgREST の既定の返却上限。
@@ -134,27 +120,31 @@ export async function importInventory(
 ): Promise<ImportReport> {
   const context: ImportContext = {
     supabase,
-    dryRun: options.dryRun,
     dataset: options.dataset ?? productionDataset,
   };
 
   const session = await syncCouncilSessions(context);
-  const tagResult = await syncTags(context);
+  const tagsDiff = await syncTags(context);
   const bill = await syncBills(context, session.billSessionId);
   const contents = await syncBillContents(context, bill);
-  const billsTags = await syncBillsTags(context, bill, tagResult.tagRefs);
+  const billsTags = await syncBillsTags(context, bill);
 
-  return {
-    dryRun: context.dryRun,
+  const report: ImportReport = {
+    dryRun: options.dryRun,
     tables: [
       session.diff,
-      tagResult.diff,
+      tagsDiff,
       bill.diff,
       contents,
       billsTags,
     ],
-    userData: await countUserData(supabase),
   };
+
+  if (!options.dryRun && hasChanges(report)) {
+    await applyInventoryTransaction(supabase, context.dataset);
+  }
+
+  return report;
 }
 
 // ---------------------------------------------------------------------------
@@ -164,7 +154,7 @@ export async function importInventory(
 async function syncCouncilSessions(
   context: ImportContext
 ): Promise<{ diff: TableDiff; billSessionId: string | null }> {
-  const { supabase, dryRun, dataset } = context;
+  const { supabase, dataset } = context;
   const desired = dataset.councilSessions;
 
   const current = await fetchCouncilSessions(supabase, desired.map(requireSlug));
@@ -181,27 +171,7 @@ async function syncCouncilSessions(
   const existingId =
     current.find((row) => row.slug === dataset.billSessionSlug)?.id ?? null;
 
-  if (dryRun) {
-    return { diff, billSessionId: existingId };
-  }
-
-  const { data, error } = await supabase
-    .from("council_sessions")
-    .upsert(desired, { onConflict: "slug" })
-    .select("id, slug");
-  if (error) {
-    throw new Error(`council_sessions の upsert に失敗: ${error.message}`);
-  }
-
-  const billSessionId =
-    data?.find((row) => row.slug === dataset.billSessionSlug)?.id ?? null;
-  if (!billSessionId) {
-    throw new Error(
-      `会期が見つからない: ${dataset.billSessionSlug}（議案を紐づけられない）`
-    );
-  }
-
-  return { diff, billSessionId };
+  return { diff, billSessionId: existingId };
 }
 
 // ---------------------------------------------------------------------------
@@ -210,8 +180,8 @@ async function syncCouncilSessions(
 
 async function syncTags(
   context: ImportContext
-): Promise<{ diff: TableDiff; tagRefs: TagRef[] }> {
-  const { supabase, dryRun, dataset } = context;
+): Promise<TableDiff> {
+  const { supabase, dataset } = context;
   const desired = dataset.tags;
 
   const current = await fetchTags(
@@ -230,22 +200,7 @@ async function syncTags(
     reportExtraneous: false,
   });
 
-  if (dryRun) {
-    return {
-      diff,
-      tagRefs: current.map((tag) => ({ id: tag.id, label: tag.label })),
-    };
-  }
-
-  const { data, error } = await supabase
-    .from("tags")
-    .upsert(desired, { onConflict: "label" })
-    .select("id, label");
-  if (error) {
-    throw new Error(`tags の upsert に失敗: ${error.message}`);
-  }
-
-  return { diff, tagRefs: data ?? [] };
+  return diff;
 }
 
 // ---------------------------------------------------------------------------
@@ -254,7 +209,7 @@ async function syncTags(
 
 interface BillSyncResult {
   diff: TableDiff;
-  /** 投入後（dry-run では投入前）の議案参照 */
+  /** 差分計算時点でDBに存在する議案参照 */
   billRefs: SeededBillRef[];
   /** 議案 id → slug。解説・タグ紐付の突合キーを組み立てるのに使う */
   slugById: Map<string, string>;
@@ -266,42 +221,46 @@ async function syncBills(
   context: ImportContext,
   billSessionId: string | null
 ): Promise<BillSyncResult> {
-  const { supabase, dryRun, dataset } = context;
+  const { supabase, dataset } = context;
 
   const desired = dataset.bills.map((bill) => ({
     ...bill,
     council_session_id: billSessionId,
   }));
+  const desiredSessionKey =
+    billSessionId ?? `slug:${dataset.billSessionSlug}`;
   const desiredSlugs = desired.map(requireSlug);
   const current = await fetchBills(supabase, desiredSlugs, billSessionId);
 
   const diff = diffTable({
     table: "bills",
     label: "議案",
-    fields: billFields(billSessionId),
+    fields: [...BILL_FIELDS, { field: "council_session_id" }],
     current: current.map((row) => toDiffRow(billKey(row), row)),
-    desired: desired.map((row) => toDiffRow(requireSlug(row), row)),
+    desired: desired.map((row) =>
+      toDiffRow(requireSlug(row), {
+        ...row,
+        council_session_id: desiredSessionKey,
+      })
+    ),
     // 会期に紐づくがインベントリに無い議案は、削除せず報告する。
     // bills を消すと interview_configs が CASCADE で落ち、
     // その先のセッションとレポートまで失われる。
     reportExtraneous: true,
   });
 
-  let billRefs: SeededBillRef[] = current
+  const billRefs: SeededBillRef[] = current
     .filter((bill) => bill.slug !== null)
     .map((bill) => ({ id: bill.id, name: bill.name, slug: bill.slug }));
 
-  if (!dryRun) {
-    const { data, error } = await supabase
-      .from("bills")
-      .upsert(desired, { onConflict: "slug" })
-      .select("id, name, slug");
-    if (error) {
-      throw new Error(`bills の upsert に失敗: ${error.message}`);
-    }
-    billRefs = data ?? [];
-  }
+  return buildBillSyncResult(diff, billRefs, desiredSlugs);
+}
 
+function buildBillSyncResult(
+  diff: TableDiff,
+  billRefs: SeededBillRef[],
+  desiredSlugs: string[]
+): BillSyncResult {
   const slugById = new Map(
     billRefs
       .filter((bill): bill is SeededBillRef & { slug: string } =>
@@ -324,7 +283,7 @@ async function syncBillContents(
   context: ImportContext,
   bill: BillSyncResult
 ): Promise<TableDiff> {
-  const { supabase, dryRun, dataset } = context;
+  const { supabase, dataset } = context;
 
   const desired = dataset.createBillContents(slugRefs(dataset));
   const current = await fetchBillContents(supabase, bill.inventoryBillIds);
@@ -349,17 +308,6 @@ async function syncBillContents(
     reportExtraneous: true,
   });
 
-  if (!dryRun) {
-    const { error } = await supabase
-      .from("bill_contents")
-      .upsert(dataset.createBillContents(bill.billRefs), {
-        onConflict: "bill_id,difficulty_level",
-      });
-    if (error) {
-      throw new Error(`bill_contents の upsert に失敗: ${error.message}`);
-    }
-  }
-
   return diff;
 }
 
@@ -369,10 +317,9 @@ async function syncBillContents(
 
 async function syncBillsTags(
   context: ImportContext,
-  bill: BillSyncResult,
-  tagRefs: TagRef[]
+  bill: BillSyncResult
 ): Promise<TableDiff> {
-  const { supabase, dryRun, dataset } = context;
+  const { supabase, dataset } = context;
 
   const desired = dataset.createBillsTags(slugRefs(dataset), labelRefs(dataset));
   const current = await fetchBillsTags(supabase, bill.inventoryBillIds);
@@ -399,18 +346,37 @@ async function syncBillsTags(
     reportExtraneous: true,
   });
 
-  if (!dryRun) {
-    const { error } = await supabase
-      .from("bills_tags")
-      .upsert(dataset.createBillsTags(bill.billRefs, tagRefs), {
-        onConflict: "bill_id,tag_id",
-      });
-    if (error) {
-      throw new Error(`bills_tags の upsert に失敗: ${error.message}`);
-    }
-  }
-
   return diff;
+}
+
+/** 5テーブルの書き込みを1トランザクションで確定する。 */
+async function applyInventoryTransaction(
+  supabase: AdminClient,
+  dataset: ImportDataset
+): Promise<void> {
+  type Args =
+    Database["public"]["Functions"]["import_production_inventory"]["Args"];
+
+  const contents = dataset
+    .createBillContents(slugRefs(dataset))
+    .map(({ bill_id, ...content }) => ({ bill_slug: bill_id, ...content }));
+  const billsTags = dataset
+    .createBillsTags(slugRefs(dataset), labelRefs(dataset))
+    .map(({ bill_id, tag_id }) => ({ bill_slug: bill_id, tag_label: tag_id }));
+  const toJson = (value: unknown) =>
+    JSON.parse(JSON.stringify(value)) as Args["p_bills"];
+
+  const { error } = await supabase.rpc("import_production_inventory", {
+    p_council_sessions: toJson(dataset.councilSessions),
+    p_tags: toJson(dataset.tags),
+    p_bills: toJson(dataset.bills),
+    p_bill_contents: toJson(contents),
+    p_bills_tags: toJson(billsTags),
+    p_bill_session_slug: dataset.billSessionSlug,
+  });
+  if (error) {
+    throw new Error(`本番インポートのトランザクションに失敗: ${error.message}`);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -516,26 +482,6 @@ async function fetchBillsTags(supabase: AdminClient, billIds: string[]) {
 }
 
 /**
- * 利用者データ層の件数だけを数える。
- * 本文・個人データは取得せず、行の作成・更新・削除も行わない。
- */
-async function countUserData(supabase: AdminClient): Promise<UserDataCount[]> {
-  const counts: UserDataCount[] = [];
-
-  for (const table of USER_DATA_TABLES) {
-    const { count, error } = await supabase
-      .from(table)
-      .select("*", { count: "exact", head: true });
-    if (error) {
-      throw new Error(`${table} の件数取得に失敗: ${error.message}`);
-    }
-    counts.push({ table, count: count ?? 0 });
-  }
-
-  return counts;
-}
-
-/**
  * 返却上限に達した読み出しをそのまま差分計算へ渡さない。
  * 読み落とした行を「DBに無い＝新規」と報告してしまうため。
  */
@@ -580,17 +526,6 @@ function billKey(bill: { id: string; slug: string | null }): string {
 
 function compositeKey(billKeyValue: string, childKey: string): string {
   return `${billKeyValue}::${childKey}`;
-}
-
-/**
- * 会期 id が確定しているときだけ council_session_id を比較する。
- * dry-run で会期が未作成の場合、比較すると既存の紐付けを
- * 「null に変わる」と誤って報告してしまう。
- */
-function billFields(sessionId: string | null): FieldSpec[] {
-  return sessionId
-    ? [...BILL_FIELDS, { field: "council_session_id" }]
-    : BILL_FIELDS;
 }
 
 function requireSlug(row: { slug?: string | null; name?: string }): string {

@@ -265,10 +265,6 @@ describe("formatImportReport", () => {
         extraneous: ["shinjuku-2026-r2-gian-99"],
       },
     ],
-    userData: [
-      { table: "interview_sessions", count: 412 },
-      { table: "interview_report", count: 88 },
-    ],
   };
 
   it("dry-run であることと各件数を出力する", () => {
@@ -292,11 +288,6 @@ describe("formatImportReport", () => {
     );
   });
 
-  it("利用者データは件数のみを出力する", () => {
-    expect(formatImportReport(report)).toContain(
-      "利用者データ  interview_sessions 412件 / interview_report 88件（読み書きしない）"
-    );
-  });
 });
 
 describe("hasChanges", () => {
@@ -311,7 +302,7 @@ describe("hasChanges", () => {
 
   it("新規も更新も無ければ false", () => {
     expect(
-      hasChanges({ dryRun: true, tables: [emptyTable], userData: [] })
+      hasChanges({ dryRun: true, tables: [emptyTable] })
     ).toBe(false);
   });
 
@@ -320,7 +311,6 @@ describe("hasChanges", () => {
       hasChanges({
         dryRun: true,
         tables: [{ ...emptyTable, created: ["gian-62"] }],
-        userData: [],
       })
     ).toBe(true);
   });

@@ -129,4 +129,4 @@ jobs:
 
       - name: Trigger Vercel rebuild
         if: ${{ inputs.dry_run == false && inputs.confirm == 'apply' }}
-        run: curl -X POST "${{ secrets.WEB_VERCEL_DEPLOY_HOOK_URL }}"
+        run: curl -fsS --retry 3 -X POST "${{ secrets.WEB_VERCEL_DEPLOY_HOOK_URL }}"

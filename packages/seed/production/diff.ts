@@ -60,18 +60,11 @@ export interface TableDiff {
   extraneous: string[];
 }
 
-/** 触れない利用者データの件数（報告のみ） */
-export interface UserDataCount {
-  table: string;
-  count: number;
-}
-
 /** インポート1回分の報告 */
 export interface ImportReport {
   /** true なら書き込みを行っていない */
   dryRun: boolean;
   tables: TableDiff[];
-  userData: UserDataCount[];
 }
 
 export interface DiffTableParams {
@@ -211,13 +204,6 @@ export function formatImportReport(report: ImportReport): string {
     for (const key of table.extraneous) {
       lines.push(`  ? ${key}（インベントリ外。削除しない）`);
     }
-  }
-
-  if (report.userData.length > 0) {
-    const counts = report.userData
-      .map((entry) => `${entry.table} ${entry.count}件`)
-      .join(" / ");
-    lines.push(`利用者データ  ${counts}（読み書きしない）`);
   }
 
   return lines.join("\n");

@@ -57,5 +57,5 @@ jobs:
           pnpm --filter @mirai-gikai/seed seed
 
           echo "🚀 Triggering Vercel rebuild..."
-          curl -X POST "$WEB_VERCEL_DEPLOY_HOOK_URL"
+          curl -fsS --retry 3 -X POST "$WEB_VERCEL_DEPLOY_HOOK_URL"
           echo "Done!"

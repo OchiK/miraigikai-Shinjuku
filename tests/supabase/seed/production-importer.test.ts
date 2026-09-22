@@ -428,6 +428,33 @@ describe("本番用インポーター", () => {
     expect(created).toBeNull();
   });
 
+  it("会期が未作成で既存議案が別会期にある場合、紐付け変更を dry-run で報告する", async () => {
+    const unseenSession = buildDataset(`${runId}-move-session`);
+    const reassignmentDataset: ImportDataset = {
+      ...dataset,
+      councilSessions: unseenSession.councilSessions,
+      billSessionSlug: unseenSession.billSessionSlug,
+    };
+
+    const report = await importInventory(adminClient, {
+      dryRun: true,
+      dataset: reassignmentDataset,
+    });
+
+    const billsDiff = report.tables.find((table) => table.table === "bills");
+    expect(billsDiff?.updated).toHaveLength(23);
+    for (const row of billsDiff?.updated ?? []) {
+      expect(row.changes).toContainEqual({
+        field: "council_session_id",
+        before: sessionId,
+        after: `slug:${unseenSession.billSessionSlug}`,
+      });
+    }
+
+    const bills = await fetchBills();
+    expect(bills).toHaveLength(23);
+  });
+
   it("dry-run は DB へ書き込まず、差分だけを返す", async () => {
     const bills = await fetchBills();
     const target = bills[0];
@@ -463,6 +490,25 @@ describe("本番用インポーター", () => {
 
   it("差分が無い状態で流すと新規も更新も 0 になる（冪等）", async () => {
     await runImport();
+    const billsBefore = await fetchBills();
+    const billIds = billsBefore.map((bill) => bill.id);
+    const { data: timestampsBefore, error: beforeError } = await adminClient
+      .from("bill_contents")
+      .select("id, updated_at")
+      .in("bill_id", billIds)
+      .order("id");
+    if (beforeError) throw new Error(beforeError.message);
+
+    await runImport();
+
+    const { data: timestampsAfter, error: afterError } = await adminClient
+      .from("bill_contents")
+      .select("id, updated_at")
+      .in("bill_id", billIds)
+      .order("id");
+    if (afterError) throw new Error(afterError.message);
+    expect(timestampsAfter).toEqual(timestampsBefore);
+
     const report = await runImport(true);
 
     for (const table of report.tables) {
@@ -471,20 +517,6 @@ describe("本番用インポーター", () => {
         created: table.created,
         updated: table.updated,
       }).toEqual({ table: table.table, created: [], updated: [] });
-    }
-  });
-
-  it("利用者データ層は件数のみを報告する", async () => {
-    const report = await runImport(true);
-
-    expect(report.userData.map((entry) => entry.table)).toEqual([
-      "interview_sessions",
-      "interview_messages",
-      "interview_report",
-      "chats",
-    ]);
-    for (const entry of report.userData) {
-      expect(entry.count).toBeGreaterThanOrEqual(0);
     }
   });
 });
