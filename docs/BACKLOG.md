@@ -56,6 +56,14 @@ Acceptance:
 - jargon explained
 - sentences simplified
 
+### P2-3 インクルーシブデザイン・アクセシビリティ検証（AccessLint / WCAG 2.2 AA）
+AccessLint（@accesslint/cli, @accesslint/mcp, skills）を用いたアクセシビリティおよびインクルーシブデザインの自動スキャン・手動検証・是正。
+Acceptance:
+- accessibility-scan / accessibility-audit による主要画面（トップ、議案一覧、議案詳細、難易度切替）の WCAG 2.2 AA 検査
+- accessibility-inspect によるキーボード操作、フォーカス順序、スクリーンリーダー対応、ズーム・リフロー、タップターゲットサイズの検証
+- accessibility-fix による検出された違反箇所の修正・是正
+- accessibility-diff による回帰検知（PR差分のアクセシビリティ評価）
+
 ## P3
 
 ### P3-1 i18n UI
