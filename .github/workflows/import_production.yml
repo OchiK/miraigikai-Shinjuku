@@ -90,12 +90,33 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
         run: |
-          supabase db dump --data-only -f backup-data.sql \
-            -t public.council_sessions \
-            -t public.tags \
-            -t public.bills \
-            -t public.bill_contents \
-            -t public.bills_tags
+          # supabase db dump はテーブルの include 指定を提供しないため、
+          # link が解決した接続先に pg_dump で直接つなぐ。全 public テーブルを
+          # dump して除外する方式は、将来追加された利用者データを漏らしうる。
+          POOLER_URL=$(cat supabase/.temp/pooler-url)
+          POOLER_HOST=$(node -e 'process.stdout.write(new URL(process.argv[1]).hostname)' "$POOLER_URL")
+          POOLER_PORT=$(node -e 'process.stdout.write(new URL(process.argv[1]).port || "5432")' "$POOLER_URL")
+          POOLER_USER=$(node -e 'process.stdout.write(decodeURIComponent(new URL(process.argv[1]).username))' "$POOLER_URL")
+
+          export PGPASSWORD="$SUPABASE_DB_PASSWORD"
+          docker run --rm \
+            --env PGPASSWORD \
+            --volume "$PWD:/backup" \
+            postgres:17 \
+            pg_dump \
+            --host="$POOLER_HOST" \
+            --port="$POOLER_PORT" \
+            --username="$POOLER_USER" \
+            --dbname=postgres \
+            --data-only \
+            --no-owner \
+            --no-privileges \
+            --table=public.council_sessions \
+            --table=public.tags \
+            --table=public.bills \
+            --table=public.bill_contents \
+            --table=public.bills_tags \
+            --file=/backup/backup-data.sql
 
       - name: Upload backup artifact
         if: ${{ inputs.dry_run == false && inputs.confirm == 'apply' }}
