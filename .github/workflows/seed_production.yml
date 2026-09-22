@@ -1,4 +1,7 @@
-name: Seed Production DB
+# 破壊的な再シード。clearAllData() で利用者データを含む全行を削除してから投入する。
+# 通常の本番更新には使わないこと。最新インベントリを届けるだけなら
+# import_production.yml（非破壊 upsert）を使う。
+name: Seed Production DB (DESTRUCTIVE / 破壊的)
 
 on:
   workflow_dispatch:
@@ -34,6 +37,9 @@ jobs:
           SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
           WEB_VERCEL_DEPLOY_HOOK_URL: ${{ secrets.WEB_VERCEL_DEPLOY_HOOK_URL }}
+          # run.ts はローカル以外への接続を既定で拒否する。
+          # このワークフローは破壊的であることを承知した上で明示的に解除する。
+          ALLOW_DESTRUCTIVE_SEED: "1"
         run: |
           supabase link --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
 
@@ -51,5 +57,5 @@ jobs:
           pnpm --filter @mirai-gikai/seed seed
 
           echo "🚀 Triggering Vercel rebuild..."
-          curl -X POST "$WEB_VERCEL_DEPLOY_HOOK_URL"
+          curl -fsS --retry 3 -X POST "$WEB_VERCEL_DEPLOY_HOOK_URL"
           echo "Done!"

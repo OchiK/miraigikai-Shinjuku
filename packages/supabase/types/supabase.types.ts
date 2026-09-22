@@ -1153,6 +1153,17 @@ export type Database = {
           total_sessions: number
         }[]
       }
+      import_production_inventory: {
+        Args: {
+          p_bill_contents: Json
+          p_bill_session_slug: string
+          p_bills: Json
+          p_bills_tags: Json
+          p_council_sessions: Json
+          p_tags: Json
+        }
+        Returns: undefined
+      }
       is_admin: { Args: never; Returns: boolean }
       set_active_council_session: {
         Args: { target_session_id: string }
@@ -1373,4 +1384,3 @@ export const Constants = {
     },
   },
 } as const
-

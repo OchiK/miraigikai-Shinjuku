@@ -37,6 +37,8 @@ import {
 } from "./shipping-bill-data";
 import { createAdminClient, clearAllData } from "../shared/helper";
 
+// clearAllData() は shared/helper.ts 側のガードにより、
+// ローカル以外への接続では実行前に停止する。
 async function seedDatabase() {
   const supabase = createAdminClient();
   console.log("🌱 Starting database seeding...");
@@ -712,4 +714,7 @@ async function seedDatabase() {
 }
 
 // Run the seed function
-seedDatabase();
+seedDatabase().catch((error) => {
+  console.error("❌ Error seeding database:", error);
+  process.exit(1);
+});
