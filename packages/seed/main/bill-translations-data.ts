@@ -50,16 +50,18 @@ export const billTranslationsWithBillSlug: BillTranslationSeed[] = [
     bill_slug: shoninKey(2),
     difficulty_level: "normal",
     locale: "en",
-    status: "generated",
+    status: "reviewed",
+    reviewed_at: "2026-09-23T22:53:38.985+00:00",
+    reviewed_by: "admin@example.com",
     model: "claude-opus-5-5",
     prompt_version: "manual-2026-09-23",
     source_hash:
       "v1:cf454d4071aa261fa81a71908467471118e3cf79957552f673d830a80d4b197a",
     title:
-      "Approval of the Mayor's emergency amendment to the Ward Tax Ordinance (light vehicle tax, housing loan deduction, etc.)",
+      "Approval of the Mayor's executive decision to the Ward Tax Ordinance (light motorvehicle tax, housing loan deduction, etc.)",
     summary:
-      "Because an amendment to the Local Tax Act was promulgated on March 31, 2026 (Reiwa 8) and took effect the next day, the Mayor amended the Ward Tax Ordinance without convening the Ward Assembly (専決処分). This item reports that action to the Ward Assembly and asks for its approval. The changes include abolishing the environmental performance levy on light vehicles and renaming the tax, and extending the housing loan deduction by five years. It was approved at the 2nd Regular Session of 2026 (Reiwa 8).",
-    content: `# Approval of the Mayor's emergency amendment to the Ward Tax Ordinance (light vehicle tax, housing loan deduction, etc.)
+      "Because an amendment to the Local Tax Act was enacted on March 31, Reiwa 8 and took effect the following day, the ward mayor amended the ward tax ordinance without convening the ward assembly (through an executive decision). This is a matter requiring a report to and approval by the ward assembly. The amendments included the abolition and renaming of the environmental performance surcharge on light motor vehicle tax, as well as a five-year extension of the mortgage interest deduction; they were approved at the second regular session of Reiwa 8.",
+    content: `# Approval of the Mayor's executive decision on the Ward Tax Ordinance (light motor vehicle tax, housing loan deduction, etc.)
 
 ## What "approval of a 専決処分" means
 
@@ -74,21 +76,21 @@ When the Mayor has taken such an action, Paragraph 3 of the same Article require
 | Matter to be decided | Partial amendment of the Shinjuku Special Ward Tax Ordinance (新宿区特別区税条例, 昭和39年新宿区条例第57号) |
 | Date of action | March 31, 2026 (Reiwa 8) |
 | Public notice | Shinjuku Ward Public Notice No. 202 (新宿区告示第202号) |
-| Reason | The Act Partially Amending the Local Tax Act, etc. (地方税法等の一部を改正する法律, 令和8年法律第2号) was promulgated on March 31, 2026 and takes effect on April 1 of the same year. The ward tax ordinance had to be amended and put into effect urgently in response, and it was clear that there was no time to convene the Ward Assembly. |
+| Reason | The Act Partially Amending the Local Tax Act, etc. (地方税法等の一部を改正する法律, 令和8年法律第2号) was enacted on March 31, 2026 and takes effect on April 1 of the same year. The ward tax ordinance had to be amended and put into effect urgently in response, and it was clear that there was no time to convene the Ward Assembly. |
 
-The explanation is that the national law was promulgated on March 31 and took effect the next day, April 1, so the ward ordinance also had to be in place by April 1, and there was no time to hold an Assembly meeting in between.
+The explanation is that the national law was enacted on March 31 and took effect the next day, April 1, so the ward ordinance also had to be in place by April 1, and there was no time to hold an Assembly meeting in between.
 
 ## What was amended
 
 The ward's summary of submitted items lists four main changes.
 
-### 1. Abolishing the environmental performance levy on light vehicles and renaming the tax
+### 1. Abolishing the environmental performance levy on light motor vehicles and renaming the tax
 
-The environmental performance levy (環境性能割) of the light vehicle tax is abolished, and the current "annual levy by vehicle type" (種別割) is renamed "light vehicle tax" (軽自動車税). Until now, the light vehicle tax had two parts: the environmental performance levy and the annual levy by vehicle type. With the environmental performance levy gone, the name goes back to "light vehicle tax."
+The environmental performance levy (環境性能割) of the light vehicle tax is abolished, and the current "annual levy by vehicle type" (種別割) is renamed "light motor vehicle tax" (軽自動車税). Until now, the light motor vehicle tax had two parts: the environmental performance levy and the annual levy by vehicle type. With the environmental performance levy gone, the name goes back to "light vehicle tax."
 
 ### 2. Review of the green special provision (reduced rates) for the light vehicle tax
 
-The green special provision reduces the light vehicle tax rate for the fiscal year after the year in which the vehicle was acquired. Within it, the special provision for a 75% reduction is extended by two years, through fiscal 2028 (Reiwa 10).
+The green special provision reduces the light motor vehicle tax rate for the fiscal year after the year in which the vehicle was acquired. Within it, the special provision for a 75% reduction is extended by two years, through fiscal 2028 (Reiwa 10).
 
 ### 3. Extending the housing loan deduction in the ward resident tax
 
@@ -109,7 +111,7 @@ In principle, the changes apply from April 1, 2026, but some parts start later.
 | Item 3 above (housing loan deduction extension) | January 1, 2027 (Reiwa 9) |
 | The part of item 4 that excludes land in disaster hazard areas from the special provision | January 1, 2028 (Reiwa 10) |
 
-For the light vehicle tax, the amended rules apply to fiscal 2026 and later. The annual levy by vehicle type for fiscal 2025 and earlier follows the previous rules. The environmental performance levy on light vehicles with three or more wheels acquired before the ordinance took effect also follows the previous rules.
+For the light motor vehicle tax, the amended rules apply to fiscal 2026 and later. The annual levy by vehicle type for fiscal 2025 and earlier follows the previous rules. The environmental performance levy on light vehicles with three or more wheels acquired before the ordinance took effect also follows the previous rules.
 
 ## What happened to this item
 
@@ -459,7 +461,9 @@ Nội dung đã được phê chuẩn tại Kỳ họp định kỳ lần thứ 
     bill_slug: gianKey(42),
     difficulty_level: "normal",
     locale: "en",
-    status: "generated",
+    status: "reviewed",
+    reviewed_at: "2026-09-23T22:57:17.597+00:00",
+    reviewed_by: "admin@example.com",
     model: "claude-opus-5-5",
     prompt_version: "manual-2026-09-23",
     source_hash:

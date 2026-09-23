@@ -41,9 +41,23 @@ describe("bill-translations-data", () => {
     expect(translation.source_hash).toBe(calculateSourceHash(source));
   });
 
-  it("人の確認前の翻訳を reviewed としてシードしない", () => {
+  it("英語以外の未確認の翻訳を reviewed としてシードしない", () => {
     for (const translation of billTranslationsWithBillSlug) {
-      expect(translation.status).not.toBe("reviewed");
+      if (translation.locale !== "en") {
+        expect(translation.status).not.toBe("reviewed");
+      }
+    }
+  });
+
+  it("英語の翻訳は reviewed になっている", () => {
+    const enTranslations = billTranslationsWithBillSlug.filter(
+      (t) => t.locale === "en"
+    );
+    expect(enTranslations.length).toBeGreaterThan(0);
+    for (const translation of enTranslations) {
+      expect(translation.status).toBe("reviewed");
+      expect(translation.reviewed_at).toBeTruthy();
+      expect(translation.reviewed_by).toBeTruthy();
     }
   });
 
