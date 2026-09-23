@@ -30,16 +30,29 @@ const STATUS_DISPLAY: Record<
   missing: { label: "未翻訳", shortLabel: "未翻訳", variant: "outline" },
 };
 
+/** 公開しない言語（英語以外）で確認済みのもの。公開画面には出ない */
+const REVIEWED_NOT_PUBLIC_DISPLAY = {
+  label: "確認済み（公開対象外）",
+  shortLabel: "対象外",
+  variant: "outline",
+} as const;
+
 interface TranslationStatusBadgeProps {
   status: TranslationReviewStatus;
   compact?: boolean;
+  /** 公開する言語か（canApproveTranslationLocale）。false なら reviewed を「公開中」と出さない */
+  isPublicLocale?: boolean;
 }
 
 /** 翻訳の状態。色だけで区別しないよう、必ずラベルを添える */
 export function TranslationStatusBadge({
   status,
   compact = false,
+  isPublicLocale = true,
 }: TranslationStatusBadgeProps) {
-  const { label, shortLabel, variant } = STATUS_DISPLAY[status];
+  const { label, shortLabel, variant } =
+    status === "reviewed" && !isPublicLocale
+      ? REVIEWED_NOT_PUBLIC_DISPLAY
+      : STATUS_DISPLAY[status];
   return <Badge variant={variant}>{compact ? shortLabel : label}</Badge>;
 }

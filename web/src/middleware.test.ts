@@ -70,11 +70,16 @@ describe("applyLocaleCookie", () => {
     expect(run("http://localhost/bills/1?lang=en")).toBe("en");
   });
 
-  it("?lang=zh-Hans のようなハイフン付きも受け付ける", () => {
-    expect(run("http://localhost/bills/1?lang=zh-Hans")).toBe("zh-Hans");
+  it("?lang=ja なら locale Cookie を ja に戻す", () => {
+    expect(run("http://localhost/bills/1?lang=ja")).toBe("ja");
   });
 
   it.each([
+    ["翻訳を公開していない言語", "http://localhost/bills/1?lang=vi"],
+    [
+      "翻訳を公開していない言語（ハイフン付き）",
+      "http://localhost/bills/1?lang=zh-Hans",
+    ],
     ["未対応の言語", "http://localhost/bills/1?lang=fr"],
     ["大文字小文字の揺れ", "http://localhost/bills/1?lang=zh-hans"],
     ["空文字", "http://localhost/bills/1?lang="],

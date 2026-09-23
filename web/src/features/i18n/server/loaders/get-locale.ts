@@ -1,7 +1,7 @@
 import "server-only";
 import {
   LOCALE_COOKIE_NAME,
-  type Locale,
+  type PublicLocale,
   parseLocale,
 } from "@mirai-gikai/shared/i18n/locales";
 import { cookies } from "next/headers";
@@ -11,8 +11,9 @@ import { cookies } from "next/headers";
  *
  * Note: URLパラメータ ?lang=en がある場合はMiddlewareがCookieにセットする。
  * Accept-Language による自動切替はしない（決定記録を参照）。
+ * 議案の翻訳を公開していない言語（vi 等）の Cookie が残っていても ja を返す。
  */
-export async function getLocale(): Promise<Locale> {
+export async function getLocale(): Promise<PublicLocale> {
   const cookieStore = await cookies();
   return parseLocale(cookieStore.get(LOCALE_COOKIE_NAME)?.value);
 }

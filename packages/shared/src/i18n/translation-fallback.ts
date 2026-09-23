@@ -1,4 +1,4 @@
-import type { TranslationLocale } from "./locales";
+import { isPublicTranslationLocale, type TranslationLocale } from "./locales";
 import { isTranslationStale, type TranslationSource } from "./source-hash";
 
 export type SourceContent = TranslationSource & {
@@ -44,8 +44,9 @@ export const TRANSLATION_BASE_DIFFICULTY = "normal";
 export const PUBLISHABLE_STATUS: TranslationStatus = "reviewed";
 
 /**
- * 公開してよい翻訳か。人の確認が済み（reviewed）、かつ翻訳した時の日本語から
- * 変わっていないものだけ。generated / stale は admin のプレビュー用。
+ * 公開してよい翻訳か。公開する言語（PUBLIC_TRANSLATION_LOCALES）で、人の確認が済み
+ * （reviewed）、かつ翻訳した時の日本語から変わっていないものだけ。
+ * generated / stale と、公開しない言語の翻訳は admin のプレビュー用。
  */
 export function isPublishableTranslation(
   translation: TranslationRecord,
@@ -53,6 +54,7 @@ export function isPublishableTranslation(
   source: TranslationSource
 ): boolean {
   return (
+    isPublicTranslationLocale(locale) &&
     translation.locale === locale &&
     translation.status === PUBLISHABLE_STATUS &&
     !isTranslationStale(translation.source_hash, source)

@@ -17,7 +17,9 @@ import {
 } from "../../shared/utils/source-snapshot";
 import {
   buildTranslationStatusFields,
+  canApproveTranslationLocale,
   isStoredTranslationStale,
+  NON_PUBLIC_LOCALE_APPROVAL_ERROR,
   requiresStaleConfirmation,
 } from "../../shared/utils/translation-review";
 import {
@@ -39,6 +41,7 @@ export type UpsertBillTranslationResult =
 /**
  * 翻訳を下書き保存（intent: draft）、または確認済みとして公開承認（intent: approve）する。
  * 日本語が変わった翻訳の承認は、confirmStale が true のときだけ受け付ける。
+ * 英語以外の承認は受け付けない（画面にボタンが無くても、直接呼ばれうるためここで拒否する）。
  */
 export async function upsertBillTranslation(
   input: SaveBillTranslationInput
@@ -46,6 +49,13 @@ export async function upsertBillTranslation(
   try {
     const admin = await requireAdmin();
     const data = saveBillTranslationSchema.parse(input);
+
+    if (
+      data.intent === "approve" &&
+      !canApproveTranslationLocale(data.locale)
+    ) {
+      return { success: false, error: NON_PUBLIC_LOCALE_APPROVAL_ERROR };
+    }
 
     const source = await findBillContentById(data.billContentId);
     if (!source) {

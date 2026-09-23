@@ -1,5 +1,5 @@
 import {
-  isSupportedLocale,
+  isPublicLocale,
   LOCALE_COOKIE_NAME,
   LOCALE_QUERY_PARAM,
 } from "@mirai-gikai/shared/i18n/locales";
@@ -91,7 +91,8 @@ function _applyDifficultyCookie(
 
 /**
  * URLパラメータ ?lang= から表示言語を取得し、レスポンスのCookieにセット。
- * 未対応の値は無視する（Cookie を ja で上書きしない）。
+ * 未対応の値と、議案の翻訳を公開していない言語（vi 等）は無視する
+ * （Cookie を ja で上書きしない）。
  */
 export function applyLocaleCookie(
   request: NextRequest,
@@ -99,7 +100,7 @@ export function applyLocaleCookie(
 ) {
   const locale = request.nextUrl.searchParams.get(LOCALE_QUERY_PARAM);
 
-  if (isSupportedLocale(locale)) {
+  if (isPublicLocale(locale)) {
     response.cookies.set(LOCALE_COOKIE_NAME, locale, LOCALE_COOKIE_OPTIONS);
   }
 }

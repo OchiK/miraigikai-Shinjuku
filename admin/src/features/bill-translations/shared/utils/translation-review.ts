@@ -1,3 +1,4 @@
+import { isPublicTranslationLocale } from "@mirai-gikai/shared/i18n/locales";
 import type { TranslationReviewStatus } from "../types/bill-translation";
 import type { SourceSnapshot } from "./source-snapshot";
 
@@ -31,6 +32,19 @@ export function isStoredTranslationStale(
 }
 
 export type TranslationWriteIntent = "draft" | "approve";
+
+/** 英語以外を承認しようとしたときに返すメッセージ */
+export const NON_PUBLIC_LOCALE_APPROVAL_ERROR =
+  "英語以外の翻訳は現在公開承認できません（下書き保存のみ可能です）";
+
+/**
+ * 公開承認してよい言語か。議案の翻訳を公開するのは PUBLIC_TRANSLATION_LOCALES（英語）だけで、
+ * ほかの言語は運営が内容を確認できないため下書きの閲覧・編集だけにする
+ * （docs/20260924_0450_多言語方針の見直し_英語のみ翻訳と多言語案内ページ.md §4）。
+ */
+export function canApproveTranslationLocale(locale: string): boolean {
+  return isPublicTranslationLocale(locale);
+}
 
 /**
  * stale の翻訳を承認するには、原文の変更を反映したという明示（confirmStale）が要る。

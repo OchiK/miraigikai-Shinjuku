@@ -16,6 +16,7 @@ import {
   type TranslationSourceItem,
 } from "../../shared/types/bill-translation";
 import {
+  canApproveTranslationLocale,
   getTranslationReviewStatus,
   shortenSourceHash,
 } from "../../shared/utils/translation-review";
@@ -64,6 +65,7 @@ export function BillTranslationsView({
   const group = groups.find((g) => g.source.difficultyLevel === difficulty);
   const translation = group?.translations[locale];
   const status = getTranslationReviewStatus(translation);
+  const canApprove = canApproveTranslationLocale(locale);
 
   return (
     <div className="space-y-6">
@@ -101,7 +103,10 @@ export function BillTranslationsView({
                 <CardTitle>
                   {TRANSLATION_LOCALE_LABELS[locale]}（{locale}）
                 </CardTitle>
-                <TranslationStatusBadge status={status} />
+                <TranslationStatusBadge
+                  status={status}
+                  isPublicLocale={canApprove}
+                />
               </div>
               {translation && (
                 <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs text-muted-foreground">
@@ -126,10 +131,17 @@ export function BillTranslationsView({
                   )}
                 </dl>
               )}
+              {!canApprove && (
+                <p className="rounded-md bg-muted p-3 text-sm text-muted-foreground">
+                  英語以外の翻訳は現在公開対象外のため、下書き保存のみ可能です。
+                </p>
+              )}
               {status === "stale" && (
                 <div className="space-y-3 rounded-md bg-destructive/10 p-3">
                   <p className="text-sm text-destructive">
-                    この翻訳を作った後に日本語の原文が変わりました。公開画面には表示されていません。原文と照らし合わせて翻訳を直してから承認してください。
+                    {canApprove
+                      ? "この翻訳を作った後に日本語の原文が変わりました。公開画面には表示されていません。原文と照らし合わせて翻訳を直してから承認してください。"
+                      : "この翻訳を作った後に日本語の原文が変わりました。原文と照らし合わせて翻訳を直し、下書き保存してください。"}
                   </p>
                   {translation?.sourceSnapshot ? (
                     <TextDiffViewer
@@ -153,6 +165,7 @@ export function BillTranslationsView({
                 locale={locale}
                 translation={translation}
                 status={status}
+                canApprove={canApprove}
                 onDirtyChange={setIsEditorDirty}
               />
             </CardContent>

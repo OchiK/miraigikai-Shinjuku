@@ -1,6 +1,6 @@
 "use client";
 
-import type { Locale } from "@mirai-gikai/shared/i18n/locales";
+import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
 import { Menu } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,7 @@ import { routes } from "@/lib/routes";
 import { RubyToggle } from "@/lib/rubyful";
 
 interface HamburgerMenuProps {
-  locale: Locale;
+  locale: PublicLocale;
   sessions: CouncilSession[];
 }
 

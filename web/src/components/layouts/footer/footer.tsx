@@ -5,6 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { siteConfig } from "@/config/site.config";
+import { GuideLanguageLinks } from "@/features/guide/client/components/guide-language-links";
+import { GUIDE_LINKS_LABEL } from "@/features/guide/shared/guide-content";
 import { isInterviewPage } from "@/lib/page-layout-utils";
 import { routes } from "@/lib/routes";
 import { policyLinks, primaryLinks } from "./footer.config";
@@ -21,6 +23,7 @@ export function Footer() {
       <div className="mx-auto flex w-full max-w-[500px] flex-col items-center px-6 py-14 pb-20 text-center">
         {siteConfig.features.showTeamMiraiSection && <FooterLogoSection />}
         <FooterPrimaryLinks />
+        <FooterGuideLinks />
         <FooterPolicies />
         <FooterCopyright />
       </div>
@@ -69,6 +72,20 @@ function FooterPrimaryLinks() {
           </li>
         ))}
       </ul>
+    </nav>
+  );
+}
+
+function FooterGuideLinks() {
+  return (
+    <nav
+      aria-label={GUIDE_LINKS_LABEL}
+      className="mb-5 flex flex-col items-center gap-2"
+    >
+      <p className="text-xs font-semibold text-mirai-text-muted">
+        {GUIDE_LINKS_LABEL}
+      </p>
+      <GuideLanguageLinks className="justify-center" />
     </nav>
   );
 }

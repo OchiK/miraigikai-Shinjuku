@@ -15,6 +15,7 @@ import {
   TRANSLATION_LOCALES,
 } from "../../shared/types/bill-translation";
 import type { TranslationMatrix } from "../../shared/types/translation-matrix";
+import { canApproveTranslationLocale } from "../../shared/utils/translation-review";
 import { TranslationStatusBadge } from "./translation-status-badge";
 
 interface BillsTranslationMatrixViewProps {
@@ -46,7 +47,10 @@ export function BillsTranslationMatrixView({
                   <span className="text-2xl font-bold">{counts.reviewed}</span>
                   <span className="text-muted-foreground">
                     {" "}
-                    / {total}件 公開中
+                    / {total}件{" "}
+                    {canApproveTranslationLocale(locale)
+                      ? "公開中"
+                      : "確認済み（公開対象外）"}
                   </span>
                 </p>
                 <p className="text-muted-foreground">
@@ -60,7 +64,7 @@ export function BillsTranslationMatrixView({
       </div>
 
       <p className="text-xs text-muted-foreground">
-        「ふつう」の日本語に対する翻訳の状態です。公開画面は、選ばれた難易度の翻訳がなければ「ふつう」の翻訳を表示し、それも公開中でなければ日本語を表示します。
+        「ふつう」の日本語に対する翻訳の状態です。公開画面は、選ばれた難易度の翻訳がなければ「ふつう」の翻訳を表示し、それも公開中でなければ日本語を表示します。英語以外の翻訳は公開しません（下書きの確認・編集のみ）。
       </p>
 
       <Card>
@@ -126,6 +130,7 @@ export function BillsTranslationMatrixView({
                           <TranslationStatusBadge
                             status={row.statuses[locale]}
                             compact
+                            isPublicLocale={canApproveTranslationLocale(locale)}
                           />
                         </Link>
                       ) : (
