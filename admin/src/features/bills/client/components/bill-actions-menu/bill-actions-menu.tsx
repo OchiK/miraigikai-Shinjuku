@@ -1,6 +1,12 @@
 "use client";
 
-import { Edit, FileText, MessageCircle, MoreVertical } from "lucide-react";
+import {
+  Edit,
+  FileText,
+  Languages,
+  MessageCircle,
+  MoreVertical,
+} from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -38,6 +44,12 @@ export function BillActionsMenu({ billId, billName }: BillActionsMenuProps) {
             <Button variant="ghost" size="sm" className="w-full justify-start">
               <FileText className="h-4 w-4 mr-2" />
               コンテンツ
+            </Button>
+          </Link>
+          <Link href={routes.billTranslations(billId) as Route}>
+            <Button variant="ghost" size="sm" className="w-full justify-start">
+              <Languages className="h-4 w-4 mr-2" />
+              多言語翻訳
             </Button>
           </Link>
           <Link href={routes.billInterview(billId) as Route}>

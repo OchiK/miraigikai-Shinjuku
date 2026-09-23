@@ -1,8 +1,8 @@
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { routes } from "@/lib/routes";
 import { BillEditForm } from "@/features/bills-edit/client/components/bill-edit-form";
+import { BillEditNav } from "@/features/bills-edit/client/components/bill-edit-nav";
 import { BillTagsForm } from "@/features/bills-edit/client/components/bill-tags-form";
 import { getBillById } from "@/features/bills-edit/server/loaders/get-bill-by-id";
 import { getBillTagIds } from "@/features/bills-edit/server/loaders/get-bill-tag-ids";
@@ -12,6 +12,7 @@ import { StancesManager } from "@/features/faction-stances/client/components/sta
 import { getFactions } from "@/features/faction-stances/server/loaders/get-factions";
 import { getStancesByBillId } from "@/features/faction-stances/server/loaders/get-stances-by-bill-id";
 import { loadTags } from "@/features/tags/server/loaders/load-tags";
+import { routes } from "@/lib/routes";
 
 interface BillEditPageProps {
   params: Promise<{
@@ -59,6 +60,8 @@ export default async function BillEditPage({ params }: BillEditPageProps) {
         <h1 className="text-2xl font-bold text-gray-900">議案編集</h1>
         <p className="text-gray-600 mt-1">議案の基本情報を編集します</p>
       </div>
+
+      <BillEditNav billId={bill.id} />
 
       <div className="space-y-6">
         <BillEditForm

@@ -1,4 +1,5 @@
 import { BillContentsEditForm } from "@/features/bills-edit/client/components/bill-contents-edit-form";
+import { BillEditNav } from "@/features/bills-edit/client/components/bill-edit-nav";
 import { getBillById } from "@/features/bills-edit/server/loaders/get-bill-by-id";
 import { getBillContents } from "@/features/bills-edit/server/loaders/get-bill-contents";
 
@@ -28,6 +29,7 @@ export default async function BillContentsEditPage({
       <h1 className="text-2xl font-bold text-gray-900 mb-6">
         議案コンテンツ編集
       </h1>
+      <BillEditNav billId={bill.id} />
       <BillContentsEditForm bill={bill} billContents={billContents} />
     </div>
   );
