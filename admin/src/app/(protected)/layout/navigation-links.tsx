@@ -34,8 +34,11 @@ export function NavigationLinks() {
     );
 
   return (
-    <nav>
-      <div className="flex space-x-8">
+    <nav
+      aria-label="管理画面のメインナビゲーション"
+      className="overflow-x-auto"
+    >
+      <div className="flex w-max min-w-full gap-8">
         {navigationLinks.map((link) => {
           const isActive = link.href === activeHref;
 
@@ -44,7 +47,7 @@ export function NavigationLinks() {
               key={link.href}
               href={link.href as Route}
               className={cn(
-                "inline-flex items-center gap-2 px-1 py-4 text-sm border-b-2 transition-colors",
+                "inline-flex min-h-11 shrink-0 items-center whitespace-nowrap border-b-2 px-1 py-4 text-sm transition-colors",
                 isActive
                   ? "border-blue-600 text-blue-600 font-semibold"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium"

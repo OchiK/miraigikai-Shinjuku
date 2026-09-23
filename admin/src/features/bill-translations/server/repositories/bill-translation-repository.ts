@@ -101,14 +101,15 @@ export async function updateTranslation(
   }
 }
 
-/** 翻訳状況の一覧用。全議案と所属する会期 */
-export async function findBillsForTranslationMatrix() {
+/** 翻訳状況の一覧用。対象会期の議案と所属する会期 */
+export async function findBillsForTranslationMatrix(councilSessionId: string) {
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("bills")
     .select(
       "id, name, bill_number, bill_number_order, council_sessions(name, start_date)"
-    );
+    )
+    .eq("council_session_id", councilSessionId);
 
   if (error) {
     throw new Error(`Failed to fetch bills: ${error.message}`);
@@ -117,21 +118,41 @@ export async function findBillsForTranslationMatrix() {
   return data ?? [];
 }
 
-/** 翻訳状況の一覧用。指定した難易度の日本語コンテンツ（全議案分） */
+/** 翻訳状況の一覧用。対象議案に属する指定難易度の日本語コンテンツ */
 export async function findBillContentsByDifficulty(
-  difficultyLevel: DifficultyLevel
+  difficultyLevel: DifficultyLevel,
+  billIds: string[]
 ) {
+  if (billIds.length === 0) return [];
+
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("bill_contents")
     .select("id, bill_id, difficulty_level, title, summary, content")
-    .eq("difficulty_level", difficultyLevel);
+    .eq("difficulty_level", difficultyLevel)
+    .in("bill_id", billIds);
 
   if (error) {
     throw new Error(`Failed to fetch bill contents: ${error.message}`);
   }
 
   return data ?? [];
+}
+
+/** 翻訳状況の一覧で対象にする会期を slug から取得する */
+export async function findCouncilSessionIdBySlug(slug: string) {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("council_sessions")
+    .select("id")
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to fetch council session: ${error.message}`);
+  }
+
+  return data?.id ?? null;
 }
 
 /** 翻訳状況の一覧用。本文は取らず、状態の判定に要る列だけ */
