@@ -4,6 +4,7 @@ import {
 } from "@mirai-gikai/shared/i18n/locales";
 import { z } from "zod";
 import type { DifficultyLevel } from "@/features/bills-edit/shared/types/bill-contents";
+import type { SourceSnapshot } from "../utils/source-snapshot";
 
 /** 翻訳先ロケール（ja は正本なので除く）。並び順はタブの表示順 */
 export const TRANSLATION_LOCALES = SUPPORTED_LOCALES.filter(
@@ -54,6 +55,11 @@ export type TranslationReviewItem = {
   status: string;
   sourceHash: string;
   isStale: boolean;
+  /**
+   * 翻訳元（source_hash を記録した時点）の日本語。原文差分の表示に使う。
+   * stale でない翻訳、記録前の翻訳、source_hash と一致しないものは null
+   */
+  sourceSnapshot: SourceSnapshot | null;
   model: string | null;
   translatedAt: string;
   reviewedAt: string | null;

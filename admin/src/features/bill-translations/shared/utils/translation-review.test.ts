@@ -11,6 +11,8 @@ import {
 const OLD_HASH = `v1:${"a".repeat(64)}`;
 const NEW_HASH = `v1:${"b".repeat(64)}`;
 const NOW = new Date("2026-09-23T10:00:00.000Z");
+const OLD_SOURCE = { title: "旧題", summary: "旧要約", content: "旧本文" };
+const NEW_SOURCE = { title: "新題", summary: "新要約", content: "新本文" };
 
 describe("getTranslationReviewStatus", () => {
   it("翻訳がなければ missing", () => {
@@ -122,14 +124,20 @@ describe("buildTranslationStatusFields", () => {
     expect(
       buildTranslationStatusFields({
         intent: "approve",
-        existing: { status: "generated", source_hash: OLD_HASH },
+        existing: {
+          status: "generated",
+          source_hash: OLD_HASH,
+          source_snapshot: OLD_SOURCE,
+        },
         currentSourceHash: NEW_HASH,
+        currentSource: NEW_SOURCE,
         reviewer: "admin@example.com",
         now: NOW,
       })
     ).toEqual({
       status: "reviewed",
       source_hash: NEW_HASH,
+      source_snapshot: NEW_SOURCE,
       reviewed_at: "2026-09-23T10:00:00.000Z",
       reviewed_by: "admin@example.com",
     });
@@ -139,14 +147,20 @@ describe("buildTranslationStatusFields", () => {
     expect(
       buildTranslationStatusFields({
         intent: "draft",
-        existing: { status: "generated", source_hash: OLD_HASH },
+        existing: {
+          status: "generated",
+          source_hash: OLD_HASH,
+          source_snapshot: OLD_SOURCE,
+        },
         currentSourceHash: NEW_HASH,
+        currentSource: NEW_SOURCE,
         reviewer: "admin@example.com",
         now: NOW,
       })
     ).toEqual({
       status: "generated",
       source_hash: OLD_HASH,
+      source_snapshot: OLD_SOURCE,
       reviewed_at: null,
       reviewed_by: null,
     });
@@ -155,8 +169,13 @@ describe("buildTranslationStatusFields", () => {
   it("reviewed の翻訳を下書き保存すると非公開（generated）に戻り、承認情報を消す", () => {
     const fields = buildTranslationStatusFields({
       intent: "draft",
-      existing: { status: "reviewed", source_hash: NEW_HASH },
+      existing: {
+        status: "reviewed",
+        source_hash: NEW_HASH,
+        source_snapshot: NEW_SOURCE,
+      },
       currentSourceHash: NEW_HASH,
+      currentSource: NEW_SOURCE,
       reviewer: "admin@example.com",
       now: NOW,
     });
@@ -169,24 +188,65 @@ describe("buildTranslationStatusFields", () => {
     expect(
       buildTranslationStatusFields({
         intent: "draft",
-        existing: { status: "stale", source_hash: OLD_HASH },
+        existing: {
+          status: "stale",
+          source_hash: OLD_HASH,
+          source_snapshot: OLD_SOURCE,
+        },
         currentSourceHash: NEW_HASH,
+        currentSource: NEW_SOURCE,
         reviewer: "admin@example.com",
         now: NOW,
       }).status
     ).toBe("stale");
   });
 
-  it("新規の下書きは現在の日本語のハッシュで保存する", () => {
+  it("新規の下書きは現在の日本語のハッシュとスナップショットで保存する", () => {
+    const fields = buildTranslationStatusFields({
+      intent: "draft",
+      existing: null,
+      currentSourceHash: NEW_HASH,
+      currentSource: NEW_SOURCE,
+      reviewer: "admin@example.com",
+      now: NOW,
+    });
+    expect(fields.source_hash).toBe(NEW_HASH);
+    expect(fields.source_snapshot).toEqual(NEW_SOURCE);
+  });
+
+  it("記録前の翻訳でも source_hash が現在の日本語と一致すれば、下書き保存でスナップショットを埋める", () => {
     expect(
       buildTranslationStatusFields({
         intent: "draft",
-        existing: null,
+        existing: {
+          status: "generated",
+          source_hash: NEW_HASH,
+          source_snapshot: null,
+        },
         currentSourceHash: NEW_HASH,
+        currentSource: NEW_SOURCE,
         reviewer: "admin@example.com",
         now: NOW,
-      }).source_hash
-    ).toBe(NEW_HASH);
+      }).source_snapshot
+    ).toEqual(NEW_SOURCE);
+  });
+
+  it("スナップショット記録前の翻訳を下書き保存しても、現在の日本語で埋めない", () => {
+    // source_hash は古い日本語のままなので、現在の日本語を入れると差分が消えてしまう
+    expect(
+      buildTranslationStatusFields({
+        intent: "draft",
+        existing: {
+          status: "generated",
+          source_hash: OLD_HASH,
+          source_snapshot: null,
+        },
+        currentSourceHash: NEW_HASH,
+        currentSource: NEW_SOURCE,
+        reviewer: "admin@example.com",
+        now: NOW,
+      }).source_snapshot
+    ).toBeNull();
   });
 });
 

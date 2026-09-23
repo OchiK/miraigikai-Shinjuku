@@ -12,6 +12,10 @@ import {
   saveBillTranslationSchema,
 } from "../../shared/types/bill-translation";
 import {
+  parseSourceSnapshot,
+  toSourceSnapshot,
+} from "../../shared/utils/source-snapshot";
+import {
   buildTranslationStatusFields,
   isStoredTranslationStale,
   requiresStaleConfirmation,
@@ -79,8 +83,13 @@ export async function upsertBillTranslation(
 
     const statusFields = buildTranslationStatusFields({
       intent: data.intent,
-      existing,
+      existing: existing && {
+        status: existing.status,
+        source_hash: existing.source_hash,
+        source_snapshot: parseSourceSnapshot(existing.source_snapshot),
+      },
       currentSourceHash,
+      currentSource: toSourceSnapshot(source),
       reviewer: admin.email ?? admin.id,
       now: new Date(),
     });

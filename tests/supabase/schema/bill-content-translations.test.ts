@@ -100,6 +100,43 @@ describe("bill_content_translations 制約", () => {
     ).rejects.toThrow(/bill_content_translations_reviewed_has_timestamp/);
   });
 
+  async function insertWithSnapshot(source_snapshot: unknown) {
+    const content = await setupContent();
+    return adminClient.from("bill_content_translations").insert({
+      bill_content_id: content.id,
+      locale: "en",
+      title: "t",
+      summary: "s",
+      content: "c",
+      source_hash: `v1:${"0".repeat(64)}`,
+      // 不正な形を DB に送るため、型を外して渡す
+      source_snapshot: source_snapshot as never,
+    });
+  }
+
+  it.each([
+    ["null（記録前の翻訳）", null],
+    [
+      "title / summary / content の文字列",
+      { title: "a", summary: "b", content: "c" },
+    ],
+  ])("source_snapshot に %s は入る", async (_label, snapshot) => {
+    const { error } = await insertWithSnapshot(snapshot);
+    expect(error).toBeNull();
+  });
+
+  it.each([
+    ["文字列", "text"],
+    ["配列", ["a"]],
+    ["フィールド欠け", { title: "a", summary: "b" }],
+    ["文字列以外の値", { title: "a", summary: "b", content: 1 }],
+  ])("source_snapshot に %s は入らない", async (_label, snapshot) => {
+    const { error } = await insertWithSnapshot(snapshot);
+    expect(error?.message).toMatch(
+      /bill_content_translations_source_snapshot_shape/
+    );
+  });
+
   it("元の bill_contents を消すと翻訳も消える", async () => {
     const content = await setupContent();
     const translation = await createTestBillContentTranslation(content.id);

@@ -6,12 +6,15 @@
  * 新しいページを追加したらここにもルートを追加し、テストを通すこと。
  */
 
+import type { TranslationLocale } from "@mirai-gikai/shared/i18n/locales";
+
 // ── 静的ルート ──────────────────────────────────────
 export const routes = {
   login: () => "/login" as const,
   bills: () => "/bills" as const,
   billNew: () => "/bills/new" as const,
   billMerge: () => "/bills/merge" as const,
+  billTranslationsList: () => "/bills/translations" as const,
   admins: () => "/admins" as const,
   tags: () => "/tags" as const,
   councilSessions: () => "/council-sessions" as const,
@@ -28,6 +31,9 @@ export const routes = {
     `/bills/${billId}/contents/edit` as const,
   billTranslations: (billId: string) =>
     `/bills/${billId}/translations` as const,
+  /** 翻訳画面を指定した言語のタブで開く */
+  billTranslationsForLocale: (billId: string, locale: TranslationLocale) =>
+    `/bills/${billId}/translations?locale=${locale}` as const,
 
   // インタビュー
   billInterview: (billId: string) => `/bills/${billId}/interview` as const,

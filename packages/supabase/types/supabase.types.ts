@@ -64,6 +64,7 @@ export type Database = {
           reviewed_at: string | null
           reviewed_by: string | null
           source_hash: string
+          source_snapshot: Json | null
           status: string
           summary: string
           title: string
@@ -81,6 +82,7 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           source_hash: string
+          source_snapshot?: Json | null
           status?: string
           summary: string
           title: string
@@ -98,6 +100,7 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           source_hash?: string
+          source_snapshot?: Json | null
           status?: string
           summary?: string
           title?: string

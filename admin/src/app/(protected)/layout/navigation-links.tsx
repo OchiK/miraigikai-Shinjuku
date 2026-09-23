@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 
 const navigationLinks = [
   { href: routes.bills(), label: "議案管理" },
+  { href: routes.billTranslationsList(), label: "多言語翻訳" },
   { href: routes.councilSessions(), label: "定例会管理" },
   { href: routes.tags(), label: "タグ管理" },
   { href: routes.factions(), label: "会派管理" },
@@ -21,19 +22,32 @@ const navigationLinks = [
 
 export function NavigationLinks() {
   const pathname = usePathname();
+  // /bills/translations は /bills にも前方一致するので、最も長く一致したリンクだけを選択中にする
+  const activeHref = navigationLinks
+    .filter((link) => pathname.startsWith(link.href))
+    .reduce<string | null>(
+      (longest, link) =>
+        longest === null || link.href.length > longest.length
+          ? link.href
+          : longest,
+      null
+    );
 
   return (
-    <nav>
-      <div className="flex space-x-8">
+    <nav
+      aria-label="管理画面のメインナビゲーション"
+      className="overflow-x-auto"
+    >
+      <div className="flex w-max min-w-full gap-8">
         {navigationLinks.map((link) => {
-          const isActive = pathname.startsWith(link.href);
+          const isActive = link.href === activeHref;
 
           return (
             <Link
               key={link.href}
               href={link.href as Route}
               className={cn(
-                "inline-flex items-center gap-2 px-1 py-4 text-sm border-b-2 transition-colors",
+                "inline-flex min-h-11 shrink-0 items-center whitespace-nowrap border-b-2 px-1 py-4 text-sm transition-colors",
                 isActive
                   ? "border-blue-600 text-blue-600 font-semibold"
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 font-medium"

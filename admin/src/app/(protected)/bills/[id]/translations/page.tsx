@@ -3,18 +3,23 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BillTranslationsView } from "@/features/bill-translations/client/components/bill-translations-view";
 import { getBillTranslations } from "@/features/bill-translations/server/loaders/get-bill-translations";
+import { translationLocaleSchema } from "@/features/bill-translations/shared/types/bill-translation";
 import { BillEditNav } from "@/features/bills-edit/client/components/bill-edit-nav";
 import { getBillById } from "@/features/bills-edit/server/loaders/get-bill-by-id";
 import { routes } from "@/lib/routes";
 
 interface BillTranslationsPageProps {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ locale?: string }>;
 }
 
 export default async function BillTranslationsPage({
   params,
+  searchParams,
 }: BillTranslationsPageProps) {
   const { id } = await params;
+  const { locale } = await searchParams;
+  const initialLocale = translationLocaleSchema.safeParse(locale).data;
   // 存在しない ID で翻訳の取得がエラーになる前に 404 を返す
   const bill = await getBillById(id);
   if (!bill) {
@@ -40,7 +45,7 @@ export default async function BillTranslationsPage({
       </div>
 
       <BillEditNav billId={bill.id} />
-      <BillTranslationsView groups={groups} />
+      <BillTranslationsView groups={groups} initialLocale={initialLocale} />
     </div>
   );
 }
