@@ -116,6 +116,10 @@ jobs:
             --table=public.bills \
             --table=public.bill_contents \
             --table=public.bills_tags \
+            --table=public.factions \
+            --table=public.committees \
+            --table=public.council_members \
+            --table=public.council_member_committees \
             --file=/backup/backup-data.sql
 
       - name: Upload backup artifact
@@ -146,7 +150,7 @@ jobs:
           curl -fsS -X POST "${WEB_PUBLIC_URL%/}/api/revalidate" \
             -H "Authorization: Bearer $REVALIDATE_SECRET" \
             -H "Content-Type: application/json" \
-            -d '{"tags":["bills","council-sessions"]}'
+            -d '{"tags":["bills","council-sessions","councilors"]}'
 
       - name: Trigger Vercel rebuild
         if: ${{ inputs.dry_run == false && inputs.confirm == 'apply' }}

@@ -1,7 +1,18 @@
 import type { Database } from "@mirai-gikai/supabase";
 import { createBillContents } from "../main/bill-contents-data";
 import type { SeededBillRef } from "../main/bill-ref";
-import { councilSessions, createBillsTags, tags } from "../main/data";
+import {
+  committees,
+  councilSessions,
+  createBillsTags,
+  factions,
+  tags,
+} from "../main/data";
+import {
+  COUNCIL_ROSTER_URL,
+  councilMembers,
+  type SeedCouncilMember,
+} from "../main/shinjuku-council-members";
 import { R8_2_SESSION, toBillInserts } from "../main/shinjuku-r8-2-inventory";
 import type { AdminClient } from "../shared/helper";
 import {
@@ -11,6 +22,7 @@ import {
   type TableDiff,
   diffTable,
   hasChanges,
+  normalizeArray,
   normalizeTimestamp,
 } from "./diff";
 
@@ -19,10 +31,14 @@ type BillContentInsert = Database["public"]["Tables"]["bill_contents"]["Insert"]
 type BillsTagsInsert = Database["public"]["Tables"]["bills_tags"]["Insert"];
 type CouncilSessionInsert =
   Database["public"]["Tables"]["council_sessions"]["Insert"];
+type CommitteeInsert = Database["public"]["Tables"]["committees"]["Insert"];
+type FactionInsert = Database["public"]["Tables"]["factions"]["Insert"];
 type TagInsert = Database["public"]["Tables"]["tags"]["Insert"];
 
 /** タグの自然キーは label。DBから読む前でも差分を組めるよう id と label を持つ */
 type TagRef = { id: string; label: string };
+
+const SHINJUKU_COUNCIL_ROSTER_KEY = "shinjuku-city-council";
 
 /**
  * インポート対象の一次資料層データ。
@@ -35,6 +51,13 @@ export interface ImportDataset {
   /** 議案を紐づける会期の slug */
   billSessionSlug: string;
   tags: TagInsert[];
+  factions: FactionInsert[];
+  committees: CommitteeInsert[];
+  /** 自治体単位で名簿の管理範囲を固定する（出典URLが変わっても変えない） */
+  councilRosterKey: string;
+  /** 議員情報の出典として表示する公式名簿URL */
+  councilRosterUrl: string;
+  councilMembers: SeedCouncilMember[];
   bills: BillInsert[];
   createBillContents: (bills: SeededBillRef[]) => BillContentInsert[];
   createBillsTags: (bills: SeededBillRef[], tags: TagRef[]) => BillsTagsInsert[];
@@ -45,6 +68,11 @@ export const productionDataset: ImportDataset = {
   councilSessions,
   billSessionSlug: requireSlug(R8_2_SESSION),
   tags,
+  factions,
+  committees,
+  councilRosterKey: SHINJUKU_COUNCIL_ROSTER_KEY,
+  councilRosterUrl: COUNCIL_ROSTER_URL,
+  councilMembers,
   bills: toBillInserts(),
   createBillContents,
   createBillsTags,
@@ -105,10 +133,38 @@ const TAG_FIELDS: FieldSpec[] = [
   { field: "featured_priority" },
 ];
 
+const FACTION_FIELDS: FieldSpec[] = [
+  { field: "display_name" },
+  { field: "alternative_names", normalize: normalizeArray },
+  { field: "logo_url" },
+  { field: "sort_order" },
+  { field: "is_active" },
+];
+
+const COMMITTEE_FIELDS: FieldSpec[] = [
+  { field: "description" },
+  { field: "sort_order" },
+  { field: "is_active" },
+];
+
+const COUNCIL_MEMBER_FIELDS: FieldSpec[] = [
+  { field: "name_kana" },
+  { field: "faction_name" },
+  { field: "faction_role" },
+  { field: "official_url" },
+  { field: "website_url" },
+  { field: "terms" },
+  { field: "sort_order" },
+  { field: "is_active" },
+];
+
+const COUNCIL_MEMBER_COMMITTEE_FIELDS: FieldSpec[] = [{ field: "role" }];
+
 /**
  * 自然キーによる非破壊 upsert で、一次資料層を最新インベントリに揃える。
  *
- * - 削除は一切行わない。インベントリから消えた行は報告に留める。
+ * - 一次資料・利用者データの行は削除しない。名簿から外れた議員は非現職にし、
+ *   現行状態を表す委員会所属だけを名簿に合わせて置き換える。
  * - bills は `slug` で突合するため、既存行の id が保たれる。
  *   id が変わると詳細ページのURLが 404 になり、interview_configs の
  *   CASCADE で利用者データまで失われる。
@@ -125,6 +181,10 @@ export async function importInventory(
 
   const session = await syncCouncilSessions(context);
   const tagsDiff = await syncTags(context);
+  const factionsDiff = await syncFactions(context);
+  const committeesDiff = await syncCommittees(context);
+  const councilMembersDiff = await syncCouncilMembers(context);
+  const councilMemberCommitteesDiff = await syncCouncilMemberCommittees(context);
   const bill = await syncBills(context, session.billSessionId);
   const contents = await syncBillContents(context, bill);
   const billsTags = await syncBillsTags(context, bill);
@@ -134,6 +194,10 @@ export async function importInventory(
     tables: [
       session.diff,
       tagsDiff,
+      factionsDiff,
+      committeesDiff,
+      councilMembersDiff,
+      councilMemberCommitteesDiff,
       bill.diff,
       contents,
       billsTags,
@@ -145,6 +209,112 @@ export async function importInventory(
   }
 
   return report;
+}
+
+// ---------------------------------------------------------------------------
+// 会派・委員会・議員
+// ---------------------------------------------------------------------------
+
+async function syncFactions(context: ImportContext): Promise<TableDiff> {
+  const { supabase, dataset } = context;
+  const desired = dataset.factions;
+  const current = await fetchFactions(
+    supabase,
+    desired.map((faction) => faction.name)
+  );
+
+  return diffTable({
+    table: "factions",
+    label: "会派",
+    fields: FACTION_FIELDS,
+    current: current.map((row) => toDiffRow(row.name, row)),
+    desired: desired.map((row) => toDiffRow(row.name, row)),
+    reportExtraneous: false,
+  });
+}
+
+async function syncCommittees(context: ImportContext): Promise<TableDiff> {
+  const { supabase, dataset } = context;
+  const desired = dataset.committees;
+  const current = await fetchCommittees(
+    supabase,
+    desired.map((committee) => committee.name)
+  );
+
+  return diffTable({
+    table: "committees",
+    label: "委員会",
+    fields: COMMITTEE_FIELDS,
+    current: current.map((row) => toDiffRow(row.name, row)),
+    desired: desired.map((row) => toDiffRow(row.name, row)),
+    reportExtraneous: false,
+  });
+}
+
+async function syncCouncilMembers(context: ImportContext): Promise<TableDiff> {
+  const { supabase, dataset } = context;
+  const desired = councilMemberRows(
+    dataset.councilMembers,
+    dataset.councilRosterKey,
+    dataset.councilRosterUrl
+  );
+  const current = await fetchCouncilMembers(supabase, dataset.councilRosterKey);
+  const desiredNames = new Set(desired.map((member) => member.name));
+  const effectiveDesired = [
+    ...desired,
+    ...current
+      .filter((member) => !desiredNames.has(member.name))
+      .map((member) => ({
+        ...member,
+        faction_name: member.factions?.name ?? null,
+        is_active: false,
+      })),
+  ];
+
+  return diffTable({
+    table: "council_members",
+    label: "議員",
+    fields: COUNCIL_MEMBER_FIELDS,
+    current: current.map((row) =>
+      toDiffRow(row.name, {
+        ...row,
+        faction_name: row.factions?.name ?? null,
+      })
+    ),
+    desired: effectiveDesired.map((row) => toDiffRow(row.name, row)),
+    reportExtraneous: false,
+  });
+}
+
+async function syncCouncilMemberCommittees(
+  context: ImportContext
+): Promise<TableDiff> {
+  const { supabase, dataset } = context;
+  const desired = councilMemberCommitteeRows(dataset.councilMembers);
+  const current = await fetchCouncilMemberCommittees(
+    supabase,
+    dataset.councilRosterKey
+  );
+
+  return diffTable({
+    table: "council_member_committees",
+    label: "議員の委員会所属",
+    fields: COUNCIL_MEMBER_COMMITTEE_FIELDS,
+    current: current.flatMap((row) =>
+      row.council_members && row.committees
+        ? [
+            toDiffRow(
+              compositeKey(row.council_members.name, row.committees.name),
+              row
+            ),
+          ]
+        : []
+    ),
+    desired: desired.map((row) =>
+      toDiffRow(compositeKey(row.member_name, row.committee_name), row)
+    ),
+    reportExtraneous: true,
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -349,7 +519,7 @@ async function syncBillsTags(
   return diff;
 }
 
-/** 5テーブルの書き込みを1トランザクションで確定する。 */
+/** 全対象テーブルの書き込みを1トランザクションで確定する。 */
 async function applyInventoryTransaction(
   supabase: AdminClient,
   dataset: ImportDataset
@@ -363,6 +533,12 @@ async function applyInventoryTransaction(
   const billsTags = dataset
     .createBillsTags(slugRefs(dataset), labelRefs(dataset))
     .map(({ bill_id, tag_id }) => ({ bill_slug: bill_id, tag_label: tag_id }));
+  const members = councilMemberRows(
+    dataset.councilMembers,
+    dataset.councilRosterKey,
+    dataset.councilRosterUrl
+  );
+  const memberCommittees = councilMemberCommitteeRows(dataset.councilMembers);
   const toJson = (value: unknown) =>
     JSON.parse(JSON.stringify(value)) as Args["p_bills"];
 
@@ -373,6 +549,11 @@ async function applyInventoryTransaction(
     p_bill_contents: toJson(contents),
     p_bills_tags: toJson(billsTags),
     p_bill_session_slug: dataset.billSessionSlug,
+    p_factions: toJson(dataset.factions),
+    p_committees: toJson(dataset.committees),
+    p_council_members: toJson(members),
+    p_council_member_committees: toJson(memberCommittees),
+    p_council_roster_key: dataset.councilRosterKey,
   });
   if (error) {
     throw new Error(`本番インポートのトランザクションに失敗: ${error.message}`);
@@ -405,6 +586,63 @@ async function fetchTags(supabase: AdminClient, labels: string[]) {
     throw new Error(`tags の取得に失敗: ${error.message}`);
   }
   return assertWithinRowLimit(data ?? [], "tags");
+}
+
+async function fetchFactions(supabase: AdminClient, names: string[]) {
+  if (names.length === 0) return [];
+  const { data, error } = await supabase
+    .from("factions")
+    .select(
+      "name, display_name, alternative_names, logo_url, sort_order, is_active"
+    )
+    .in("name", names);
+  if (error) {
+    throw new Error(`factions の取得に失敗: ${error.message}`);
+  }
+  return assertWithinRowLimit(data ?? [], "factions");
+}
+
+async function fetchCommittees(supabase: AdminClient, names: string[]) {
+  if (names.length === 0) return [];
+  const { data, error } = await supabase
+    .from("committees")
+    .select("name, description, sort_order, is_active")
+    .in("name", names);
+  if (error) {
+    throw new Error(`committees の取得に失敗: ${error.message}`);
+  }
+  return assertWithinRowLimit(data ?? [], "committees");
+}
+
+async function fetchCouncilMembers(supabase: AdminClient, rosterKey: string) {
+  const { data, error } = await supabase
+    .from("council_members")
+    .select(
+      "name, name_kana, faction_role, official_url, website_url, terms, sort_order, is_active, roster_key, factions(name)"
+    )
+    .eq("roster_key", rosterKey);
+  if (error) {
+    throw new Error(`council_members の取得に失敗: ${error.message}`);
+  }
+  return assertWithinRowLimit(data ?? [], "council_members");
+}
+
+async function fetchCouncilMemberCommittees(
+  supabase: AdminClient,
+  rosterKey: string
+) {
+  const { data, error } = await supabase
+    .from("council_member_committees")
+    .select(
+      "role, council_members!inner(name, roster_key), committees(name)"
+    )
+    .eq("council_members.roster_key", rosterKey);
+  if (error) {
+    throw new Error(
+      `council_member_committees の取得に失敗: ${error.message}`
+    );
+  }
+  return assertWithinRowLimit(data ?? [], "council_member_committees");
 }
 
 type BillRow = {
@@ -513,6 +751,35 @@ function slugRefs(dataset: ImportDataset): SeededBillRef[] {
 /** 同じ理由で、id の代わりに label を入れたタグ参照 */
 function labelRefs(dataset: ImportDataset): TagRef[] {
   return dataset.tags.map((tag) => ({ id: tag.label, label: tag.label }));
+}
+
+function councilMemberRows(
+  members: SeedCouncilMember[],
+  councilRosterKey: string,
+  councilRosterUrl: string
+) {
+  return members.map((member, index) => ({
+    name: member.name,
+    name_kana: member.nameKana,
+    faction_name: member.faction,
+    faction_role: member.factionRole,
+    roster_key: councilRosterKey,
+    official_url: councilRosterUrl,
+    website_url: member.websiteUrl,
+    terms: member.terms,
+    sort_order: index + 1,
+    is_active: true,
+  }));
+}
+
+function councilMemberCommitteeRows(members: SeedCouncilMember[]) {
+  return members.flatMap((member) =>
+    Object.entries(member.committees).map(([committeeName, role]) => ({
+      member_name: member.name,
+      committee_name: committeeName,
+      role,
+    }))
+  );
 }
 
 function toDiffRow(key: string, row: object): DiffRow {

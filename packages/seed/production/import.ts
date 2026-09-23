@@ -4,7 +4,8 @@
  *   pnpm --filter @mirai-gikai/seed import:production:dry-run
  *   pnpm --filter @mirai-gikai/seed import:production
  *
- * 破壊的な開発シード（main/run.ts）とは別経路であり、削除は一切行わない。
+ * 破壊的な開発シード（main/run.ts）とは別経路であり、一次資料・利用者データの
+ * 行は削除しない。現行状態を表す議員の委員会所属だけを名簿に合わせる。
  */
 import { createAdminClient } from "../shared/helper";
 import { parseCliArgs, requireSupabaseEnv } from "./cli-args";
@@ -19,7 +20,7 @@ async function main() {
   console.log(
     dryRun
       ? "モード: dry-run（差分の表示のみ。DBへは書き込まない）"
-      : "モード: 本番反映（自然キーによる upsert。削除は行わない）"
+      : "モード: 本番反映（自然キーによる同期。一次資料・利用者データは削除しない）"
   );
 
   const report = await importInventory(createAdminClient(), { dryRun });

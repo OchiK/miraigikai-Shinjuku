@@ -55,7 +55,8 @@ export interface TableDiff {
   unchanged: string[];
   /**
    * DBにあり、インベントリに無い行の自然キー。
-   * インポーターはこれらを削除しない。人が判断するための報告に留める。
+   * 通常は人が判断するための報告に留める。現行状態だけを持つ
+   * council_member_committees は、同期時の削除対象として扱う。
    */
   extraneous: string[];
 }
@@ -156,6 +157,11 @@ export function normalizeTimestamp(value: unknown): unknown {
   return Number.isNaN(parsed) ? value : parsed;
 }
 
+/** PostgREST と投入データの配列を参照ではなく要素列で比較する。 */
+export function normalizeArray(value: unknown): unknown {
+  return Array.isArray(value) ? JSON.stringify(value) : value;
+}
+
 /** null と undefined を同一視して比較する（DBの NULL と未設定を区別しない）。 */
 function isEqual(a: unknown, b: unknown): boolean {
   if (a === null || a === undefined) return b === null || b === undefined;
@@ -202,7 +208,11 @@ export function formatImportReport(report: ImportReport): string {
     }
 
     for (const key of table.extraneous) {
-      lines.push(`  ? ${key}（インベントリ外。削除しない）`);
+      const action =
+        table.table === "council_member_committees"
+          ? "同期時に削除"
+          : "削除しない";
+      lines.push(`  ? ${key}（インベントリ外。${action}）`);
     }
   }
 
@@ -220,6 +230,10 @@ export function formatValue(value: unknown): string {
 /** 報告全体に1件でも書き込み対象があるか。 */
 export function hasChanges(report: ImportReport): boolean {
   return report.tables.some(
-    (table) => table.created.length > 0 || table.updated.length > 0
+    (table) =>
+      table.created.length > 0 ||
+      table.updated.length > 0 ||
+      (table.table === "council_member_committees" &&
+        table.extraneous.length > 0)
   );
 }

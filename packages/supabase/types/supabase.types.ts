@@ -443,6 +443,7 @@ export type Database = {
           name: string
           name_kana: string
           official_url: string | null
+          roster_key: string | null
           sort_order: number
           terms: number | null
           updated_at: string
@@ -457,6 +458,7 @@ export type Database = {
           name: string
           name_kana: string
           official_url?: string | null
+          roster_key?: string | null
           sort_order?: number
           terms?: number | null
           updated_at?: string
@@ -471,6 +473,7 @@ export type Database = {
           name?: string
           name_kana?: string
           official_url?: string | null
+          roster_key?: string | null
           sort_order?: number
           terms?: number | null
           updated_at?: string
@@ -1307,17 +1310,34 @@ export type Database = {
           total_sessions: number
         }[]
       }
-      import_production_inventory: {
-        Args: {
-          p_bill_contents: Json
-          p_bill_session_slug: string
-          p_bills: Json
-          p_bills_tags: Json
-          p_council_sessions: Json
-          p_tags: Json
-        }
-        Returns: undefined
-      }
+      import_production_inventory:
+        | {
+            Args: {
+              p_bill_contents: Json
+              p_bill_session_slug: string
+              p_bills: Json
+              p_bills_tags: Json
+              p_council_sessions: Json
+              p_tags: Json
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              p_bill_contents: Json
+              p_bill_session_slug: string
+              p_bills: Json
+              p_bills_tags: Json
+              p_committees: Json
+              p_council_member_committees: Json
+              p_council_members: Json
+              p_council_roster_key: string
+              p_council_sessions: Json
+              p_factions: Json
+              p_tags: Json
+            }
+            Returns: undefined
+          }
       is_admin: { Args: never; Returns: boolean }
       set_active_council_session: {
         Args: { target_session_id: string }
