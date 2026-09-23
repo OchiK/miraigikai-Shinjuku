@@ -10,6 +10,7 @@ import {
 import { z } from "zod";
 import { siteConfig } from "@/config/site.config";
 import type { DifficultyLevelEnum } from "@/features/bill-difficulty/shared/types";
+import { parseDifficultyLevel } from "@/features/bill-difficulty/shared/utils/parse-difficulty-level";
 import type { BillWithContent } from "@/features/bills/shared/types";
 import {
   SUGGEST_INTERVIEW_TOOL_NAME,
@@ -24,6 +25,7 @@ import {
   createPromptProvider,
   type PromptProvider,
 } from "@/lib/prompt";
+import { loadPublishedBillForChat } from "../loaders/load-published-bill-for-chat";
 import { isWithinDailyCostLimit, recordChatUsage } from "./cost-tracker";
 import {
   checkSystemDailyCostLimit,
@@ -48,6 +50,15 @@ type ChatRequestParams = {
 export type HandleChatDeps = {
   promptProvider?: PromptProvider;
   model?: LanguageModel;
+  /** 既定は siteConfig.features.aiChat */
+  chatEnabled?: boolean;
+  /** 既定は公開済み議案のみ返す loadPublishedBillForChat */
+  billLoader?: (
+    billId: string,
+    difficultyLevel: DifficultyLevelEnum
+  ) => Promise<BillWithContent | null>;
+  /** 既定はユーザー日次・システム日次・システム月次の上限チェック */
+  checkCostLimits?: (userId: string) => Promise<void>;
 };
 
 type ChatUsageMetadata =
@@ -61,30 +72,44 @@ export async function handleChatRequest({
   userId,
   deps,
 }: ChatRequestParams) {
+  // 画面を経由しないリクエストもAPIで止める
+  const chatEnabled = deps?.chatEnabled ?? siteConfig.features.aiChat;
+  if (!chatEnabled) {
+    throw new ChatError(ChatErrorCode.CHAT_DISABLED);
+  }
+
   const promptProvider = deps?.promptProvider ?? createPromptProvider();
 
   // Extract context from messages
-  const context = extractChatContext(messages);
+  const clientContext = extractChatContext(messages);
 
+  // クライアントの billContext は議案IDだけを信用し、本文はDBの公開データで置き換える
+  const billLoader = deps?.billLoader ?? loadPublishedBillForChat;
+  const verifiedBill = await billLoader(
+    clientContext.billContext.id,
+    clientContext.difficultyLevel
+  );
+  if (!verifiedBill) {
+    throw new ChatError(ChatErrorCode.BILL_NOT_PUBLISHED);
+  }
+  const context: ChatMessageMetadata = {
+    ...clientContext,
+    billContext: verifiedBill,
+  };
+
+  const checkCostLimits = deps?.checkCostLimits ?? checkAllCostLimits;
   try {
-    // Check per-user cost limit before processing
-    const isWithinLimit = await isWithinDailyCostLimit(
-      userId,
-      env.chat.dailyUserCostLimitUsd
-    );
-    if (!isWithinLimit) {
-      throw new ChatError(ChatErrorCode.DAILY_COST_LIMIT_REACHED);
-    }
-
-    // Check system-wide cost limits before processing
-    await checkSystemDailyCostLimit();
-    await checkSystemMonthlyCostLimit();
+    await checkCostLimits(userId);
   } catch (error) {
     if (error instanceof ChatError) {
       throw error;
     }
-    // コストチェックに失敗した場合はログに記録して続行
+    // 上限を確認できないまま有料APIを呼ばない（fail-closed）
     console.error("Cost limit check error:", error);
+    throw new ChatError(
+      ChatErrorCode.COST_CHECK_FAILED,
+      error instanceof Error ? error.message : String(error)
+    );
   }
 
   // Build prompt configuration
@@ -153,6 +178,23 @@ export async function handleChatRequest({
 }
 
 /**
+ * ユーザー日次・システム日次・システム月次のコスト上限を確認する。
+ * 上限超過時は ChatError をスローする。
+ */
+async function checkAllCostLimits(userId: string): Promise<void> {
+  const isWithinLimit = await isWithinDailyCostLimit(
+    userId,
+    env.chat.dailyUserCostLimitUsd
+  );
+  if (!isWithinLimit) {
+    throw new ChatError(ChatErrorCode.DAILY_COST_LIMIT_REACHED);
+  }
+
+  await checkSystemDailyCostLimit();
+  await checkSystemMonthlyCostLimit();
+}
+
+/**
  * メッセージから最初のメタデータを抽出してコンテキストを作成
  */
 function extractChatContext(
@@ -167,10 +209,10 @@ function extractChatContext(
 
   return {
     billContext: metadata.billContext,
-    hasInterviewConfig: metadata?.hasInterviewConfig,
-    difficultyLevel: (metadata?.difficultyLevel ||
-      "normal") as DifficultyLevelEnum,
-    sessionId: metadata?.sessionId || "",
+    hasInterviewConfig: metadata.hasInterviewConfig,
+    // プロンプト名に使うため、許可された難易度以外は既定値に落とす
+    difficultyLevel: parseDifficultyLevel(metadata.difficultyLevel),
+    sessionId: metadata.sessionId || "",
   };
 }
 

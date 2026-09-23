@@ -24,6 +24,23 @@ export function chatErrorToResponse(error: unknown): Response {
           "今月の利用上限に達しました。来月1日以降に再度お試しください。",
           429
         );
+      case ChatErrorCode.CHAT_DISABLED:
+        return textResponse(
+          "現在AIチャット機能はメンテナンス中です。しばらく経ってから再度お試しください。",
+          503
+        );
+      case ChatErrorCode.BILL_NOT_PUBLISHED:
+        return textResponse("指定された議案は現在公開されていません。", 403);
+      case ChatErrorCode.BILL_CONTENT_UNAVAILABLE:
+        return textResponse(
+          "議案情報を取得できませんでした。時間をおいて再度お試しください。",
+          503
+        );
+      case ChatErrorCode.COST_CHECK_FAILED:
+        return textResponse(
+          "サービスが一時的に利用できません。時間をおいて再度お試しください。",
+          503
+        );
       default:
         return textResponse(
           "エラーが発生しました。しばらく待ってから再度お試しください。",

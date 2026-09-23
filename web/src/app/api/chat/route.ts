@@ -53,8 +53,15 @@ export async function POST(req: Request) {
   // 明示的にtelemetryを初期化
   await registerNodeTelemetry();
 
-  const { messages }: { messages: UIMessage<ChatMessageMetadata>[] } =
-    await req.json();
+  let messages: UIMessage<ChatMessageMetadata>[];
+  try {
+    ({ messages } = await req.json());
+  } catch {
+    return jsonResponse({ error: "Invalid JSON body" }, 400);
+  }
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return jsonResponse({ error: "messages is required" }, 400);
+  }
 
   const {
     data: { user },
