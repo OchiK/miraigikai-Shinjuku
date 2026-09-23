@@ -126,7 +126,8 @@ dry-run の差分表示が、意図しない上書きに気づく唯一の歯止
 
 1. `dry_run: true` でワークフローを実行し、ログの差分を確認する。
 2. 意図した差分だけであれば `dry_run: false` / `confirm: apply` で再実行する。
-   書き込み前に一次資料層のみの `supabase db dump --data-only` が artifact（保持14日）として保存される。
+   書き込み前に一次資料層の5テーブルだけを `pg_dump --data-only --table` で取得し、
+   artifact（保持14日）として保存する。`supabase db dump` はテーブル指定ができないため使わない。
 3. 反映後、`CACHE_TAGS.BILLS` の無効化と Vercel 再デプロイが自動で走る。
 
 ローカルで同じ経路をなぞる場合:
