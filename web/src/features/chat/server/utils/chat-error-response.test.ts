@@ -27,6 +27,28 @@ describe("chatErrorToResponse", () => {
     expect(await res.text()).toContain("今月の利用上限");
   });
 
+  it("CHAT_DISABLED で 503 を返す", async () => {
+    const res = chatErrorToResponse(new ChatError(ChatErrorCode.CHAT_DISABLED));
+    expect(res.status).toBe(503);
+    expect(await res.text()).toContain("メンテナンス中");
+  });
+
+  it("BILL_NOT_PUBLISHED で 403 を返す", async () => {
+    const res = chatErrorToResponse(
+      new ChatError(ChatErrorCode.BILL_NOT_PUBLISHED)
+    );
+    expect(res.status).toBe(403);
+    expect(await res.text()).toContain("公開されていません");
+  });
+
+  it("COST_CHECK_FAILED で 503 を返す", async () => {
+    const res = chatErrorToResponse(
+      new ChatError(ChatErrorCode.COST_CHECK_FAILED)
+    );
+    expect(res.status).toBe(503);
+    expect(await res.text()).toContain("一時的に利用できません");
+  });
+
   it("その他の ChatError で 500 を返す", async () => {
     const res = chatErrorToResponse(
       new ChatError(ChatErrorCode.PROMPT_FETCH_FAILED)
