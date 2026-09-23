@@ -1,5 +1,5 @@
 import { type SeededBillRef, requireBillBySlug } from "./bill-ref";
-import { shoninKey } from "./shinjuku-r8-2-inventory";
+import { gianKey, shoninKey } from "./shinjuku-r8-2-inventory";
 
 /**
  * 議案コンテンツの翻訳（多言語基盤の動作確認用）。
@@ -9,8 +9,8 @@ import { shoninKey } from "./shinjuku-r8-2-inventory";
  * bill-translations-data.test.ts が失敗するので、翻訳も直してから
  * ハッシュを更新すること（ハッシュだけ書き換えてはならない）。
  *
- * status は generated（人の確認前）に固定する。公開画面は reviewed しか
- * 出さないため、このシードの翻訳はそのままでは表示されない。
+ * 人の確認が終わるまでは status を generated にする。reviewed へ移すときは
+ * reviewed_at と reviewed_by も必ず設定する。公開画面は reviewed しか出さない。
  * 確認の手順は docs/20260923_1500_多言語基盤_ロケール方式の決定記録.md を参照。
  *
  * このデータは本番インポーター（packages/seed/production）の対象外。
@@ -19,14 +19,24 @@ type BillTranslationSeed = {
   bill_slug: string;
   difficulty_level: "easy" | "normal" | "hard";
   locale: "en" | "zh-Hans" | "ko" | "ne" | "my" | "vi";
-  status: "generated";
   model: string;
   prompt_version: string;
   source_hash: string;
   title: string;
   summary: string;
   content: string;
-};
+} & (
+  | {
+      status: "generated";
+      reviewed_at?: never;
+      reviewed_by?: never;
+    }
+  | {
+      status: "reviewed";
+      reviewed_at: string;
+      reviewed_by: string;
+    }
+);
 
 export const billTranslationsWithBillSlug: BillTranslationSeed[] = [
   // =========================================================================
@@ -100,6 +110,72 @@ For the light vehicle tax, the amended rules apply to fiscal 2026 and later. The
 ## What happened to this item
 
 It was approved at the 2nd Regular Session of 2026 (Reiwa 8) (session period: June 10 to June 19).`,
+  },
+
+  // =========================================================================
+  // 第42号議案 令和8年度新宿区一般会計補正予算（第2号）
+  // =========================================================================
+  {
+    bill_slug: gianKey(42),
+    difficulty_level: "normal",
+    locale: "en",
+    status: "generated",
+    model: "claude-opus-5-5",
+    prompt_version: "manual-2026-09-23",
+    source_hash:
+      "v1:50bae16937cb286f0067304c2100f22f5612bcde839282c49c929e96eafb891b",
+    title:
+      "More money for shopping-street vouchers and road work (General Account Supplementary Budget No. 2)",
+    summary:
+      "This supplementary budget adds ¥292,564,000 to the General Account. It covers a subsidy that raises the premium rate of the Shopping Street Happy Vouchers from 20% to 30%, equipment work at the Tsunohazu Community Center, and increased funding for road improvement and public sewer work on Phase I of Edogawabashi-dori.",
+    content: `# More money for shopping-street vouchers and road work (General Account Supplementary Budget No. 2)
+
+This is a supplementary budget for the fiscal 2026 (Reiwa 8) General Account, submitted by the Mayor on June 10, 2026. It adds 292,564 thousand yen (about ¥292.56 million) to both revenue and expenditure, bringing the General Account total to 189,293,341 thousand yen (about ¥189.29 billion).
+
+## What the money is for
+
+### Expanding the Shopping Street Happy Vouchers (160,224 thousand yen)
+
+This is a subsidy to the Shinjuku Federation of Shopping Street Associations (新宿区商店会連合会). The ward's summary document gives the reason for the expansion as follows (our translation): "to revitalize shopping streets and support residents' daily lives, in light of the prolonged rise in prices and the effects of the situation in the Middle East."
+
+| Item | Details |
+|------|------|
+| Premium rate | 20% → 30% (¥13,000 worth of paper vouchers for ¥10,000) |
+| Common vouchers (usable at all stores) | ¥4,500 worth → ¥5,000 worth |
+| Support vouchers (usable at stores run by small and medium-sized enterprises with a floor area under 1,000 square meters) | ¥7,500 worth → ¥8,000 worth |
+| Participating stores | Stores that belong to a shopping street association and to the Shinjuku Federation of Shopping Street Associations |
+| Number of books issued | 150,000 |
+| Where to buy | All post offices in the ward |
+| Application period | July 1 to July 27 |
+| Sales period | September 16 to October 16 |
+| Period of use | October 1 to January 8 |
+
+### Equipment work at the Tsunohazu Community Center (角筈地域センター) (9,284 thousand yen)
+
+This increases the construction cost because of revisions to labor unit prices and other factors.
+
+### Road and sewer work on Phase I of Edogawabashi-dori (江戸川橋通り第Ⅰ期) (123,056 thousand yen)
+
+Both are increases in construction costs due to changes in the development plan.
+
+- Road improvement (construction costs): 108,816 thousand yen
+- Public sewer development (construction costs): 14,240 thousand yen
+
+## Where the money comes from
+
+| Revenue category | Amount added | Breakdown |
+|------|--------|------|
+| Transfers from funds (繰入金) | 61,985 thousand yen | Fiscal Adjustment Fund 47,885 thousand yen / Social Capital Development Fund 14,100 thousand yen |
+| Miscellaneous revenue (諸収入) | 126,579 thousand yen | Revenue from commissioned work (public sewer development costs) 14,240 thousand yen / Penalties and late-payment interest 32,235 thousand yen / Other income (雑入; equivalent to the refund of road improvement costs for Phase I of Edogawabashi-dori) 80,104 thousand yen |
+| Special ward bonds (特別区債) | 104,000 thousand yen | Regional development bonds 7,000 thousand yen / Civil engineering bonds 97,000 thousand yen |
+
+This budget draws 47,885 thousand yen from the Fiscal Adjustment Fund (財政調整基金). The fund's projected balance at the end of fiscal 2026 is 26,179,670 thousand yen (about ¥26.18 billion).
+
+The overall limit on special ward bonds changes from 2,443,000 thousand yen to 2,547,000 thousand yen.
+
+## What happened to this bill
+
+It was passed as originally proposed (原案可決) at the 2nd Regular Session of 2026 (Reiwa 8) (session period: June 10 to June 19).`,
   },
 ];
 
