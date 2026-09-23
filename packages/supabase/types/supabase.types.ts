@@ -52,6 +52,68 @@ export type Database = {
         }
         Relationships: []
       }
+      bill_content_translations: {
+        Row: {
+          bill_content_id: string
+          content: string
+          created_at: string
+          id: string
+          locale: string
+          model: string | null
+          prompt_version: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source_hash: string
+          status: string
+          summary: string
+          title: string
+          translated_at: string
+          updated_at: string
+        }
+        Insert: {
+          bill_content_id: string
+          content: string
+          created_at?: string
+          id?: string
+          locale: string
+          model?: string | null
+          prompt_version?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_hash: string
+          status?: string
+          summary: string
+          title: string
+          translated_at?: string
+          updated_at?: string
+        }
+        Update: {
+          bill_content_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          locale?: string
+          model?: string | null
+          prompt_version?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_hash?: string
+          status?: string
+          summary?: string
+          title?: string
+          translated_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bill_content_translations_bill_content_id_fkey"
+            columns: ["bill_content_id"]
+            isOneToOne: false
+            referencedRelation: "bill_contents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bill_contents: {
         Row: {
           bill_id: string
@@ -1384,3 +1446,4 @@ export const Constants = {
     },
   },
 } as const
+

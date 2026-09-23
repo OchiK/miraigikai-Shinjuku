@@ -19,6 +19,7 @@ const TABLES_TO_CLEAR = [
   "interview_configs",
   "faction_stances",
   "chats",
+  "bill_content_translations",
   "bill_contents",
   "bills_tags",
   "bills",

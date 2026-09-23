@@ -14,6 +14,7 @@ import {
 const tables = [
   "bills",
   "bill_contents",
+  "bill_content_translations",
   "mirai_stances",
   "chats",
   "tags",

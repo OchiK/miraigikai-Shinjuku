@@ -1,5 +1,6 @@
 "use client";
 
+import type { Locale } from "@mirai-gikai/shared/i18n/locales";
 import { Menu } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -9,14 +10,16 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import type { CouncilSession } from "@/features/council-sessions/shared/types";
+import { LanguageSelector } from "@/features/i18n/client/components/language-selector";
 import { routes } from "@/lib/routes";
 import { RubyToggle } from "@/lib/rubyful";
 
 interface HamburgerMenuProps {
+  locale: Locale;
   sessions: CouncilSession[];
 }
 
-export function HamburgerMenu({ sessions }: HamburgerMenuProps) {
+export function HamburgerMenu({ locale, sessions }: HamburgerMenuProps) {
   const sessionsWithSlug = sessions.filter(
     (s): s is CouncilSession & { slug: string } => Boolean(s.slug)
   );
@@ -35,6 +38,7 @@ export function HamburgerMenu({ sessions }: HamburgerMenuProps) {
       </PopoverTrigger>
       <PopoverContent className="w-56" align="end">
         <div className="flex flex-col gap-3">
+          <LanguageSelector currentLocale={locale} />
           <RubyToggle />
           {sessionsWithSlug.length > 0 && (
             <div>

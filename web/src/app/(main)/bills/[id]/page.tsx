@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { getDifficultyLevel } from "@/features/bill-difficulty/server/loaders/get-difficulty-level";
 import { getBillById } from "@/features/bills/server/loaders/get-bill-by-id";
 import { BillDetailLayout } from "@/features/bills/server/components/bill-detail/bill-detail-layout";
+import { getLocale } from "@/features/i18n/server/loaders/get-locale";
+import { getLocalizedBill } from "@/features/i18n/server/loaders/get-localized-bill";
 import { env } from "@/lib/env";
 import { routes } from "@/lib/routes";
 
@@ -63,19 +65,27 @@ export async function generateMetadata({
 
 export default async function BillDetailPage({ params }: BillDetailPageProps) {
   const { id } = await params;
-  const [billWithContent, currentDifficulty] = await Promise.all([
+  const [billWithContent, currentDifficulty, locale] = await Promise.all([
     getBillById(id),
     getDifficultyLevel(),
+    getLocale(),
   ]);
 
   if (!billWithContent) {
     notFound();
   }
 
+  const { bill, localization } = await getLocalizedBill(
+    billWithContent,
+    locale,
+    currentDifficulty
+  );
+
   return (
     <BillDetailLayout
-      bill={billWithContent}
+      bill={bill}
       currentDifficulty={currentDifficulty}
+      localization={localization}
     />
   );
 }

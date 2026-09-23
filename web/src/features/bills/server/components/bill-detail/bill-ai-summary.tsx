@@ -7,6 +7,8 @@ interface BillAiSummaryProps {
   title?: string | null;
   summary?: string | null;
   isReviewCompleted: boolean;
+  /** 題名と要約の言語。翻訳を表示しているときだけ渡す */
+  lang?: string;
 }
 
 function ReviewInProgressNotice({ className = "" }: { className?: string }) {
@@ -38,6 +40,7 @@ export function BillAiSummary({
   title,
   summary,
   isReviewCompleted,
+  lang,
 }: BillAiSummaryProps) {
   const readableTitle = title?.trim();
   const text = summary?.trim();
@@ -64,13 +67,18 @@ export function BillAiSummary({
       </div>
 
       {readableTitle && (
-        <p className="mb-3 font-bold font-heading text-xl leading-[1.9]">
+        <p
+          className="mb-3 font-bold font-heading text-xl leading-[1.9]"
+          lang={lang}
+        >
           {readableTitle}
         </p>
       )}
 
       {text && (
-        <p className="whitespace-pre-wrap text-base leading-[1.9]">{text}</p>
+        <p className="whitespace-pre-wrap text-base leading-[1.9]" lang={lang}>
+          {text}
+        </p>
       )}
 
       <p className="mt-4 text-sm leading-[1.9]">

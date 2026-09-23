@@ -359,6 +359,16 @@
   animation: fade-in 0.3s ease-out forwards;
 }
 
+/* 翻訳した議案の見出しは表示体（Caprasimo）にしない。
+   Caprasimo は英数字ラベル用で、文になった欧文見出しは読みにくい。
+   ネパール語・ビルマ語は Zen Maru Gothic にもグリフがないため、本文と同じ
+   スタック（Figtree → システムフォント）に寄せる。
+   Tailwind の font-heading（utilities レイヤー）より優先させるためレイヤー外に置く。 */
+[lang]:not([lang="ja"]) :is(h1, h2, h3, h4, h5, h6),
+[lang]:not([lang="ja"]).font-heading {
+  font-family: var(--font-sans);
+}
+
 button {
   cursor: pointer;
 }
