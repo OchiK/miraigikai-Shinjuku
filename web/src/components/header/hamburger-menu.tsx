@@ -40,6 +40,12 @@ export function HamburgerMenu({ locale, sessions }: HamburgerMenuProps) {
         <div className="flex flex-col gap-3">
           <LanguageSelector currentLocale={locale} />
           <RubyToggle />
+          <Link
+            href={routes.councilors()}
+            className="flex min-h-11 items-center text-sm hover:underline"
+          >
+            議員一覧
+          </Link>
           {sessionsWithSlug.length > 0 && (
             <div>
               <p className="text-xs font-semibold text-mirai-text-muted mb-1">

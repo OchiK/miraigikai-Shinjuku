@@ -40,6 +40,10 @@ export const routes = {
   // ── 定例会セッション ────────────────────────────────
   sessionBills: (slug: string) => `/sessions/${slug}/bills` as const,
 
+  // ── 議員 ──────────────────────────────────────────
+  councilors: () => "/councilors" as const,
+  councilorDetail: (id: string) => `/councilors/${id}` as const,
+
   // ── その他 ────────────────────────────────────────
   faq: () => "/faq" as const,
 } as const;
