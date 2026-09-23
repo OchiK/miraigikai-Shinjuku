@@ -1,6 +1,6 @@
 import {
-  SUPPORTED_LOCALES,
-  type TranslationLocale,
+  GUIDE_LOCALES,
+  PUBLIC_TRANSLATION_LOCALES,
 } from "@mirai-gikai/shared/i18n/locales";
 import { calculateSourceHash } from "@mirai-gikai/shared/i18n/source-hash";
 import {
@@ -58,12 +58,8 @@ describe("resolveLocalizedBillContent 統合テスト", () => {
     expect(result.translation.title).toBe("Reviewed title");
   });
 
-  const translationLocales = SUPPORTED_LOCALES.filter(
-    (locale): locale is TranslationLocale => locale !== "ja"
-  );
-
   it.each(
-    translationLocales
+    PUBLIC_TRANSLATION_LOCALES
   )("%s: 確認済みの翻訳だけを返し、未確認の翻訳は日本語に落とす", async (locale) => {
     const { bill, normal, hard } = await setupBill();
     await createTestBillContentTranslation(normal.id, {
@@ -95,6 +91,22 @@ describe("resolveLocalizedBillContent 統合テスト", () => {
     expect(fallbackResult.kind).toBe("translated");
     if (fallbackResult.kind !== "translated") return;
     expect(fallbackResult.source.id).toBe(normal.id);
+  });
+
+  it.each(
+    GUIDE_LOCALES
+  )("%s: 翻訳を公開しない言語は reviewed で日本語と一致していても日本語「ふつう」に落とす", async (locale) => {
+    const { bill, normal } = await setupBill();
+    await createTestBillContentTranslation(normal.id, {
+      ...reviewed(normal),
+      locale,
+    });
+
+    const result = await resolveLocalizedBillContent(bill.id, locale, "normal");
+
+    expect(result.kind).toBe("unavailable");
+    if (result.kind !== "unavailable") return;
+    expect(result.fallback?.id).toBe(normal.id);
   });
 
   it("「くわしく」を選んでいて翻訳が「ふつう」にしか無ければ「ふつう」の翻訳", async () => {

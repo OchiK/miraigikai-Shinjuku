@@ -1,6 +1,8 @@
+import { GUIDE_LOCALES } from "@mirai-gikai/shared/i18n/locales";
 import type { MetadataRoute } from "next";
 import { getBills } from "@/features/bills/server/loaders/get-bills";
 import { getCouncilors } from "@/features/councilors/server/loaders/get-councilors";
+import { buildGuideLanguageAlternates } from "@/features/guide/shared/utils/guide-alternates";
 import { env } from "@/lib/env";
 import { routes } from "@/lib/routes";
 
@@ -24,6 +26,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.5,
   }));
 
+  // 5言語の案内ページは互いに hreflang で結ぶ
+  const guideLanguages = buildGuideLanguageAlternates(baseUrl);
+  const guideUrls = GUIDE_LOCALES.map((locale) => ({
+    url: `${baseUrl}${routes.guide(locale)}`,
+    changeFrequency: "monthly" as const,
+    priority: 0.6,
+    alternates: { languages: guideLanguages },
+  }));
+
   return [
     {
       url: baseUrl,
@@ -38,5 +49,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     },
     ...councilorUrls,
+    ...guideUrls,
   ];
 }

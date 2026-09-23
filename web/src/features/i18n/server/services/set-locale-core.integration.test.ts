@@ -12,12 +12,7 @@ describe("setLocale 統合テスト", () => {
     deps = { getCookies: async () => store };
   });
 
-  it.each([
-    "ja",
-    "en",
-    "zh-Hans",
-    "vi",
-  ])("'%s' をCookieに保存する", async (locale) => {
+  it.each(["ja", "en"])("'%s' をCookieに保存する", async (locale) => {
     await setLocaleCore(locale, deps);
 
     expect(mockSet).toHaveBeenCalledWith(
@@ -29,6 +24,8 @@ describe("setLocale 統合テスト", () => {
 
   it.each([
     ["未対応の言語", "fr"],
+    ["翻訳を公開していない言語", "vi"],
+    ["翻訳を公開していない言語（ハイフン付き）", "zh-Hans"],
     ["大文字小文字の揺れ", "zh-hans"],
     ["文字列以外", 1],
     ["undefined", undefined],

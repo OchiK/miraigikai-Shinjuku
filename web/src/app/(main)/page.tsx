@@ -2,6 +2,7 @@ import { Container } from "@/components/layouts/container";
 import { About } from "@/components/top/about";
 
 import { Hero } from "@/components/top/hero";
+import { MultilingualGuideBanner } from "@/components/top/multilingual-guide-banner";
 import { TeamMirai } from "@/components/top/team-mirai";
 import { BillDisclaimer } from "@/features/bills/client/components/bill-detail/bill-disclaimer";
 import { BillsByTagSection } from "@/features/bills/server/components/bills-by-tag-section";
@@ -23,6 +24,9 @@ export default async function Home() {
   return (
     <>
       <Hero />
+
+      {/* 多言語案内（議案の翻訳を公開していない5言語） */}
+      <MultilingualGuideBanner />
 
       {/* 本日の定例会セクション */}
       <CurrentCouncilSession session={currentSession} />

@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { calculateSourceHash } from "./source-hash";
+import { GUIDE_LOCALES } from "./locales";
 import {
+  isPublishableTranslation,
   resolveLocalizedContent,
   type SourceContent,
   type TranslationRecord,
@@ -106,12 +108,24 @@ describe("resolveLocalizedContent", () => {
 
   it("別のロケールの翻訳は使わない", () => {
     const result = resolveLocalizedContent({
-      locale: "ko",
+      locale: "en",
       requestedDifficulty: "normal",
       sources,
-      translations: [makeTranslation(normal)],
+      translations: [makeTranslation(normal, { locale: "ko" })],
     });
     expect(result.kind).toBe("unavailable");
+  });
+
+  it.each(
+    GUIDE_LOCALES
+  )("%s は reviewed で日本語と一致していても公開せず日本語「ふつう」に落とす", (locale) => {
+    const result = resolveLocalizedContent({
+      locale,
+      requestedDifficulty: "normal",
+      sources,
+      translations: [makeTranslation(normal, { locale })],
+    });
+    expect(result).toEqual({ kind: "unavailable", fallback: normal });
   });
 
   it("sources に無い bill_content の翻訳（別議案）は使わない", () => {
@@ -129,5 +143,23 @@ describe("resolveLocalizedContent", () => {
       ],
     });
     expect(result.kind).toBe("unavailable");
+  });
+});
+
+describe("isPublishableTranslation", () => {
+  it("en の reviewed で日本語と一致する翻訳は公開する", () => {
+    expect(
+      isPublishableTranslation(makeTranslation(normal), "en", normal)
+    ).toBe(true);
+  });
+
+  it.each(GUIDE_LOCALES)("%s の翻訳は reviewed でも公開しない", (locale) => {
+    expect(
+      isPublishableTranslation(
+        makeTranslation(normal, { locale }),
+        locale,
+        normal
+      )
+    ).toBe(false);
   });
 });

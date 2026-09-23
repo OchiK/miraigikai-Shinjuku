@@ -1,3 +1,5 @@
+import type { GuideLocale } from "@mirai-gikai/shared/i18n/locales";
+
 /**
  * web アプリの内部ルート定義
  *
@@ -43,6 +45,9 @@ export const routes = {
   // ── 議員 ──────────────────────────────────────────
   councilors: () => "/councilors" as const,
   councilorDetail: (id: string) => `/councilors/${id}` as const,
+
+  // ── 多言語案内 ────────────────────────────────────
+  guide: (locale: GuideLocale) => `/guide/${locale}` as const,
 
   // ── その他 ────────────────────────────────────────
   faq: () => "/faq" as const,

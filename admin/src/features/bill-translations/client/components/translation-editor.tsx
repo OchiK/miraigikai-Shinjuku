@@ -45,6 +45,8 @@ interface TranslationEditorProps {
   locale: TranslationLocale;
   translation: TranslationReviewItem | undefined;
   status: TranslationReviewStatus;
+  /** 公開承認できる言語か。false なら承認ボタンを出さず、下書き保存だけにする */
+  canApprove: boolean;
   /** 未保存の編集があるかを親に伝える（タブ切り替え時の確認用） */
   onDirtyChange: (isDirty: boolean) => void;
 }
@@ -57,6 +59,7 @@ export function TranslationEditor({
   locale,
   translation,
   status,
+  canApprove,
   onDirtyChange,
 }: TranslationEditorProps) {
   const router = useRouter();
@@ -213,14 +216,20 @@ export function TranslationEditor({
             )}
             下書き保存（非公開）
           </Button>
-          <Button type="button" onClick={handleApproveClick} disabled={isBusy}>
-            {pending === "approve" ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <CheckCircle2 className="h-4 w-4" />
-            )}
-            確認済みにする（公開承認）
-          </Button>
+          {canApprove && (
+            <Button
+              type="button"
+              onClick={handleApproveClick}
+              disabled={isBusy}
+            >
+              {pending === "approve" ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <CheckCircle2 className="h-4 w-4" />
+              )}
+              確認済みにする（公開承認）
+            </Button>
+          )}
           {status === "reviewed" && (
             <Button
               type="button"
@@ -237,9 +246,11 @@ export function TranslationEditor({
             </Button>
           )}
         </div>
-        <p className="text-xs text-muted-foreground">
-          下書き保存すると、確認済みの翻訳も非公開に戻ります。公開するには「確認済みにする」を押してください。
-        </p>
+        {canApprove && (
+          <p className="text-xs text-muted-foreground">
+            下書き保存すると、確認済みの翻訳も非公開に戻ります。公開するには「確認済みにする」を押してください。
+          </p>
+        )}
       </form>
 
       <AlertDialog open={isStaleDialogOpen} onOpenChange={setIsStaleDialogOpen}>

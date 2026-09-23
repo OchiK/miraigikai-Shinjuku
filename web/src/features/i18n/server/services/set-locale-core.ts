@@ -1,5 +1,5 @@
 import {
-  isSupportedLocale,
+  isPublicLocale,
   LOCALE_COOKIE_NAME,
 } from "@mirai-gikai/shared/i18n/locales";
 import { cookies } from "next/headers";
@@ -16,10 +16,11 @@ export type SetLocaleDeps = {
 /**
  * 表示言語をCookieに保存するコアロジック
  * Server Action の引数はクライアントから任意の値が届くため、ここで検証する。
+ * 議案の翻訳を公開していない言語（vi 等）は、メニューに無いので受け付けない。
  * テストからはDIでcookiesを差し替え可能
  */
 export async function setLocaleCore(locale: unknown, deps?: SetLocaleDeps) {
-  if (!isSupportedLocale(locale)) {
+  if (!isPublicLocale(locale)) {
     throw new Error("Unsupported locale");
   }
   const getCookies = deps?.getCookies ?? cookies;

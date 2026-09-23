@@ -1,6 +1,6 @@
 "use client";
 
-import type { Locale } from "@mirai-gikai/shared/i18n/locales";
+import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -15,7 +15,7 @@ import { HamburgerMenu } from "./hamburger-menu";
 
 interface HeaderClientProps {
   difficultyLevel: DifficultyLevelEnum;
-  locale: Locale;
+  locale: PublicLocale;
   sessions: CouncilSession[];
 }
 

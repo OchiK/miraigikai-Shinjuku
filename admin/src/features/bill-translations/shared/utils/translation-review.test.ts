@@ -1,7 +1,9 @@
+import { GUIDE_LOCALES } from "@mirai-gikai/shared/i18n/locales";
 import { describe, expect, it } from "vitest";
 import {
   buildRevokeStatusFields,
   buildTranslationStatusFields,
+  canApproveTranslationLocale,
   getTranslationReviewStatus,
   isStoredTranslationStale,
   requiresStaleConfirmation,
@@ -267,5 +269,20 @@ describe("shortenSourceHash", () => {
 
   it("形式が違う値はそのまま返す", () => {
     expect(shortenSourceHash("broken")).toBe("broken");
+  });
+});
+
+describe("canApproveTranslationLocale", () => {
+  it("英語は承認できる", () => {
+    expect(canApproveTranslationLocale("en")).toBe(true);
+  });
+
+  it.each(GUIDE_LOCALES)("%s は承認できない（下書きのみ）", (locale) => {
+    expect(canApproveTranslationLocale(locale)).toBe(false);
+  });
+
+  it("ja や未対応の値も承認できない", () => {
+    expect(canApproveTranslationLocale("ja")).toBe(false);
+    expect(canApproveTranslationLocale("fr")).toBe(false);
   });
 });

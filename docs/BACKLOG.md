@@ -101,12 +101,13 @@ Acceptance:
 Progress (2026-09-23):
 - Phase A（対照確認・手動編集・公開承認・キャッシュ無効化）は `admin/src/features/bill-translations/`（`/bills/[id]/translations`）で実装済み。
   承認時はレビュアーが見ていた日本語の `source_hash` を送り、保存時の日本語と違えば受け付けない。stale の翻訳の承認には明示の確認が要る。
-- 未着手: 原文の変更差分（diff）表示（TR-4）、一括確認ダッシュボード（TR-7）、ルビ関連（RB-1〜5）。
+- 2026-09-24: 原文の変更差分（diff）表示（TR-4）と一括確認の一覧画面（TR-7、`/bills/translations`）を実装した（#41）。
+- 未着手: ルビ関連（RB-1〜5）。
 - ルビのプレビューは保留。公開画面の議案本文は raw HTML を通さず（`<ruby>` は落ちる）、`【正式名称】［ふりがな］（＝言いかえ）` もそのまま文字として出る。
   利用者に見えるふりがなは外部スクリプト Rubyful V2 が付けるものだけなので、管理画面で独自にルビを描くと公開画面と食い違う。
   先に公開側の描画方針を決めること。
 
-### P3-5 英語のみ翻訳・5言語の案内ページ（計画のみ・未着手）
+### P3-5 英語のみ翻訳・5言語の案内ページ（2026-09-24 実装。スクリーンショットのみ残り）
 詳細は `docs/20260924_0450_多言語方針の見直し_英語のみ翻訳と多言語案内ページ.md`。
 
 Acceptance:
@@ -121,6 +122,12 @@ Acceptance:
   - 先頭に各言語で「機械翻訳であること」と連絡先を1行で書く。ネイティブ確認はしない
   - `web/src/lib/routes.ts` にルート関数を追加し、5ページを `hreflang` で結んで sitemap に載せる
   - トップページとフッターから自言語表記でリンクする
+
+Progress (2026-09-24):
+- スクリーンショット以外は実装済み。公開判定は `isPublishableTranslation`、表示言語は `parseLocale` / middleware / `setLocaleCore`、
+  管理画面は `canApproveTranslationLocale`（`upsertBillTranslation` とエディタの両方）で制限している。
+- 案内ページの文面は `web/src/features/guide/shared/guide-content.ts`。原文と翻訳の段落数はテストで揃えている。
+- 残り: ブラウザ翻訳の手順（Chrome / Safari / Android / アプリ内ブラウザ）のスクリーンショット。実機での撮影が要るため未作成で、いまは文章だけで説明している。
 
 ## P4
 
