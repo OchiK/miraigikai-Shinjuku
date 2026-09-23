@@ -4,7 +4,13 @@ import {
   createBillContents,
 } from "../../../packages/seed/main/bill-contents-data";
 import type { SeededBillRef } from "../../../packages/seed/main/bill-ref";
-import { createBillsTags, tags } from "../../../packages/seed/main/data";
+import {
+  committees,
+  createBillsTags,
+  factions,
+  tags,
+} from "../../../packages/seed/main/data";
+import { councilMembers } from "../../../packages/seed/main/shinjuku-council-members";
 import {
   R8_2_SESSION,
   r8SecondSessionItems,
@@ -48,6 +54,27 @@ function buildDataset(idPrefix: string): ImportDataset {
       slug: bill.slug ? stripped(bill.slug) : null,
     }));
 
+  const prefixedCommittees = committees.map((committee) => ({
+    ...committee,
+    name: prefixed(committee.name),
+  }));
+  const prefixedFactions = factions.map((faction) => ({
+    ...faction,
+    name: prefixed(faction.name),
+    display_name: prefixed(faction.display_name),
+  }));
+  const prefixedCouncilMembers = councilMembers.map((member) => ({
+    ...member,
+    name: prefixed(member.name),
+    faction: prefixed(member.faction),
+    committees: Object.fromEntries(
+      Object.entries(member.committees).map(([name, role]) => [
+        prefixed(name),
+        role,
+      ])
+    ),
+  }));
+
   return {
     councilSessions: [
       {
@@ -60,6 +87,11 @@ function buildDataset(idPrefix: string): ImportDataset {
     ],
     billSessionSlug: prefixed(R8_2_SESSION.slug as string),
     tags: tags.map((tag) => ({ ...tag, label: prefixed(tag.label) })),
+    factions: prefixedFactions,
+    committees: prefixedCommittees,
+    councilRosterKey: idPrefix,
+    councilRosterUrl: `https://example.com/council-roster/${idPrefix}`,
+    councilMembers: prefixedCouncilMembers,
     // bill_number は会期単位で一意なため、テスト会期の中では接頭辞が要らない
     bills: toBillInserts().map((bill) => ({
       ...bill,
@@ -187,6 +219,27 @@ describe("本番用インポーター", () => {
         "label",
         dataset.tags.map((tag) => tag.label)
       );
+    await adminClient
+      .from("council_members")
+      .delete()
+      .in(
+        "name",
+        dataset.councilMembers.map((member) => member.name)
+      );
+    await adminClient
+      .from("committees")
+      .delete()
+      .in(
+        "name",
+        dataset.committees.map((committee) => committee.name)
+      );
+    await adminClient
+      .from("factions")
+      .delete()
+      .in(
+        "name",
+        dataset.factions.map((faction) => faction.name)
+      );
     if (userData?.userId) await cleanupTestUser(userData.userId);
   });
 
@@ -198,6 +251,130 @@ describe("本番用インポーター", () => {
     const contents = await fetchContents(bills.map((b) => b.id));
     expect(contents).toHaveLength(billContentsWithBillSlug.length);
     expect(contents).toHaveLength(69);
+  });
+
+  it("初回インポートで議員38名と委員会所属87件を投入する", async () => {
+    const memberNames = dataset.councilMembers.map((member) => member.name);
+    const { data: members, error: membersError } = await adminClient
+      .from("council_members")
+      .select("id, name")
+      .in("name", memberNames);
+    if (membersError) throw new Error(membersError.message);
+    expect(members).toHaveLength(38);
+
+    const { count, error: linksError } = await adminClient
+      .from("council_member_committees")
+      .select("id, council_members!inner(name)", {
+        count: "exact",
+        head: true,
+      })
+      .in("council_members.name", memberNames);
+    if (linksError) throw new Error(linksError.message);
+    expect(count).toBe(87);
+  });
+
+  it("再インポートしても council_members.id が変わらない", async () => {
+    const memberNames = dataset.councilMembers.map((member) => member.name);
+    const fetchMembers = async () => {
+      const { data, error } = await adminClient
+        .from("council_members")
+        .select("id, name")
+        .in("name", memberNames)
+        .order("name");
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    };
+
+    const before = await fetchMembers();
+    await runImport();
+    expect(await fetchMembers()).toEqual(before);
+  });
+
+  it("名簿から外れた議員を削除せず非現職にする", async () => {
+    const removed = dataset.councilMembers[0];
+    if (!removed) throw new Error("議員データがない");
+
+    const { data: before, error: beforeError } = await adminClient
+      .from("council_members")
+      .select("id")
+      .eq("name", removed.name)
+      .single();
+    if (beforeError) throw new Error(beforeError.message);
+
+    const report = await importInventory(adminClient, {
+      dryRun: false,
+      dataset: {
+        ...dataset,
+        councilRosterUrl: `${dataset.councilRosterUrl}/moved`,
+        councilMembers: dataset.councilMembers.slice(1),
+      },
+    });
+
+    const memberDiff = report.tables.find(
+      (table) => table.table === "council_members"
+    );
+    expect(memberDiff?.updated).toContainEqual(
+      expect.objectContaining({
+        key: removed.name,
+        changes: expect.arrayContaining([
+          { field: "is_active", before: true, after: false },
+        ]),
+      })
+    );
+
+    const { data: after, error: afterError } = await adminClient
+      .from("council_members")
+      .select("id, is_active")
+      .eq("name", removed.name)
+      .single();
+    if (afterError) throw new Error(afterError.message);
+    expect(after).toEqual({ id: before.id, is_active: false });
+
+    await runImport();
+  });
+
+  it("名簿から外れた委員会所属をトランザクション内で取り除く", async () => {
+    const target = dataset.councilMembers.find(
+      (member) => Object.keys(member.committees).length >= 2
+    );
+    if (!target) throw new Error("複数の委員会に所属する議員がいない");
+    const [removedCommittee] = Object.keys(target.committees);
+    if (!removedCommittee) throw new Error("委員会データがない");
+    const remainingCommittees = Object.fromEntries(
+      Object.entries(target.committees).filter(
+        ([committee]) => committee !== removedCommittee
+      )
+    );
+
+    const report = await importInventory(adminClient, {
+      dryRun: false,
+      dataset: {
+        ...dataset,
+        councilMembers: dataset.councilMembers.map((member) =>
+          member.name === target.name
+            ? { ...member, committees: remainingCommittees }
+            : member
+        ),
+      },
+    });
+
+    const linksDiff = report.tables.find(
+      (table) => table.table === "council_member_committees"
+    );
+    expect(linksDiff?.extraneous).toContain(
+      `${target.name}::${removedCommittee}`
+    );
+
+    const { data: links, error } = await adminClient
+      .from("council_member_committees")
+      .select("committees!inner(name), council_members!inner(name)")
+      .eq("council_members.name", target.name);
+    if (error) throw new Error(error.message);
+    expect((links ?? []).map((link) => link.committees.name).sort()).toEqual(
+      Object.keys(remainingCommittees).sort()
+    );
+
+    await runImport();
   });
 
   it("再インポートしても bills.id が 1 件も変わらない", async () => {
@@ -415,6 +592,10 @@ describe("本番用インポーター", () => {
     expect(byTable("council_sessions")?.created).toEqual([
       unseen.billSessionSlug,
     ]);
+    expect(byTable("factions")?.created).toHaveLength(9);
+    expect(byTable("committees")?.created).toHaveLength(9);
+    expect(byTable("council_members")?.created).toHaveLength(38);
+    expect(byTable("council_member_committees")?.created).toHaveLength(87);
     expect(byTable("bills")?.created).toHaveLength(23);
     expect(byTable("bill_contents")?.created).toHaveLength(69);
     expect(byTable("bills_tags")?.created).toHaveLength(23);

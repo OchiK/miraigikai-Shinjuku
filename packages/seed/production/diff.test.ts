@@ -7,6 +7,7 @@ import {
   formatValue,
   hasChanges,
   normalizeTimestamp,
+  normalizeArray,
 } from "./diff";
 
 const billFields = [
@@ -229,6 +230,16 @@ describe("normalizeTimestamp", () => {
   });
 });
 
+describe("normalizeArray", () => {
+  it("同じ要素を持つ別の配列を同じ値に揃える", () => {
+    expect(normalizeArray(["公明"])).toBe(normalizeArray(["公明"]));
+  });
+
+  it("配列以外はそのまま返す", () => {
+    expect(normalizeArray("公明")).toBe("公明");
+  });
+});
+
 describe("formatValue", () => {
   it("長い本文は先頭だけを出して文字数を添える", () => {
     const formatted = formatValue("あ".repeat(100));
@@ -288,6 +299,19 @@ describe("formatImportReport", () => {
     );
   });
 
+  it("インベントリ外の委員会所属は削除対象として出力する", () => {
+    expect(
+      formatImportReport({
+        dryRun: true,
+        tables: [
+          {
+            ...report.tables[0],
+            table: "council_member_committees",
+          },
+        ],
+      })
+    ).toContain("（インベントリ外。同期時に削除）");
+  });
 });
 
 describe("hasChanges", () => {
@@ -311,6 +335,20 @@ describe("hasChanges", () => {
       hasChanges({
         dryRun: true,
         tables: [{ ...emptyTable, created: ["gian-62"] }],
+      })
+    ).toBe(true);
+  });
+
+  it("削除対象の委員会所属があれば true", () => {
+    expect(
+      hasChanges({
+        dryRun: true,
+        tables: [
+          {
+            ...emptyTable,
+            table: "council_member_committees",
+          },
+        ],
       })
     ).toBe(true);
   });

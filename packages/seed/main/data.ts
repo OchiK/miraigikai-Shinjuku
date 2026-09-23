@@ -44,29 +44,74 @@ export const councilSessions: CouncilSessionInsert[] = [
 ];
 
 // 会派データ
+// 出典: 新宿区議会「会派構成」（2026年8月7日更新）
+// https://www.city.shinjuku.lg.jp/kusei/file08_00003.html
+// 並びは同ページの掲載順（所属人数順）。alternative_names には公式の委員会名簿で
+// 使われる略称と、会派名変更前の名称を入れる（議決結果PDFとの突合に使う）。
 export const factions: FactionInsert[] = [
   {
-    name: "jimin",
-    display_name: "自由民主党",
+    name: "jimin-sansei",
+    display_name: "自民・参政クラブ",
+    alternative_names: ["自参ク"],
     sort_order: 1,
     is_active: true,
   },
   {
     name: "komei",
-    display_name: "公明党",
+    display_name: "新宿区議会公明党",
+    alternative_names: ["公明"],
     sort_order: 2,
     is_active: true,
   },
   {
     name: "kyosan",
-    display_name: "日本共産党",
+    display_name: "日本共産党新宿区議会議員団",
+    alternative_names: ["共産"],
     sort_order: 3,
+    is_active: true,
+  },
+  {
+    name: "shinjuku-mirai",
+    display_name: "新宿未来の会",
+    alternative_names: ["新宿会"],
+    sort_order: 4,
     is_active: true,
   },
   {
     name: "rikken",
     display_name: "立憲民主党・無所属クラブ",
-    sort_order: 4,
+    alternative_names: ["民無ク"],
+    sort_order: 5,
+    is_active: true,
+  },
+  {
+    name: "ishin",
+    display_name: "日本維新の会・新宿区議団",
+    alternative_names: ["維新"],
+    sort_order: 6,
+    is_active: true,
+  },
+  {
+    name: "genekisedai",
+    display_name: "現役世代に優しい新宿・減税の会",
+    alternative_names: ["現役"],
+    sort_order: 7,
+    is_active: true,
+  },
+  {
+    // 令和8年8月7日付けで「れいわ新選組 新宿」から名称変更
+    name: "inochi",
+    display_name: "いのちの党 新宿",
+    alternative_names: ["いのち", "れいわ新選組 新宿"],
+    sort_order: 8,
+    is_active: true,
+  },
+  {
+    // 令和8年7月1日結成
+    name: "update",
+    display_name: "アップデート新宿",
+    alternative_names: ["アプデ"],
+    sort_order: 9,
     is_active: true,
   },
 ];
@@ -95,6 +140,35 @@ export const committees: CommitteeInsert[] = [
     name: "福祉健康委員会",
     description: "地域福祉、高齢者・障害者支援、保健衛生、健康づくりなどについての審査",
     sort_order: 4,
+    is_active: true,
+  },
+  // 以下は議員の所属委員会として必要なもの。
+  // 出典: 新宿区議会「委員会名簿」（2026年8月7日更新）
+  // https://www.city.shinjuku.lg.jp/kusei/file08_01_00013.html
+  // 所管事項の説明は一次情報で確認できていないため description は入れない。
+  {
+    name: "議会運営委員会",
+    sort_order: 5,
+    is_active: true,
+  },
+  {
+    name: "防災等安全対策特別委員会",
+    sort_order: 6,
+    is_active: true,
+  },
+  {
+    name: "自治・議会・行財政改革等特別委員会",
+    sort_order: 7,
+    is_active: true,
+  },
+  {
+    name: "文化観光産業等特別委員会",
+    sort_order: 8,
+    is_active: true,
+  },
+  {
+    name: "本庁舎対策等特別委員会",
+    sort_order: 9,
     is_active: true,
   },
 ];

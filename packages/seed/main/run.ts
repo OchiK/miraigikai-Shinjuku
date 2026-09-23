@@ -24,6 +24,11 @@ import {
 } from "./data";
 import { createBillContents } from "./bill-contents-data";
 import { createBillContentTranslations } from "./bill-translations-data";
+import {
+  councilMembers,
+  createCouncilMemberCommitteeInserts,
+  createCouncilMemberInserts,
+} from "./shinjuku-council-members";
 import { R8_2_SESSION } from "./shinjuku-r8-2-inventory";
 import {
   createShippingBillInterviewConfig,
@@ -123,6 +128,46 @@ async function seedDatabase() {
     }
 
     console.log(`✅ Inserted ${insertedFactions.length} factions`);
+
+    // Insert council members（議員名簿）
+    console.log("👤 Inserting council members...");
+    const { data: insertedMembers, error: membersError } = await supabase
+      .from("council_members")
+      .insert(createCouncilMemberInserts(councilMembers, insertedFactions))
+      .select("id, name");
+
+    if (membersError) {
+      throw new Error(
+        `Failed to insert council members: ${membersError.message}`
+      );
+    }
+
+    if (!insertedMembers) {
+      throw new Error("No council members were inserted");
+    }
+
+    console.log(`✅ Inserted ${insertedMembers.length} council members`);
+
+    // Insert council_member_committees（委員会所属）
+    console.log("🪑 Inserting council member committees...");
+    const memberCommittees = createCouncilMemberCommitteeInserts(
+      councilMembers,
+      insertedMembers,
+      insertedCommittees
+    );
+    const { error: memberCommitteesError } = await supabase
+      .from("council_member_committees")
+      .insert(memberCommittees);
+
+    if (memberCommitteesError) {
+      throw new Error(
+        `Failed to insert council member committees: ${memberCommitteesError.message}`
+      );
+    }
+
+    console.log(
+      `✅ Inserted ${memberCommittees.length} council member committees`
+    );
 
     // Insert bills
     console.log("📄 Inserting bills...");
@@ -717,6 +762,8 @@ async function seedDatabase() {
     console.log(`  Council Sessions: ${insertedCouncilSessions.length}`);
     console.log(`  Committees: ${insertedCommittees.length}`);
     console.log(`  Factions: ${insertedFactions.length}`);
+    console.log(`  Council Members: ${insertedMembers.length}`);
+    console.log(`  Council Member Committees: ${memberCommittees.length}`);
     console.log(`  Tags: ${insertedTags.length}`);
     console.log(`  Bills: ${insertedBills.length}`);
     console.log(`  Bill Contents: ${insertedContents.length}`);

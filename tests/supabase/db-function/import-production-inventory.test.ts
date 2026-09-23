@@ -4,6 +4,11 @@ import { adminClient } from "../utils";
 const runId = `itest-production-rpc-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
 const sessionSlug = `${runId}-session`;
 const billSlug = `${runId}-bill`;
+const factionName = `${runId}-faction`;
+const committeeName = `${runId}-committee`;
+const memberName = `${runId}-member`;
+const rosterKey = `${runId}-roster`;
+const rosterUrl = `https://example.com/council-roster/${runId}`;
 
 describe("import_production_inventory", () => {
   afterAll(async () => {
@@ -44,7 +49,7 @@ describe("import_production_inventory", () => {
       ],
       p_bill_contents: [
         {
-          bill_slug: `${runId}-unknown-bill`,
+          bill_slug: billSlug,
           difficulty_level: "normal",
           title: "ロールバックテスト",
           summary: "ロールバックテスト",
@@ -53,10 +58,50 @@ describe("import_production_inventory", () => {
       ],
       p_bills_tags: [],
       p_bill_session_slug: sessionSlug,
+      p_factions: [
+        {
+          name: factionName,
+          display_name: `テスト会派 ${runId}`,
+          alternative_names: [],
+          logo_url: null,
+          sort_order: 1,
+          is_active: true,
+        },
+      ],
+      p_committees: [
+        {
+          name: committeeName,
+          description: null,
+          sort_order: 1,
+          is_active: true,
+        },
+      ],
+      p_council_members: [
+        {
+          name: memberName,
+          name_kana: `${runId}-member-kana`,
+          faction_name: factionName,
+          faction_role: null,
+          roster_key: rosterKey,
+          official_url: rosterUrl,
+          website_url: null,
+          terms: 1,
+          sort_order: 1,
+          is_active: true,
+        },
+      ],
+      p_council_member_committees: [
+        {
+          member_name: memberName,
+          committee_name: `${runId}-unknown-committee`,
+          role: "委員",
+        },
+      ],
+      p_council_roster_key: rosterKey,
     });
 
     expect(error?.message).toContain(
-      "one or more bill contents reference an unknown bill slug"
+      "one or more council-member committee links reference an unknown natural key"
     );
 
     const { data: session, error: sessionError } = await adminClient
@@ -73,7 +118,23 @@ describe("import_production_inventory", () => {
       .maybeSingle();
     if (billError) throw new Error(billError.message);
 
+    const { data: faction, error: factionError } = await adminClient
+      .from("factions")
+      .select("id")
+      .eq("name", factionName)
+      .maybeSingle();
+    if (factionError) throw new Error(factionError.message);
+
+    const { data: member, error: memberError } = await adminClient
+      .from("council_members")
+      .select("id")
+      .eq("name", memberName)
+      .maybeSingle();
+    if (memberError) throw new Error(memberError.message);
+
     expect(session).toBeNull();
     expect(bill).toBeNull();
+    expect(faction).toBeNull();
+    expect(member).toBeNull();
   });
 });
