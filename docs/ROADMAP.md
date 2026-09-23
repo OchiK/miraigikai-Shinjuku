@@ -136,13 +136,13 @@ easy / normal / hard の3難易度をシード側で公開対象としている
 
 ## Phase 3: 多言語基盤
 
-- [ ] i18nライブラリ選定
-- [ ] locale config
-- [ ] UI translation
-- [ ] translation table
-- [ ] source hash / stale tracking
-- [ ] language switcher
-- [ ] fallback
+- [x] i18nライブラリ選定（当面は入れない。決定記録 §3）
+- [x] locale config
+- [ ] UI translation（翻訳まわりの案内3種のみ済み。UI全体は未着手）
+- [x] translation table
+- [x] source hash / stale tracking（読み出し時照合。stale への自動更新は未着手）
+- [x] language switcher
+- [x] fallback
 
 順序:
 1. en
@@ -151,6 +151,11 @@ easy / normal / hard の3難易度をシード側で公開対象としている
 
 Exit:
 同一議案を7localeで表示できる。
+
+2026-09-23: 基盤を実装した。ロケールは Cookie（`?lang=` 併用）で持ち、URL は変えない。
+翻訳は `bill_content_translations` に置き、`reviewed` かつ日本語のハッシュが一致するものだけを公開する。
+方式と手順は `docs/20260923_1500_多言語基盤_ロケール方式の決定記録.md`。
+公開済みの翻訳はまだ0件（シードの英訳1件は `generated`）で、Exit は未達。
 
 ## Phase 4: AI chat
 

@@ -23,6 +23,7 @@ import {
   DEMO_REPORT_ID_CITIZEN,
 } from "./data";
 import { createBillContents } from "./bill-contents-data";
+import { createBillContentTranslations } from "./bill-translations-data";
 import { R8_2_SESSION } from "./shinjuku-r8-2-inventory";
 import {
   createShippingBillInterviewConfig,
@@ -177,7 +178,7 @@ async function seedDatabase() {
     const { data: insertedContents, error: contentsError } = await supabase
       .from("bill_contents")
       .insert(billContents)
-      .select("id");
+      .select("id, bill_id, difficulty_level");
 
     if (contentsError) {
       throw new Error(
@@ -190,6 +191,25 @@ async function seedDatabase() {
     }
 
     console.log(`✅ Inserted ${insertedContents.length} bill contents`);
+
+    // Insert bill_content_translations（status=generated のため公開画面には出ない）
+    console.log("🌐 Inserting bill content translations...");
+    const translations = createBillContentTranslations(
+      insertedBills,
+      insertedContents
+    );
+
+    const { error: translationsError } = await supabase
+      .from("bill_content_translations")
+      .insert(translations);
+
+    if (translationsError) {
+      throw new Error(
+        `Failed to insert bill content translations: ${translationsError.message}`
+      );
+    }
+
+    console.log(`✅ Inserted ${translations.length} bill content translations`);
 
     // Insert faction_stances
     console.log("🎯 Inserting faction stances...");

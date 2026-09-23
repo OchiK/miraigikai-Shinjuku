@@ -1,5 +1,6 @@
 "use client";
 
+import type { Locale } from "@mirai-gikai/shared/i18n/locales";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -14,10 +15,15 @@ import { HamburgerMenu } from "./hamburger-menu";
 
 interface HeaderClientProps {
   difficultyLevel: DifficultyLevelEnum;
+  locale: Locale;
   sessions: CouncilSession[];
 }
 
-export function HeaderClient({ difficultyLevel, sessions }: HeaderClientProps) {
+export function HeaderClient({
+  difficultyLevel,
+  locale,
+  sessions,
+}: HeaderClientProps) {
   const pathname = usePathname();
   const showDifficultySelector = isMainPage(pathname);
   const showInterviewActions = isInterviewPage(pathname);
@@ -50,7 +56,7 @@ export function HeaderClient({ difficultyLevel, sessions }: HeaderClientProps) {
               <DifficultySelector currentLevel={difficultyLevel} />
             )}
             {showInterviewActions && <InterviewHeaderActions />}
-            <HamburgerMenu sessions={sessions} />
+            <HamburgerMenu locale={locale} sessions={sessions} />
           </nav>
         </div>
       </div>

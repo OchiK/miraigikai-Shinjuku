@@ -207,6 +207,23 @@ export async function findBillContentByDifficulty(
   return pickBillContent(data, difficultyLevel);
 }
 
+/**
+ * 議案の全難易度のコンテンツを取得（翻訳元の照合に使う）
+ */
+export async function findAllBillContentsByBillId(billId: string) {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("bill_contents")
+    .select("*")
+    .eq("bill_id", billId);
+
+  if (error) {
+    throw new Error(`Failed to fetch bill contents: ${error.message}`);
+  }
+
+  return data;
+}
+
 // ============================================================
 // Tags (bulk)
 // ============================================================

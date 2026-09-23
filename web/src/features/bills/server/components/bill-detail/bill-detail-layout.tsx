@@ -1,6 +1,8 @@
 import { Container } from "@/components/layouts/container";
 import { siteConfig } from "@/config/site.config";
 import type { DifficultyLevelEnum } from "@/features/bill-difficulty/shared/types";
+import { TranslationNotice } from "@/features/i18n/server/components/translation-notice";
+import type { BillLocalization } from "@/features/i18n/shared/types";
 import { InterviewLandingSection } from "@/features/interview-config/client/components/interview-landing-section";
 import { getInterviewConfig } from "@/features/interview-config/server/loaders/get-interview-config";
 import { BillInterviewOpinionsSection } from "@/features/interview-report/server/components/bill-interview-opinions-section";
@@ -22,6 +24,8 @@ import { BillSourceLinks } from "./bill-source-links";
 interface BillDetailLayoutProps {
   bill: BillWithContent;
   currentDifficulty: DifficultyLevelEnum;
+  /** 日本語以外を選んでいるときの表示状態。ja なら null */
+  localization?: BillLocalization | null;
 }
 
 /**
@@ -38,10 +42,17 @@ interface BillDetailLayoutProps {
 export async function BillDetailLayout({
   bill,
   currentDifficulty,
+  localization,
 }: BillDetailLayoutProps) {
   const showStances =
     bill.status === "preparing" ||
     (bill.faction_stances && bill.faction_stances.length > 0);
+
+  // 翻訳を表示しているときだけ、要約と本文に言語を明示する
+  const contentLang =
+    localization?.kind === "translated"
+      ? localization.requestedLocale
+      : undefined;
 
   const [interviewConfig, publicReportsResult] = await Promise.all([
     getInterviewConfig(bill.id),
@@ -65,11 +76,15 @@ export async function BillDetailLayout({
             {/* 2〜4. 議決ステータス・議案番号 / 表題 / 分野タグ */}
             <BillDetailHeader bill={bill} />
 
+            {/* 表示言語の案内（日本語以外を選んだときのみ） */}
+            {localization && <TranslationNotice localization={localization} />}
+
             {/* 5. かんたん要約 */}
             <BillAiSummary
               summary={bill.bill_content?.summary}
               title={bill.bill_content?.title}
               isReviewCompleted={bill.is_review_completed}
+              lang={contentLang}
             />
 
             {/* 6. 議決結果 */}
@@ -89,7 +104,9 @@ export async function BillDetailLayout({
             {/* 8. 議案の原文（既定では開かない） */}
             {bill.bill_content?.content && (
               <BillOriginalAccordion>
-                <BillContent bill={bill} />
+                <div lang={contentLang}>
+                  <BillContent bill={bill} />
+                </div>
               </BillOriginalAccordion>
             )}
 

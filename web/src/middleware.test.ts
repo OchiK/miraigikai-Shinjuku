@@ -1,5 +1,10 @@
+import { NextRequest, NextResponse } from "next/server";
 import { describe, expect, it } from "vitest";
-import { isHtmlAcceptHeader, isValidDifficultyLevel } from "./middleware";
+import {
+  applyLocaleCookie,
+  isHtmlAcceptHeader,
+  isValidDifficultyLevel,
+} from "./middleware";
 
 describe("isValidDifficultyLevel", () => {
   it("should return true for 'normal'", () => {
@@ -50,5 +55,31 @@ describe("isHtmlAcceptHeader", () => {
 
   it("should return false for empty string", () => {
     expect(isHtmlAcceptHeader("")).toBe(false);
+  });
+});
+
+describe("applyLocaleCookie", () => {
+  function run(url: string) {
+    const request = new NextRequest(url);
+    const response = NextResponse.next();
+    applyLocaleCookie(request, response);
+    return response.cookies.get("locale")?.value;
+  }
+
+  it("?lang=en なら locale Cookie を en にする", () => {
+    expect(run("http://localhost/bills/1?lang=en")).toBe("en");
+  });
+
+  it("?lang=zh-Hans のようなハイフン付きも受け付ける", () => {
+    expect(run("http://localhost/bills/1?lang=zh-Hans")).toBe("zh-Hans");
+  });
+
+  it.each([
+    ["未対応の言語", "http://localhost/bills/1?lang=fr"],
+    ["大文字小文字の揺れ", "http://localhost/bills/1?lang=zh-hans"],
+    ["空文字", "http://localhost/bills/1?lang="],
+    ["パラメータなし", "http://localhost/bills/1"],
+  ])("%s では Cookie を書かない（既存の選択を ja で上書きしない）", (_label, url) => {
+    expect(run(url)).toBeUndefined();
   });
 });

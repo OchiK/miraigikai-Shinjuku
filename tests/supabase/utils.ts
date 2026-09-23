@@ -216,6 +216,39 @@ export async function createTestBillContent(
   return data;
 }
 
+/** テスト用 bill_content_translations を作成 */
+export async function createTestBillContentTranslation(
+  billContentId: string,
+  overrides: Partial<{
+    locale: "en" | "zh-Hans" | "ko" | "ne" | "my" | "vi";
+    title: string;
+    summary: string;
+    content: string;
+    source_hash: string;
+    status: "generated" | "reviewed" | "stale";
+    reviewed_at: string | null;
+  }> = {}
+) {
+  const defaults = {
+    bill_content_id: billContentId,
+    locale: "en",
+    title: "Test translation title",
+    summary: "Test translation summary",
+    content: "# Test translation content",
+    source_hash: `v1:${"0".repeat(64)}`,
+    status: "generated",
+    ...overrides,
+  };
+  const { data, error } = await adminClient
+    .from("bill_content_translations")
+    .insert(defaults)
+    .select()
+    .single();
+  if (error)
+    throw new Error(`bill_content_translations 作成失敗: ${error.message}`);
+  return data;
+}
+
 /** テスト用 tag を作成 */
 export async function createTestTag(
   overrides: Partial<{
