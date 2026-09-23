@@ -41,6 +41,14 @@ describe("chatErrorToResponse", () => {
     expect(await res.text()).toContain("公開されていません");
   });
 
+  it("BILL_CONTENT_UNAVAILABLE で 503 を返す", async () => {
+    const res = chatErrorToResponse(
+      new ChatError(ChatErrorCode.BILL_CONTENT_UNAVAILABLE)
+    );
+    expect(res.status).toBe(503);
+    expect(await res.text()).toContain("議案情報を取得できませんでした");
+  });
+
   it("COST_CHECK_FAILED で 503 を返す", async () => {
     const res = chatErrorToResponse(
       new ChatError(ChatErrorCode.COST_CHECK_FAILED)

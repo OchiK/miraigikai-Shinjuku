@@ -94,6 +94,12 @@ describe("handleChatRequest 統合テスト", () => {
       summary: "テスト議案の要約",
       content: "テスト議案の本文",
     });
+    await createTestBillContent(bill.id, {
+      difficulty_level: "hard",
+      title: "テスト議案のタイトル（詳細）",
+      summary: "テスト議案の要約（詳細）",
+      content: "テスト議案の本文（詳細）",
+    });
   });
 
   afterEach(async () => {
@@ -370,6 +376,30 @@ describe("handleChatRequest 統合テスト", () => {
           })
         ).rejects.toMatchObject({ code: ChatErrorCode.BILL_NOT_PUBLISHED });
       }
+      expect(mockModel.doStreamCalls).toHaveLength(0);
+    });
+
+    it("公開済み議案の本文を取得できなければ503相当で止め、LLMを呼ばない", async () => {
+      const billWithoutContent = await createTestBill({
+        publish_status: "published",
+      });
+      billIds.push(billWithoutContent.id);
+      const mockModel = createStreamMock(["テスト"]);
+
+      await expect(
+        handleChatRequest({
+          messages: createTestMessages({
+            billContext: createClientBillContext(billWithoutContent.id),
+          }),
+          userId: testUser.id,
+          deps: {
+            model: mockModel,
+            promptProvider: createMockPromptProvider(),
+          },
+        })
+      ).rejects.toMatchObject({
+        code: ChatErrorCode.BILL_CONTENT_UNAVAILABLE,
+      });
       expect(mockModel.doStreamCalls).toHaveLength(0);
     });
 

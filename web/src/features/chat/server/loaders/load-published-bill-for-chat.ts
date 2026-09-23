@@ -6,6 +6,7 @@ import {
   findPublishedBillById,
 } from "@/features/bills/server/repositories/bill-repository";
 import type { BillWithContent } from "@/features/bills/shared/types";
+import { ChatError, ChatErrorCode } from "@/features/chat/shared/types/errors";
 
 /**
  * チャットのプロンプトに使う公開済み議案をDBから取得する。
@@ -32,13 +33,16 @@ export async function loadPublishedBillForChat(
     billId,
     difficultyLevel
   );
+  if (!billContent) {
+    throw new ChatError(ChatErrorCode.BILL_CONTENT_UNAVAILABLE);
+  }
 
   const { council_sessions, ...billColumns } = bill;
 
   return {
     ...billColumns,
     council_session: council_sessions ?? null,
-    bill_content: billContent ?? undefined,
+    bill_content: billContent,
     tags: [],
   };
 }
