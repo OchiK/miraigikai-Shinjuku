@@ -9,6 +9,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import type { CouncilSession } from "@/features/council-sessions/shared/types";
+import { routes } from "@/lib/routes";
 import { RubyToggle } from "@/lib/rubyful";
 
 interface HamburgerMenuProps {
@@ -16,7 +17,9 @@ interface HamburgerMenuProps {
 }
 
 export function HamburgerMenu({ sessions }: HamburgerMenuProps) {
-  const sessionsWithSlug = sessions.filter((s) => s.slug);
+  const sessionsWithSlug = sessions.filter(
+    (s): s is CouncilSession & { slug: string } => Boolean(s.slug)
+  );
 
   return (
     <Popover>
@@ -24,7 +27,7 @@ export function HamburgerMenu({ sessions }: HamburgerMenuProps) {
         <Button
           variant="ghost"
           size="icon"
-          className="h-10 w-10"
+          className="h-11 w-11"
           aria-label="メニューを開く"
         >
           <Menu className="h-5 w-5" />
@@ -35,15 +38,15 @@ export function HamburgerMenu({ sessions }: HamburgerMenuProps) {
           <RubyToggle />
           {sessionsWithSlug.length > 0 && (
             <div>
-              <p className="text-xs font-semibold text-gray-500 mb-1">
+              <p className="text-xs font-semibold text-mirai-text-muted mb-1">
                 議案一覧
               </p>
               <ul className="flex flex-col gap-1">
                 {sessionsWithSlug.map((session) => (
                   <li key={session.id}>
                     <Link
-                      href={`/sessions/${session.slug}/bills`}
-                      className="block text-sm py-1 hover:underline"
+                      href={routes.sessionBills(session.slug)}
+                      className="flex min-h-11 items-center text-sm hover:underline"
                     >
                       {session.name}の議案一覧
                     </Link>

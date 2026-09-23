@@ -16,10 +16,10 @@ export function Hero() {
       />
       <div className="absolute bottom-[30vh] left-0 right-0 py-4">
         <Container>
-          <p className="font-bold text-xl md:text-2xl leading-relaxed">
+          <h1 className="font-bold text-xl md:text-2xl leading-relaxed">
             いま{siteConfig.councilName}で議論されていること <br />
             やさしい言葉で説明します
-          </p>
+          </h1>
           <p className="mt-2 font-display text-xs">
             {/* 表示したい場合は `powered by ${siteConfig.operator.name}` とかで*/}
             {siteConfig.features.showTeamMiraiSection
