@@ -10,6 +10,9 @@ jobs:
   integration-test:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: read
 
     steps:
       - name: Checkout code
@@ -31,6 +34,9 @@ jobs:
         uses: supabase/setup-cli@b60b5899c73b63a2d2d651b1e90db8d4c9392f51 # v1.6.0
         with:
           version: latest
+
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Start Supabase
         run: supabase start -x studio,imgproxy,logflare,vector,realtime,edge-runtime,supavisor,inbucket
