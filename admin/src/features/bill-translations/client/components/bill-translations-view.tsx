@@ -19,19 +19,25 @@ import {
   getTranslationReviewStatus,
   shortenSourceHash,
 } from "../../shared/utils/translation-review";
+import { TextDiffViewer } from "./text-diff-viewer";
 import { TranslationEditor } from "./translation-editor";
 import { TranslationStatusBadge } from "./translation-status-badge";
 
 interface BillTranslationsViewProps {
   groups: BillTranslationGroup[];
+  /** 最初に開く言語タブ（一覧から特定の言語のセルで来たとき） */
+  initialLocale?: TranslationLocale;
 }
 
 function formatJst(utc: string): string {
   return `${utcToJstDatetimeLocal(utc).replace("T", " ")}（JST）`;
 }
 
-export function BillTranslationsView({ groups }: BillTranslationsViewProps) {
-  const [locale, setLocale] = useState<TranslationLocale>("en");
+export function BillTranslationsView({
+  groups,
+  initialLocale = "en",
+}: BillTranslationsViewProps) {
+  const [locale, setLocale] = useState<TranslationLocale>(initialLocale);
   const [difficulty, setDifficulty] = useState<DifficultyLevel>("normal");
   const [isEditorDirty, setIsEditorDirty] = useState(false);
 
@@ -121,9 +127,21 @@ export function BillTranslationsView({ groups }: BillTranslationsViewProps) {
                 </dl>
               )}
               {status === "stale" && (
-                <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-                  この翻訳を作った後に日本語の原文が変わりました。公開画面には表示されていません。原文と照らし合わせて翻訳を直してから承認してください。
-                </p>
+                <div className="space-y-3 rounded-md bg-destructive/10 p-3">
+                  <p className="text-sm text-destructive">
+                    この翻訳を作った後に日本語の原文が変わりました。公開画面には表示されていません。原文と照らし合わせて翻訳を直してから承認してください。
+                  </p>
+                  {translation?.sourceSnapshot ? (
+                    <TextDiffViewer
+                      before={translation.sourceSnapshot}
+                      after={group.source}
+                    />
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      この翻訳には翻訳時の原文が記録されていないため、変更箇所は表示できません。
+                    </p>
+                  )}
+                </div>
               )}
             </CardHeader>
             <CardContent>

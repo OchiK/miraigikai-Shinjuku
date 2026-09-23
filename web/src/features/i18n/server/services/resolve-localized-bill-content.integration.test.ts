@@ -1,3 +1,7 @@
+import {
+  SUPPORTED_LOCALES,
+  type TranslationLocale,
+} from "@mirai-gikai/shared/i18n/locales";
 import { calculateSourceHash } from "@mirai-gikai/shared/i18n/source-hash";
 import {
   adminClient,
@@ -52,6 +56,45 @@ describe("resolveLocalizedBillContent 統合テスト", () => {
     if (result.kind !== "translated") return;
     expect(result.source.id).toBe(normal.id);
     expect(result.translation.title).toBe("Reviewed title");
+  });
+
+  const translationLocales = SUPPORTED_LOCALES.filter(
+    (locale): locale is TranslationLocale => locale !== "ja"
+  );
+
+  it.each(
+    translationLocales
+  )("%s: 確認済みの翻訳だけを返し、未確認の翻訳は日本語に落とす", async (locale) => {
+    const { bill, normal, hard } = await setupBill();
+    await createTestBillContentTranslation(normal.id, {
+      ...reviewed(normal),
+      locale,
+      title: `Reviewed ${locale}`,
+    });
+    await createTestBillContentTranslation(hard.id, {
+      locale,
+      source_hash: calculateSourceHash(hard),
+      status: "generated",
+    });
+
+    const reviewedResult = await resolveLocalizedBillContent(
+      bill.id,
+      locale,
+      "normal"
+    );
+    expect(reviewedResult.kind).toBe("translated");
+    if (reviewedResult.kind !== "translated") return;
+    expect(reviewedResult.translation.title).toBe(`Reviewed ${locale}`);
+
+    // 「くわしく」の翻訳は generated なので使わず、確認済みの「ふつう」に落とす
+    const fallbackResult = await resolveLocalizedBillContent(
+      bill.id,
+      locale,
+      "hard"
+    );
+    expect(fallbackResult.kind).toBe("translated");
+    if (fallbackResult.kind !== "translated") return;
+    expect(fallbackResult.source.id).toBe(normal.id);
   });
 
   it("「くわしく」を選んでいて翻訳が「ふつう」にしか無ければ「ふつう」の翻訳", async () => {

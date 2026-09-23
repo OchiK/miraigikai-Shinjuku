@@ -1,4 +1,5 @@
 import type { TranslationReviewStatus } from "../types/bill-translation";
+import type { SourceSnapshot } from "./source-snapshot";
 
 /**
  * 画面に出す状態を決める。日本語が変わっていれば、DB の status が reviewed でも
@@ -46,6 +47,8 @@ export function requiresStaleConfirmation(params: {
 export type TranslationStatusFields = {
   status: "generated" | "reviewed" | "stale";
   source_hash: string;
+  /** source_hash の元になった日本語。原文差分の表示に使う */
+  source_snapshot: SourceSnapshot | null;
   reviewed_at: string | null;
   reviewed_by: string | null;
 };
@@ -57,28 +60,54 @@ export type TranslationStatusFields = {
  *   既存の値を残す（stale の翻訳を下書き保存しても stale のまま）。新規なら現在の日本語。
  * - approve: 現在の日本語に対して確認済みにする。source_hash を現在の値に更新するので、
  *   stale の翻訳を承認する前に呼び出し側で確認を取ること。
+ *
+ * source_snapshot は常に source_hash と同じ日本語を指すよう、source_hash と一緒に動かす。
  */
 export function buildTranslationStatusFields(params: {
   intent: TranslationWriteIntent;
-  existing: { status: string; source_hash: string } | null;
+  existing: {
+    status: string;
+    source_hash: string;
+    source_snapshot: SourceSnapshot | null;
+  } | null;
   currentSourceHash: string;
+  currentSource: SourceSnapshot;
   reviewer: string;
   now: Date;
 }): TranslationStatusFields {
-  const { intent, existing, currentSourceHash, reviewer, now } = params;
+  const { intent, existing, currentSourceHash, currentSource, reviewer, now } =
+    params;
 
   if (intent === "approve") {
     return {
       status: "reviewed",
       source_hash: currentSourceHash,
+      source_snapshot: currentSource,
       reviewed_at: now.toISOString(),
       reviewed_by: reviewer,
     };
   }
 
+  if (existing) {
+    // 記録前の翻訳でも、source_hash が現在の日本語と一致していれば同じ日本語なので埋めてよい
+    const canBackfillSnapshot =
+      existing.source_snapshot === null &&
+      existing.source_hash === currentSourceHash;
+    return {
+      status: existing.status === "stale" ? "stale" : "generated",
+      source_hash: existing.source_hash,
+      source_snapshot: canBackfillSnapshot
+        ? currentSource
+        : existing.source_snapshot,
+      reviewed_at: null,
+      reviewed_by: null,
+    };
+  }
+
   return {
-    status: existing?.status === "stale" ? "stale" : "generated",
-    source_hash: existing?.source_hash ?? currentSourceHash,
+    status: "generated",
+    source_hash: currentSourceHash,
+    source_snapshot: currentSource,
     reviewed_at: null,
     reviewed_by: null,
   };
@@ -87,7 +116,7 @@ export function buildTranslationStatusFields(params: {
 /** 承認を取り消して下書きに戻す。本文と source_hash は変えない */
 export function buildRevokeStatusFields(): Omit<
   TranslationStatusFields,
-  "source_hash"
+  "source_hash" | "source_snapshot"
 > {
   return { status: "generated", reviewed_at: null, reviewed_by: null };
 }

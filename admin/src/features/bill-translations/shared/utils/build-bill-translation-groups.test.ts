@@ -13,7 +13,11 @@ const content = (id: string, difficulty_level: string) => ({
 const translation = (
   bill_content_id: string,
   locale: string,
-  overrides: Partial<{ status: string; source_hash: string }> = {}
+  overrides: Partial<{
+    status: string;
+    source_hash: string;
+    source_snapshot: unknown;
+  }> = {}
 ) => ({
   id: `${bill_content_id}-${locale}`,
   bill_content_id,
@@ -103,5 +107,53 @@ describe("buildBillTranslationGroups", () => {
       hashSource: calculateSourceHash,
     });
     expect(group.translations.en?.isStale).toBe(true);
+  });
+
+  it("source_hash と一致するスナップショットだけを差分用に渡す", () => {
+    const source = content("normal", "normal");
+    const oldSource = { ...source, content: "改定前の本文" };
+    const oldHash = calculateSourceHash(oldSource);
+    const snapshot = {
+      title: oldSource.title,
+      summary: oldSource.summary,
+      content: oldSource.content,
+    };
+    const [group] = buildBillTranslationGroups({
+      contents: [source],
+      translations: [
+        translation("normal", "en", {
+          source_hash: oldHash,
+          source_snapshot: snapshot,
+        }),
+        translation("normal", "ko", {
+          source_hash: oldHash,
+          source_snapshot: { ...snapshot, content: "別の本文" },
+        }),
+        translation("normal", "vi", { source_hash: oldHash }),
+      ],
+      hashSource: calculateSourceHash,
+    });
+    expect(group.translations.en?.sourceSnapshot).toEqual(snapshot);
+    expect(group.translations.ko?.sourceSnapshot).toBeNull();
+    expect(group.translations.vi?.sourceSnapshot).toBeNull();
+  });
+
+  it("stale でない翻訳にはスナップショットを渡さない", () => {
+    const source = content("normal", "normal");
+    const [group] = buildBillTranslationGroups({
+      contents: [source],
+      translations: [
+        translation("normal", "en", {
+          source_hash: calculateSourceHash(source),
+          source_snapshot: {
+            title: source.title,
+            summary: source.summary,
+            content: source.content,
+          },
+        }),
+      ],
+      hashSource: calculateSourceHash,
+    });
+    expect(group.translations.en?.sourceSnapshot).toBeNull();
   });
 });

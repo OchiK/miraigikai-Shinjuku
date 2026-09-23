@@ -8,6 +8,7 @@ import {
   type DifficultyLevel,
 } from "@/features/bills-edit/shared/types/bill-contents";
 import type { BillTranslationGroup } from "../types/bill-translation";
+import { verifySourceSnapshot } from "./source-snapshot";
 import { isStoredTranslationStale } from "./translation-review";
 
 const DIFFICULTY_ORDER = DIFFICULTY_LEVELS.map((level) => level.value);
@@ -27,6 +28,8 @@ type TranslationRow = {
   content: string;
   status: string;
   source_hash: string;
+  /** DB の jsonb。記録前の翻訳は null */
+  source_snapshot?: unknown;
   model: string | null;
   translated_at: string;
   reviewed_at: string | null;
@@ -80,6 +83,7 @@ export function buildBillTranslationGroups(params: {
           continue;
         }
         const locale: TranslationLocale = translation.locale;
+        const isStale = isStoredTranslationStale(translation, sourceHash);
         group.translations[locale] = {
           id: translation.id,
           locale,
@@ -88,7 +92,16 @@ export function buildBillTranslationGroups(params: {
           content: translation.content,
           status: translation.status,
           sourceHash: translation.source_hash,
-          isStale: isStoredTranslationStale(translation, sourceHash),
+          isStale,
+          // 差分は stale のときしか使わない。それ以外は日本語全文を画面に送らない
+          sourceSnapshot: isStale
+            ? verifySourceSnapshot({
+                snapshot: translation.source_snapshot ?? null,
+                difficultyLevel: content.difficultyLevel,
+                sourceHash: translation.source_hash,
+                hashSource,
+              })
+            : null,
           model: translation.model,
           translatedAt: translation.translated_at,
           reviewedAt: translation.reviewed_at,

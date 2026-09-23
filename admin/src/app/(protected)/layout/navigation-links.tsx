@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 
 const navigationLinks = [
   { href: routes.bills(), label: "議案管理" },
+  { href: routes.billTranslationsList(), label: "多言語翻訳" },
   { href: routes.councilSessions(), label: "定例会管理" },
   { href: routes.tags(), label: "タグ管理" },
   { href: routes.factions(), label: "会派管理" },
@@ -21,12 +22,22 @@ const navigationLinks = [
 
 export function NavigationLinks() {
   const pathname = usePathname();
+  // /bills/translations は /bills にも前方一致するので、最も長く一致したリンクだけを選択中にする
+  const activeHref = navigationLinks
+    .filter((link) => pathname.startsWith(link.href))
+    .reduce<string | null>(
+      (longest, link) =>
+        longest === null || link.href.length > longest.length
+          ? link.href
+          : longest,
+      null
+    );
 
   return (
     <nav>
       <div className="flex space-x-8">
         {navigationLinks.map((link) => {
-          const isActive = pathname.startsWith(link.href);
+          const isActive = link.href === activeHref;
 
           return (
             <Link

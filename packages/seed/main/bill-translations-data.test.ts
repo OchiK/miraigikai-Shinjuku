@@ -1,7 +1,23 @@
 import { calculateSourceHash } from "@mirai-gikai/shared/i18n/source-hash";
 import { describe, expect, it } from "vitest";
 import { billContentsWithBillSlug } from "./bill-contents-data";
-import { billTranslationsWithBillSlug } from "./bill-translations-data";
+import {
+  billTranslationsWithBillSlug,
+  findTranslationSourceSnapshot,
+} from "./bill-translations-data";
+
+const TRANSLATION_LOCALES = ["en", "zh-Hans", "ko", "ne", "my", "vi"] as const;
+
+/**
+ * 本文中の 4 桁以上の数値（桁区切りを除いた値）。
+ * 桁区切りは言語で違う（ベトナム語は 292.564）ので、, と . を取り除いて比べる。
+ * 「約2億9,256万円」のような万・億単位の概数は、言語ごとに単位を換えて書き直すので対象外。
+ */
+function extractLargeNumbers(text: string): string[] {
+  return (text.replace(/\d[\d,]*[万億]/g, "").match(/\d[\d,.]*\d/g) ?? [])
+    .map((n) => n.replace(/[,.]/g, ""))
+    .filter((n) => n.length >= 4);
+}
 
 /**
  * シードの翻訳が、いまの日本語から作られたものであることを固定する。
@@ -46,4 +62,57 @@ describe("bill-translations-data", () => {
     );
     expect(new Set(keys).size).toBe(keys.length);
   });
+
+  it("翻訳がある本文には、全ロケールの翻訳がそろっている", () => {
+    const groups = new Map<string, Set<string>>();
+    for (const t of billTranslationsWithBillSlug) {
+      const key = `${t.bill_slug}/${t.difficulty_level}`;
+      groups.set(key, (groups.get(key) ?? new Set()).add(t.locale));
+    }
+    for (const [key, locales] of groups) {
+      expect([...locales].sort(), key).toEqual([...TRANSLATION_LOCALES].sort());
+    }
+  });
+
+  it.each(
+    billTranslationsWithBillSlug.map((t) => [
+      `${t.bill_slug} / ${t.difficulty_level} / ${t.locale}`,
+      t,
+    ])
+  )(
+    "%s: 日本語本文の金額・年などの数値が翻訳から抜けていない",
+    (_label, translation) => {
+      // 人の確認を受けていない言語もあるので、数値の写し間違いだけは機械的に防ぐ
+      const source = findTranslationSourceSnapshot(
+        translation.bill_slug,
+        translation.difficulty_level
+      );
+      const translated = new Set(extractLargeNumbers(translation.content));
+      const missing = extractLargeNumbers(source.content).filter(
+        (n) => !translated.has(n)
+      );
+      expect(missing).toEqual([]);
+    }
+  );
+
+  it.each(
+    billTranslationsWithBillSlug.map((t) => [
+      `${t.bill_slug} / ${t.difficulty_level} / ${t.locale}`,
+      t,
+    ])
+  )(
+    "%s: 原文差分用のスナップショットが source_hash と同じ日本語を指す",
+    (_label, translation) => {
+      const snapshot = findTranslationSourceSnapshot(
+        translation.bill_slug,
+        translation.difficulty_level
+      );
+      expect(
+        calculateSourceHash({
+          difficulty_level: translation.difficulty_level,
+          ...snapshot,
+        })
+      ).toBe(translation.source_hash);
+    }
+  );
 });
