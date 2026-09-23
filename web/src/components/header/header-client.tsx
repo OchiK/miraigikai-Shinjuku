@@ -24,22 +24,16 @@ export function HeaderClient({ difficultyLevel, sessions }: HeaderClientProps) {
 
   return (
     <header className="px-3 fixed top-4 left-0 right-0 z-40 max-w-[1440px] mx-auto">
-      <div className="rounded-2xl bg-white shadow-sm mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="rounded-2xl bg-mirai-surface shadow-mirai-md mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo / Site Title */}
           <div className="flex items-center min-w-0">
             <Link
               href={routes.home()}
-              className="flex items-center space-x-2 min-w-0"
-              aria-label="ホーム"
+              className="flex items-center space-x-2 min-w-0 min-h-11"
             >
               {siteConfig.features.showTeamMiraiSection && (
-                <Image
-                  src="/img/logo.svg"
-                  alt={siteConfig.siteName}
-                  width={42}
-                  height={36}
-                />
+                <Image src="/img/logo.svg" alt="" width={42} height={36} />
               )}
               <div className="truncate text-base font-bold sm:text-xl">
                 {siteConfig.siteName}

@@ -39,7 +39,7 @@ export default async function SessionBillsPage({ params }: Props) {
   ]);
 
   return (
-    <Container className="py-8">
+    <Container className="pt-24 pb-8 md:pt-8">
       <Suspense>
         <CouncilSessionBillList
           session={session}

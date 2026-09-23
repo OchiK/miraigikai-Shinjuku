@@ -30,7 +30,7 @@ export default async function Home() {
       {/* 議案一覧セクション */}
       <Container className="">
         <div className="py-10">
-          <main className="flex flex-col gap-16">
+          <div className="flex flex-col gap-16">
             {/* 注目の議案セクション */}
             <FeaturedBillSection bills={featuredBills} />
 
@@ -40,7 +40,7 @@ export default async function Home() {
               featuredBillIds={featuredBillIds}
               sessionSlug={activeSessionSlug}
             />
-          </main>
+          </div>
         </div>
       </Container>
       {/* 前回の定例会セクション（Archive） */}
