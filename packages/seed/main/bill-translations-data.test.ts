@@ -31,6 +31,15 @@ describe("bill-translations-data", () => {
     }
   });
 
+  it("reviewed の翻訳には確認日時と確認者がある", () => {
+    for (const translation of billTranslationsWithBillSlug) {
+      if (translation.status !== "reviewed") continue;
+
+      expect(translation.reviewed_at).toBeTruthy();
+      expect(translation.reviewed_by).toBeTruthy();
+    }
+  });
+
   it("同じ本文・同じロケールの翻訳を重複させない", () => {
     const keys = billTranslationsWithBillSlug.map(
       (t) => `${t.bill_slug}/${t.difficulty_level}/${t.locale}`

@@ -9,8 +9,8 @@ import { gianKey, shoninKey } from "./shinjuku-r8-2-inventory";
  * bill-translations-data.test.ts が失敗するので、翻訳も直してから
  * ハッシュを更新すること（ハッシュだけ書き換えてはならない）。
  *
- * status は generated（人の確認前）に固定する。公開画面は reviewed しか
- * 出さないため、このシードの翻訳はそのままでは表示されない。
+ * 人の確認が終わるまでは status を generated にする。reviewed へ移すときは
+ * reviewed_at と reviewed_by も必ず設定する。公開画面は reviewed しか出さない。
  * 確認の手順は docs/20260923_1500_多言語基盤_ロケール方式の決定記録.md を参照。
  *
  * このデータは本番インポーター（packages/seed/production）の対象外。
@@ -19,14 +19,24 @@ type BillTranslationSeed = {
   bill_slug: string;
   difficulty_level: "easy" | "normal" | "hard";
   locale: "en" | "zh-Hans" | "ko" | "ne" | "my" | "vi";
-  status: "generated";
   model: string;
   prompt_version: string;
   source_hash: string;
   title: string;
   summary: string;
   content: string;
-};
+} & (
+  | {
+      status: "generated";
+      reviewed_at?: never;
+      reviewed_by?: never;
+    }
+  | {
+      status: "reviewed";
+      reviewed_at: string;
+      reviewed_by: string;
+    }
+);
 
 export const billTranslationsWithBillSlug: BillTranslationSeed[] = [
   // =========================================================================
