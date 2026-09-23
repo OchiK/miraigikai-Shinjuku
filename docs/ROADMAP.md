@@ -201,6 +201,7 @@ Exit:
 
 ## Phase 7: Optional
 
+- [ ] council members（議員一覧・詳細ページ: 世田谷モデル）
 - [ ] minutes
 - [ ] speeches
 - [ ] committees
@@ -208,3 +209,5 @@ Exit:
 - [ ] zh-Hant
 - [ ] AI interview
 - [ ] notifications
+
+2026-09-23: 「みらい議会＠世田谷区」（civictech-setagaya.org）をモデルとした議員ページ（`/councilors`, `/councilors/[id]`）の要件定義および設計書を作成した（`docs/20260923_1630_議員ページ要件定義_世田谷モデル.md`）。定数38名の基本名簿・会派・委員会表示（Phase 7-A）、発言・質問要約連携（Phase 7-B）、議案賛否連携（Phase 7-C）の段階的アプローチを計画。

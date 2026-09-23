@@ -111,3 +111,17 @@ Acceptance:
 ### P5-1 Automation
 Acceptance:
 new Shinjuku page/PDF change creates draft, never silently overwrites reviewed content.
+
+## P7
+
+### P7-1 議員ページ（Council Person Page - 世田谷モデル）
+「みらい議会＠世田谷区」の議員ページ（`/councilors`, `/councilors/[id]`）をモデルに、
+新宿区議会議員（定数38名）の一覧・詳細ページおよび質問要約・所属会派・委員会導線を整備する。
+詳細は `docs/20260923_1630_議員ページ要件定義_世田谷モデル.md` を参照。
+
+Acceptance:
+- 議員一覧ページ（`/councilors`）で会派別・委員会別に新宿区議会議員（38名）の基本情報・アバター・質問集計を表示
+- 議員詳細ページ（`/councilors/[id]`）で基本プロフィール、所属会派、所属委員会、公式名簿への外部リンク（基準日明記）を表示
+- （Phase 7-B）議員詳細ページで本会議・委員会での発言・質問の要約カード、関心テーマタグ、AIサマリーを表示
+- （Phase 7-C）議案詳細ページと発言・賛否議員との相互連携導線
+- Organic デザインシステム（`globals.css` トークン、ボタン・アイコン規則、44pxタップ領域）および WCAG 2.2 AA に準拠
