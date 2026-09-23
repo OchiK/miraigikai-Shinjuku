@@ -80,6 +80,17 @@ Acceptance:
 Acceptance:
 ja/en/zh-Hans/ko/ne/my/vi available.
 
+### P3-4 翻訳・ルビ手動確認・編集機能（Translation & Ruby Review Tooling）
+AI生成翻訳（generated）の対照確認・手動編集・公開承認（reviewed）および、
+ルビ（ふりがな）の誤読確認・手動補正を行える管理画面・レビュー手段を整備する。
+詳細は `docs/20260923_1650_翻訳およびルビ手動確認編集機能_要件定義.md` を参照。
+
+Acceptance:
+- 原文（日本語）と各言語の翻訳文を横並び（side-by-side）で対照確認・手動編集できるAdmin UI
+- `source_hash` 照合による stale（原文変更あり）検知と変更差分（diff）の可視化
+- 承認操作（`generated` → `reviewed`）および保存時の公開キャッシュ即時無効化（`CACHE_TAGS.BILLS` revalidate）
+- ルビ（ふりがな）のリアルタイムプレビューおよび誤読補正・カスタムルビ辞書の管理機能
+
 ## P4
 
 ### P4-1 Chat guardrails
