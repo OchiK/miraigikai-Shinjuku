@@ -66,7 +66,7 @@ export function About() {
                   <br />
                   ご意見や不具合等がございましたら党公式への連絡ではなく、
                   <br />
-                  開発者の
+                  運営者（
                   <a
                     href={siteConfig.operator.contactUrl}
                     target="_blank"

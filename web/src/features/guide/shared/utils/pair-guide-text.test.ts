@@ -80,11 +80,11 @@ describe("pairGuideSections", () => {
     const text = makeText([1]);
     text.sections[0].paragraphs[0] = "個人（{operator}）が運営";
 
-    const paired = pairGuideSections(text, text, "OchiK");
+    const paired = pairGuideSections(text, text, "新宿区民");
 
     expect(paired[0].paragraphs[0]).toEqual({
-      translated: "個人（OchiK）が運営",
-      ja: "個人（OchiK）が運営",
+      translated: "個人（新宿区民）が運営",
+      ja: "個人（新宿区民）が運営",
     });
   });
 
@@ -109,7 +109,7 @@ describe("pairGuideSections", () => {
     const paired = pairGuideSections(
       GUIDE_TEXTS[locale],
       GUIDE_TEXT_JA,
-      "OchiK"
+      "新宿区民"
     );
     const all = paired.flatMap((s) => [s.heading, ...s.paragraphs]);
     for (const { translated, ja } of all) {
