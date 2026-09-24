@@ -48,6 +48,17 @@ export function isJapaneseLocale(locale: string | null | undefined): boolean {
 }
 
 /**
+ * ふりがなの切り替えを見せるページかどうか。
+ * 押してもルビが付かないページ（多言語案内ページ・日本語以外の表示言語）では出さない。
+ */
+export function canToggleRuby(
+  pathname: string | null,
+  locale: string | null | undefined
+): boolean {
+  return !isRubyfulExcludedPath(pathname) && isJapaneseLocale(locale);
+}
+
+/**
  * ルビ（Rubyful）を起動・維持すべきかどうかを判定する純粋関数。
  *
  * 以下の場合はルビを無効（false）にする：

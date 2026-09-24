@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { CouncilSession } from "../types";
-import { hasSlug, pickHeaderSession } from "./pick-header-session";
+import {
+  hasSessionsBesides,
+  hasSlug,
+  pickHeaderSession,
+} from "./pick-header-session";
 
 function session(overrides: Partial<CouncilSession>): CouncilSession {
   return {
@@ -53,5 +57,28 @@ describe("pickHeaderSession", () => {
   it("選べる定例会が無ければ null", () => {
     expect(pickHeaderSession([])).toBeNull();
     expect(pickHeaderSession([session({ slug: null })])).toBeNull();
+  });
+});
+
+describe("hasSessionsBesides", () => {
+  const header = { ...session({ id: "r8-2", slug: "r8-2" }), slug: "r8-2" };
+
+  it("ヘッダーの定例会しか無ければ false", () => {
+    expect(hasSessionsBesides([header], header)).toBe(false);
+  });
+
+  it("slug のあるほかの定例会があれば true", () => {
+    const other = session({ id: "r8-1", slug: "r8-1" });
+    expect(hasSessionsBesides([header, other], header)).toBe(true);
+  });
+
+  it("slug の無い定例会は数えない", () => {
+    const noSlug = session({ id: "r7-4", slug: null });
+    expect(hasSessionsBesides([header, noSlug], header)).toBe(false);
+  });
+
+  it("ヘッダーの定例会が無ければ、slug のある定例会があるかで決まる", () => {
+    expect(hasSessionsBesides([], null)).toBe(false);
+    expect(hasSessionsBesides([session({ slug: null })], null)).toBe(false);
   });
 });

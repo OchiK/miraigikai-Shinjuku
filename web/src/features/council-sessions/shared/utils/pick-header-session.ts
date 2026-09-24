@@ -20,3 +20,16 @@ export function pickHeaderSession(
   const withSlug = sessions.filter(hasSlug);
   return withSlug.find((s) => s.is_active) ?? withSlug[0] ?? null;
 }
+
+/**
+ * ヘッダーの定例会のほかに、議案一覧ページを持つ定例会があるか。
+ * デスクトップのヘッダーからは辿れないので、メニューに残す必要がある。
+ */
+export function hasSessionsBesides(
+  sessions: CouncilSession[],
+  headerSession: CouncilSessionWithSlug | null
+): boolean {
+  return sessions.some(
+    (session) => hasSlug(session) && session.id !== headerSession?.id
+  );
+}
