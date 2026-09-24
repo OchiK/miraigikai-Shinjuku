@@ -1,13 +1,19 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { Switch } from "@/components/ui/switch";
+import { isRubyfulExcludedPath } from "@/lib/rubyful/should-enable-rubyful";
 import { useRubyToggle } from "@/lib/rubyful/use-ruby-toggle";
 
 /**
  * デスクトップメニュー: ルビ切り替え (画面右上、難易度切り替えの下)
  */
 export function DesktopMenuRubyToggle() {
+  const pathname = usePathname();
   const { rubyEnabled, handleRubyToggle } = useRubyToggle();
+
+  // 多言語案内ページではルビを使わないため、切り替え自体を出さない
+  if (isRubyfulExcludedPath(pathname)) return null;
 
   return (
     <div className="fixed top-[108px] right-6 z-50">

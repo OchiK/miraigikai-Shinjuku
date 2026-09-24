@@ -5,7 +5,9 @@ import Link from "next/link";
 import { Container } from "@/components/layouts/container";
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/config/site.config";
+import { NO_RUBYFUL_CLASS } from "@/lib/rubyful/should-enable-rubyful";
 import { routes } from "@/lib/routes";
+import { cn } from "@/lib/utils";
 import { GuideLanguageLinks } from "../../client/components/guide-language-links";
 import { GUIDE_TEXT_JA, GUIDE_TEXTS } from "../../shared/guide-content";
 import {
@@ -31,7 +33,14 @@ export function GuideView({ locale }: GuideViewProps) {
 
   return (
     <Container className="pt-24 pb-12 md:pt-8">
-      <article lang={locale} className="flex flex-col gap-6">
+      {/* 翻訳文の漢字に日本語のルビが付かないよう、ページ全体を Rubyful の対象外にする。
+          除外を効かせているのは class（RUBYFUL_SELECTOR が参照）で、
+          data-no-rubyful は DevTools や検証で除外領域を見分けるための目印 */}
+      <article
+        lang={locale}
+        data-no-rubyful="true"
+        className={cn(NO_RUBYFUL_CLASS, "flex flex-col gap-6")}
+      >
         <aside className="flex gap-3 rounded-xl bg-mirai-featured p-5 text-mirai-featured-text shadow-mirai-sm">
           <Languages
             aria-hidden="true"

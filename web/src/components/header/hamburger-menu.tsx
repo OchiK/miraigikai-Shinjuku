@@ -3,6 +3,7 @@
 import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
 import { Menu } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -13,6 +14,7 @@ import type { CouncilSession } from "@/features/council-sessions/shared/types";
 import { LanguageSelector } from "@/features/i18n/client/components/language-selector";
 import { routes } from "@/lib/routes";
 import { RubyToggle } from "@/lib/rubyful";
+import { isRubyfulExcludedPath } from "@/lib/rubyful/should-enable-rubyful";
 
 interface HamburgerMenuProps {
   locale: PublicLocale;
@@ -20,6 +22,9 @@ interface HamburgerMenuProps {
 }
 
 export function HamburgerMenu({ locale, sessions }: HamburgerMenuProps) {
+  const pathname = usePathname();
+  // 多言語案内ページではルビを使わないため、ふりがなの切り替えを出さない
+  const showRubyToggle = !isRubyfulExcludedPath(pathname);
   const sessionsWithSlug = sessions.filter(
     (s): s is CouncilSession & { slug: string } => Boolean(s.slug)
   );
@@ -39,7 +44,7 @@ export function HamburgerMenu({ locale, sessions }: HamburgerMenuProps) {
       <PopoverContent className="w-56" align="end">
         <div className="flex flex-col gap-3">
           <LanguageSelector currentLocale={locale} />
-          <RubyToggle />
+          {showRubyToggle && <RubyToggle />}
           <Link
             href={routes.councilors()}
             className="flex min-h-11 items-center text-sm hover:underline"

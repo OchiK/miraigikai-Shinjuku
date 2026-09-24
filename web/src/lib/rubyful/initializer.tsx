@@ -6,7 +6,7 @@ import Script from "next/script";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef } from "react";
 import { rubyfulClient } from "./index";
-import { shouldEnableRubyful } from "./should-enable-rubyful";
+import { RUBYFUL_SELECTOR, shouldEnableRubyful } from "./should-enable-rubyful";
 import "./styles.css";
 
 declare global {
@@ -49,10 +49,10 @@ export function RubyfulInitializer() {
     });
 
     if (!shouldEnable) {
-      if (isInitializedRef.current) {
-        window.RubyfulV2.destroy?.();
-        isInitializedRef.current = false;
-      }
+      // ref の状態に頼らず毎回 destroy する。Rubyful 側はインスタンスが無ければ
+      // 何もせず、あれば監視を止めて DOM 上の <ruby> を元の文字列に戻す
+      window.RubyfulV2.destroy?.();
+      isInitializedRef.current = false;
       return;
     }
 
@@ -60,8 +60,7 @@ export function RubyfulInitializer() {
 
     // Rubyful V2を初期化
     window.RubyfulV2.init({
-      selector:
-        "main p, main h1, main h2, main h3, main h4, main h5, main h6, main li, main td, main th, main span, main a",
+      selector: RUBYFUL_SELECTOR,
       defaultDisplay: true,
       observeChanges: true,
       styles: {
