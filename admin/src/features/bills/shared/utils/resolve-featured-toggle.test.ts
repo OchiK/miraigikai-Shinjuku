@@ -53,6 +53,25 @@ describe("resolveFeaturedToggle", () => {
     expect(outcome.isFeatured).toBe(true);
   });
 
+  it("保存後のキャッシュ無効化だけ失敗したら状態を維持して警告する", () => {
+    const outcome = resolveFeaturedToggle({
+      billName: "新宿区条例",
+      requested: true,
+      result: {
+        success: true,
+        warning: "保存されましたが、公開Webへの即時反映に失敗しました",
+      },
+    });
+
+    expect(outcome).toEqual({
+      isFeatured: true,
+      toast: {
+        type: "warning",
+        message: "保存されましたが、公開Webへの即時反映に失敗しました",
+      },
+    });
+  });
+
   it("エラー文言がなければ既定の文言を返す", () => {
     const outcome = resolveFeaturedToggle({
       billName: "新宿区条例",

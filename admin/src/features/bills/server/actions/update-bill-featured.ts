@@ -12,6 +12,7 @@ import { updateBillIsFeatured } from "../repositories/bill-repository";
 export type UpdateBillFeaturedResult = {
   success: boolean;
   error?: string;
+  warning?: string;
 };
 
 export async function updateBillFeaturedAction({
@@ -34,10 +35,16 @@ export async function updateBillFeaturedAction({
     await updateBillIsFeatured(billId, isFeatured);
 
     // web側のキャッシュを無効化（トップの「注目の議案」へ即時反映）
-    await invalidateWebCache([WEB_CACHE_TAGS.BILLS]);
+    const cacheResult = await invalidateWebCache([WEB_CACHE_TAGS.BILLS]);
     revalidatePath(routes.bills());
 
-    return { success: true };
+    return cacheResult.success
+      ? { success: true }
+      : {
+          success: true,
+          warning:
+            "注目設定は保存されましたが、公開Webへの即時反映に失敗しました。環境変数と再検証ログを確認してください。",
+        };
   } catch (error) {
     console.error("Error updating bill featured status:", error);
     return { success: false, error: "注目設定の更新に失敗しました" };

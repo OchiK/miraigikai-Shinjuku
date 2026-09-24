@@ -1,6 +1,6 @@
 export type FeaturedToggleOutcome = {
   isFeatured: boolean;
-  toast: { type: "success" | "error"; message: string };
+  toast: { type: "success" | "warning" | "error"; message: string };
 };
 
 /**
@@ -15,7 +15,7 @@ export function resolveFeaturedToggle({
 }: {
   billName: string;
   requested: boolean;
-  result: { success: boolean; error?: string };
+  result: { success: boolean; error?: string; warning?: string };
 }): FeaturedToggleOutcome {
   if (!result.success) {
     return {
@@ -24,6 +24,13 @@ export function resolveFeaturedToggle({
         type: "error",
         message: result.error || "注目設定の更新に失敗しました",
       },
+    };
+  }
+
+  if (result.warning) {
+    return {
+      isFeatured: requested,
+      toast: { type: "warning", message: result.warning },
     };
   }
 

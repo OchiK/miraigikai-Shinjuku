@@ -42,6 +42,16 @@ describe("FeaturedBillSection", () => {
     expect(screen.getByText("注目議案1")).toBeInTheDocument();
   });
 
+  it("全幅カードに画像があれば md 以上で横並びにする", () => {
+    const bills = makeBills(1);
+    bills[0].thumbnail_url = "/img/sample-bill-thumbnail.webp";
+    render(<FeaturedBillSection bills={bills} />);
+
+    const image = screen.getByRole("img", { name: bills[0].name });
+    expect(image.parentElement).toHaveClass("md:w-1/2", "md:shrink-0");
+    expect(image.parentElement?.parentElement).toHaveClass("md:flex-row");
+  });
+
   it("2件なら2カラムに並べ、全幅のカードは作らない", () => {
     render(<FeaturedBillSection bills={makeBills(2)} />);
     const links = cardLinks();

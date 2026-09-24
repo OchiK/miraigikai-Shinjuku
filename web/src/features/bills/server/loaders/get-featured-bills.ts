@@ -9,6 +9,7 @@ import {
   findTagsByBillIds,
   findBillIdsWithPublicInterview,
 } from "../repositories/bill-repository";
+import { findFeaturedBillsWithSessionFallback } from "../utils/find-featured-bills-with-session-fallback";
 
 /**
  * 注目の議案を取得する
@@ -28,10 +29,11 @@ const _getCachedFeaturedBills = unstable_cache(
     difficultyLevel: DifficultyLevelEnum,
     councilSessionId: string | null
   ): Promise<BillWithContent[]> => {
-    const data = await findFeaturedBillsWithContents(
+    const data = await findFeaturedBillsWithSessionFallback({
       difficultyLevel,
-      councilSessionId
-    );
+      councilSessionId,
+      findFeaturedBills: findFeaturedBillsWithContents,
+    });
 
     if (data.length === 0) {
       return [];

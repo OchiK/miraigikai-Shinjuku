@@ -228,7 +228,7 @@ Acceptance:
 Progress (2026-09-24):
 - ヘッダーに `[日本語 | English]` のセグメント（`LanguageToggle`）を配置。難易度セレクタやインタビュー操作と並ぶ画面ではスマホ幅で隠し、トップページの多言語バナーにも同じ切替を置いた。
 
-### P8-5 「注目の議案」レイアウト刷新（Featured Bills Layout & Aesthetics） ✅
+### P8-5 「注目の議案」レイアウト刷新（Featured Bills Layout & Aesthetics）
 トップページの「注目の議案」セクションが直線的な1列（縦並び）になっており視覚的な魅力に欠けるため、レイアウトを見直す。
 
 Acceptance:
@@ -238,7 +238,8 @@ Acceptance:
 実装メモ:
 - `md` 以上で2カラムのグリッドにした。1件なら全幅の主役カード、2件なら均等2カラム、3件以上なら先頭を全幅の主役カード、残りを2カラムで並べ、残りが奇数なら最後の1件を全幅にする（`getFeaturedBillLayout`）。スマホは1カラム。
 - 全幅カードはサムネイルがあると `md` 以上で本文の横に置く。主役カードは見出し `md:text-2xl`・余白 `md:p-8`。
-- 管理画面の注目切替が本番のトップに反映されない件はコード側の原因が見つからなかった。ローカルでは `/api/revalidate` が通り、注目議案も表示される。本番 admin の Vercel 環境変数 `NEXT_PUBLIC_WEB_URL`（本番 web の URL）と `REVALIDATE_SECRET`（web と一致）の確認待ち。
+- アクティブ会期に注目議案がない場合は、全会期の公開済み注目議案へフォールバックする。
+- キャッシュ無効化に失敗した場合は、保存済みの注目設定を維持したまま管理画面へ警告を表示する。本番 admin の Vercel 環境変数 `NEXT_PUBLIC_WEB_URL`（本番 web の URL）と `REVALIDATE_SECRET`（web と一致）を確認し、実際の注目切替が公開Webへ即時反映されるまで完了扱いにしない。
 
 ### P8-6 ルビ（Rubyful）適用スコープの日本語限定化（Ruby Scope Guard for Japanese Only）
 ふりがな（ルビ）トグルをONにした状態で中国語案内ページ（`/guide/zh-Hans`）等を開くと、中国語の漢字に対しても日本語のふりがなが付与されてしまう不具合を防止する。
