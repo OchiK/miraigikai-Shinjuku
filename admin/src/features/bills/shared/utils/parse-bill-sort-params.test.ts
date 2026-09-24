@@ -37,6 +37,11 @@ describe("parseBillSortParams", () => {
     expect(result).toEqual({ field: "council_session", order: "asc" });
   });
 
+  it("is_featuredフィールドを受け付ける", () => {
+    const result = parseBillSortParams("is_featured", "desc");
+    expect(result).toEqual({ field: "is_featured", order: "desc" });
+  });
+
   it("不正なフィールドはデフォルトフィールドにフォールバックする", () => {
     const result = parseBillSortParams("invalid_field", "asc");
     expect(result).toEqual({ field: "created_at", order: "asc" });

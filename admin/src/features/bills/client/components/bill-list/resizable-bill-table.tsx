@@ -17,6 +17,7 @@ import type {
 import { getBillStatusLabel } from "../../../shared/types";
 import { BillActionsMenu } from "../bill-actions-menu/bill-actions-menu";
 import { FeaturedFilter } from "./featured-filter";
+import { FeaturedToggle } from "./featured-toggle";
 import { PreviewButton } from "./preview-button";
 import { PublishStatusBadge } from "./publish-status-badge";
 import { PublishStatusFilter } from "./publish-status-filter";
@@ -38,6 +39,7 @@ type ColumnConfig = {
 const COLUMNS: ColumnConfig[] = [
   { key: "bill_number", defaultWidth: 120, minWidth: 80, resizable: true },
   { key: "name", defaultWidth: 280, minWidth: 150, resizable: true },
+  { key: "is_featured", defaultWidth: 80, minWidth: 60, resizable: true },
   { key: "council_session", defaultWidth: 150, minWidth: 100, resizable: true },
   {
     key: "publish_status",
@@ -207,6 +209,14 @@ export function ResizableBillTable({
                       議案名
                     </SortableHeadButton>
                   )}
+                  {col.key === "is_featured" && (
+                    <SortableHeadButton
+                      field="is_featured"
+                      sortConfig={sortConfig}
+                    >
+                      注目
+                    </SortableHeadButton>
+                  )}
                   {col.key === "council_session" && (
                     <SortableHeadButton
                       field="council_session"
@@ -298,6 +308,13 @@ function BillRow({ bill }: { bill: BillWithCouncilSession }) {
         >
           {bill.name}
         </Link>
+      </td>
+      <td className="p-2 align-middle overflow-hidden">
+        <FeaturedToggle
+          billId={bill.id}
+          billName={bill.name}
+          isFeatured={bill.is_featured}
+        />
       </td>
       <td className="p-2 align-middle overflow-hidden">
         <span className="block truncate text-gray-600">

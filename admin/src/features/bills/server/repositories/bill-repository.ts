@@ -73,15 +73,21 @@ export async function findBillsWithCouncilSessions(
     query = query.eq("is_featured", filters.isFeatured === "true");
   }
 
-  const result =
-    field === "council_session"
-      ? await query.order("created_at", {
-          referencedTable: "council_sessions",
-          ascending,
-        })
-      : await query.order(field, orderOptions);
+  if (field === "council_session") {
+    query = query.order("created_at", {
+      referencedTable: "council_sessions",
+      ascending,
+    });
+  } else if (field === "is_featured") {
+    // 注目フラグは2値しかないため、同じ値の中は作成日の新しい順で並びを固定する
+    query = query
+      .order("is_featured", orderOptions)
+      .order("created_at", { ascending: false });
+  } else {
+    query = query.order(field, orderOptions);
+  }
 
-  const { data, error } = result;
+  const { data, error } = await query;
 
   if (error) {
     throw new Error(`Failed to fetch bills: ${error.message}`);
@@ -138,6 +144,21 @@ export async function updateBillPublishStatus(
 
   if (error) {
     throw new Error(`Failed to update bill publish status: ${error.message}`);
+  }
+}
+
+export async function updateBillIsFeatured(
+  billId: string,
+  isFeatured: boolean
+) {
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from("bills")
+    .update({ is_featured: isFeatured })
+    .eq("id", billId);
+
+  if (error) {
+    throw new Error(`Failed to update bill featured status: ${error.message}`);
   }
 }
 
