@@ -1,10 +1,17 @@
+import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
 import Image from "next/image";
 import { siteConfig } from "@/config/site.config";
+import { getUiMessages } from "@/features/i18n/shared/ui-messages";
 import { LinkButton } from "./link-button";
 
-export function About() {
+interface AboutProps {
+  locale?: PublicLocale;
+}
+
+export function About({ locale = "ja" }: AboutProps) {
+  const { about } = getUiMessages(locale);
   return (
-    <div className="py-10">
+    <div lang={locale} className="py-10">
       <div className="flex flex-col gap-4">
         {/* ヘッダー */}
         <div className="flex flex-col gap-4">
@@ -18,7 +25,7 @@ export function About() {
             />
           </h2>
           <p className="text-sm font-bold text-mirai-accent-text">
-            {siteConfig.siteName}とは
+            {about.lead}
           </p>
         </div>
 
@@ -26,13 +33,12 @@ export function About() {
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-3">
             <h3 className="text-2xl font-bold leading-[43.2px]">
-              議会での議論を
+              {about.headingLines[0]}
               <br />
-              できる限りわかりやすく
+              {about.headingLines[1]}
             </h3>
             <p className="text-[15px] leading-[28px] text-black">
-              {siteConfig.siteName}は、{siteConfig.siteDescription}
-              。公式資料を確認しながら、区政への理解を深めるためにご利用ください。
+              {about.body}
             </p>
           </div>
 
@@ -47,7 +53,7 @@ export function About() {
                 height: 25,
               }}
             >
-              {siteConfig.siteName}とは
+              {about.lead}
             </LinkButton>
           )}
 
@@ -55,30 +61,26 @@ export function About() {
           {!siteConfig.features.showTeamMiraiSection && (
             <div className="flex flex-col gap-4 pt-2 border-t border-gray-200">
               <div className="flex flex-col gap-2 text-[13px] leading-relaxed text-mirai-text-secondary">
-                <p>
-                  このサイトは「チームみらい」開発の「みらい議会」をベースに作成しています。
-                </p>
+                <p>{about.basedOn}</p>
               </div>
 
               <div className="flex flex-col gap-1 text-[13px] leading-relaxed text-mirai-text-secondary">
                 <p>
-                  このサイトは「チームみらい」の公式ではない、非公式のサイトです。
+                  {about.unofficial}
                   <br />
-                  ご意見や不具合等がございましたら党公式への連絡ではなく、
-                  <br />
-                  運営者（
+                  {about.contactBefore}
                   <a
                     href={siteConfig.operator.contactUrl}
                     target="_blank"
                     rel="noreferrer"
                     className="underline underline-offset-2 hover:opacity-70 transition-opacity"
                   >
-                    {siteConfig.operator.name}
+                    {about.operatorName}
                   </a>
-                  にご連絡お願いします。
+                  {about.contactAfter}
                 </p>
                 <p className="pt-1">
-                  本サービスのソースコード（AGPL-3.0）は{" "}
+                  {about.sourceBefore}
                   <a
                     href={siteConfig.operator.contactUrl}
                     target="_blank"
@@ -86,8 +88,8 @@ export function About() {
                     className="underline underline-offset-2 hover:opacity-70 transition-opacity"
                   >
                     GitHub
-                  </a>{" "}
-                  で公開されています。
+                  </a>
+                  {about.sourceAfter}
                 </p>
               </div>
             </div>

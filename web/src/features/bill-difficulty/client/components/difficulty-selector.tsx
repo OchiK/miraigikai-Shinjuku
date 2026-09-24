@@ -1,11 +1,12 @@
 "use client";
 
+import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { getUiMessages } from "@/features/i18n/shared/ui-messages";
 import { cn } from "@/lib/utils";
 import { setDifficultyLevel } from "../../server/actions/set-difficulty-level";
 import {
-  DIFFICULTY_LABELS,
   type DifficultyLevelEnum,
   VALID_DIFFICULTY_LEVELS,
 } from "../../shared/types";
@@ -18,6 +19,8 @@ interface DifficultySelectorProps {
   currentLevel: DifficultyLevelEnum;
   scrollToTop?: boolean;
   maintainScrollFromBottom?: boolean;
+  /** 表示言語。省略時は日本語 */
+  locale?: PublicLocale;
 }
 
 /**
@@ -28,7 +31,9 @@ export function DifficultySelector({
   currentLevel,
   scrollToTop,
   maintainScrollFromBottom,
+  locale = "ja",
 }: DifficultySelectorProps) {
+  const { difficulty } = getUiMessages(locale);
   const [selectedLevel, setSelectedLevel] =
     useState<DifficultyLevelEnum>(currentLevel);
   const [isChanging, setIsChanging] = useState(false);
@@ -80,7 +85,7 @@ export function DifficultySelector({
     <div
       className="flex shrink-0 items-center gap-0.5 rounded-full bg-neutral-200 p-0.5 md:gap-1 md:p-1"
       role="group"
-      aria-label="説明の詳しさを切り替え"
+      aria-label={difficulty.groupLabel}
     >
       {VALID_DIFFICULTY_LEVELS.map((level) => {
         const isSelected = level === selectedLevel;
@@ -100,7 +105,7 @@ export function DifficultySelector({
                 : "text-mirai-text-secondary"
             )}
           >
-            {DIFFICULTY_LABELS[level]}
+            {difficulty.labels[level]}
           </Button>
         );
       })}

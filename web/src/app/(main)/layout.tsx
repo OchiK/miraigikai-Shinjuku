@@ -5,14 +5,17 @@ import { Header } from "@/components/header";
 import { AuthGate } from "@/components/layouts/auth-gate";
 import { Footer } from "@/components/layouts/footer/footer";
 import { MainLayout } from "@/components/layouts/main-layout";
+import { getLocale } from "@/features/i18n/server/loaders/get-locale";
 import { env } from "@/lib/env";
 import { RubyfulInitializer } from "@/lib/rubyful";
 
-export default function MainGroupLayout({
+export default async function MainGroupLayout({
   children,
 }: Readonly<{
   children: ReactNode;
 }>) {
+  const locale = await getLocale();
+
   return (
     <>
       <SpeedInsights />
@@ -25,7 +28,7 @@ export default function MainGroupLayout({
         <main className="min-h-dvh md:min-h-[calc(100dvh-96px)] bg-mirai-surface">
           {children}
         </main>
-        <Footer />
+        <Footer locale={locale} />
       </MainLayout>
     </>
   );

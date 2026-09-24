@@ -1,7 +1,8 @@
+import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
 import { CircleHelp } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
-import { siteConfig } from "@/config/site.config";
+import { getUiMessages } from "@/features/i18n/shared/ui-messages";
 import { routes } from "@/lib/routes";
 
 /**
@@ -9,24 +10,26 @@ import { routes } from "@/lib/routes";
  *
  * 非公式であることとAI回答の限界を、各議案の末尾に必ず置く。
  */
-export function BillDisclaimer() {
+export function BillDisclaimer({ locale = "ja" }: { locale?: PublicLocale }) {
+  const { disclaimer } = getUiMessages(locale);
   return (
-    <section className="rounded-xl bg-mirai-surface-sunken p-6">
+    <section lang={locale} className="rounded-xl bg-mirai-surface-sunken p-6">
       <div className="space-y-6">
         <div className="space-y-2">
           <h2 className="font-bold text-mirai-text text-sm">
-            掲載コンテンツについて
+            {disclaimer.contentTitle}
           </h2>
           <p className="text-mirai-text-muted text-xs leading-[1.9]">
-            掲載されている議案情報は、{siteConfig.councilName}
-            に上程された議案などの公開情報を基に、AIを活用しながら背景情報を整理したものです。
+            {disclaimer.contentBody}
           </p>
         </div>
 
         <div className="space-y-2">
-          <h2 className="font-bold text-mirai-text text-sm">免責事項</h2>
+          <h2 className="font-bold text-mirai-text text-sm">
+            {disclaimer.disclaimerTitle}
+          </h2>
           <p className="text-mirai-text-muted text-xs leading-[1.9]">
-            本サイトで公開する情報は、可能な限り正確かつ最新の情報を反映するよう努めていますが、その正確性・完全性・即時性について保証するものではありません。また、AIチャットは不正確または誤解を招く回答を生成する可能性があります。正確な情報は、公式文書や一次資料をご確認ください。
+            {disclaimer.disclaimerBody}
           </p>
         </div>
 
@@ -39,7 +42,7 @@ export function BillDisclaimer() {
             className="size-4"
             strokeWidth={2.75}
           />
-          よくある質問
+          {disclaimer.faq}
         </Link>
       </div>
     </section>

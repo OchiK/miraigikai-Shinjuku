@@ -1,9 +1,11 @@
+import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
 import { ChevronRight } from "lucide-react";
 import Image from "next/image";
 import type { Route } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import type { CouncilSession } from "@/features/council-sessions/shared/types";
+import { getUiMessages } from "@/features/i18n/shared/ui-messages";
 import { routes } from "@/lib/routes";
 import { CompactBillCard } from "../../client/components/bill-list/compact-bill-card";
 import type { BillWithContent } from "../../shared/types";
@@ -12,6 +14,7 @@ interface PreviousSessionSectionProps {
   session: CouncilSession;
   bills: BillWithContent[];
   totalBillCount: number;
+  locale?: PublicLocale;
 }
 
 const VISIBLE_BILLS = 5;
@@ -20,6 +23,7 @@ export function PreviousSessionSection({
   session,
   bills,
   totalBillCount,
+  locale = "ja",
 }: PreviousSessionSectionProps) {
   const visibleBills = bills.slice(0, VISIBLE_BILLS);
   const showMoreButton = totalBillCount > visibleBills.length;
@@ -32,7 +36,13 @@ export function PreviousSessionSection({
   const sessionBillsUrl = `/sessions/${session.slug}/bills`;
   const startDate = new Date(session.start_date);
   const endDate = new Date(session.end_date ?? session.start_date);
-  const sessionDescription = `${startDate.getFullYear()}.${startDate.getMonth() + 1}月〜${endDate.getMonth() + 1}月に実施された${session.name}`;
+  const { home } = getUiMessages(locale);
+  const sessionDescription = home.sessionPeriod({
+    year: startDate.getFullYear(),
+    startMonth: startDate.getMonth() + 1,
+    endMonth: endDate.getMonth() + 1,
+    sessionName: session.name,
+  });
 
   return (
     <section className="flex flex-col gap-6">
@@ -47,8 +57,8 @@ export function PreviousSessionSection({
             priority
           />
         </h2>
-        <p className="text-sm font-bold text-mirai-accent-text">
-          過去の定例会に上程された議案
+        <p lang={locale} className="text-sm font-bold text-mirai-accent-text">
+          {home.archiveSubtitle}
         </p>
       </div>
 
@@ -57,9 +67,8 @@ export function PreviousSessionSection({
         <Link href={sessionBillsUrl as Route} className="group">
           <h3 className="text-[22px] font-bold text-black leading-[1.48] flex items-center gap-1.5">
             <span className="flex items-center gap-4">
-              {new Date(session.start_date).getFullYear()}年 {session.name}
-              の議案
-              <span className="shrink-0">{totalBillCount}件</span>
+              {home.sessionBillsHeading(startDate.getFullYear(), session.name)}
+              <span className="shrink-0">{home.billCount(totalBillCount)}</span>
             </span>
             <ChevronRight className="h-6 w-6 text-mirai-text-muted group-hover:translate-x-0.5 transition-transform" />
           </h3>
@@ -73,7 +82,7 @@ export function PreviousSessionSection({
       <div className="relative flex flex-col gap-3">
         {visibleBills.map((bill) => (
           <Link key={bill.id} href={routes.billDetail(bill.id) as Route}>
-            <CompactBillCard bill={bill} />
+            <CompactBillCard bill={bill} locale={locale} />
           </Link>
         ))}
 
@@ -87,7 +96,9 @@ export function PreviousSessionSection({
                 asChild
                 className="w-[214px] h-12 text-base font-bold border-mirai-text rounded-full hover:bg-neutral-200 bg-card"
               >
-                <Link href={sessionBillsUrl as Route}>もっと読む</Link>
+                <Link lang={locale} href={sessionBillsUrl as Route}>
+                  {home.readMore}
+                </Link>
               </Button>
             </div>
           </div>

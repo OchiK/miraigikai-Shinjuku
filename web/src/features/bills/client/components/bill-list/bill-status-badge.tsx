@@ -1,4 +1,6 @@
+import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
 import { Badge } from "@/components/ui/badge";
+import { localizeCardStatusLabel } from "@/features/i18n/shared/ui-messages";
 import type { BillStatusEnum } from "../../../shared/types";
 import {
   getCardStatusLabel,
@@ -13,17 +15,24 @@ interface BillStatusBadgeProps {
    * 専決処分の承認が「可決」と表示される点に注意。
    */
   statusNote?: string | null;
+  /** 表示言語。省略時は日本語 */
+  locale?: PublicLocale;
   className?: string;
 }
 
 export function BillStatusBadge({
   status,
   statusNote,
+  locale = "ja",
   className,
 }: BillStatusBadgeProps) {
   return (
-    <Badge variant={getStatusVariant(status, statusNote)} className={className}>
-      {getCardStatusLabel(status, statusNote)}
+    <Badge
+      variant={getStatusVariant(status, statusNote)}
+      lang={locale}
+      className={className}
+    >
+      {localizeCardStatusLabel(getCardStatusLabel(status, statusNote), locale)}
     </Badge>
   );
 }

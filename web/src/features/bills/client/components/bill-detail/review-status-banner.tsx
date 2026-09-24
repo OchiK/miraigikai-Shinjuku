@@ -1,5 +1,6 @@
 "use client";
 
+import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
 import { Info } from "lucide-react";
 import { useState } from "react";
 import {
@@ -7,14 +8,17 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { getUiMessages } from "@/features/i18n/shared/ui-messages";
 
 /** Figmaデザイン準拠のレビュー完了チェックアイコン */
 function ReviewCheckIcon({
   className,
   style,
+  label,
 }: {
   className?: string;
   style?: React.CSSProperties;
+  label: string;
 }) {
   return (
     <svg
@@ -22,7 +26,7 @@ function ReviewCheckIcon({
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       role="img"
-      aria-label="レビュー完了"
+      aria-label={label}
       className={className}
       style={style}
     >
@@ -58,6 +62,8 @@ interface ReviewCompleteBadgeProps {
   size?: number;
   /** CSS top offset (e.g. "2px"). Default: top-[1px] */
   top?: string;
+  /** 表示言語。アイコンの読み上げ名に使う。省略時は日本語 */
+  locale?: PublicLocale;
 }
 
 /**
@@ -68,7 +74,9 @@ export function ReviewCompleteBadge({
   showTooltip = false,
   size,
   top,
+  locale = "ja",
 }: ReviewCompleteBadgeProps) {
+  const label = getUiMessages(locale).card.reviewComplete;
   const [open, setOpen] = useState(false);
 
   const hasCustomSize = size != null;
@@ -80,6 +88,7 @@ export function ReviewCompleteBadge({
       style={hasCustomTop ? { top } : undefined}
     >
       <ReviewCheckIcon
+        label={label}
         className={hasCustomSize ? undefined : "size-5"}
         style={
           hasCustomSize
@@ -104,6 +113,7 @@ export function ReviewCompleteBadge({
           onClick={() => setOpen(true)}
         >
           <ReviewCheckIcon
+            label={label}
             className={hasCustomSize ? undefined : "size-5"}
             style={
               hasCustomSize

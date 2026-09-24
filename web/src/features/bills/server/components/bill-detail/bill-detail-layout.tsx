@@ -1,3 +1,4 @@
+import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
 import { Container } from "@/components/layouts/container";
 import { siteConfig } from "@/config/site.config";
 import type { DifficultyLevelEnum } from "@/features/bill-difficulty/shared/types";
@@ -26,6 +27,8 @@ interface BillDetailLayoutProps {
   currentDifficulty: DifficultyLevelEnum;
   /** 日本語以外を選んでいるときの表示状態。ja なら null */
   localization?: BillLocalization | null;
+  /** UI 文言の言語。翻訳が無く日本語を出しているときも、選んだ言語に合わせる */
+  locale?: PublicLocale;
 }
 
 /**
@@ -43,6 +46,7 @@ export async function BillDetailLayout({
   bill,
   currentDifficulty,
   localization,
+  locale = "ja",
 }: BillDetailLayoutProps) {
   const showStances =
     bill.status === "preparing" ||
@@ -74,7 +78,7 @@ export async function BillDetailLayout({
 
           <div className="flex flex-col gap-8">
             {/* 2〜4. 議決ステータス・議案番号 / 表題 / 分野タグ */}
-            <BillDetailHeader bill={bill} />
+            <BillDetailHeader bill={bill} locale={locale} />
 
             {/* 表示言語の案内（日本語以外を選んだときのみ） */}
             {localization && <TranslationNotice localization={localization} />}
@@ -137,7 +141,7 @@ export async function BillDetailLayout({
             </div>
 
             {/* 11. 免責 */}
-            <BillDisclaimer />
+            <BillDisclaimer locale={locale} />
           </div>
         </Container>
       </BillDetailClient>

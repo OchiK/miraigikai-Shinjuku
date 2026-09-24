@@ -1,7 +1,9 @@
+import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
 import Image from "next/image";
 import { RubySafeLineClamp } from "@/components/ruby-safe-line-clamp";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { siteConfig } from "@/config/site.config";
+import { getUiMessages } from "@/features/i18n/shared/ui-messages";
 import { formatDateJST } from "@/lib/utils/date";
 import type { BillWithContent } from "../../../shared/types";
 import { ReviewCompleteBadge } from "../bill-detail/review-status-banner";
@@ -10,9 +12,12 @@ import { BillTag } from "./bill-tag";
 
 interface BillCardProps {
   bill: BillWithContent;
+  /** 表示言語。議案名・要約・タグは DB のまま出す */
+  locale?: PublicLocale;
 }
 
-export function BillCard({ bill }: BillCardProps) {
+export function BillCard({ bill, locale = "ja" }: BillCardProps) {
+  const { card } = getUiMessages(locale);
   const showInterview =
     siteConfig.features.aiInterview && bill.hasPublicInterview;
   const displayTitle = bill.bill_content?.title;
@@ -27,7 +32,7 @@ export function BillCard({ bill }: BillCardProps) {
             className={`${bill.thumbnail_url != null ? "absolute" : "relative"} top-3 left-3 z-1`}
           >
             <span className="inline-flex items-center justify-center px-3 py-0.5 text-xs font-medium bg-mirai-featured text-mirai-featured-text rounded-full">
-              注目
+              <span lang={locale}>{card.featured}</span>
             </span>
           </div>
         )}
@@ -54,7 +59,7 @@ export function BillCard({ bill }: BillCardProps) {
                 {bill.is_review_completed && (
                   <>
                     {" "}
-                    <ReviewCompleteBadge />
+                    <ReviewCompleteBadge locale={locale} />
                   </>
                 )}
               </CardTitle>
@@ -62,12 +67,15 @@ export function BillCard({ bill }: BillCardProps) {
                 <BillStatusBadge
                   status={bill.status}
                   statusNote={bill.status_note}
+                  locale={locale}
                   className="w-fit"
                 />
                 {/* published_at はサイト掲載日時であり、議案の提出日ではない */}
                 <div className="flex items-center gap-2 text-xs font-medium text-mirai-text-muted">
                   {bill.published_at && (
-                    <time>{formatDateJST(bill.published_at)} 掲載</time>
+                    <time lang={locale}>
+                      {card.published(formatDateJST(bill.published_at))}
+                    </time>
                   )}
                 </div>
               </div>
@@ -85,7 +93,7 @@ export function BillCard({ bill }: BillCardProps) {
                   ))}
                   {showInterview && (
                     <span className="inline-flex items-center justify-center px-3 py-1 text-xs font-medium bg-mirai-tag text-mirai-tag-text rounded-full">
-                      AIインタビュー受付中
+                      <span lang={locale}>{card.interviewOpen}</span>
                     </span>
                   )}
                 </div>

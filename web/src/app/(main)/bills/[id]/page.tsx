@@ -86,6 +86,7 @@ export default async function BillDetailPage({ params }: BillDetailPageProps) {
       bill={bill}
       currentDifficulty={currentDifficulty}
       localization={localization}
+      locale={locale}
     />
   );
 }

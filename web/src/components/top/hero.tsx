@@ -1,13 +1,20 @@
+import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
 import Image from "next/image";
 import { Container } from "@/components/layouts/container";
 import { siteConfig } from "@/config/site.config";
+import { getUiMessages } from "@/features/i18n/shared/ui-messages";
 
-export function Hero() {
+interface HeroProps {
+  locale?: PublicLocale;
+}
+
+export function Hero({ locale = "ja" }: HeroProps) {
+  const { home } = getUiMessages(locale);
   return (
     <div className="relative w-full h-[80vh] min-h-[400px] md:h-[70vh]">
       <Image
         src="/img/hero_background.png"
-        alt={siteConfig.councilName}
+        alt={home.heroImageAlt}
         fill
         priority
         className="object-cover"
@@ -16,9 +23,12 @@ export function Hero() {
       />
       <div className="absolute bottom-[30vh] left-0 right-0 py-4">
         <Container>
-          <h1 className="font-bold text-xl md:text-2xl leading-relaxed">
-            いま{siteConfig.councilName}で議論されていること <br />
-            やさしい言葉で説明します
+          <h1
+            lang={locale}
+            className="font-bold text-xl md:text-2xl leading-relaxed"
+          >
+            {home.heroLines[0]} <br />
+            {home.heroLines[1]}
           </h1>
           <p className="mt-2 font-display text-xs">
             {/* 表示したい場合は `powered by ${siteConfig.operator.name}` とかで*/}

@@ -1,5 +1,6 @@
 "use client";
 
+import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
 import type { Route } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -7,37 +8,48 @@ import { usePathname } from "next/navigation";
 import { siteConfig } from "@/config/site.config";
 import { GuideLanguageLinks } from "@/features/guide/client/components/guide-language-links";
 import { GUIDE_LINKS_LABEL } from "@/features/guide/shared/guide-content";
+import {
+  getUiMessages,
+  type UiMessages,
+} from "@/features/i18n/shared/ui-messages";
 import { isInterviewPage } from "@/lib/page-layout-utils";
 import { routes } from "@/lib/routes";
-import { policyLinks, primaryLinks } from "./footer.config";
+import { getPolicyLinks, getPrimaryLinks } from "./footer.config";
 
-export function Footer() {
+type FooterMessages = UiMessages["footer"];
+
+interface FooterProps {
+  /** 表示言語。省略時は日本語 */
+  locale?: PublicLocale;
+}
+
+export function Footer({ locale = "ja" }: FooterProps) {
   const pathname = usePathname();
+  const { footer } = getUiMessages(locale);
 
   if (isInterviewPage(pathname)) {
     return null;
   }
 
   return (
-    <footer className="bg-card text-mirai-text">
+    <footer lang={locale} className="bg-card text-mirai-text">
       <div className="mx-auto flex w-full max-w-[500px] flex-col items-center px-6 py-14 pb-20 text-center">
-        {siteConfig.features.showTeamMiraiSection && <FooterLogoSection />}
-        <FooterPrimaryLinks />
+        {siteConfig.features.showTeamMiraiSection && (
+          <FooterLogoSection messages={footer} />
+        )}
+        <FooterPrimaryLinks messages={footer} />
         <FooterGuideLinks />
-        <FooterPolicies />
-        <FooterCopyright />
+        <FooterPolicies messages={footer} />
+        <FooterCopyright messages={footer} />
       </div>
     </footer>
   );
 }
 
-function FooterLogoSection() {
+function FooterLogoSection({ messages }: { messages: FooterMessages }) {
   return (
     <div className="flex flex-col items-center text-center mb-9">
-      <Link
-        href={routes.home()}
-        aria-label={`${siteConfig.siteName} トップページ`}
-      >
+      <Link href={routes.home()} aria-label={messages.homeLogoLabel}>
         <Image
           src="/img/logo.svg"
           alt={siteConfig.siteName}
@@ -50,9 +62,10 @@ function FooterLogoSection() {
   );
 }
 
-function FooterPrimaryLinks() {
+function FooterPrimaryLinks({ messages }: { messages: FooterMessages }) {
+  const primaryLinks = getPrimaryLinks(messages);
   return (
-    <nav aria-label="主要リンク" className="w-full mb-5">
+    <nav aria-label={messages.primaryLinksLabel} className="w-full mb-5">
       <ul
         className="
       flex flex-col items-center gap-3 text-[14px] font-semibold text-mirai-text
@@ -90,7 +103,8 @@ function FooterGuideLinks() {
   );
 }
 
-function FooterPolicies() {
+function FooterPolicies({ messages }: { messages: FooterMessages }) {
+  const policyLinks = getPolicyLinks(messages);
   return (
     <div className="flex flex-col items-center text-[12px] font-semibold text-mirai-text mb-5">
       <ul className="flex flex-wrap justify-center gap-x-2 gap-y-1">
@@ -112,7 +126,7 @@ function FooterPolicies() {
   );
 }
 
-function FooterCopyright() {
+function FooterCopyright({ messages }: { messages: FooterMessages }) {
   if (siteConfig.features.showTeamMiraiSection) {
     return (
       <div className="text-center text-sm font-medium text-mirai-text">
@@ -123,14 +137,9 @@ function FooterCopyright() {
 
   return (
     <div className="space-y-1 text-center text-xs font-medium text-mirai-text-muted">
-      <p>これは政党チームみらいが運営しているものではありません。</p>
-      <p>
-        本サイトは個人が運営する非公式サービスです。{siteConfig.cityName}および
-        {siteConfig.councilName}が運営・監修するものではありません。
-      </p>
-      <p>
-        © 2026 {siteConfig.siteName} (非公式) / 運営: {siteConfig.operator.name}
-      </p>
+      <p>{messages.notTeamMirai}</p>
+      <p>{messages.unofficialNotice}</p>
+      <p>{messages.copyright}</p>
     </div>
   );
 }

@@ -7,6 +7,7 @@ import type { DifficultyLevelEnum } from "@/features/bill-difficulty/shared/type
 import type { CouncilSession } from "@/features/council-sessions/shared/types";
 import { pickHeaderSession } from "@/features/council-sessions/shared/utils/pick-header-session";
 import { LanguageToggle } from "@/features/i18n/client/components/language-toggle";
+import { getUiMessages } from "@/features/i18n/shared/ui-messages";
 import { InterviewHeaderActions } from "@/features/interview-session/client/components/interview-header-actions";
 import { isInterviewPage, isMainPage } from "@/lib/page-layout-utils";
 import { routes } from "@/lib/routes";
@@ -37,6 +38,7 @@ export function HeaderClient({
   // ふりがなボタンが並ぶ下層ページも、スマートフォン幅ではサイト名が入りきらない
   const compactHomeLink = isCrowded || showRubyToggle;
   const headerSession = pickHeaderSession(sessions);
+  const { nav } = getUiMessages(locale);
   // ヘッダーのふりがなボタンを出す幅と、それ未満でメニューにスイッチを出す幅を対にする。
   // 難易度セレクタ等が並ぶページは sm（500px）、それ以外は xs（360px）から入りきる
   const rubyPillClassName = isCrowded
@@ -45,7 +47,10 @@ export function HeaderClient({
   const menuRubyToggleClassName = isCrowded ? "sm:hidden" : "xs:hidden";
 
   return (
-    <header className="px-3 fixed top-4 left-0 right-0 z-40 max-w-[1440px] mx-auto">
+    <header
+      lang={locale}
+      className="px-3 fixed top-4 left-0 right-0 z-40 max-w-[1440px] mx-auto"
+    >
       <div className="rounded-2xl bg-mirai-surface shadow-mirai-md mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center gap-3 h-16">
           {/* Logo / Site Title */}
@@ -53,6 +58,7 @@ export function HeaderClient({
             <HomeLink
               isHome={pathname === routes.home()}
               compact={compactHomeLink}
+              locale={locale}
             />
           </div>
 
@@ -60,16 +66,20 @@ export function HeaderClient({
           <NavLinks
             pathname={pathname}
             session={headerSession}
+            locale={locale}
             className="hidden lg:flex"
           />
 
           {/* Navigation */}
           <nav
             className="flex shrink-0 items-center space-x-2"
-            aria-label="補助ナビゲーション"
+            aria-label={nav.secondaryNavLabel}
           >
             {showDifficultySelector && (
-              <DifficultySelector currentLevel={difficultyLevel} />
+              <DifficultySelector
+                currentLevel={difficultyLevel}
+                locale={locale}
+              />
             )}
             {/* 狭い画面で隠すときは、メニューとトップページの案内から切り替える */}
             <LanguageToggle

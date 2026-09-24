@@ -53,4 +53,20 @@ describe("NavLinks", () => {
     expect(screen.queryByText(/現在の会期/)).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "議員一覧" })).toBeInTheDocument();
   });
+
+  it("英語表示では英語のラベルで出す", () => {
+    render(<NavLinks pathname="/" session={session} locale="en" />);
+
+    expect(screen.getByRole("link", { name: "Bills" })).toHaveAttribute(
+      "href",
+      "/sessions/r8-2/bills"
+    );
+    expect(screen.getByRole("link", { name: "Councilors" })).toHaveAttribute(
+      "href",
+      "/councilors"
+    );
+    expect(
+      screen.getByRole("navigation", { name: "Main navigation" })
+    ).toBeInTheDocument();
+  });
 });
