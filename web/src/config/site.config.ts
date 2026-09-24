@@ -8,6 +8,18 @@ export const siteConfig = {
     "新宿区議会でどのような議案が検討されているかを、公式資料をもとにわかりやすく伝える非公式サイトです",
   cityName: "新宿区",
   councilName: "新宿区議会",
+  /**
+   * 英語表示（locale=en）で使う名前。
+   * ヘッダーのサイト名は英語表示でも日本語のまま出す（名前を1つに保つため）。
+   */
+  english: {
+    siteName: "Mirai Gikai @ Shinjuku",
+    siteDescription:
+      "an unofficial site that explains, based on official materials, which bills Shinjuku City Council is considering",
+    cityName: "Shinjuku City",
+    councilName: "Shinjuku City Council",
+    operatorName: "Shinjuku Resident A",
+  },
   keywords: [
     "みらい議会＠新宿区",
     "新宿区",

@@ -18,6 +18,7 @@ import {
   hasSlug,
 } from "@/features/council-sessions/shared/utils/pick-header-session";
 import { LanguageSelector } from "@/features/i18n/client/components/language-selector";
+import { getUiMessages } from "@/features/i18n/shared/ui-messages";
 import { routes } from "@/lib/routes";
 import { RubyToggle } from "@/lib/rubyful";
 import { cn } from "@/lib/utils";
@@ -51,6 +52,7 @@ export function HamburgerMenu({
 }: HamburgerMenuProps) {
   const sessionsWithSlug = sessions.filter(hasSlug);
   const hasDesktopOnlyItems = hasSessionsBesides(sessions, headerSession);
+  const { nav } = getUiMessages(locale);
 
   return (
     <Popover>
@@ -59,12 +61,12 @@ export function HamburgerMenu({
           variant="ghost"
           size="icon"
           className={cn("h-11 w-11", !hasDesktopOnlyItems && "lg:hidden")}
-          aria-label="メニューを開く"
+          aria-label={nav.openMenu}
         >
           <Menu className="h-5 w-5" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-56" align="end">
+      <PopoverContent lang={locale} className="w-56" align="end">
         <div className="flex flex-col gap-3">
           <div className="lg:hidden">
             <LanguageSelector currentLocale={locale} />
@@ -76,12 +78,12 @@ export function HamburgerMenu({
             href={routes.councilors()}
             className="flex min-h-11 items-center text-sm hover:underline lg:hidden"
           >
-            議員一覧
+            {nav.councilors}
           </Link>
           {sessionsWithSlug.length > 0 && (
             <div className={cn(!hasDesktopOnlyItems && "lg:hidden")}>
               <p className="text-xs font-semibold text-mirai-text-muted mb-1">
-                議案一覧
+                {nav.bills}
               </p>
               <ul className="flex flex-col gap-1">
                 {sessionsWithSlug.map((session) => (
@@ -95,7 +97,7 @@ export function HamburgerMenu({
                       href={routes.sessionBills(session.slug)}
                       className="flex min-h-11 items-center text-sm hover:underline"
                     >
-                      {session.name}の議案一覧
+                      {nav.sessionBills(session.name)}
                     </Link>
                   </li>
                 ))}

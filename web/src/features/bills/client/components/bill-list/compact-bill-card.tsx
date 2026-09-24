@@ -1,5 +1,7 @@
+import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
 import Image from "next/image";
 import { Card } from "@/components/ui/card";
+import { getUiMessages } from "@/features/i18n/shared/ui-messages";
 import { formatDateJST } from "@/lib/utils/date";
 import type { BillWithContent } from "../../../shared/types";
 import { ReviewCompleteBadge } from "../bill-detail/review-status-banner";
@@ -8,16 +10,21 @@ import { BillStatusBadge } from "./bill-status-badge";
 interface CompactBillCardProps {
   bill: BillWithContent;
   className?: string;
+  /** 表示言語。議案名は DB のまま出す */
+  locale?: PublicLocale;
 }
 
 /**
  * コンパクトな水平レイアウトの議案カード
  * 過去定例会セクションや過去定例会議案一覧ページで使用
  */
-export function CompactBillCard({ bill, className }: CompactBillCardProps) {
+export function CompactBillCard({
+  bill,
+  className,
+  locale = "ja",
+}: CompactBillCardProps) {
   const displayTitle = bill.bill_content?.title || bill.name;
-  // published_at はサイト掲載日時であり、議案の提出日ではない
-  const statusLabel = "掲載";
+  const { card } = getUiMessages(locale);
 
   return (
     <Card
@@ -31,7 +38,7 @@ export function CompactBillCard({ bill, className }: CompactBillCardProps) {
             {bill.is_review_completed && (
               <>
                 {" "}
-                <ReviewCompleteBadge size={14} top="1px" />
+                <ReviewCompleteBadge size={14} top="1px" locale={locale} />
               </>
             )}
           </h3>
@@ -39,11 +46,13 @@ export function CompactBillCard({ bill, className }: CompactBillCardProps) {
             <BillStatusBadge
               status={bill.status}
               statusNote={bill.status_note}
+              locale={locale}
               className="w-fit"
             />
+            {/* published_at はサイト掲載日時であり、議案の提出日ではない */}
             {bill.published_at && (
-              <span className="text-xs text-mirai-text-muted">
-                {formatDateJST(bill.published_at)} {statusLabel}
+              <span lang={locale} className="text-xs text-mirai-text-muted">
+                {card.published(formatDateJST(bill.published_at))}
               </span>
             )}
           </div>

@@ -11,6 +11,8 @@ import { PreviousSessionSection } from "@/features/bills/server/components/previ
 import { loadHomeData } from "@/features/bills/server/loaders/load-home-data";
 import { getCurrentCouncilSession } from "@/features/council-sessions/server/loaders/get-current-council-session";
 import { CurrentCouncilSession } from "@/features/council-sessions/client/components/current-council-session";
+import { BillsInJapaneseNotice } from "@/features/i18n/client/components/bills-in-japanese-notice";
+import { getLocale } from "@/features/i18n/server/loaders/get-locale";
 import { getJapanTime } from "@/lib/utils/date";
 
 export default async function Home() {
@@ -18,31 +20,35 @@ export default async function Home() {
     await loadHomeData();
 
   const currentSession = await getCurrentCouncilSession(getJapanTime());
+  const locale = await getLocale();
 
   const featuredBillIds = new Set(featuredBills.map((b) => b.id));
 
   return (
     <>
-      <Hero />
+      <Hero locale={locale} />
 
       {/* 多言語案内（議案の翻訳を公開していない5言語） */}
       <MultilingualGuideBanner />
 
       {/* 本日の定例会セクション */}
-      <CurrentCouncilSession session={currentSession} />
+      <CurrentCouncilSession session={currentSession} locale={locale} />
 
       {/* 議案一覧セクション */}
       <Container className="">
         <div className="py-10">
           <div className="flex flex-col gap-16">
+            <BillsInJapaneseNotice locale={locale} />
+
             {/* 注目の議案セクション */}
-            <FeaturedBillSection bills={featuredBills} />
+            <FeaturedBillSection bills={featuredBills} locale={locale} />
 
             {/* タグ別議案一覧セクション */}
             <BillsByTagSection
               billsByTag={billsByTag}
               featuredBillIds={featuredBillIds}
               sessionSlug={activeSessionSlug}
+              locale={locale}
             />
           </div>
         </div>
@@ -55,6 +61,7 @@ export default async function Home() {
               session={previousSessionData.session}
               bills={previousSessionData.bills}
               totalBillCount={previousSessionData.totalBillCount}
+              locale={locale}
             />
           </Container>
         </div>
@@ -62,13 +69,13 @@ export default async function Home() {
 
       <Container>
         {/* みらい議会とは セクション */}
-        <About />
+        <About locale={locale} />
 
         {/* チームみらいについて セクション */}
         <TeamMirai />
 
         {/* 免責事項 */}
-        <BillDisclaimer />
+        <BillDisclaimer locale={locale} />
       </Container>
     </>
   );

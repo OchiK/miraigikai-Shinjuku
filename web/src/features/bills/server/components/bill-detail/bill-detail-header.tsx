@@ -1,3 +1,4 @@
+import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
 import { ReviewCompleteBadge } from "../../../client/components/bill-detail/review-status-banner";
 import { BillStatusBadge } from "../../../client/components/bill-list/bill-status-badge";
 import { BillTag } from "../../../client/components/bill-list/bill-tag";
@@ -5,6 +6,7 @@ import type { BillWithContent } from "../../../shared/types";
 
 interface BillDetailHeaderProps {
   bill: BillWithContent;
+  locale?: PublicLocale;
 }
 
 /**
@@ -13,7 +15,10 @@ interface BillDetailHeaderProps {
  * 順序は固定で、議決ステータス＋議案番号 → 表題（正式名称）→ 分野タグ。
  * 読みやすい題名と要約はAI生成なので、この下の BillAiSummary に分けて置く。
  */
-export function BillDetailHeader({ bill }: BillDetailHeaderProps) {
+export function BillDetailHeader({
+  bill,
+  locale = "ja",
+}: BillDetailHeaderProps) {
   return (
     <header className="flex flex-col gap-4">
       {/* 2. 議決ステータス + 議案番号・種別 */}
@@ -22,6 +27,7 @@ export function BillDetailHeader({ bill }: BillDetailHeaderProps) {
           className="w-fit"
           status={bill.status}
           statusNote={bill.status_note}
+          locale={locale}
         />
         {bill.bill_number && (
           <span className="inline-flex items-baseline gap-2 text-mirai-text-muted text-sm">

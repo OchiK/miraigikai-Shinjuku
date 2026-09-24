@@ -1,7 +1,9 @@
+import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
 import { ChevronRight } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
+import { getUiMessages } from "@/features/i18n/shared/ui-messages";
 import { routes } from "@/lib/routes";
 import type { BillsByTag } from "../../shared/types";
 import { selectBillsForDisplay } from "../../shared/utils/select-bills-for-display";
@@ -11,16 +13,19 @@ interface BillsByTagSectionProps {
   billsByTag: BillsByTag[];
   featuredBillIds: Set<string>;
   sessionSlug?: string | null;
+  locale?: PublicLocale;
 }
 
 export function BillsByTagSection({
   billsByTag,
   featuredBillIds,
   sessionSlug,
+  locale = "ja",
 }: BillsByTagSectionProps) {
   if (billsByTag.length === 0) {
     return null;
   }
+  const { home } = getUiMessages(locale);
 
   return (
     <div className="flex flex-col gap-12">
@@ -52,7 +57,7 @@ export function BillsByTagSection({
             <div className="flex flex-col gap-4">
               {displayBills.map((bill) => (
                 <Link key={bill.id} href={routes.billDetail(bill.id) as Route}>
-                  <BillCard bill={bill} />
+                  <BillCard bill={bill} locale={locale} />
                 </Link>
               ))}
             </div>
@@ -65,8 +70,11 @@ export function BillsByTagSection({
               >
                 <Card className="border border-black hover:bg-gray-50 transition-colors cursor-pointer">
                   <CardContent className="flex items-center justify-between py-4 px-5">
-                    <span className="font-bold text-base text-black">
-                      その他の{tag.label}議案はこちら
+                    <span
+                      lang={locale}
+                      className="font-bold text-base text-black"
+                    >
+                      {home.moreTagBills(tag.label)}
                     </span>
                     <ChevronRight className="h-5 w-5 text-gray-400 flex-shrink-0" />
                   </CardContent>

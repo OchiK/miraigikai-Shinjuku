@@ -1,5 +1,7 @@
+import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
 import Link from "next/link";
 import type { CouncilSessionWithSlug } from "@/features/council-sessions/shared/types";
+import { getUiMessages } from "@/features/i18n/shared/ui-messages";
 import { routes } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 
@@ -7,6 +9,8 @@ interface NavLinksProps {
   pathname: string;
   /** 「議案一覧」のリンク先と会期バッジに使う定例会 */
   session: CouncilSessionWithSlug | null;
+  /** 表示言語。省略時は日本語 */
+  locale?: PublicLocale;
   className?: string;
 }
 
@@ -18,17 +22,23 @@ const linkClassName =
  * スマートフォンではハンバーガーメニューに同じ導線がある。
  * 会期バッジは難易度セレクタ等と並んでも収まる xl 以上でだけ出す。
  */
-export function NavLinks({ pathname, session, className }: NavLinksProps) {
+export function NavLinks({
+  pathname,
+  session,
+  locale = "ja",
+  className,
+}: NavLinksProps) {
+  const { nav } = getUiMessages(locale);
   const links = [
     ...(session
-      ? [{ label: "議案一覧", href: routes.sessionBills(session.slug) }]
+      ? [{ label: nav.bills, href: routes.sessionBills(session.slug) }]
       : []),
-    { label: "議員一覧", href: routes.councilors() },
+    { label: nav.councilors, href: routes.councilors() },
   ];
 
   return (
     <div className={cn("items-center gap-3", className)}>
-      <nav aria-label="主要ナビゲーション">
+      <nav aria-label={nav.primaryNavLabel}>
         <ul className="flex items-center gap-1">
           {links.map((link) => (
             <li key={link.href}>
@@ -46,8 +56,8 @@ export function NavLinks({ pathname, session, className }: NavLinksProps) {
       </nav>
       {session && (
         <p className="hidden whitespace-nowrap rounded-full bg-card px-3 py-1 text-xs font-medium text-mirai-text shadow-mirai-sm xl:block">
-          <span className="sr-only">現在の会期：</span>
-          {session.name}
+          <span className="sr-only">{nav.currentSessionPrefix}</span>
+          <span lang="ja">{session.name}</span>
         </p>
       )}
     </div>

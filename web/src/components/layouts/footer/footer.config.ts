@@ -1,4 +1,5 @@
 import { siteConfig } from "@/config/site.config";
+import type { UiMessages } from "@/features/i18n/shared/ui-messages";
 import { routes } from "@/lib/routes";
 
 export type FooterLink = {
@@ -13,52 +14,59 @@ export type FooterPolicyLink = {
   external?: boolean;
 };
 
-export const primaryLinks: FooterLink[] = [
-  {
-    label: "TOP",
-    href: routes.home(),
-  },
-  ...(siteConfig.externalLinks.aboutNote
-    ? [
-        {
-          label: `${siteConfig.siteName}とは`,
-          href: siteConfig.externalLinks.aboutNote,
-          external: true,
-        },
-      ]
-    : []),
-  ...(siteConfig.features.showTeamMiraiSection
-    ? ([
-        {
-          label: "チームみらいについて",
-          href: siteConfig.externalLinks.teamAbout,
-          external: true,
-        },
-        {
-          label: "寄附で応援する",
-          href: siteConfig.externalLinks.donation,
-          external: true,
-        },
-      ] as FooterLink[])
-    : []),
-];
+type FooterMessages = UiMessages["footer"];
 
-export const policyLinks: FooterPolicyLink[] = [
-  {
-    label: "よくあるご質問",
-    href: routes.faq(),
-  },
-  {
-    label: "利用規約",
-    href: routes.terms(),
-  },
-  {
-    label: "プライバシーポリシー",
-    href: routes.privacy(),
-  },
-  {
-    label: "ソースコード (GitHub)",
-    href: siteConfig.operator.contactUrl,
-    external: true,
-  },
-];
+export function getPrimaryLinks(messages: FooterMessages): FooterLink[] {
+  return [
+    {
+      label: messages.top,
+      href: routes.home(),
+    },
+    ...(siteConfig.externalLinks.aboutNote
+      ? [
+          {
+            label: messages.aboutSite,
+            href: siteConfig.externalLinks.aboutNote,
+            external: true,
+          },
+        ]
+      : []),
+    // チームみらいの案内は党の公式サービスとして出すときだけ。日本語のみ
+    ...(siteConfig.features.showTeamMiraiSection
+      ? ([
+          {
+            label: "チームみらいについて",
+            href: siteConfig.externalLinks.teamAbout,
+            external: true,
+          },
+          {
+            label: "寄附で応援する",
+            href: siteConfig.externalLinks.donation,
+            external: true,
+          },
+        ] as FooterLink[])
+      : []),
+  ];
+}
+
+export function getPolicyLinks(messages: FooterMessages): FooterPolicyLink[] {
+  return [
+    {
+      label: messages.faq,
+      href: routes.faq(),
+    },
+    {
+      label: messages.terms,
+      href: routes.terms(),
+    },
+    {
+      label: messages.privacy,
+      href: routes.privacy(),
+    },
+    {
+      label: messages.sourceCode,
+      href: siteConfig.operator.contactUrl,
+      external: true,
+    },
+  ];
+}

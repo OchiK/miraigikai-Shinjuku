@@ -151,6 +151,43 @@ describe("HeaderClient", () => {
     });
   });
 
+  describe("英語表示（P8-12）", () => {
+    it("ナビ・難易度・ホーム導線・メニューを英語で出し、サイト名は日本語のまま", async () => {
+      renderHeader("/", [r82, r81], "en");
+
+      expect(screen.getByRole("link", { name: "Bills" })).toHaveAttribute(
+        "href",
+        "/sessions/r8-2/bills"
+      );
+      expect(
+        screen.getAllByRole("link", { name: "Councilors" })[0]
+      ).toBeInTheDocument();
+      const difficulty = screen.getByRole("group", {
+        name: "Choose how detailed the explanation is",
+      });
+      for (const label of ["Plain", "Standard", "Detailed"]) {
+        expect(
+          within(difficulty).getByRole("button", { name: label })
+        ).toBeInTheDocument();
+      }
+      expect(screen.getByText(siteConfig.siteName)).toBeInTheDocument();
+
+      await userEvent.click(screen.getByRole("button", { name: "Open menu" }));
+      const dialog = screen.getByRole("dialog");
+      expect(
+        within(dialog).getByRole("link", { name: "Bills: 令和8年第1回定例会" })
+      ).toBeInTheDocument();
+    });
+
+    it("下層ページのホーム導線を英語で出す", () => {
+      renderHeader("/councilors", [r82], "en");
+
+      const home = screen.getByRole("link", { name: /Home/ });
+      expect(home).toHaveAttribute("href", "/");
+      expect(home).toHaveAttribute("title", "Back to the home page");
+    });
+  });
+
   describe("デスクトップでのメニューの重複解消（P8-11）", () => {
     it("ヘッダーに無い項目が無ければ、デスクトップではメニューごと隠す", () => {
       renderHeader("/councilors", [r82]);
