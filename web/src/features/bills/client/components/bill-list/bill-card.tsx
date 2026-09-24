@@ -4,6 +4,7 @@ import { RubySafeLineClamp } from "@/components/ruby-safe-line-clamp";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { siteConfig } from "@/config/site.config";
 import { getUiMessages } from "@/features/i18n/shared/ui-messages";
+import { cn } from "@/lib/utils";
 import { formatDateJST } from "@/lib/utils/date";
 import type { BillWithContent } from "../../../shared/types";
 import { ReviewCompleteBadge } from "../bill-detail/review-status-banner";
@@ -14,9 +15,22 @@ interface BillCardProps {
   bill: BillWithContent;
   /** 表示言語。議案名・要約・タグは DB のまま出す */
   locale?: PublicLocale;
+  /** "lead" は「注目の議案」の主役カード。見出しと要約を大きく取る */
+  variant?: "default" | "lead";
+  /** グリッドの1行を占めるカード。md 以上ではサムネイルを本文の横に置く */
+  wide?: boolean;
+  className?: string;
 }
 
-export function BillCard({ bill, locale = "ja" }: BillCardProps) {
+export function BillCard({
+  bill,
+  locale = "ja",
+  variant = "default",
+  wide = false,
+  className,
+}: BillCardProps) {
+  const isLead = variant === "lead";
+  const isHorizontal = wide && bill.thumbnail_url != null;
   const { card } = getUiMessages(locale);
   const showInterview =
     siteConfig.features.aiInterview && bill.hasPublicInterview;
@@ -24,8 +38,15 @@ export function BillCard({ bill, locale = "ja" }: BillCardProps) {
   const summary = bill.bill_content?.summary;
 
   return (
-    <Card className="border-0 bg-card shadow-(--shadow-mirai-sm) rounded-xl hover:bg-neutral-300 transition-colors relative overflow-hidden max-w-[634px]">
-      <div className="flex flex-col">
+    <Card
+      className={cn(
+        "border-0 bg-card shadow-(--shadow-mirai-sm) rounded-xl hover:bg-neutral-300 transition-colors relative overflow-hidden max-w-[634px]",
+        className
+      )}
+    >
+      <div
+        className={cn("flex flex-col h-full", isHorizontal && "md:flex-row")}
+      >
         {/* 注目バッジエリア */}
         {bill.is_featured && (
           <div
@@ -39,7 +60,12 @@ export function BillCard({ bill, locale = "ja" }: BillCardProps) {
 
         {/* サムネイル画像 */}
         {bill.thumbnail_url && (
-          <div className="relative w-full aspect-video">
+          <div
+            className={cn(
+              "relative w-full aspect-video",
+              isHorizontal && "md:w-1/2 md:shrink-0"
+            )}
+          >
             <Image
               src={bill.thumbnail_url}
               alt={bill.name}
@@ -52,9 +78,14 @@ export function BillCard({ bill, locale = "ja" }: BillCardProps) {
 
         {/* コンテンツエリア */}
         <div className="flex-1">
-          <CardHeader>
+          <CardHeader className={cn(isLead && "md:p-8")}>
             <div className="flex flex-col gap-3">
-              <CardTitle className="font-heading font-bold text-xl leading-[1.5] tracking-normal text-mirai-text">
+              <CardTitle
+                className={cn(
+                  "font-heading font-bold text-xl leading-[1.5] tracking-normal text-mirai-text",
+                  isLead && "md:text-2xl"
+                )}
+              >
                 {displayTitle}
                 {bill.is_review_completed && (
                   <>
