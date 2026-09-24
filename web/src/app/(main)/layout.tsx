@@ -1,5 +1,4 @@
 import { GoogleAnalytics } from "@next/third-parties/google";
-import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { ReactNode } from "react";
 import { Header } from "@/components/header";
@@ -20,7 +19,6 @@ export default async function MainGroupLayout({
   return (
     <>
       <SpeedInsights />
-      <Analytics />
       <GoogleAnalytics gaId={env.analytics.gaTrackingId ?? ""} />
       <RubyfulInitializer />
       <AuthGate />

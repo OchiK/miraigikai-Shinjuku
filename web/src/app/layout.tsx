@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import {
@@ -103,6 +104,7 @@ export default function RootLayout({
       >
         <NextTopLoader showSpinner={false} color="var(--primary)" />
         {children}
+        <Analytics />
       </body>
     </html>
   );
