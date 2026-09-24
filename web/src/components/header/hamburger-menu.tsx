@@ -11,6 +11,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import type { CouncilSession } from "@/features/council-sessions/shared/types";
+import { hasSlug } from "@/features/council-sessions/shared/utils/pick-header-session";
 import { LanguageSelector } from "@/features/i18n/client/components/language-selector";
 import { routes } from "@/lib/routes";
 import { RubyToggle } from "@/lib/rubyful";
@@ -25,9 +26,7 @@ export function HamburgerMenu({ locale, sessions }: HamburgerMenuProps) {
   const pathname = usePathname();
   // 多言語案内ページではルビを使わないため、ふりがなの切り替えを出さない
   const showRubyToggle = !isRubyfulExcludedPath(pathname);
-  const sessionsWithSlug = sessions.filter(
-    (s): s is CouncilSession & { slug: string } => Boolean(s.slug)
-  );
+  const sessionsWithSlug = sessions.filter(hasSlug);
 
   return (
     <Popover>

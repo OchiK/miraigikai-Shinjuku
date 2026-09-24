@@ -9,3 +9,6 @@ export type CouncilSession = {
   created_at: string;
   updated_at: string;
 };
+
+/** 議案一覧ページ（/sessions/[slug]/bills）を持つ定例会 */
+export type CouncilSessionWithSlug = CouncilSession & { slug: string };

@@ -17,7 +17,7 @@ interface GuideLanguageLinksProps {
 /**
  * 5言語の案内ページ（/guide/[locale]）へのリンク。
  * 各言語の話者が自分の言語を見つけられるよう、自言語表記で並べる。
- * Server / Client のどちらからも使う（トップ・フッター・言語メニュー）。
+ * Server / Client のどちらからも使う（トップページ・案内ページ）。
  */
 export function GuideLanguageLinks({
   currentLocale,
