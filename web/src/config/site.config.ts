@@ -39,7 +39,7 @@ export const siteConfig = {
    * 利用規約や問い合わせ先に使用します。
    */
   operator: {
-    name: "OchiK" as string,
+    name: "新宿区民" as string,
     contactUrl: "https://github.com/OchiK/miraigikai-Shinjuku" as string,
     /** 利用規約の準拠法・管轄裁判所（第一審の専属的合意管轄） */
     jurisdiction: "東京地方裁判所" as string,
