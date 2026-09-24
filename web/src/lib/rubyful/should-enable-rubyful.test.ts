@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
 import {
+  canToggleRuby,
   isJapaneseLocale,
   isRubyfulExcludedPath,
   RUBYFUL_SELECTOR,
@@ -160,5 +161,20 @@ describe("RUBYFUL_SELECTOR", () => {
       false
     );
     expect(document.getElementById("ja")?.matches(RUBYFUL_SELECTOR)).toBe(true);
+  });
+});
+
+describe("canToggleRuby", () => {
+  it("日本語の通常ページでは出す", () => {
+    expect(canToggleRuby("/councilors", "ja")).toBe(true);
+    expect(canToggleRuby("/", null)).toBe(true);
+  });
+
+  it("多言語案内ページでは出さない", () => {
+    expect(canToggleRuby("/guide/zh-Hans", "ja")).toBe(false);
+  });
+
+  it("日本語以外の表示言語では出さない", () => {
+    expect(canToggleRuby("/councilors", "en")).toBe(false);
   });
 });

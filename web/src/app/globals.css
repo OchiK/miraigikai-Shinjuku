@@ -9,6 +9,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --breakpoint-xs: 360px;
   --breakpoint-sm: 500px;
   --breakpoint-md: 700px;
   --breakpoint-pc: 1000px;
