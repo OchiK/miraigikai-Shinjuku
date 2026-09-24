@@ -78,6 +78,10 @@
     "./i18n/translation-fallback": {
       "types": "./src/i18n/translation-fallback.ts",
       "default": "./src/i18n/translation-fallback.ts"
+    },
+    "./ruby/custom-readings": {
+      "types": "./src/ruby/custom-readings.ts",
+      "default": "./src/ruby/custom-readings.ts"
     }
   },
   "peerDependencies": {
