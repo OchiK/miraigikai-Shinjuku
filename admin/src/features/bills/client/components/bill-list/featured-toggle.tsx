@@ -45,10 +45,16 @@ export function FeaturedToggle({
       });
 
       setCurrentFeatured(outcome.isFeatured);
-      if (outcome.toast.type === "success") {
-        toast.success(outcome.toast.message);
-      } else {
-        toast.error(outcome.toast.message);
+      switch (outcome.toast.type) {
+        case "success":
+          toast.success(outcome.toast.message);
+          break;
+        case "warning":
+          toast.warning(outcome.toast.message);
+          break;
+        case "error":
+          toast.error(outcome.toast.message);
+          break;
       }
     });
   }

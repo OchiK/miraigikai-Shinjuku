@@ -3,8 +3,10 @@ import type { Route } from "next";
 import Link from "next/link";
 import { getUiMessages } from "@/features/i18n/shared/ui-messages";
 import { routes } from "@/lib/routes";
-import type { BillWithContent } from "../../shared/types";
+import { cn } from "@/lib/utils";
 import { BillCard } from "../../client/components/bill-list/bill-card";
+import type { BillWithContent } from "../../shared/types";
+import { getFeaturedBillLayout } from "../../shared/utils/featured-bill-layout";
 
 interface FeaturedBillSectionProps {
   bills: BillWithContent[];
@@ -33,12 +35,28 @@ export function FeaturedBillSection({
       </div>
 
       {/* 注目の議案カード */}
-      <div className="flex flex-col gap-4">
-        {bills.map((bill) => (
-          <Link key={bill.id} href={routes.billDetail(bill.id) as Route}>
-            <BillCard bill={bill} locale={locale} />
-          </Link>
-        ))}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        {bills.map((bill, index) => {
+          const { isLead, spansFullRow } = getFeaturedBillLayout(
+            index,
+            bills.length
+          );
+          return (
+            <Link
+              key={bill.id}
+              href={routes.billDetail(bill.id) as Route}
+              className={cn("block h-full", spansFullRow && "md:col-span-2")}
+            >
+              <BillCard
+                bill={bill}
+                locale={locale}
+                variant={isLead ? "lead" : "default"}
+                wide={spansFullRow}
+                className="h-full max-w-none transition-[background-color,box-shadow] hover:shadow-(--shadow-mirai-md)"
+              />
+            </Link>
+          );
+        })}
       </div>
     </section>
   );
