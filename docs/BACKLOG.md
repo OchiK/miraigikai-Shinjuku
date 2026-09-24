@@ -237,3 +237,11 @@ Acceptance:
 - `web/src/config/site.config.ts`（`siteConfig.author.name`）を `新宿区民` に変更
 - 案内ページ（`guide-content.ts` 等）の文面、フッター表記、利用規約・免責事項の表記を `新宿区民` へ更新
 
+### P8-8 議案管理一覧での「注目議案」直接切替（Inline Featured Toggle in Admin Bills List）
+管理画面の議案一覧（`/bills`）テーブル上で、各議案の「注目（`is_featured`）」ステータスを、個別編集画面（`/bills/[id]/edit`）に入ることなく直接ワンクリック（スイッチ/トグル）で切り替え可能にする。
+
+Acceptance:
+- 議案管理一覧（`/bills`）の各行に「注目」トグルスイッチまたはチェックボックスを配置
+- 一覧から1クリックで `is_featured` の ON/OFF を切り替え・即時保存できる
+- 切り替え時に公開キャッシュ（`CACHE_TAGS.BILLS` / `revalidatePath`）が自動更新され、Web公開側の「注目の議案」へ即時反映される
+- 失敗時のトースト通知・オプティミスティック更新またはローディング表示を備える
