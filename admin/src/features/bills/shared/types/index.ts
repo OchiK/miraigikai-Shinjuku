@@ -27,7 +27,8 @@ export type BillSortField =
   | "publish_status_order"
   | "bill_number"
   | "name"
-  | "council_session";
+  | "council_session"
+  | "is_featured";
 
 export const BILL_SORT_FIELDS: readonly BillSortField[] = [
   "created_at",
@@ -37,6 +38,7 @@ export const BILL_SORT_FIELDS: readonly BillSortField[] = [
   "bill_number",
   "name",
   "council_session",
+  "is_featured",
 ] as const;
 
 export type BillSortConfig = SortConfig<BillSortField>;
