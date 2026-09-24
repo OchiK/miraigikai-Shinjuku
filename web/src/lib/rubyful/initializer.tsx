@@ -1,5 +1,6 @@
 "use client";
 
+import { DEFAULT_RUBY_CUSTOM_READINGS } from "@mirai-gikai/shared/ruby/custom-readings";
 import Script from "next/script";
 import { rubyfulClient } from "./index";
 import "./styles.css";
@@ -12,6 +13,7 @@ declare global {
         defaultDisplay: boolean;
         observeChanges?: boolean;
         styles?: object;
+        customReadings?: Record<string, string>;
       }) => void;
     };
   }
@@ -35,6 +37,9 @@ export function RubyfulInitializer() {
             styles: {
               toggleButtonClass: "ruby-button",
             },
+            // Rubyful が誤読する語の読みを上書きする。外部スクリプトに凍結済みの
+            // 既定辞書をそのまま渡さないよう、コピーして渡す
+            customReadings: { ...DEFAULT_RUBY_CUSTOM_READINGS },
           });
         }
       }}
