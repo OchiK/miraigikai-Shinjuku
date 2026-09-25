@@ -9,7 +9,7 @@ description: 本番DB・ローカルDB接続の規約。DBデータを参照・�
 
 ローカルの Admin アプリは `.env.production` を使って**本番 Supabase DB** に接続している。
 
-- 本番 Supabase URL: `https://lxphthejcjrmxhigxvzy.supabase.co`
+- 本番 Supabase URL: `https://bdfkjdanycpxtoljxeho.supabase.co`
 - 認証情報: `.env.production` を参照（`.gitignore` 対象のため非公開）
 
 ## DBを操作する際のルール
