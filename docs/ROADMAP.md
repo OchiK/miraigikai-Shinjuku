@@ -238,6 +238,7 @@ Exit:
 - [x] council members Phase 7-A: 新宿区議会38名の議員一覧・詳細ページ（世田谷モデル、著作権配慮の顔写真不使用モノグラムアバター、#38）
 - [x] council members Phase 7-B: 質問要約連携（#61、本番投入 2026-09-25）
 - [x] council members Phase 7-C: 議案・議員の相互連携と会派賛否（#66, #68）
+- [ ] council members Phase 7-D: 議員の公式ホームページ・Xアカウント情報の拡充（BACKLOG P7-3）
 - [ ] minutes
 - [ ] speeches
 - [ ] committees
