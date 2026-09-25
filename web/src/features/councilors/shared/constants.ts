@@ -26,6 +26,13 @@ export const QUESTION_SOURCES = {
   /** 要約を作成した日 */
   asOf: "2026年9月25日",
   scope: "令和8年第1回・第2回定例会の本会議（代表質問・一般質問）",
+  /** scope の会期部分だけ。注記の文中で使う */
+  scopeSessionsLabel: "令和8年第1回・第2回定例会",
+  /** 主な掲載範囲の初日（令和8年第1回定例会の開会日）。これより前の質問は「以前の定例会」 */
+  scopeStartDate: "2026-02-17",
+  /** 主な掲載範囲に質問がない議員の扱い */
+  earlierSessionsRule:
+    "この期間に代表質問・一般質問がなかった議員は、それ以前で最も新しい定例会の質問を掲載しています。",
   minutes: {
     label: "会議録検索システム",
     url: "https://ssp.kaigiroku.net/tenant/shinjuku/",

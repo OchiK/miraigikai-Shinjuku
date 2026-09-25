@@ -100,6 +100,7 @@ describe("議員ローダー 統合テスト", () => {
         {
           council_member_id: activeId,
           council_session_id: sessionId,
+          session_name: `テスト定例会-${suffix}`,
           venue_type: "plenary",
           question_kind: "general",
           title: "後の論点",
@@ -111,6 +112,7 @@ describe("議員ローダー 統合テスト", () => {
         {
           council_member_id: activeId,
           council_session_id: sessionId,
+          session_name: `テスト定例会-${suffix}`,
           venue_type: "plenary",
           question_kind: "general",
           title: "先の論点",
@@ -122,6 +124,7 @@ describe("議員ローダー 統合テスト", () => {
         {
           council_member_id: activeId,
           committee_id: standingId,
+          session_name: "令和7年 第4回定例会",
           venue_type: "committee",
           title: "委員会の質問",
           summary: "要約C",
@@ -184,6 +187,7 @@ describe("議員ローダー 統合テスト", () => {
       budget: 0,
       committee: 1,
     });
+    expect(active?.latestQuestionDate).toBe("2026-06-11");
   });
 
   it("getCouncilorById は質問を新しい順・同じ日は発言順で、会期名・委員会名つきで返す", async () => {
@@ -206,7 +210,7 @@ describe("議員ローダー 統合テスト", () => {
       venueType: "committee",
       questionKind: null,
       committeeName: `テスト常任委員会-${suffix}`,
-      sessionName: null,
+      sessionName: "令和7年 第4回定例会",
       sourceUrl: null,
     });
   });

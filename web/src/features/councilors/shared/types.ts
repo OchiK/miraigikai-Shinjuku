@@ -41,7 +41,8 @@ export type CouncilorQuestion = {
   /** 会議録の該当発言へのURL */
   sourceUrl: string | null;
   committeeName: string | null;
-  sessionName: string | null;
+  /** 会議録上の会期名（例: 令和8年 第2回定例会） */
+  sessionName: string;
 };
 
 /** 掲載中の質問のテーマタグ集計 */
@@ -66,6 +67,11 @@ export type Councilor = {
   /** 掲載中の質問の件数 */
   questionsCount: number;
   questionVenueCounts: QuestionVenueCounts;
+  /**
+   * 本会議の質問のうち最も新しい発言日。本会議の質問がなければ null。
+   * 「以前の定例会」注記の判定に使うため、委員会の質問は含めない
+   */
+  latestQuestionDate: string | null;
 };
 
 /** 詳細ページ用。質問の一覧（新しい順）を持つ */

@@ -11,6 +11,7 @@ import {
 } from "./committee-kind";
 import {
   countQuestionVenues,
+  getLatestSpeechDate,
   isQuestionKind,
   isVenueType,
   sortQuestionsBySpeech,
@@ -31,11 +32,11 @@ export type CouncilorRow = {
     role: string;
     committees: { id: string; name: string; sort_order: number } | null;
   }[];
-  /** 件数の集計にだけ使うため、発言の場だけを select する */
-  council_member_questions: { venue_type: string }[];
+  /** 件数と最新の発言日の集計にだけ使うため、この2列だけを select する */
+  council_member_questions: { venue_type: string; speech_date: string }[];
 };
 
-/** council_member_questions を委員会名・会期名つきで select した1行 */
+/** council_member_questions を委員会名つきで select した1行 */
 export type CouncilorQuestionRow = {
   id: string;
   council_member_id: string;
@@ -46,8 +47,8 @@ export type CouncilorQuestionRow = {
   topic_tags: string[];
   speech_date: string;
   source_url: string | null;
+  session_name: string;
   committees: { name: string } | null;
-  council_sessions: { name: string } | null;
 };
 
 export function toCouncilor(row: CouncilorRow): Councilor {
@@ -87,6 +88,11 @@ export function toCouncilor(row: CouncilorRow): Councilor {
     questionVenueCounts: countQuestionVenues(
       row.council_member_questions.map((q) => q.venue_type)
     ),
+    latestQuestionDate: getLatestSpeechDate(
+      row.council_member_questions
+        .filter((q) => q.venue_type === "plenary")
+        .map((q) => q.speech_date)
+    ),
   };
 }
 
@@ -111,7 +117,7 @@ export function toCouncilorQuestion(
     speechDate: row.speech_date,
     sourceUrl: row.source_url,
     committeeName: row.committees?.name ?? null,
-    sessionName: row.council_sessions?.name ?? null,
+    sessionName: row.session_name,
   };
 }
 

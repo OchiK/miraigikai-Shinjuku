@@ -36,9 +36,9 @@ const row: CouncilorRow = {
     },
   ],
   council_member_questions: [
-    { venue_type: "plenary" },
-    { venue_type: "plenary" },
-    { venue_type: "committee" },
+    { venue_type: "plenary", speech_date: "2026-02-25" },
+    { venue_type: "plenary", speech_date: "2026-06-11" },
+    { venue_type: "committee", speech_date: "2026-06-10" },
   ],
 };
 
@@ -55,8 +55,8 @@ const questionRow: CouncilorQuestionRow = {
   topic_tags: ["まちづくり", "交通"],
   speech_date: "2026-06-11",
   source_url: minuteUrl(61),
+  session_name: "令和8年 第2回定例会",
   committees: null,
-  council_sessions: { name: "令和8年 第2回定例会" },
 };
 
 describe("toCouncilor", () => {
@@ -117,8 +117,24 @@ describe("toCouncilor の質問件数", () => {
     });
   });
 
-  it("質問がなければ0件", () => {
+  it("本会議の質問のうち最も新しい発言日を持つ", () => {
+    expect(toCouncilor(row).latestQuestionDate).toBe("2026-06-11");
+  });
+
+  it("委員会の質問は最新の発言日に含めない", () => {
+    const councilor = toCouncilor({
+      ...row,
+      council_member_questions: [
+        { venue_type: "plenary", speech_date: "2025-11-27" },
+        { venue_type: "committee", speech_date: "2026-06-10" },
+      ],
+    });
+    expect(councilor.latestQuestionDate).toBe("2025-11-27");
+  });
+
+  it("質問がなければ0件で、最新の発言日は null", () => {
     const councilor = toCouncilor({ ...row, council_member_questions: [] });
+    expect(councilor.latestQuestionDate).toBeNull();
     expect(councilor.questionsCount).toBe(0);
     expect(councilor.questionVenueCounts).toEqual({
       plenary: 0,

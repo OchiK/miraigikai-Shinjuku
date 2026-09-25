@@ -7,7 +7,7 @@
 
 import {
   MINUTES_COUNCIL_IDS,
-  type QuestionSessionSlug,
+  type MinutesSessionKey,
   councilMemberQuestions,
 } from "./shinjuku-council-questions";
 
@@ -22,7 +22,7 @@ type Minute = {
 };
 
 async function fetchMinutes(
-  session: QuestionSessionSlug,
+  session: MinutesSessionKey,
   scheduleId: number
 ): Promise<Minute[]> {
   const body = new URLSearchParams({

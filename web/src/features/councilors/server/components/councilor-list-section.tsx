@@ -60,7 +60,7 @@ export function CouncilorListSection({ councilors }: Props) {
         <p className="text-mirai-text-muted text-xs leading-[1.9]">
           {COUNCILOR_SOURCES.asOf}
           時点の公式名簿にもとづきます。質問は{QUESTION_SOURCES.scope}
-          の会議録から掲載しています。
+          の会議録から掲載しています。{QUESTION_SOURCES.earlierSessionsRule}
         </p>
       </header>
 

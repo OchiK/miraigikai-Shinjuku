@@ -17,7 +17,7 @@ const COUNCILOR_SELECT = `
   sort_order,
   factions (id, display_name, sort_order),
   council_member_committees (role, committees (id, name, sort_order)),
-  council_member_questions (venue_type)
+  council_member_questions (venue_type, speech_date)
 `;
 
 const COUNCILOR_QUESTION_SELECT = `
@@ -30,8 +30,8 @@ const COUNCILOR_QUESTION_SELECT = `
   topic_tags,
   speech_date,
   source_url,
-  committees (name),
-  council_sessions (name)
+  session_name,
+  committees (name)
 `;
 
 /**

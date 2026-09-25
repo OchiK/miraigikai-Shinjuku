@@ -37,9 +37,7 @@ export function CouncilorQuestionCard({ question }: Props) {
         <time dateTime={question.speechDate} className="text-mirai-text-muted">
           {formatSpeechDate(question.speechDate)}
         </time>
-        {question.sessionName && (
-          <span className="text-mirai-text-muted">{question.sessionName}</span>
-        )}
+        <span className="text-mirai-text-muted">{question.sessionName}</span>
       </div>
 
       <h3 className="font-bold font-heading text-lg text-mirai-text leading-[1.6]">

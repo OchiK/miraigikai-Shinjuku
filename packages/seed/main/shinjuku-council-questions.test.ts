@@ -3,6 +3,8 @@ import { councilSessions } from "./data";
 import { councilMembers } from "./shinjuku-council-members";
 import {
   MINUTES_SCHEDULE_DATES,
+  MINUTES_SESSION_NAMES,
+  PRIMARY_SESSIONS,
   QUESTION_TOPIC_TAGS,
   buildMinuteUrl,
   councilMemberQuestions,
@@ -21,8 +23,12 @@ const insertedSessions = councilSessions.map((s, i) => ({
 }));
 
 describe("議員の質問要約 seed", () => {
-  it("令和8年第1回・第2回定例会の代表質問・一般質問を103件持つ", () => {
-    expect(councilMemberQuestions).toHaveLength(103);
+  it("令和8年の103件と、以前の定例会の21件を持つ", () => {
+    const primary = councilMemberQuestions.filter((q) =>
+      PRIMARY_SESSIONS.includes(q.session)
+    );
+    expect(primary).toHaveLength(103);
+    expect(councilMemberQuestions).toHaveLength(124);
   });
 
   it("全件の質問者が名簿の議員と一致する", () => {
@@ -35,11 +41,47 @@ describe("議員の質問要約 seed", () => {
     expect(unknown).toEqual([]);
   });
 
-  // 議長は質問しない。会議録で2回の定例会に質問がなかった議員もいる
-  it("質問者は30名で、議長は含まない", () => {
+  it("名簿の38名全員に質問がある", () => {
     const speakers = new Set(councilMemberQuestions.map((q) => q.member));
-    expect(speakers.size).toBe(30);
-    expect(speakers.has("渡辺清人")).toBe(false);
+    expect(speakers.size).toBe(38);
+  });
+
+  // 以前の定例会は、令和8年に質問がない議員の直近1会期分だけを載せる
+  it("以前の定例会の質問は、令和8年に質問がない議員の1会期分に限る", () => {
+    const primarySpeakers = new Set(
+      councilMemberQuestions
+        .filter((q) => PRIMARY_SESSIONS.includes(q.session))
+        .map((q) => q.member)
+    );
+    const earlier = councilMemberQuestions.filter(
+      (q) => !PRIMARY_SESSIONS.includes(q.session)
+    );
+
+    expect(earlier.filter((q) => primarySpeakers.has(q.member))).toEqual([]);
+
+    const sessionsByMember = new Map<string, Set<string>>();
+    for (const q of earlier) {
+      const sessions = sessionsByMember.get(q.member) ?? new Set();
+      sessions.add(q.session);
+      sessionsByMember.set(q.member, sessions);
+    }
+    expect(sessionsByMember.size).toBe(8);
+    for (const sessions of sessionsByMember.values()) {
+      expect(sessions.size).toBe(1);
+    }
+  });
+
+  // web の QUESTION_SOURCES.scopeStartDate（令和8年第1回定例会の開会日）と同じ日付。
+  // 画面の「以前の定例会」注記は発言日とこの日付の比較で出すため、seed の区分と一致させる
+  it("主な掲載範囲の質問は2026-02-17以降、それ以外はそれより前の発言日", () => {
+    const scopeStartDate = "2026-02-17";
+    for (const q of councilMemberQuestions) {
+      if (PRIMARY_SESSIONS.includes(q.session)) {
+        expect(q.speechDate >= scopeStartDate).toBe(true);
+      } else {
+        expect(q.speechDate < scopeStartDate).toBe(true);
+      }
+    }
   });
 
   it("同じ会議録の発言を重複して参照しない", () => {
@@ -137,13 +179,28 @@ describe("createCouncilMemberQuestionInserts", () => {
     ).toThrow("Council member not found");
   });
 
-  it("存在しない会期は例外にする", () => {
+  it("主な掲載範囲の会期がDBになければ例外にする", () => {
+    const primary = councilMemberQuestions.find((q) =>
+      PRIMARY_SESSIONS.includes(q.session)
+    );
+    if (!primary) throw new Error("primary question missing");
     expect(() =>
-      createCouncilMemberQuestionInserts(
-        councilMemberQuestions.slice(0, 1),
-        insertedMembers,
-        []
-      )
+      createCouncilMemberQuestionInserts([primary], insertedMembers, [])
     ).toThrow("Council session not found");
+  });
+
+  it("以前の定例会は会期ページに紐づけず、会期名だけ持つ", () => {
+    const earlier = councilMemberQuestions.filter(
+      (q) => !PRIMARY_SESSIONS.includes(q.session)
+    );
+    const inserts = createCouncilMemberQuestionInserts(
+      earlier,
+      insertedMembers,
+      insertedSessions
+    );
+    for (const [i, insert] of inserts.entries()) {
+      expect(insert.council_session_id).toBeNull();
+      expect(insert.session_name).toBe(MINUTES_SESSION_NAMES[earlier[i].session]);
+    }
   });
 });

@@ -71,7 +71,8 @@ export function CouncilorSources() {
             {QUESTION_SOURCES.minutes.label}に掲載された
             {QUESTION_SOURCES.scope}
             の会議録をもとに、AIが作成したものです（{QUESTION_SOURCES.asOf}
-            作成）。要約に答弁の内容は含みません。テーマタグもAIが付けたものです。正確な内容は会議録をご確認ください。
+            作成）。{QUESTION_SOURCES.earlierSessionsRule}
+            要約に答弁の内容は含みません。テーマタグもAIが付けたものです。正確な内容は会議録をご確認ください。
           </p>
           <ExternalSourceLink href={QUESTION_SOURCES.minutes.url}>
             {siteConfig.councilName} {QUESTION_SOURCES.minutes.label}

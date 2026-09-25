@@ -1,6 +1,6 @@
 import "server-only";
 
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Info } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { siteConfig } from "@/config/site.config";
@@ -15,6 +15,7 @@ import type {
 } from "../../shared/types";
 import { groupCommitteesByKind } from "../../shared/utils/committee-kind";
 import {
+  getEarlierSessionNoticeName,
   VENUE_LABELS,
   VENUE_TYPES,
 } from "../../shared/utils/councilor-questions";
@@ -109,7 +110,14 @@ function QuestionCountBadges({
   );
 }
 
-function TopicSummary({ questions }: { questions: CouncilorQuestion[] }) {
+function TopicSummary({
+  questions,
+  earlierSessionName,
+}: {
+  questions: CouncilorQuestion[];
+  /** 以前の定例会の質問を載せているとき、その会期名 */
+  earlierSessionName: string | null;
+}) {
   const summary = summarizeCouncilorTopics(questions);
   const text = buildTopicSummaryText(summary);
 
@@ -137,15 +145,46 @@ function TopicSummary({ questions }: { questions: CouncilorQuestion[] }) {
       </ul>
       <p className="text-base text-mirai-text leading-[1.9]">{text}</p>
       <p className="text-mirai-text-muted text-xs leading-[1.9]">
-        このサイトで公開中の質問{summary.questionCount}
-        件に付けたテーマタグを数えたものです（{QUESTION_SOURCES.asOf}
+        このサイトで公開中の質問{summary.questionCount}件
+        {earlierSessionName && `（${earlierSessionName}の質問）`}
+        に付けたテーマタグを数えたものです（{QUESTION_SOURCES.asOf}
         時点）。タグはAIが付けたもので、議員の関心のすべてを表すものではありません。
       </p>
     </div>
   );
 }
 
+/**
+ * 令和8年の質問がなく、以前の定例会の質問を載せている議員への注記
+ */
+function EarlierSessionsNotice({ sessionName }: { sessionName: string }) {
+  return (
+    <div
+      className="flex items-start gap-3 rounded-xl bg-mirai-surface-sunken px-5 py-4 text-mirai-text"
+      role="note"
+    >
+      <Info
+        aria-hidden="true"
+        className="mt-1 size-4 shrink-0"
+        strokeWidth={2.75}
+      />
+      <p className="text-sm leading-[1.9]">
+        {QUESTION_SOURCES.scopeSessionsLabel}
+        の本会議では、この議員の代表質問・一般質問はありません。それ以前で最も新しい
+        {sessionName}
+        の質問を掲載しています。
+      </p>
+    </div>
+  );
+}
+
 export function CouncilorDetailSection({ councilor }: Props) {
+  const earlierNoticeSession = getEarlierSessionNoticeName(
+    councilor.latestQuestionDate,
+    councilor.questions,
+    QUESTION_SOURCES.scopeStartDate
+  );
+
   return (
     <div className="flex flex-col gap-8">
       <Link
@@ -203,7 +242,10 @@ export function CouncilorDetailSection({ councilor }: Props) {
 
           {councilor.questions.length > 0 && (
             <DetailItem label="掲載中の質問からの傾向">
-              <TopicSummary questions={councilor.questions} />
+              <TopicSummary
+                questions={councilor.questions}
+                earlierSessionName={earlierNoticeSession}
+              />
             </DetailItem>
           )}
 
@@ -245,8 +287,13 @@ export function CouncilorDetailSection({ councilor }: Props) {
         </h2>
         <p className="text-mirai-text-muted text-sm leading-[1.9]">
           {QUESTION_SOURCES.scope}
-          での質問を、論点ごとに新しい順で掲載しています。要約はAIが会議録の質問部分をもとに作成したもので、答弁の内容は含みません。正確な内容は会議録をご確認ください。
+          での質問を、論点ごとに新しい順で掲載しています。
+          {!earlierNoticeSession && QUESTION_SOURCES.earlierSessionsRule}
+          要約はAIが会議録の質問部分をもとに作成したもので、答弁の内容は含みません。正確な内容は会議録をご確認ください。
         </p>
+        {earlierNoticeSession && (
+          <EarlierSessionsNotice sessionName={earlierNoticeSession} />
+        )}
         {councilor.questions.length === 0 ? (
           <p className="rounded-xl bg-card p-5 text-base text-mirai-text shadow-mirai-sm">
             質問はまだ登録されていません

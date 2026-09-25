@@ -445,6 +445,7 @@ export type Database = {
           created_at: string
           id: string
           question_kind: string | null
+          session_name: string
           source_url: string | null
           speech_date: string
           summary: string
@@ -461,6 +462,7 @@ export type Database = {
           created_at?: string
           id?: string
           question_kind?: string | null
+          session_name: string
           source_url?: string | null
           speech_date: string
           summary: string
@@ -477,6 +479,7 @@ export type Database = {
           created_at?: string
           id?: string
           question_kind?: string | null
+          session_name?: string
           source_url?: string | null
           speech_date?: string
           summary?: string

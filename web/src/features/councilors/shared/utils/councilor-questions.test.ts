@@ -3,7 +3,10 @@ import type { CouncilorQuestion } from "../types";
 import {
   countQuestionVenues,
   formatSpeechDate,
+  getEarlierSessionNoticeName,
+  getLatestSpeechDate,
   getSourceMinuteId,
+  hasOnlyEarlierQuestions,
   isQuestionKind,
   isVenueType,
   sortQuestionsBySpeech,
@@ -28,7 +31,7 @@ function question(
     speechDate,
     sourceUrl,
     committeeName: null,
-    sessionName: null,
+    sessionName: "令和8年 第2回定例会",
   };
 }
 
@@ -63,6 +66,59 @@ describe("isQuestionKind", () => {
     expect(isQuestionKind("representative")).toBe(true);
     expect(isQuestionKind("general")).toBe(true);
     expect(isQuestionKind("other")).toBe(false);
+  });
+});
+
+describe("getLatestSpeechDate", () => {
+  it("最も新しい発言日を返す", () => {
+    expect(
+      getLatestSpeechDate(["2025-11-27", "2026-06-11", "2026-02-25"])
+    ).toBe("2026-06-11");
+  });
+
+  it("空なら null", () => {
+    expect(getLatestSpeechDate([])).toBeNull();
+  });
+});
+
+describe("hasOnlyEarlierQuestions", () => {
+  const scopeStart = "2026-02-17";
+
+  it("最新の質問が掲載範囲より前なら true", () => {
+    expect(hasOnlyEarlierQuestions("2025-11-27", scopeStart)).toBe(true);
+  });
+
+  it("最新の質問が掲載範囲の初日以降なら false", () => {
+    expect(hasOnlyEarlierQuestions("2026-02-17", scopeStart)).toBe(false);
+    expect(hasOnlyEarlierQuestions("2026-06-11", scopeStart)).toBe(false);
+  });
+
+  it("質問がなければ false", () => {
+    expect(hasOnlyEarlierQuestions(null, scopeStart)).toBe(false);
+  });
+});
+
+describe("getEarlierSessionNoticeName", () => {
+  const scopeStart = "2026-02-17";
+  const questions = [
+    { sessionName: "令和7年 第4回定例会" },
+    { sessionName: "令和7年 第3回定例会" },
+  ];
+
+  it("以前の定例会の質問だけなら、先頭（直近）の会期名を返す", () => {
+    expect(
+      getEarlierSessionNoticeName("2025-11-27", questions, scopeStart)
+    ).toBe("令和7年 第4回定例会");
+  });
+
+  it("令和8年の質問があれば null", () => {
+    expect(
+      getEarlierSessionNoticeName("2026-06-11", questions, scopeStart)
+    ).toBeNull();
+  });
+
+  it("質問がなければ null", () => {
+    expect(getEarlierSessionNoticeName(null, [], scopeStart)).toBeNull();
   });
 });
 

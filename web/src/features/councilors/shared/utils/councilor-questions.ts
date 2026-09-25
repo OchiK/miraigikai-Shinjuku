@@ -39,6 +39,40 @@ export function countQuestionVenues(venueTypes: string[]): QuestionVenueCounts {
 }
 
 /**
+ * 最も新しい発言日（YYYY-MM-DD）。空なら null
+ */
+export function getLatestSpeechDate(speechDates: string[]): string | null {
+  return speechDates.reduce<string | null>(
+    (latest, date) => (latest === null || date > latest ? date : latest),
+    null
+  );
+}
+
+/**
+ * 掲載中の質問がすべて主な掲載範囲より前か（令和8年に質問がなく、以前の定例会を載せている議員）。
+ * 質問がなければ false
+ */
+export function hasOnlyEarlierQuestions(
+  latestQuestionDate: string | null,
+  scopeStartDate: string
+): boolean {
+  return latestQuestionDate !== null && latestQuestionDate < scopeStartDate;
+}
+
+/**
+ * 以前の定例会を載せている議員に注記する会期名。新しい順の質問の先頭が直近の会期。
+ * 注記が不要（令和8年の質問がある・質問がない）なら null
+ */
+export function getEarlierSessionNoticeName(
+  latestQuestionDate: string | null,
+  questionsNewestFirst: Pick<CouncilorQuestion, "sessionName">[],
+  scopeStartDate: string
+): string | null {
+  if (!hasOnlyEarlierQuestions(latestQuestionDate, scopeStartDate)) return null;
+  return questionsNewestFirst[0]?.sessionName ?? null;
+}
+
+/**
  * 会議録URLの minute_id（発言番号）。同じ日の質問を発言順に並べるのに使う。
  * 取り出せなければ null
  */

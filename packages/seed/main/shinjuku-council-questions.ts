@@ -1,11 +1,13 @@
 import type { Database } from "@mirai-gikai/supabase";
 
-// 新宿区議会 議員の質問要約（令和8年第1回・第2回定例会の代表質問・一般質問）
+// 新宿区議会 議員の質問要約（本会議の代表質問・一般質問）
 //
 // 出典: 新宿区議会 会議録検索システム（本会議の会議録）
 //   https://ssp.kaigiroku.net/tenant/shinjuku/
 //   - 令和8年第1回定例会: 2月24日（第2号）、2月25日（第3号）
 //   - 令和8年第2回定例会: 6月10日（第5号）、6月11日（第6号）
+//   - 以前の定例会（下の「以前の定例会の扱い」の議員のみ）:
+//     令和7年第1回 2月26日、第3回 9月25日、第4回 11月26日・27日
 //
 // 1件は「議員1人の、1回の発言（会議録の1発言）で扱った論点」。
 // - title: 議員が質問で示した項目名に沿った見出し
@@ -16,23 +18,50 @@ import type { Database } from "@mirai-gikai/supabase";
 // 採否の基準:
 // - 対象は「代表質問」「一般質問」の日程で議員が行った質問だけ。
 //   議案への討論（賛否の表明）や、質問の最後のお礼・要望だけの再発言は含めない。
-// - 議長（渡辺清人）など、この2回の定例会で代表質問・一般質問をしていない議員は0件になる。
+//
+// 以前の定例会の扱い:
+// - 令和8年第1回・第2回定例会で代表質問・一般質問がなかった議員（8名）は、
+//   それ以前で最も新しい定例会の質問を載せる。遡るのは直近の1会期分だけ。
+// - 議長の渡辺清人・副議長の三沢ひで子は令和7年5月23日の臨時会で選ばれ、
+//   それ以降の定例会では代表質問・一般質問がない。2人とも令和7年第1回定例会が直近。
+// - 画面では、令和8年の質問がない議員にその旨の注記を出す（web 側で発言日から判定）。
 
 export const MINUTES_SEARCH_URL = "https://ssp.kaigiroku.net/tenant/shinjuku/";
 
-/** 会議録検索システムの会議ID（council_sessions.slug → council_id） */
+/**
+ * 会議録検索システムの会議ID。キーは会期の slug で、サイトに会期ページがある
+ * （council_sessions に行がある）のは r8-1・r8-2 だけ。r7-* は質問の出典としてのみ使う。
+ */
 export const MINUTES_COUNCIL_IDS = {
+  "r7-1": 3077,
+  "r7-3": 3122,
+  "r7-4": 3144,
   "r8-1": 3163,
   "r8-2": 3193,
 } as const;
 
-export type QuestionSessionSlug = keyof typeof MINUTES_COUNCIL_IDS;
+export type MinutesSessionKey = keyof typeof MINUTES_COUNCIL_IDS;
+
+/** 会議録上の会期名。council_member_questions.session_name に入れる */
+export const MINUTES_SESSION_NAMES: Record<MinutesSessionKey, string> = {
+  "r7-1": "令和7年 第1回定例会",
+  "r7-3": "令和7年 第3回定例会",
+  "r7-4": "令和7年 第4回定例会",
+  "r8-1": "令和8年 第1回定例会",
+  "r8-2": "令和8年 第2回定例会",
+};
+
+/** 主な掲載範囲。これより前の会期は「以前の定例会の扱い」の議員だけに使う */
+export const PRIMARY_SESSIONS: MinutesSessionKey[] = ["r8-1", "r8-2"];
 
 /** 会議録の日程ID（schedule_id）ごとの会議日。speechDate の検算に使う */
 export const MINUTES_SCHEDULE_DATES: Record<
-  QuestionSessionSlug,
+  MinutesSessionKey,
   Record<number, string>
 > = {
+  "r7-1": { 4: "2025-02-26" },
+  "r7-3": { 3: "2025-09-25" },
+  "r7-4": { 2: "2025-11-26", 3: "2025-11-27" },
   "r8-1": { 3: "2026-02-24", 4: "2026-02-25" },
   "r8-2": { 2: "2026-06-10", 3: "2026-06-11" },
 };
@@ -68,7 +97,7 @@ export type QuestionKindLabel = "代表質問" | "一般質問";
 export type SeedCouncilMemberQuestion = {
   /** 会議録の表記（空白なし）。名簿の氏名とは空白を除いて突合する */
   member: string;
-  session: QuestionSessionSlug;
+  session: MinutesSessionKey;
   kind: QuestionKindLabel;
   /** 発言日（YYYY-MM-DD） */
   speechDate: string;
@@ -83,7 +112,7 @@ export type SeedCouncilMemberQuestion = {
  * 会議録検索システムの該当発言へのURL（システムの「URL表示」と同じ形式）
  */
 export function buildMinuteUrl(
-  session: QuestionSessionSlug,
+  session: MinutesSessionKey,
   scheduleId: number,
   minuteId: number
 ): string {
@@ -1338,6 +1367,263 @@ export const councilMemberQuestions: SeedCouncilMemberQuestion[] = [
       "エアコン購入費助成を必要な人に届ける周知と適切な利用の啓発を問うた。まちなか避暑地の運用と猛暑への備え、薬局など民間事業者の協力による身近な休憩スポットづくり、位置や開設時間を地図にして区のホームページやLINEで周知することを提案した。",
     topicTags: ["防災", "高齢者", "医療・健康"],
   },
+  // ── 以前の定例会（令和8年第1回・第2回に代表質問・一般質問がなかった議員の、直近の質問） ──
+  // ── 令和7年第4回定例会 11月26日（代表質問） ──
+  {
+    member: "時光じゅん子",
+    session: "r7-4",
+    kind: "代表質問",
+    speechDate: "2025-11-26",
+    scheduleId: 2,
+    minuteId: 50,
+    title: "区民生活を守り・支える施策の充実",
+    summary:
+      "総合防災訓練の今年度の状況と次回の考え、河川監視映像の配信事業の評価とSNSなどでの発信、緊急医療救護所での医師会などとの連携と周知を問うた。違反を繰り返す民泊事業者への対応、LGBT等性的マイノリティに関する職員ハンドブックの周知、おくやみ相談窓口の設置についてもたずねた。",
+    topicTags: ["防災", "住宅", "人権・平和"],
+  },
+  {
+    member: "時光じゅん子",
+    session: "r7-4",
+    kind: "代表質問",
+    speechDate: "2025-11-26",
+    scheduleId: 2,
+    minuteId: 52,
+    title: "区民のインフラである火葬場",
+    summary:
+      "高騰する火葬料への区の考えを問い、民間火葬場の指導監督に向けた法改正を国に求めるとした都の方針への受け止めと区の取組をたずねた。区民葬の新たな助成制度に向けた令和8年度予算編成についても問うた。",
+    topicTags: ["区政運営", "福祉"],
+  },
+  {
+    member: "時光じゅん子",
+    session: "r7-4",
+    kind: "代表質問",
+    speechDate: "2025-11-26",
+    scheduleId: 2,
+    minuteId: 54,
+    title: "今後の中小企業支援",
+    summary:
+      "新たに始めた中小企業支援事業の利用実績と利用者の反応、中小企業のイノベーション促進への支援を問うた。区が目指すスタートアップ像と、高田馬場創業支援センターの利用実績を踏まえ、民間ではなく行政が担うべき役割を明確にするよう求めた。",
+    topicTags: ["地域経済"],
+  },
+  {
+    member: "時光じゅん子",
+    session: "r7-4",
+    kind: "代表質問",
+    speechDate: "2025-11-26",
+    scheduleId: 2,
+    minuteId: 60,
+    title: "アフォーダブル住宅等、居住安定化に資する住宅政策の推進",
+    summary:
+      "住宅マスタープランの策定で、都が進めるアフォーダブル住宅の推進を考慮し、区民住宅の募集対象に結婚予定者を加えるなど子育て世代や若者の居住安定を図るよう求めた。アスベスト含有調査の支援対象を危険度の比較的低い建材にも広げるよう提案した。",
+    topicTags: ["住宅", "子育て"],
+  },
+  {
+    member: "時光じゅん子",
+    session: "r7-4",
+    kind: "代表質問",
+    speechDate: "2025-11-26",
+    scheduleId: 2,
+    minuteId: 62,
+    title: "持続可能な環境都市・新宿",
+    summary:
+      "「ゼロカーボンシティ新宿」表明の認知度の低さを踏まえ、区民に届く周知の強化を求めた。子どもへの環境教育の効果と、区内の大学と連携した若者向けの環境意識啓発事業を問い、区有施設へのマイボトル用給水器の設置を提案した。",
+    topicTags: ["環境", "教育"],
+  },
+  {
+    member: "時光じゅん子",
+    session: "r7-4",
+    kind: "代表質問",
+    speechDate: "2025-11-26",
+    scheduleId: 2,
+    minuteId: 64,
+    title: "子ども施策（朝の小1の壁・児童相談体制・特別支援学級）",
+    summary:
+      "「朝の小1の壁」対策の検討状況と今後の考え、始業前の時間に配慮する区内事業者の取組の推進を問うた。東京都児童相談センター内の分室設置の効果と今後の児童相談体制、虐待の未然防止の充実、自閉症・情緒障害特別支援学級の開設時期と開設校をたずねた。",
+    topicTags: ["子育て", "教育", "福祉"],
+  },
+  // ── 令和7年第4回定例会 11月27日（代表質問・一般質問） ──
+  {
+    member: "佐藤佳一",
+    session: "r7-4",
+    kind: "代表質問",
+    speechDate: "2025-11-27",
+    scheduleId: 3,
+    minuteId: 7,
+    title: "区長の政治姿勢と区民生活の支援",
+    summary:
+      "非核三原則の見直しが報じられたことを受け、区長が首相に抗議し撤回を求めるよう迫った。お米券を課税世帯にも広げて支給すること、食料品の消費税ゼロに向けた議論を国に求めること、シルバーパスへの助成、修学旅行費や学用品費への補助と、裁縫道具・習字セットなどの教材の備品化を提案した。",
+    topicTags: ["人権・平和", "行財政", "教育"],
+  },
+  {
+    member: "佐藤佳一",
+    session: "r7-4",
+    kind: "代表質問",
+    speechDate: "2025-11-27",
+    scheduleId: 3,
+    minuteId: 10,
+    title: "OTC類似薬の保険外しと医療保険のあり方",
+    summary:
+      "市販薬と似た薬（OTC類似薬）を保険から外す国の動きによる区民の負担増への見解を問い、中止を国に求めるよう迫った。子ども・子育て支援金の上乗せの中止要請、来年度の国民健康保険料の見込み、新たに入国した人への保険料の一括前払いのための条例改定をやめることを求めた。",
+    topicTags: ["医療・健康", "多文化共生"],
+  },
+  {
+    member: "佐藤佳一",
+    session: "r7-4",
+    kind: "代表質問",
+    speechDate: "2025-11-27",
+    scheduleId: 3,
+    minuteId: 12,
+    title: "基本構想と総合計画",
+    summary:
+      "総合計画の検証が3段階評価で全てB評価になっている意義を問い、都市マスタープランの検証に区民の視点を取り入れるよう求めた。学識経験者のアドバイザーの指摘を残りの計画期間の事業改善に早く活かすこと、基本構想審議会を早期に立ち上げ幅広い区民参画で進めることを提案した。",
+    topicTags: ["区政運営"],
+  },
+  {
+    member: "佐藤佳一",
+    session: "r7-4",
+    kind: "代表質問",
+    speechDate: "2025-11-27",
+    scheduleId: 3,
+    minuteId: 14,
+    title: "本庁舎問題",
+    summary:
+      "本庁舎整備の資金計画で基金の割合を5割以上とした理由と、約500億円以外を含む費用総額の明示を求めた。不用額を当てにした基金の積み増しや他の基金の付け替えの内容を問い、区民サービスへの影響を懸念して、拙速に進めず区民や職員へのアンケートや説明会を早期に行うよう求めた。",
+    topicTags: ["行財政", "まちづくり"],
+  },
+  {
+    member: "佐藤佳一",
+    session: "r7-4",
+    kind: "代表質問",
+    speechDate: "2025-11-27",
+    scheduleId: 3,
+    minuteId: 16,
+    title: "神宮外苑再開発",
+    summary:
+      "区が後から地権者として加わり個人施行となった事業の仕組みについて区民への説明を求め、権利床の場所が決まった経緯を時系列で示すよう求めた。従前資産評価への区議会議員を含む審議会の設置、公共施設管理者同意の条件の履行状況、補償額の算定根拠の公開、廃道敷の管理協定の妥当性をただした。",
+    topicTags: ["まちづくり", "行財政"],
+  },
+  {
+    member: "ひやま真一",
+    session: "r7-4",
+    kind: "一般質問",
+    speechDate: "2025-11-27",
+    scheduleId: 3,
+    minuteId: 66,
+    title: "区内中小企業の継承と地域の活性化、まちの美化",
+    summary:
+      "区内事業者の事業承継の相談状況と空き店舗の活用に向けた課題認識を問い、商店街と区内大学との連携の成果と、経営支援・創業支援での今後の連携を求めた。新宿の地域特性に合った創業支援・企業誘致と高田馬場創業支援センターの在り方、ポイ捨てや飼い犬のマナーなどまちの美化対策の強化をたずねた。",
+    topicTags: ["地域経済", "環境"],
+  },
+  {
+    member: "沢田あゆみ",
+    session: "r7-4",
+    kind: "一般質問",
+    speechDate: "2025-11-27",
+    scheduleId: 3,
+    minuteId: 79,
+    title: "高齢者施設の情報提供とおくやみに関するサポート",
+    summary:
+      "高齢者施設の情報を分かりやすくするため、福岡市や民間サイトを参考に「高齢者くらしのおたすけガイド」の記述を充実するよう求めた。遺族の手続を支えるため、区政情報センターを活用したおくやみのワンストップ窓口の設置と、案内冊子の改善を提案した。",
+    topicTags: ["高齢者", "福祉", "区政運営"],
+  },
+  {
+    member: "中村しんいち",
+    session: "r7-4",
+    kind: "一般質問",
+    speechDate: "2025-11-27",
+    scheduleId: 3,
+    minuteId: 92,
+    title: "一人暮らし高齢者の支援",
+    summary:
+      "高齢者の困り事を地域のボランティアが手伝う「ちょこっと・暮らしのサポート事業」について、依頼から支援までを速くするため、地域別のボランティアグループへの一斉連絡やコーディネーターの配置を戸山ハイツでモデル的に検討するよう求めた。高齢者見守りキーホルダーの対象拡大と、緊急連絡先などを元気なうちに区に登録できる制度の導入を提案した。",
+    topicTags: ["高齢者", "福祉"],
+  },
+  // ── 令和7年第3回定例会 9月25日（代表質問） ──
+  {
+    member: "高月まな",
+    session: "r7-3",
+    kind: "代表質問",
+    speechDate: "2025-09-25",
+    scheduleId: 3,
+    minuteId: 7,
+    title: "区財政と物価高騰対策",
+    summary:
+      "2024年度決算の分析と区民生活の実態把握を問い、消費税減税を求めないなら国に何を要望しているのか、区独自の物価高対策を行うべきではないかとただした。お米券の支給、シルバーパスへの助成、八王子市のような中小事業者・個人事業主への支援策の実施を求めた。",
+    topicTags: ["行財政", "地域経済", "高齢者"],
+  },
+  {
+    member: "高月まな",
+    session: "r7-3",
+    kind: "代表質問",
+    speechDate: "2025-09-25",
+    scheduleId: 3,
+    minuteId: 9,
+    title: "多文化共生",
+    summary:
+      "排外主義を明確に否定する声明の発信と、国への基本法制定の要請を区長に求めた。外国人にだけ本人確認書類の提示や保険料の前納を求める対応は差別的だとして、医療通訳など医療現場を支える取組を求め、罰則を含むヘイトスピーチ禁止条例の制定と、学校での外国籍の子どもへの配慮と人権教育をたずねた。",
+    topicTags: ["多文化共生", "人権・平和", "教育"],
+  },
+  {
+    member: "高月まな",
+    session: "r7-3",
+    kind: "代表質問",
+    speechDate: "2025-09-25",
+    scheduleId: 3,
+    minuteId: 12,
+    title: "気候危機対策としての緑化推進",
+    summary:
+      "「新宿りっぱな街路樹運動」事業の復活と、明治通りなどで都に立派な街路樹を植えるよう要請することを求めた。樹冠被覆率の数値目標の設定、交差点の植え込みへの高木の植樹、落ち葉清掃を行政が担うこと、区の施設では樹木による緑化で基準を満たすことを提案した。",
+    topicTags: ["環境", "まちづくり"],
+  },
+  {
+    member: "高月まな",
+    session: "r7-3",
+    kind: "代表質問",
+    speechDate: "2025-09-25",
+    scheduleId: 3,
+    minuteId: 14,
+    title: "猛暑から命を守る対策",
+    summary:
+      "エアコン購入費への区の上乗せ補助、区営住宅へのエアコン設置、夏の電気代の助成を求めた。都の制度も活用し、公園や学校、子どもの施設、駅前など可能な場所にミスト設備を増やすよう提案した。",
+    topicTags: ["防災", "高齢者", "住宅"],
+  },
+  {
+    member: "高月まな",
+    session: "r7-3",
+    kind: "代表質問",
+    speechDate: "2025-09-25",
+    scheduleId: 3,
+    minuteId: 17,
+    title: "公共施設等総合管理計画",
+    summary:
+      "延床面積22%削減の目標は妥当だったのか検証するよう求め、計画の見直しは徹底した区民参加で行うよう迫った。区民意識調査の設問が誘導的ではないかとただし、工事単価の高騰を踏まえた長寿命化重視の計画と、本庁舎の移転・建て替えを一旦立ち止まることを求めた。",
+    topicTags: ["行財政", "まちづくり"],
+  },
+  // ── 令和7年第1回定例会 2月26日（一般質問） ──
+  {
+    member: "三沢ひで子",
+    session: "r7-1",
+    kind: "一般質問",
+    speechDate: "2025-02-26",
+    scheduleId: 4,
+    minuteId: 81,
+    title: "区内のAEDの設置",
+    summary:
+      "区内のAEDの設置状況と設置場所の周知を問い、令和7年度の設置拡大の計画、コンビニに設置されていることが分かる工夫と店員の協力を求めた。地域センターでのAED貸出しの追加と、女性への配慮として区有施設のAEDに三角巾を配備することを提案した。",
+    topicTags: ["医療・健康", "防災"],
+  },
+  {
+    member: "渡辺清人",
+    session: "r7-1",
+    kind: "一般質問",
+    speechDate: "2025-02-26",
+    scheduleId: 4,
+    minuteId: 108,
+    title: "新宿区のカスタマーハラスメント",
+    summary:
+      "区の「対応困難事例集」にあるカスタマーハラスメントの事例を問い、区職員や委託先の民間事業者へのメンタルヘルス・ハラスメント対策をたずねた。実際の事例と対応方法を事例集に加えて職員に周知すること、研修の取組や庁舎での未然防止策を問うた。",
+    topicTags: ["区政運営"],
+  },
 ];
 
 type CouncilMemberQuestionInsert =
@@ -1356,6 +1642,7 @@ const QUESTION_KIND_VALUES: Record<
 
 /**
  * 質問要約の insert 行を作る。議員は氏名（空白を除く）、会期は slug で突合する。
+ * 主な掲載範囲の会期がDBになければ例外にする。
  */
 export function createCouncilMemberQuestionInserts(
   questions: SeedCouncilMemberQuestion[],
@@ -1369,13 +1656,15 @@ export function createCouncilMemberQuestionInserts(
     if (!member) {
       throw new Error(`Council member not found for name: ${question.member}`);
     }
+    // 以前の定例会はサイトに会期ページがないため null
     const session = insertedSessions.find((s) => s.slug === question.session);
-    if (!session) {
+    if (!session && PRIMARY_SESSIONS.includes(question.session)) {
       throw new Error(`Council session not found for slug: ${question.session}`);
     }
     return {
       council_member_id: member.id,
-      council_session_id: session.id,
+      council_session_id: session?.id ?? null,
+      session_name: MINUTES_SESSION_NAMES[question.session],
       venue_type: "plenary",
       question_kind: QUESTION_KIND_VALUES[question.kind],
       title: question.title,
