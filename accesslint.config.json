@@ -2,7 +2,7 @@
   "default": "dev",
   "targets": {
     "dev": {
-      "url": "http://localhost:3000"
+      "url": "http://localhost:3002"
     },
     "admin": {
       "url": "http://localhost:3001"

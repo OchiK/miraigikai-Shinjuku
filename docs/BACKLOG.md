@@ -64,6 +64,12 @@ Acceptance:
 - accessibility-fix による検出された違反箇所の修正・是正
 - accessibility-diff による回帰検知（PR差分のアクセシビリティ評価）
 
+Progress (2026-09-25):
+`@accesslint/cli scan` の自動検査で出た3件（トップの多言語案内 nav のラベル重複、`/guide/*` の article 内 aside、`/faq` の main ランドマーク欠落）を直した。
+トップ（日・英）、`/guide/*`（5言語）、`/faq`、`/terms`、`/privacy`、`/councilors`、`/sessions/r8-2/bills`、議案詳細で違反0件。
+ヘッダーのふりがな・言語切替の `aria-pressed` と44pxのタップ領域はコードで確認した。
+キーボード操作・フォーカス順序・スクリーンリーダー・リフローの手動検証（accessibility-inspect）と accessibility-diff の回帰検知は未実施で、残作業。
+
 ## P3
 
 ### P3-1 i18n UI

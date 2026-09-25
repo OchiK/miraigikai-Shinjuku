@@ -7,7 +7,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { siteConfig } from "@/config/site.config";
 import { GuideLanguageLinks } from "@/features/guide/client/components/guide-language-links";
-import { GUIDE_LINKS_LABEL } from "@/features/guide/shared/guide-content";
+import {
+  GUIDE_LINKS_LABEL,
+  GUIDE_LINKS_NAV_LABEL_FOOTER,
+} from "@/features/guide/shared/guide-content";
 import {
   getUiMessages,
   type UiMessages,
@@ -92,7 +95,7 @@ function FooterPrimaryLinks({ messages }: { messages: FooterMessages }) {
 function FooterGuideLinks() {
   return (
     <nav
-      aria-label={GUIDE_LINKS_LABEL}
+      aria-label={GUIDE_LINKS_NAV_LABEL_FOOTER}
       className="mb-5 flex flex-col items-center gap-2"
     >
       <p className="text-xs font-semibold text-mirai-text-muted">

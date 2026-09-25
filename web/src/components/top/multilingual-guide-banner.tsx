@@ -2,7 +2,10 @@ import { Languages } from "lucide-react";
 import type { ReactNode } from "react";
 import { Container } from "@/components/layouts/container";
 import { GuideLanguageLinks } from "@/features/guide/client/components/guide-language-links";
-import { GUIDE_LINKS_LABEL } from "@/features/guide/shared/guide-content";
+import {
+  GUIDE_LINKS_LABEL,
+  GUIDE_LINKS_NAV_LABEL_TOP,
+} from "@/features/guide/shared/guide-content";
 import { LanguageToggle } from "@/features/i18n/client/components/language-toggle";
 import { getLocale } from "@/features/i18n/server/loaders/get-locale";
 import { ENGLISH_BILLS_LABEL } from "@/features/i18n/shared/messages";
@@ -25,12 +28,10 @@ export async function MultilingualGuideBanner() {
           <LanguageToggle currentLocale={locale} className="self-start" />
         </div>
         <nav
-          aria-labelledby="multilingual-guide-banner-label"
+          aria-label={GUIDE_LINKS_NAV_LABEL_TOP}
           className="flex flex-col gap-3 md:flex-row md:items-center"
         >
-          <BannerLabel id="multilingual-guide-banner-label">
-            {GUIDE_LINKS_LABEL}
-          </BannerLabel>
+          <BannerLabel>{GUIDE_LINKS_LABEL}</BannerLabel>
           <GuideLanguageLinks />
         </nav>
       </div>
@@ -39,19 +40,14 @@ export async function MultilingualGuideBanner() {
 }
 
 function BannerLabel({
-  id,
   lang,
   children,
 }: {
-  id?: string;
   lang?: string;
   children: ReactNode;
 }) {
   return (
-    <p
-      id={id}
-      className="flex shrink-0 items-center gap-2 text-sm font-semibold text-mirai-text"
-    >
+    <p className="flex shrink-0 items-center gap-2 text-sm font-semibold text-mirai-text">
       <Languages aria-hidden="true" className="size-5" strokeWidth={2.75} />
       <span lang={lang}>{children}</span>
     </p>
