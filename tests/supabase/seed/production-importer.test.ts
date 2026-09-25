@@ -12,6 +12,10 @@ import {
 } from "../../../packages/seed/main/data";
 import { councilMembers } from "../../../packages/seed/main/shinjuku-council-members";
 import {
+  councilMemberQuestions,
+  toCouncilMemberQuestionImportRows,
+} from "../../../packages/seed/main/shinjuku-council-questions";
+import {
   R8_2_SESSION,
   r8SecondSessionItems,
   toBillInserts,
@@ -30,6 +34,7 @@ import { adminClient, cleanupTestUser, createTestUser } from "../utils";
  *   3. 利用者データ（interview_sessions / interview_report）が消えないこと
  *   4. 解説の更新が同一の (bill_id, difficulty_level) に当たること
  *   5. インベントリ外の議案を削除せず、報告だけ行うこと
+ *   6. 議員の質問要約が投入され、再インポートでも id が変わらず削除もされないこと
  *
  * seed 済みのデータや他テストと衝突しないよう、実行ごとに一意な接頭辞を
  * 付けた複製インベントリ（ImportDataset）を流し込む。変換ロジックそのものは
@@ -92,6 +97,19 @@ function buildDataset(idPrefix: string): ImportDataset {
     councilRosterKey: idPrefix,
     councilRosterUrl: `https://example.com/council-roster/${idPrefix}`,
     councilMembers: prefixedCouncilMembers,
+    // 複製インベントリの会期は R8-2 だけなので、それ以外の会期の質問は
+    // 会期ページに紐づけない（本番の以前の定例会と同じ扱い）
+    councilMemberQuestions: toCouncilMemberQuestionImportRows(
+      councilMemberQuestions,
+      councilMembers
+    ).map((row) => ({
+      ...row,
+      member_name: prefixed(row.member_name),
+      session_slug:
+        row.session_slug === R8_2_SESSION.slug
+          ? prefixed(row.session_slug)
+          : null,
+    })),
     // bill_number は会期単位で一意なため、テスト会期の中では接頭辞が要らない
     bills: toBillInserts().map((bill) => ({
       ...bill,
@@ -271,6 +289,141 @@ describe("本番用インポーター", () => {
       .in("council_members.name", memberNames);
     if (linksError) throw new Error(linksError.message);
     expect(count).toBe(87);
+  });
+
+  it("初回インポートで質問要約124件を投入し、会期ページがある会期だけ紐づける", async () => {
+    const memberNames = dataset.councilMembers.map((member) => member.name);
+    const { data, error } = await adminClient
+      .from("council_member_questions")
+      .select("council_session_id, session_name, council_members!inner(name)")
+      .in("council_members.name", memberNames);
+    if (error) throw new Error(error.message);
+
+    expect(data).toHaveLength(124);
+    const r8Second = (data ?? []).filter(
+      (row) => row.session_name === "令和8年 第2回定例会"
+    );
+    expect(r8Second.length).toBeGreaterThan(0);
+    expect(r8Second.every((row) => row.council_session_id === sessionId)).toBe(
+      true
+    );
+    expect(
+      (data ?? [])
+        .filter((row) => row.session_name !== "令和8年 第2回定例会")
+        .every((row) => row.council_session_id === null)
+    ).toBe(true);
+  });
+
+  it("再インポートしても質問要約の id が変わらず、要約の更新は同じ行に当たる", async () => {
+    const target = dataset.councilMemberQuestions[0];
+    if (!target) throw new Error("質問データがない");
+    const fetchTarget = async () => {
+      const { data, error } = await adminClient
+        .from("council_member_questions")
+        .select("id, summary, council_members!inner(name)")
+        .eq("council_members.name", target.member_name)
+        .eq("source_url", target.source_url)
+        .single();
+      if (error) throw new Error(error.message);
+      return data;
+    };
+
+    const before = await fetchTarget();
+    const { error: updateError } = await adminClient
+      .from("council_member_questions")
+      .update({ summary: "手で書き換えた要約" })
+      .eq("id", before.id);
+    if (updateError) throw new Error(updateError.message);
+
+    const report = await runImport();
+    const questionsDiff = report.tables.find(
+      (table) => table.table === "council_member_questions"
+    );
+    expect(questionsDiff?.updated.map((row) => row.key)).toEqual([
+      `${target.member_name}::${target.source_url}`,
+    ]);
+
+    const after = await fetchTarget();
+    expect(after.id).toBe(before.id);
+    expect(after.summary).toBe(target.summary);
+  });
+
+  it("インベントリから外れた質問要約を削除せず、インベントリ外として報告する", async () => {
+    const [removed, ...rest] = dataset.councilMemberQuestions;
+    if (!removed) throw new Error("質問データがない");
+
+    const report = await importInventory(adminClient, {
+      dryRun: false,
+      dataset: { ...dataset, councilMemberQuestions: rest },
+    });
+    const questionsDiff = report.tables.find(
+      (table) => table.table === "council_member_questions"
+    );
+    expect(questionsDiff?.extraneous).toEqual([
+      `${removed.member_name}::${removed.source_url}`,
+    ]);
+
+    const { data: survived } = await adminClient
+      .from("council_member_questions")
+      .select("id, council_members!inner(name)")
+      .eq("council_members.name", removed.member_name)
+      .eq("source_url", removed.source_url)
+      .maybeSingle();
+    expect(survived?.id).toBeDefined();
+  });
+
+  it("管理画面で切り替えた注目設定を、再インポートで上書きしない", async () => {
+    const bills = await fetchBills();
+    const target = bills[0];
+    if (!target) throw new Error("議案が投入されていない");
+    const inventoryFeatured =
+      dataset.bills.find((bill) => bill.slug === target.slug)?.is_featured ??
+      false;
+
+    const { error: updateError } = await adminClient
+      .from("bills")
+      .update({ is_featured: !inventoryFeatured })
+      .eq("id", target.id);
+    if (updateError) throw new Error(updateError.message);
+
+    // 差分が無いと RPC 自体が呼ばれないため、質問要約を1件崩して書き込みを発生させる
+    const question = dataset.councilMemberQuestions[0];
+    if (!question) throw new Error("質問データがない");
+    const { data: questionRow, error: questionError } = await adminClient
+      .from("council_member_questions")
+      .select("id, council_members!inner(name)")
+      .eq("council_members.name", question.member_name)
+      .eq("source_url", question.source_url)
+      .single();
+    if (questionError) throw new Error(questionError.message);
+    const { error: touchError } = await adminClient
+      .from("council_member_questions")
+      .update({ summary: "書き込みを発生させるための変更" })
+      .eq("id", questionRow.id);
+    if (touchError) throw new Error(touchError.message);
+
+    const report = await runImport();
+    const billsDiff = report.tables.find((table) => table.table === "bills");
+    expect(billsDiff?.updated).toEqual([]);
+    const questionsDiff = report.tables.find(
+      (table) => table.table === "council_member_questions"
+    );
+    expect(questionsDiff?.updated).toHaveLength(1);
+
+    const { data, error } = await adminClient
+      .from("bills")
+      .select("is_featured")
+      .eq("id", target.id)
+      .single();
+    if (error) throw new Error(error.message);
+    expect(data.is_featured).toBe(!inventoryFeatured);
+
+    // 後続テストのためにインベントリの値へ戻す
+    const { error: restoreError } = await adminClient
+      .from("bills")
+      .update({ is_featured: inventoryFeatured })
+      .eq("id", target.id);
+    if (restoreError) throw new Error(restoreError.message);
   });
 
   it("再インポートしても council_members.id が変わらない", async () => {
@@ -596,6 +749,7 @@ describe("本番用インポーター", () => {
     expect(byTable("committees")?.created).toHaveLength(9);
     expect(byTable("council_members")?.created).toHaveLength(38);
     expect(byTable("council_member_committees")?.created).toHaveLength(87);
+    expect(byTable("council_member_questions")?.created).toHaveLength(124);
     expect(byTable("bills")?.created).toHaveLength(23);
     expect(byTable("bill_contents")?.created).toHaveLength(69);
     expect(byTable("bills_tags")?.created).toHaveLength(23);
@@ -615,6 +769,11 @@ describe("本番用インポーター", () => {
       ...dataset,
       councilSessions: unseenSession.councilSessions,
       billSessionSlug: unseenSession.billSessionSlug,
+      // 質問要約も新しい会期に寄せる（投入対象にない会期は dry-run でも拒否される）
+      councilMemberQuestions: dataset.councilMemberQuestions.map((row) => ({
+        ...row,
+        session_slug: row.session_slug && unseenSession.billSessionSlug,
+      })),
     };
 
     const report = await importInventory(adminClient, {

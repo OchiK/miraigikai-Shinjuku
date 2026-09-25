@@ -9,7 +9,9 @@ import {
   buildMinuteUrl,
   councilMemberQuestions,
   createCouncilMemberQuestionInserts,
+  findUnknownQuestionSessionSlugs,
   normalizeMemberName,
+  toCouncilMemberQuestionImportRows,
 } from "./shinjuku-council-questions";
 
 /** DB投入後に返ってくる行を再現する */
@@ -202,5 +204,64 @@ describe("createCouncilMemberQuestionInserts", () => {
       expect(insert.council_session_id).toBeNull();
       expect(insert.session_name).toBe(MINUTES_SESSION_NAMES[earlier[i].session]);
     }
+  });
+});
+
+describe("toCouncilMemberQuestionImportRows", () => {
+  const rows = toCouncilMemberQuestionImportRows(
+    councilMemberQuestions,
+    councilMembers
+  );
+
+  it("全件を名簿の氏名（空白入り）で表す", () => {
+    expect(rows).toHaveLength(councilMemberQuestions.length);
+    const rosterNames = new Set(councilMembers.map((m) => m.name));
+    expect(rows.every((row) => rosterNames.has(row.member_name))).toBe(true);
+  });
+
+  it("主な掲載範囲は会期の slug を持ち、以前の定例会は null", () => {
+    for (const [i, row] of rows.entries()) {
+      const question = councilMemberQuestions[i];
+      expect(row.session_slug).toBe(
+        PRIMARY_SESSIONS.includes(question.session) ? question.session : null
+      );
+      expect(row.session_name).toBe(MINUTES_SESSION_NAMES[question.session]);
+    }
+  });
+
+  it("本番の突合キー（議員・出典URL）が重複しない", () => {
+    const keys = rows.map((row) => `${row.member_name}::${row.source_url}`);
+    expect(new Set(keys).size).toBe(keys.length);
+  });
+
+  it("名簿にない議員は例外にする", () => {
+    expect(() =>
+      toCouncilMemberQuestionImportRows(councilMemberQuestions.slice(0, 1), [])
+    ).toThrow("Council member not found");
+  });
+});
+
+describe("findUnknownQuestionSessionSlugs", () => {
+  it("投入する会期に無い slug を重複なく返し、null は無視する", () => {
+    expect(
+      findUnknownQuestionSessionSlugs(
+        [
+          { session_slug: "r8-2" },
+          { session_slug: "r9-1" },
+          { session_slug: "r9-1" },
+          { session_slug: null },
+        ],
+        ["r8-1", "r8-2"]
+      )
+    ).toEqual(["r9-1"]);
+  });
+
+  it("本番の質問は全て投入する会期に含まれる", () => {
+    expect(
+      findUnknownQuestionSessionSlugs(
+        toCouncilMemberQuestionImportRows(councilMemberQuestions, councilMembers),
+        councilSessions.flatMap((session) => (session.slug ? [session.slug] : []))
+      )
+    ).toEqual([]);
   });
 });
