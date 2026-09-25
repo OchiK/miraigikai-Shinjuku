@@ -346,7 +346,7 @@ describe("公開可否", () => {
     ).toEqual([]);
   });
 
-  it("議員提出議案4件は公開するが、公開レビュー未了として「レビュー中」を出す", () => {
+  it("議員提出議案4件は公開され、公開レビュー完了（is_review_completed: true）となっている", () => {
     const councilorBills = toBillInserts().filter((b) => !isWardBill(b));
     expect(councilorBills.map((b) => b.bill_number)).toEqual(
       R8_2_COUNCILOR_BILL_LABELS
@@ -354,7 +354,7 @@ describe("公開可否", () => {
     for (const bill of councilorBills) {
       expect(bill.publish_status).toBe("published");
       expect(bill.published_at).toBe(R8_2_PUBLISHED_AT);
-      expect(bill.is_review_completed).toBe(false);
+      expect(bill.is_review_completed).toBe(true);
     }
   });
 
