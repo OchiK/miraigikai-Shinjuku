@@ -32,6 +32,7 @@ import {
   hasChanges,
   mergeSessionPages,
   parseMonitorState,
+  resolveKnownSessionPages,
   selectNewSessions,
   type SessionPages,
 } from "./detect-changes";
@@ -153,10 +154,11 @@ async function main() {
     ),
     knownIds
   );
-  const newDecisionPages = selectNewSessions(
-    parseIndexPage(await fetchText(DECISIONS_INDEX_URL), DECISIONS_INDEX_URL),
-    knownIds
+  const decisionsIndex = parseIndexPage(
+    await fetchText(DECISIONS_INDEX_URL),
+    DECISIONS_INDEX_URL
   );
+  const newDecisionPages = selectNewSessions(decisionsIndex, knownIds);
 
   const newSessions: SessionSnapshot[] = [];
   for (const pages of mergeSessionPages(newSubmissionPages, newDecisionPages)) {
@@ -164,15 +166,11 @@ async function main() {
   }
 
   const knownSnapshots: SessionSnapshot[] = [];
-  for (const known of KNOWN_SESSIONS) {
-    knownSnapshots.push(
-      await fetchSession({
-        sessionId: known.sessionId,
-        sessionName: known.sessionId,
-        submissionsUrl: known.submissionsUrl,
-        decisionsUrl: known.decisionsUrl,
-      })
-    );
+  for (const pages of resolveKnownSessionPages(
+    KNOWN_SESSIONS,
+    decisionsIndex
+  )) {
+    knownSnapshots.push(await fetchSession(pages));
   }
 
   const linkPages: Record<string, PageLink[]> = {};

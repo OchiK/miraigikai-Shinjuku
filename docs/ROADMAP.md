@@ -212,7 +212,7 @@ Exit:
 
 ## Phase 5: 第3回定例会 live
 
-- [ ] 2026年第3回定例会を投入（BACKLOG P5-2。下書きPR #80 に22件）
+- [ ] 2026年第3回定例会を投入（BACKLOG P5-2。インベントリ22件と更新検知への登録は済み。DB投入と解説が残り）
 - [x] new/updated bill検出（#76, #78。会期中は平日毎日、会期外は週1回）
 - [ ] result未確定状態（BACKLOG P5-2）
 - [ ] 後日result update（BACKLOG P5-2）

@@ -9,6 +9,7 @@ import {
   hasChanges,
   mergeSessionPages,
   parseMonitorState,
+  resolveKnownSessionPages,
   selectNewSessions,
   type DetectInput,
 } from "./detect-changes";
@@ -18,6 +19,7 @@ import {
   parseSubmissionPage,
 } from "./parse-council-page";
 import { R8_2_SESSION } from "../main/shinjuku-r8-2-inventory";
+import { R8_3_SESSION } from "../main/shinjuku-r8-3-inventory";
 import { KNOWN_SESSIONS } from "./targets";
 import type {
   DetectionResult,
@@ -28,6 +30,13 @@ import type {
 
 const fixture = (name: string) =>
   readFileSync(new URL(`./fixtures/${name}`, import.meta.url), "utf-8");
+
+/** KNOWN_SESSIONS から会期IDで取り出す（並び順に依存しない） */
+const knownSession = (sessionId: string): KnownSession => {
+  const session = KNOWN_SESSIONS.find((s) => s.sessionId === sessionId);
+  if (!session) throw new Error(`KNOWN_SESSIONS に ${sessionId} が無い`);
+  return session;
+};
 
 const entry = (sessionId: string, url = `https://example.jp/${sessionId}`) =>
   ({ title: sessionId, url, sessionId }) satisfies IndexEntry;
@@ -65,11 +74,18 @@ const matchingSnapshot = (): SessionSnapshot => ({
     officialTitle: item.officialTitle,
     pdfUrl: item.fullTextPdfUrl,
   })),
-  decisions: known.items.map((item) => ({
-    officialLabel: item.officialLabel,
-    officialTitle: item.officialTitle,
-    decision: item.decision,
-  })),
+  // 未議決の案件は議決結果ページに載らない
+  decisions: known.items.flatMap((item) =>
+    item.decision === null
+      ? []
+      : [
+          {
+            officialLabel: item.officialLabel,
+            officialTitle: item.officialTitle,
+            decision: item.decision,
+          },
+        ]
+  ),
 });
 
 const baseInput = (): DetectInput => ({
@@ -269,11 +285,86 @@ describe("compareKnownSession（レビュー済みコンテンツを上書きし
       compareKnownSession(known, { ...matchingSnapshot(), decisions: [] })
     ).toThrow(/議決結果ページ/);
   });
+
+  describe("議決結果が未掲載のまま登録した会期", () => {
+    const pending: KnownSession = {
+      ...known,
+      decisionsUrl: null,
+      items: known.items.map((item) => ({ ...item, decision: null })),
+    };
+
+    it("議決結果ページを取得していなければ、0件でも停止しない", () => {
+      expect(
+        compareKnownSession(pending, {
+          ...matchingSnapshot(),
+          decisionsUrl: null,
+          decisions: [],
+        })
+      ).toEqual({ draftItems: [], proposedChanges: [] });
+    });
+
+    it("議決結果が掲載されたら、未議決との食い違いとして報告する", () => {
+      const changes = compareKnownSession(
+        pending,
+        matchingSnapshot()
+      ).proposedChanges;
+      expect(
+        changes.map((c) => [c.officialLabel, c.field, c.current, c.official])
+      ).toEqual([
+        ["第42号議案", "decision", null, "原案可決"],
+        ["第43号議案", "decision", null, "原案可決"],
+        ["（会期全体）", "decisionsUrl", null, known.decisionsUrl],
+      ]);
+    });
+
+    it("一覧に載った議決結果ページから1件も読めなければ、ページURLつきで停止する", () => {
+      expect(() =>
+        compareKnownSession(pending, { ...matchingSnapshot(), decisions: [] })
+      ).toThrow(/一覧に載ったが.*example\.jp\/dec/);
+    });
+  });
+});
+
+describe("resolveKnownSessionPages", () => {
+  const pending: KnownSession = {
+    ...known,
+    sessionId: "r8-3",
+    decisionsUrl: null,
+  };
+
+  it("登録済みの議決結果ページがあればそれを使う", () => {
+    expect(
+      resolveKnownSessionPages(
+        [known],
+        [entry("r8-2", "https://example.jp/other")]
+      )
+    ).toEqual([
+      {
+        sessionId: "r8-2",
+        sessionName: "r8-2",
+        submissionsUrl: known.submissionsUrl,
+        decisionsUrl: known.decisionsUrl,
+      },
+    ]);
+  });
+
+  it("未掲載で登録した会期は、議決結果の一覧から同じ会期のページを探す", () => {
+    const [pages] = resolveKnownSessionPages(
+      [pending],
+      [entry("r8-3", "https://example.jp/dec3"), entry("r8-2")]
+    );
+    expect(pages.decisionsUrl).toBe("https://example.jp/dec3");
+  });
+
+  it("一覧にまだ無ければ null のまま", () => {
+    const [pages] = resolveKnownSessionPages([pending], [entry("r8-2")]);
+    expect(pages.decisionsUrl).toBeNull();
+  });
 });
 
 describe("KNOWN_SESSIONS と公式ページの実物（2026-09-25 取得）", () => {
   it("令和8年第2回定例会のインベントリは公式ページと食い違いがない", () => {
-    const [r82] = KNOWN_SESSIONS;
+    const r82 = knownSession("r8-2");
     const snapshot: SessionSnapshot = {
       sessionId: r82.sessionId,
       sessionName: r82.sessionId,
@@ -293,15 +384,55 @@ describe("KNOWN_SESSIONS と公式ページの実物（2026-09-25 取得）", ()
     });
   });
 
-  it("一覧の実物から、令和8年第3回定例会だけを新しい会期として選ぶ", () => {
-    const index = parseIndexPage(
-      fixture("index-submissions.html"),
-      "https://www.city.shinjuku.lg.jp/kusei/index_gian01.html"
-    );
+  it("令和8年第3回定例会のインベントリは公式ページと食い違いがない", () => {
+    const r83 = knownSession("r8-3");
+    const snapshot: SessionSnapshot = {
+      sessionId: r83.sessionId,
+      sessionName: r83.sessionId,
+      submissionsUrl: r83.submissionsUrl,
+      decisionsUrl: r83.decisionsUrl,
+      submissions: parseSubmissionPage(
+        fixture("submissions-r8-3.html"),
+        r83.submissionsUrl
+      ),
+      decisions: [],
+    };
+    expect(r83.sessionId).toBe(R8_3_SESSION.slug);
+    expect(r83.items).toHaveLength(22);
+    expect(compareKnownSession(r83, snapshot)).toEqual({
+      draftItems: [],
+      proposedChanges: [],
+    });
+  });
+
+  it("一覧の実物に、インベントリ未登録の会期は無い", () => {
     const knownIds = new Set(KNOWN_SESSIONS.map((s) => s.sessionId));
-    expect(selectNewSessions(index, knownIds).map((e) => e.sessionId)).toEqual([
-      "r8-3",
-    ]);
+    for (const [name, url] of [
+      [
+        "index-submissions.html",
+        "https://www.city.shinjuku.lg.jp/kusei/index_gian01.html",
+      ],
+      [
+        "index-decisions.html",
+        "https://www.city.shinjuku.lg.jp/kusei/index_giketsu01.html",
+      ],
+    ]) {
+      expect(
+        selectNewSessions(parseIndexPage(fixture(name), url), knownIds)
+      ).toEqual([]);
+    }
+  });
+
+  it("令和8年第3回定例会の議決結果ページは、一覧の実物にまだ無い", () => {
+    const decisionsIndex = parseIndexPage(
+      fixture("index-decisions.html"),
+      "https://www.city.shinjuku.lg.jp/kusei/index_giketsu01.html"
+    );
+    const pages = resolveKnownSessionPages(KNOWN_SESSIONS, decisionsIndex);
+    expect(pages.find((p) => p.sessionId === "r8-3")?.decisionsUrl).toBeNull();
+    expect(pages.find((p) => p.sessionId === "r8-2")?.decisionsUrl).toBe(
+      knownSession("r8-2").decisionsUrl
+    );
   });
 });
 

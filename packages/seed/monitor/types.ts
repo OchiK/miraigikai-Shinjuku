@@ -56,7 +56,8 @@ export interface KnownItem {
   officialLabel: string;
   officialTitle: string;
   fullTextPdfUrl: string | null;
-  decision: string;
+  /** 公式の議決結果。議決結果ページが未掲載の会期は null */
+  decision: string | null;
   /** 公開レビュー済みか（bills.is_review_completed） */
   reviewCompleted: boolean;
 }
@@ -65,7 +66,11 @@ export interface KnownItem {
 export interface KnownSession {
   sessionId: string;
   submissionsUrl: string;
-  decisionsUrl: string;
+  /**
+   * 議決結果ページ。会期中で未掲載なら null。
+   * null の会期は毎回、議決結果の一覧からその会期のページを探す。
+   */
+  decisionsUrl: string | null;
   /** 区長提出議案の提出議案ページ・議決結果ページに載る案件だけ */
   items: KnownItem[];
 }
@@ -110,6 +115,7 @@ export interface ProposedChange {
     | "officialTitle"
     | "fullTextPdfUrl"
     | "decision"
+    | "decisionsUrl"
     | "missingOnOfficialPage";
   /** インベントリの値 */
   current: string | null;
