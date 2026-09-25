@@ -41,6 +41,48 @@ Acceptance:
 Acceptance:
 each derived content can trace back to source.
 
+## S5 本番稼働検証（ROADMAP「Step 5」の残作業）
+
+ROADMAP の Step 5 で未完了の項目。Phase の Exit 条件とは別に、本番環境そのものを確かめる作業。
+経緯は `docs/verification/20260918_1830_step5_production_verification.md`、`docs/verification/20260923_本番公開確認記録.md`、`docs/verification/20260924_本番公開確認記録.md`。
+
+### S5-1 Admin の本番配備経路と認可
+いまの本番 Admin は、ローカルで `pnpm dev:admin:prod-db` を立てて本番DBにつなぐ形でしか使っていない（2026-09-24 の確認記録）。
+
+Acceptance:
+- Admin を本番にデプロイするか、ローカル起動のみで運用するかを決めて記録する
+- デプロイする場合は URL・配備 SHA・Vercel 環境変数を記録し、未ログインと `admin` ロールなしのユーザーが弾かれることを確かめる
+- 本番の Admin アカウントの作り方（Supabase Authentication でユーザーを作り、`raw_app_meta_data` に `{"roles": ["admin"]}` を付ける）を手順書に書く
+
+### S5-2 本番DBのmigration履歴・制約・出典列の確認
+Acceptance:
+- 本番の migration 履歴が `supabase/migrations/` と一致する
+- `(council_session_id, bill_number)` の複合ユニーク、`bill_number_order`、出典URL列が本番にある
+- 確認に使ったクエリと結果を `docs/verification/` に残す
+
+### S5-3 復旧手順のリハーサル
+本番専用インポーターは対象テーブルのバックアップを取るが、そこから戻す手順は試していない。
+
+Acceptance:
+- ローカルまたは検証用の Supabase で、バックアップからの復元を最後まで通す
+- 手順と所要時間を文書にする
+
+### S5-4 公開画面の総点検（全議案・モバイル・AIチャット）
+Acceptance:
+- 公開中の全議案（区長提出23件と議員提出議案4件）で、3難易度の本文・一次資料リンク・出典導線を確認する
+- スマホ幅での表示を確認し、スクリーンショットを証跡として保存する
+- 公開済みの議案で AI チャットが答え、未公開の議案では 403 になることを本番で確認する
+- 次の2点はコード上は対応済みなので、本番で確かめてから ROADMAP のチェックを付ける
+  - 注目議案は `publish_status = "published"` だけを出す（`findFeaturedBillsWithContents`）。準備中案件の404リンクが出ないこと
+  - チャットAPIは `siteConfig.features.aiChat` のサーバー側ゲート、未公開議案の拒否、上限確認失敗時の fail-closed を持つ（`handle-chat-request.ts`）
+
+### S5-5 本番インポート後のキャッシュ即時無効化
+`import_production.yml` は `WEB_PUBLIC_URL` と `REVALIDATE_SECRET` がないとキャッシュ無効化を飛ばす。2026-09-25 時点でリポジトリの Secrets にどちらも入っていない。
+
+Acceptance:
+- GitHub の Secrets（または production environment）に `WEB_PUBLIC_URL` と、web の Vercel と同じ `REVALIDATE_SECRET` を入れる
+- 次の本番インポートで「スキップした」ではなく `/api/revalidate` の 200 がログに出ることを確認する
+
 ## P2
 
 ### P2-1 Restore easy difficulty
@@ -75,6 +117,9 @@ Progress (2026-09-25):
 ### P3-1 i18n UI
 Acceptance:
 language switch works without losing current bill.
+
+Progress (2026-09-25):
+ROADMAP の「UI translation」の残りは P8-12 の残作業（定例会の議案一覧・議員一覧・FAQ/規約などの下層ページ、議案詳細の見出し、英語文言のネイティブ確認、`<html lang>`）で扱う。
 
 ### P3-2 Translation schema
 Acceptance:
@@ -154,6 +199,17 @@ Acceptance:
 - total monthly cap
 - clear UI when cap reached
 
+Progress (2026-09-25):
+コードで確認した現状（`web/src/features/chat/server/services/handle-chat-request.ts` ほか）。
+- 済み: 議案に紐づけ（クライアントの議案IDだけを信じ、本文はDBの公開データで置き換える。未公開は 403）
+- 済み: ユーザー日次・システム日次・システム月次の上限（`env.chat.*CostLimitUsd`）と、上限を確認できないときの fail-closed
+- 済み: 利用記録（`chat_usage_events` への記録）と、入力欄の「AIの回答は間違えることがあります」の注意書き
+- 済み（プロンプトのみ）: 関係のない話題を断るルール（`COMMON_RULES_GENERIC`）
+- 残り: 出典表示。回答に一次資料のどこを根拠にしたかを示す仕組みがない。デザインシステムの「出典が出せない答えは返さない」「AI生成文は一次資料と同じ見た目にしない」を満たすこと
+- 残り: 回答言語を質問の言語に合わせる指示がプロンプトにない。英語表示でのチャットUI文言もまだ日本語
+- 残り: 関係のない質問を有料APIの前に止める仕組みはない（`packages/shared/src/moderation/` は使っていない）
+- 残り: 上限到達時の 429 文言が画面にどう出るか（`PromptInputError`）を確認する。英語表示での文言も要る
+
 ## P5
 
 ### P5-0 bill_number のユニーク制約を会期スコープにする ✅
@@ -175,8 +231,27 @@ Progress (2026-09-25):
 - 区長提出議案は一覧ページ（`index_gian01` / `index_giketsu01`）から会期ページをたどり、インベントリ未登録の会期・案件を下書き（`monitor/drafts/shinjuku-draft.json`、常に `reviewCompleted: false` / `hasPublishableContent: false`）にする。登録済み案件と公式サイトの食い違い（件名・全文PDF・議決結果・消失）はレポートに載せるだけで、インベントリ・DBは書き換えない。
 - 議員提出議案は議会側ページのURLに規則性がないため、定例会・臨時会一覧と決議・意見書ページのリンク増減、審議結果PDFの sha256 だけを見る。
 - 下書きPRは固定ブランチ `automation/shinjuku-council-update` に作る。下書きは (公式サイト, インベントリ) だけで決まるので、同じ状態では何度回してもPRは増えない。
-- 残り: リポジトリ設定で「Allow GitHub Actions to create and approve pull requests」を有効にすること。有効化後の初回実行で令和8年第3回定例会（第63〜80号議案・認定第1〜4号の22件）が下書きPRになる見込み。新しい会期のインベントリを作ったら `monitor/targets.ts` の `KNOWN_SESSIONS` に足すこと。
+- リポジトリ設定「Allow GitHub Actions to create and approve pull requests」は有効化済み。初回実行で令和8年第3回定例会（第63〜80号議案・認定第1〜4号の22件）の下書きPR（#80）ができた。取り込みは P5-2。新しい会期のインベントリを作ったら `monitor/targets.ts` の `KNOWN_SESSIONS` に足すこと。
 - 設計: `docs/20260925_1740_P5-1_自動化_新宿区議会更新検知とドラフト生成_設計.md`（§9 に実装時の変更点）。
+
+### P5-2 令和8年第3回定例会の投入（ROADMAP Phase 5）
+更新検知の下書きPR（#80、ブランチ `automation/shinjuku-council-update`）に第63〜80号議案・認定第1〜4号の22件が出ている。
+
+Acceptance:
+- 下書きを確認してインベントリ（`shinjuku-r8-3-inventory.ts` 相当）を作り、`monitor/targets.ts` の `KNOWN_SESSIONS` に `r8-3` を足す
+- 議決前の案件は結果なし（未確定）として表示し、可決・否決と取り違えない
+- 議決結果が公式に出たら、レビュー済みの本文を上書きせずに結果だけを更新する
+- 解説（やさしい／ふつう／くわしく）は第2回定例会と同じ基準（claim ledger・公開レビュー）で整備する
+- Exit: 会期の更新を1人で運用できる
+
+### P5-3 半自動化の残り（ROADMAP Phase 6）
+会期ページの解析・変化の検知・定期実行・下書きPRは P5-1 で実装済み。
+
+Acceptance:
+- 全文PDFからのテキスト抽出
+- 抽出したテキストから解説の下書き（`generated`）を作る
+- Admin に、下書きを確認して公開に回すレビュー待ち一覧を置く
+- Exit: 「更新を見つける」「下書きを作る」まで自動
 
 ## P7
 
@@ -201,6 +276,16 @@ Progress (2026-09-24〜25):
 - Phase 7-C（議案・議員の相互連携導線）は完了（#66）。議員一覧に会派アンカー（`#faction-{slug}`）、議案詳細の会派賛否から該当会派へのリンク、議案詳細に常設の「この議案と議員」節（議員一覧への導線・議案に紐づく質問）、議員の質問カードに関連議案リンク、議員詳細に開催中定例会の議案一覧リンクを追加。
   `council_member_questions.bill_id` は全件未設定のため、質問↔議案リンクはデータが入るまで表示されない（会派名リンクは下記の賛否投入で表示される）。質問と議案の紐づけは、委員会質疑の取り込み時に一次情報（会議録の議題）から行うこと。
 - 会派の賛否（令和8年第2回定例会・23議案×8会派）を新宿区議会の「議案の概要と審議結果」（区議会だより No.322 と同じ表）から投入（#68）。出典は議会公式ページのPDFに切り替えた。採決時の会派名（`faction_stances.faction_name_at_vote`）と出典を議決結果カードに表示し、本番インポーターで賛否を扱えるようにした。本番への投入は dry-run の確認後。計画は `docs/20260925_1330_会派賛否データ投入計画.md`（#67）。
+
+### P7-2 任意機能の候補（ROADMAP Phase 7 の未着手分）
+着手するときに要件を書き起こす。いまは候補の記録だけ。
+
+- 会議録（minutes）と発言（speeches）の取り込み。7-B の会議録検索API（tenant 211）が使える。質問と議案の紐づけ（`council_member_questions.bill_id`）もここで入れる
+- 委員会（committees）のページ
+- 予算エクスプローラー（budget explorer）
+- AI インタビュー。いまは設定で無効
+- 更新通知（notifications）
+- zh-Hant は 2026-09-24 の方針（議案の翻訳は英語のみ）で見送り。やるなら案内ページの追加として扱う
 
 ## P8 UI/UX・アクセシビリティ・ブランディング改善
 
