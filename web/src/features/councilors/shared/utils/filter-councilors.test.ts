@@ -27,6 +27,9 @@ const councilor = (
   sortOrder: 0,
   faction: null,
   committees: [],
+  questionsCount: 0,
+  questionVenueCounts: { plenary: 0, budget: 0, committee: 0 },
+  latestQuestionDate: null,
   ...overrides,
 });
 

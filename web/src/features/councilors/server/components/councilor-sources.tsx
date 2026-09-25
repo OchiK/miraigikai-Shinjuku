@@ -6,7 +6,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { siteConfig } from "@/config/site.config";
 import { routes } from "@/lib/routes";
-import { COUNCILOR_SOURCES } from "../../shared/constants";
+import { COUNCILOR_SOURCES, QUESTION_SOURCES } from "../../shared/constants";
 
 const SOURCE_LINKS = [
   COUNCILOR_SOURCES.roster,
@@ -62,6 +62,21 @@ export function CouncilorSources() {
               </li>
             ))}
           </ul>
+        </div>
+
+        <div className="space-y-2">
+          <h2 className="font-bold text-mirai-text text-sm">質問要約の出典</h2>
+          <p className="text-mirai-text-muted text-xs leading-[1.9]">
+            質問の見出しと要約は、{siteConfig.councilName}の
+            {QUESTION_SOURCES.minutes.label}に掲載された
+            {QUESTION_SOURCES.scope}
+            の会議録をもとに、AIが作成したものです（{QUESTION_SOURCES.asOf}
+            作成）。{QUESTION_SOURCES.earlierSessionsRule}
+            要約に答弁の内容は含みません。テーマタグもAIが付けたものです。正確な内容は会議録をご確認ください。
+          </p>
+          <ExternalSourceLink href={QUESTION_SOURCES.minutes.url}>
+            {siteConfig.councilName} {QUESTION_SOURCES.minutes.label}
+          </ExternalSourceLink>
         </div>
 
         <div className="space-y-2">

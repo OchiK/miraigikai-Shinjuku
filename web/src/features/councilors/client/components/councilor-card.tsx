@@ -1,7 +1,9 @@
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { routes } from "@/lib/routes";
+import { QUESTION_SOURCES } from "../../shared/constants";
 import type { Councilor } from "../../shared/types";
+import { hasOnlyEarlierQuestions } from "../../shared/utils/councilor-questions";
 import { CouncilorAvatar } from "./councilor-avatar";
 
 type Props = {
@@ -13,6 +15,10 @@ type Props = {
  */
 export function CouncilorCard({ councilor }: Props) {
   const standing = councilor.committees.filter((c) => c.kind === "standing");
+  const onlyEarlier = hasOnlyEarlierQuestions(
+    councilor.latestQuestionDate,
+    QUESTION_SOURCES.scopeStartDate
+  );
 
   return (
     <Link
@@ -36,7 +42,18 @@ export function CouncilorCard({ councilor }: Props) {
               {councilor.terms}期
             </span>
           )}
+          {councilor.questionsCount > 0 && (
+            <span className="rounded-full bg-background px-3 py-0.5 font-bold text-mirai-text text-xs">
+              質問 {councilor.questionsCount}件
+            </span>
+          )}
         </div>
+        {onlyEarlier && (
+          <p className="text-mirai-text-muted text-xs leading-[1.75]">
+            {QUESTION_SOURCES.scopeSessionsLabel}
+            の代表質問・一般質問はなく、以前の定例会の質問を掲載
+          </p>
+        )}
         {standing.length > 0 && (
           <p className="text-mirai-text-muted text-xs leading-[1.75]">
             {standing

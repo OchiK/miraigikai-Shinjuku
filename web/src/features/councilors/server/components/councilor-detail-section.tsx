@@ -1,18 +1,33 @@
 import "server-only";
 
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Info } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { siteConfig } from "@/config/site.config";
 import { routes } from "@/lib/routes";
 import { CouncilorAvatar } from "../../client/components/councilor-avatar";
-import { COUNCILOR_SOURCES } from "../../shared/constants";
-import type { Councilor, CouncilorCommittee } from "../../shared/types";
+import { COUNCILOR_SOURCES, QUESTION_SOURCES } from "../../shared/constants";
+import type {
+  CouncilorCommittee,
+  CouncilorDetail,
+  CouncilorQuestion,
+  QuestionVenueCounts,
+} from "../../shared/types";
 import { groupCommitteesByKind } from "../../shared/utils/committee-kind";
+import {
+  getEarlierSessionNoticeName,
+  VENUE_LABELS,
+  VENUE_TYPES,
+} from "../../shared/utils/councilor-questions";
+import {
+  buildTopicSummaryText,
+  summarizeCouncilorTopics,
+} from "../../shared/utils/summarize-councilor-topics";
+import { CouncilorQuestionCard } from "./councilor-question-card";
 import { CouncilorSources, ExternalSourceLink } from "./councilor-sources";
 
 type Props = {
-  councilor: Councilor;
+  councilor: CouncilorDetail;
 };
 
 function RoleTag({ role }: { role: string }) {
@@ -67,7 +82,109 @@ function CommitteeGroups({ committees }: { committees: CouncilorCommittee[] }) {
   );
 }
 
+function QuestionCountBadges({
+  total,
+  venueCounts,
+}: {
+  total: number;
+  venueCounts: QuestionVenueCounts;
+}) {
+  const venues = VENUE_TYPES.filter((venue) => venueCounts[venue] > 0).map(
+    (venue) => ({ label: VENUE_LABELS[venue], count: venueCounts[venue] })
+  );
+
+  return (
+    <ul className="flex flex-wrap gap-2 pt-2 text-xs" aria-label="掲載中の質問">
+      <li className="rounded-full bg-background px-3 py-0.5 font-bold text-mirai-text">
+        質問 {total}件
+      </li>
+      {venues.map((venue) => (
+        <li
+          key={venue.label}
+          className="rounded-full bg-background px-3 py-0.5 text-mirai-text-muted"
+        >
+          {venue.label} {venue.count}件
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function TopicSummary({
+  questions,
+  earlierSessionName,
+}: {
+  questions: CouncilorQuestion[];
+  /** 以前の定例会の質問を載せているとき、その会期名 */
+  earlierSessionName: string | null;
+}) {
+  const summary = summarizeCouncilorTopics(questions);
+  const text = buildTopicSummaryText(summary);
+
+  // 質問0件のときは呼び出し側で項目ごと出さない。ここで null なのはタグが1つもない場合
+  if (!text) {
+    return (
+      <p className="text-base text-mirai-text">テーマタグはまだありません</p>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      <ul className="flex flex-wrap gap-2" aria-label="主なテーマ">
+        {summary.topTags.map(({ tag, count }) => (
+          <li
+            key={tag}
+            className="rounded-full bg-background px-3 py-1 text-mirai-text text-sm"
+          >
+            {tag}
+            <span className="ml-1 text-mirai-text-muted text-xs">
+              {count}件
+            </span>
+          </li>
+        ))}
+      </ul>
+      <p className="text-base text-mirai-text leading-[1.9]">{text}</p>
+      <p className="text-mirai-text-muted text-xs leading-[1.9]">
+        このサイトで公開中の質問{summary.questionCount}件
+        {earlierSessionName && `（${earlierSessionName}の質問）`}
+        に付けたテーマタグを数えたものです（{QUESTION_SOURCES.asOf}
+        時点）。タグはAIが付けたもので、議員の関心のすべてを表すものではありません。
+      </p>
+    </div>
+  );
+}
+
+/**
+ * 令和8年の質問がなく、以前の定例会の質問を載せている議員への注記
+ */
+function EarlierSessionsNotice({ sessionName }: { sessionName: string }) {
+  return (
+    <div
+      className="flex items-start gap-3 rounded-xl bg-mirai-surface-sunken px-5 py-4 text-mirai-text"
+      role="note"
+    >
+      <Info
+        aria-hidden="true"
+        className="mt-1 size-4 shrink-0"
+        strokeWidth={2.75}
+      />
+      <p className="text-sm leading-[1.9]">
+        {QUESTION_SOURCES.scopeSessionsLabel}
+        の本会議では、この議員の代表質問・一般質問はありません。それ以前で最も新しい
+        {sessionName}
+        の質問を掲載しています。
+      </p>
+    </div>
+  );
+}
+
 export function CouncilorDetailSection({ councilor }: Props) {
+  const earlierNoticeSession = getEarlierSessionNoticeName(
+    councilor.latestQuestionDate,
+    councilor.questions,
+    QUESTION_SOURCES.scopeStartDate
+  );
+
   return (
     <div className="flex flex-col gap-8">
       <Link
@@ -88,6 +205,12 @@ export function CouncilorDetailSection({ councilor }: Props) {
             {councilor.name}
           </h1>
           <p className="text-mirai-text-muted text-sm">{councilor.nameKana}</p>
+          {councilor.questionsCount > 0 && (
+            <QuestionCountBadges
+              total={councilor.questionsCount}
+              venueCounts={councilor.questionVenueCounts}
+            />
+          )}
         </div>
       </header>
 
@@ -117,6 +240,15 @@ export function CouncilorDetailSection({ councilor }: Props) {
             </ExternalSourceLink>
           </DetailItem>
 
+          {councilor.questions.length > 0 && (
+            <DetailItem label="掲載中の質問からの傾向">
+              <TopicSummary
+                questions={councilor.questions}
+                earlierSessionName={earlierNoticeSession}
+              />
+            </DetailItem>
+          )}
+
           {councilor.terms && (
             <DetailItem label="当選回数">
               <p className="text-base text-mirai-text">{councilor.terms}期</p>
@@ -141,6 +273,40 @@ export function CouncilorDetailSection({ councilor }: Props) {
             )}
           </DetailItem>
         </dl>
+      </section>
+
+      <section
+        aria-labelledby="councilor-questions-heading"
+        className="flex flex-col gap-4"
+      >
+        <h2
+          id="councilor-questions-heading"
+          className="font-heading font-bold text-2xl text-mirai-text leading-[1.3] md:text-[32px]"
+        >
+          掲載中の質問
+        </h2>
+        <p className="text-mirai-text-muted text-sm leading-[1.9]">
+          {QUESTION_SOURCES.scope}
+          での質問を、論点ごとに新しい順で掲載しています。
+          {!earlierNoticeSession && QUESTION_SOURCES.earlierSessionsRule}
+          要約はAIが会議録の質問部分をもとに作成したもので、答弁の内容は含みません。正確な内容は会議録をご確認ください。
+        </p>
+        {earlierNoticeSession && (
+          <EarlierSessionsNotice sessionName={earlierNoticeSession} />
+        )}
+        {councilor.questions.length === 0 ? (
+          <p className="rounded-xl bg-card p-5 text-base text-mirai-text shadow-mirai-sm">
+            質問はまだ登録されていません
+          </p>
+        ) : (
+          <ol className="flex flex-col gap-4">
+            {councilor.questions.map((question) => (
+              <li key={question.id}>
+                <CouncilorQuestionCard question={question} />
+              </li>
+            ))}
+          </ol>
+        )}
       </section>
 
       <CouncilorSources />

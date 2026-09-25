@@ -436,6 +436,89 @@ export type Database = {
           },
         ]
       }
+      council_member_questions: {
+        Row: {
+          bill_id: string | null
+          committee_id: string | null
+          council_member_id: string
+          council_session_id: string | null
+          created_at: string
+          id: string
+          question_kind: string | null
+          session_name: string
+          source_url: string | null
+          speech_date: string
+          summary: string
+          title: string
+          topic_tags: string[]
+          updated_at: string
+          venue_type: string
+        }
+        Insert: {
+          bill_id?: string | null
+          committee_id?: string | null
+          council_member_id: string
+          council_session_id?: string | null
+          created_at?: string
+          id?: string
+          question_kind?: string | null
+          session_name: string
+          source_url?: string | null
+          speech_date: string
+          summary: string
+          title: string
+          topic_tags?: string[]
+          updated_at?: string
+          venue_type: string
+        }
+        Update: {
+          bill_id?: string | null
+          committee_id?: string | null
+          council_member_id?: string
+          council_session_id?: string | null
+          created_at?: string
+          id?: string
+          question_kind?: string | null
+          session_name?: string
+          source_url?: string | null
+          speech_date?: string
+          summary?: string
+          title?: string
+          topic_tags?: string[]
+          updated_at?: string
+          venue_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "council_member_questions_bill_id_fkey"
+            columns: ["bill_id"]
+            isOneToOne: false
+            referencedRelation: "bills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "council_member_questions_committee_id_fkey"
+            columns: ["committee_id"]
+            isOneToOne: false
+            referencedRelation: "committees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "council_member_questions_council_member_id_fkey"
+            columns: ["council_member_id"]
+            isOneToOne: false
+            referencedRelation: "council_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "council_member_questions_council_session_id_fkey"
+            columns: ["council_session_id"]
+            isOneToOne: false
+            referencedRelation: "council_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       council_members: {
         Row: {
           created_at: string

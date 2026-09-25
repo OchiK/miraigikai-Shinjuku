@@ -29,6 +29,10 @@ import {
   createCouncilMemberCommitteeInserts,
   createCouncilMemberInserts,
 } from "./shinjuku-council-members";
+import {
+  councilMemberQuestions,
+  createCouncilMemberQuestionInserts,
+} from "./shinjuku-council-questions";
 import { R8_2_SESSION } from "./shinjuku-r8-2-inventory";
 import {
   createShippingBillInterviewConfig,
@@ -167,6 +171,27 @@ async function seedDatabase() {
 
     console.log(
       `✅ Inserted ${memberCommittees.length} council member committees`
+    );
+
+    // Insert council_member_questions（議員の質問要約）
+    console.log("🗣️  Inserting council member questions...");
+    const memberQuestions = createCouncilMemberQuestionInserts(
+      councilMemberQuestions,
+      insertedMembers,
+      insertedCouncilSessions
+    );
+    const { error: memberQuestionsError } = await supabase
+      .from("council_member_questions")
+      .insert(memberQuestions);
+
+    if (memberQuestionsError) {
+      throw new Error(
+        `Failed to insert council member questions: ${memberQuestionsError.message}`
+      );
+    }
+
+    console.log(
+      `✅ Inserted ${memberQuestions.length} council member questions`
     );
 
     // Insert bills
