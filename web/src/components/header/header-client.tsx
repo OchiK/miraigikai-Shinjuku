@@ -81,7 +81,7 @@ export function HeaderClient({
                 locale={locale}
               />
             )}
-            {/* 狭い画面で隠すときは、メニューとトップページの案内から切り替える */}
+            {/* 狭い画面で隠すときは、メニューの中の言語選択で切り替える */}
             <LanguageToggle
               currentLocale={locale}
               className={isCrowded ? "hidden sm:flex" : undefined}
