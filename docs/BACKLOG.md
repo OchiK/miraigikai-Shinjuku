@@ -298,6 +298,31 @@ Progress (2026-09-24〜25):
 - 更新通知（notifications）
 - zh-Hant は 2026-09-24 の方針（議案の翻訳は英語のみ）で見送り。やるなら案内ページの追加として扱う
 
+### P7-3 議員本人のX（旧Twitter）アカウント表示（Councilor X/Twitter Account Links）
+議員詳細ページ（`/councilors/[id]`）において、各区議会議員の公式X（旧Twitter）アカウントへのリンク情報を表示し、有権者・住民が議員の最新の発信や政策活動へ直接アクセスできるようにする。設計は `docs/20260926_0750_P7-3_議員公式HP_Xアカウント拡充_設計.md` を参照。
+
+現状と方針:
+- **Xアカウント表示**:
+  - `council_members` テーブルに `x_url` 列を追加。
+  - 本人確認が取れたアカウントのみ登録（本人サイトからのリンク、またはプロフィールに「新宿区議会議員」と明記されていること。38名中23名を確認・登録、残り15名は手動補完予定の `null`）。
+- **公式ウェブサイト（`website_url`）の方針**:
+  - 公式名簿に掲載されているURLのみを入れる方針を維持（議員詳細の「公式名簿に掲載されているURLです」という表示の信憑性を保つため、名簿外の独自補完は行わない）。
+- **UI表示**:
+  - 議員詳細ページ（`/councilors/[id]`）の「公式の情報」欄に、`ExternalSourceLink`（44px以上のタップ領域、lucide アイコン、新しいタブで開く旨の sr-only 注記）を用いて配置。
+  - 出典欄に掲載基準と確認日を明記。
+
+Acceptance:
+- `council_members` テーブルに `x_url` 列を追加し、`import_production_inventory` で安全に反映できる
+- 38名分の `xUrl` をシード・インポーターに反映する（確認済みアカウントのみ登録、未確認は null）
+- 議員詳細ページで公式Xリンクがアクセシブルに表示される
+- 関連するテスト（単体・インポーター統合テスト）が通過する
+
+Progress (2026-09-26, PR #86):
+- `council_members.x_url` を追加するマイグレーション（`20260926080000_add_council_member_x_url.sql`）を作成。`import_production_inventory` の11引数版（`council_members` の upsert を持つ版）を再定義し、`x_url` の展開・INSERT・UPDATE・`is distinct from` 判定を追加。
+- 本人サイトからのリンクまたはプロフィール明記で確認できた23名のXアカウントを `packages/seed/main/shinjuku-council-members.ts` に設定。未確認の15名は `null` とした。
+- `web`: `Councilor.xUrl`、repository の select、議員詳細の「公式の情報」にXリンク（`ExternalSourceLink`）、出典欄に掲載基準（本人サイトからのリンクまたはプロフィール明記、2026年9月26日現在）を追加。
+- テスト: `to-councilor.test.ts`、`shinjuku-council-members.test.ts`、`import-production-inventory.test.ts` を追加・更新し全件通過。
+
 ## P8 UI/UX・アクセシビリティ・ブランディング改善
 
 ### P8-1 トップページへの明確な復帰導線（Return to Top Navigation）
