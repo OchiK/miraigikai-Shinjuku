@@ -380,3 +380,8 @@ Acceptance:
 - 不要となった文言定数（`ENGLISH_BILLS_LABEL`）等のクリーンアップ
 - 関連するテスト（バナー表示や文言テスト）が正常に通過すること
 
+Progress (2026-09-25, PR #65):
+- `MultilingualGuideBanner` から「Read the bills in English」の行と `LanguageToggle` を削除し、他言語案内ページ（`/guide/*`）へのリンク群のみのシンプルな構成に整理。
+- `MultilingualGuideBanner` を同期コンポーネント化し、未使用の `ENGLISH_BILLS_LABEL` 定数を削除。
+- `header-client.tsx` と `language-toggle.tsx` のコメントを「ヘッダーに一本化」へ更新。
+
