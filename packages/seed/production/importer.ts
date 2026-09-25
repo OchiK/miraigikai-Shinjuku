@@ -13,6 +13,12 @@ import {
   councilMembers,
   type SeedCouncilMember,
 } from "../main/shinjuku-council-members";
+import {
+  type CouncilMemberQuestionImportRow,
+  councilMemberQuestions,
+  findUnknownQuestionSessionSlugs,
+  toCouncilMemberQuestionImportRows,
+} from "../main/shinjuku-council-questions";
 import { R8_2_SESSION, toBillInserts } from "../main/shinjuku-r8-2-inventory";
 import type { AdminClient } from "../shared/helper";
 import {
@@ -58,6 +64,8 @@ export interface ImportDataset {
   /** 議員情報の出典として表示する公式名簿URL */
   councilRosterUrl: string;
   councilMembers: SeedCouncilMember[];
+  /** 議員の質問要約。議員は名簿の氏名、会期は slug の自然キーで表す */
+  councilMemberQuestions: CouncilMemberQuestionImportRow[];
   bills: BillInsert[];
   createBillContents: (bills: SeededBillRef[]) => BillContentInsert[];
   createBillsTags: (bills: SeededBillRef[], tags: TagRef[]) => BillsTagsInsert[];
@@ -73,6 +81,10 @@ export const productionDataset: ImportDataset = {
   councilRosterKey: SHINJUKU_COUNCIL_ROSTER_KEY,
   councilRosterUrl: COUNCIL_ROSTER_URL,
   councilMembers,
+  councilMemberQuestions: toCouncilMemberQuestionImportRows(
+    councilMemberQuestions,
+    councilMembers
+  ),
   bills: toBillInserts(),
   createBillContents,
   createBillsTags,
@@ -113,7 +125,8 @@ const BILL_FIELDS: FieldSpec[] = [
   { field: "status_note" },
   { field: "publish_status" },
   { field: "published_at", normalize: normalizeTimestamp },
-  { field: "is_featured" },
+  // is_featured は管理画面で切り替える運用値。新規作成時だけインベントリの値を入れ、
+  // 既存の議案では比較も上書きもしない（import_production_inventory と揃える）
   { field: "is_review_completed" },
   { field: "thumbnail_url" },
   { field: "pdf_url" },
@@ -160,6 +173,17 @@ const COUNCIL_MEMBER_FIELDS: FieldSpec[] = [
 
 const COUNCIL_MEMBER_COMMITTEE_FIELDS: FieldSpec[] = [{ field: "role" }];
 
+const COUNCIL_MEMBER_QUESTION_FIELDS: FieldSpec[] = [
+  { field: "session_slug" },
+  { field: "session_name" },
+  { field: "venue_type" },
+  { field: "question_kind" },
+  { field: "title" },
+  { field: "summary" },
+  { field: "topic_tags", normalize: normalizeArray },
+  { field: "speech_date" },
+];
+
 /**
  * 自然キーによる非破壊 upsert で、一次資料層を最新インベントリに揃える。
  *
@@ -168,6 +192,8 @@ const COUNCIL_MEMBER_COMMITTEE_FIELDS: FieldSpec[] = [{ field: "role" }];
  * - bills は `slug` で突合するため、既存行の id が保たれる。
  *   id が変わると詳細ページのURLが 404 になり、interview_configs の
  *   CASCADE で利用者データまで失われる。
+ * - 議員の質問要約は（議員の氏名・出典URL）で突合して upsert する。
+ *   インベントリから外れた質問は削除せず、インベントリ外として報告する。
  * - interview_configs / interview_questions は Admin 側の運用対象なので触らない。
  */
 export async function importInventory(
@@ -185,6 +211,7 @@ export async function importInventory(
   const committeesDiff = await syncCommittees(context);
   const councilMembersDiff = await syncCouncilMembers(context);
   const councilMemberCommitteesDiff = await syncCouncilMemberCommittees(context);
+  const councilMemberQuestionsDiff = await syncCouncilMemberQuestions(context);
   const bill = await syncBills(context, session.billSessionId);
   const contents = await syncBillContents(context, bill);
   const billsTags = await syncBillsTags(context, bill);
@@ -198,6 +225,7 @@ export async function importInventory(
       committeesDiff,
       councilMembersDiff,
       councilMemberCommitteesDiff,
+      councilMemberQuestionsDiff,
       bill.diff,
       contents,
       billsTags,
@@ -313,6 +341,49 @@ async function syncCouncilMemberCommittees(
     desired: desired.map((row) =>
       toDiffRow(compositeKey(row.member_name, row.committee_name), row)
     ),
+    reportExtraneous: true,
+  });
+}
+
+async function syncCouncilMemberQuestions(
+  context: ImportContext
+): Promise<TableDiff> {
+  const { supabase, dataset } = context;
+  const desired = dataset.councilMemberQuestions;
+  // RPC と同じ検証を dry-run でも行い、本番実行で初めて失敗するのを防ぐ
+  const unknownSlugs = findUnknownQuestionSessionSlugs(
+    desired,
+    dataset.councilSessions.map(requireSlug)
+  );
+  if (unknownSlugs.length > 0) {
+    throw new Error(
+      `質問要約が投入対象にない会期を参照している: ${unknownSlugs.join(", ")}`
+    );
+  }
+  const current = await fetchCouncilMemberQuestions(
+    supabase,
+    dataset.councilRosterKey
+  );
+
+  return diffTable({
+    table: "council_member_questions",
+    label: "議員の質問要約",
+    fields: COUNCIL_MEMBER_QUESTION_FIELDS,
+    // 出典URLの無い行は RPC が作らない（空URLを拒否する）ため突合対象にしない
+    current: current.flatMap((row) =>
+      row.council_members && row.source_url
+        ? [
+            toDiffRow(
+              compositeKey(row.council_members.name, row.source_url),
+              { ...row, session_slug: row.council_sessions?.slug ?? null }
+            ),
+          ]
+        : []
+    ),
+    desired: desired.map((row) =>
+      toDiffRow(compositeKey(row.member_name, row.source_url), row)
+    ),
+    // インベントリから外れた質問は削除せず報告する（一次資料由来の要約のため）
     reportExtraneous: true,
   });
 }
@@ -554,6 +625,7 @@ async function applyInventoryTransaction(
     p_council_members: toJson(members),
     p_council_member_committees: toJson(memberCommittees),
     p_council_roster_key: dataset.councilRosterKey,
+    p_council_member_questions: toJson(dataset.councilMemberQuestions),
   });
   if (error) {
     throw new Error(`本番インポートのトランザクションに失敗: ${error.message}`);
@@ -643,6 +715,22 @@ async function fetchCouncilMemberCommittees(
     );
   }
   return assertWithinRowLimit(data ?? [], "council_member_committees");
+}
+
+async function fetchCouncilMemberQuestions(
+  supabase: AdminClient,
+  rosterKey: string
+) {
+  const { data, error } = await supabase
+    .from("council_member_questions")
+    .select(
+      "session_name, venue_type, question_kind, title, summary, topic_tags, speech_date, source_url, council_members!inner(name, roster_key), council_sessions(slug)"
+    )
+    .eq("council_members.roster_key", rosterKey);
+  if (error) {
+    throw new Error(`council_member_questions の取得に失敗: ${error.message}`);
+  }
+  return assertWithinRowLimit(data ?? [], "council_member_questions");
 }
 
 type BillRow = {

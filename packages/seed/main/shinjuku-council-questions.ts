@@ -1679,3 +1679,75 @@ export function createCouncilMemberQuestionInserts(
     };
   });
 }
+
+/**
+ * 本番インポーター（import_production_inventory）に渡す、自然キーだけで表した質問行。
+ * 議員は名簿の氏名、会期は slug（サイトに会期ページがない以前の定例会は null）で表す。
+ */
+export type CouncilMemberQuestionImportRow = {
+  member_name: string;
+  session_slug: string | null;
+  session_name: string;
+  venue_type: "plenary";
+  question_kind: "representative" | "general";
+  title: string;
+  summary: string;
+  topic_tags: string[];
+  speech_date: string;
+  source_url: string;
+};
+
+/**
+ * 質問を本番インポート用の行に変換する。議員は名簿の氏名（空白入り）に解決する。
+ */
+export function toCouncilMemberQuestionImportRows(
+  questions: SeedCouncilMemberQuestion[],
+  members: { name: string }[]
+): CouncilMemberQuestionImportRow[] {
+  return questions.map((question) => {
+    const member = members.find(
+      (m) => normalizeMemberName(m.name) === question.member
+    );
+    if (!member) {
+      throw new Error(`Council member not found for name: ${question.member}`);
+    }
+    return {
+      member_name: member.name,
+      session_slug: PRIMARY_SESSIONS.includes(question.session)
+        ? question.session
+        : null,
+      session_name: MINUTES_SESSION_NAMES[question.session],
+      venue_type: "plenary",
+      question_kind: QUESTION_KIND_VALUES[question.kind],
+      title: question.title,
+      summary: question.summary,
+      topic_tags: question.topicTags,
+      speech_date: question.speechDate,
+      source_url: buildMinuteUrl(
+        question.session,
+        question.scheduleId,
+        question.minuteId
+      ),
+    };
+  });
+}
+
+/**
+ * 会期ページに紐づける質問の slug が、同時に投入する会期に含まれているか。
+ * 含まれない slug を返す（dry-run でも本番と同じ理由で失敗させるため）
+ */
+export function findUnknownQuestionSessionSlugs(
+  rows: Pick<CouncilMemberQuestionImportRow, "session_slug">[],
+  sessionSlugs: string[]
+): string[] {
+  const known = new Set(sessionSlugs);
+  return [
+    ...new Set(
+      rows.flatMap((row) =>
+        row.session_slug !== null && !known.has(row.session_slug)
+          ? [row.session_slug]
+          : []
+      )
+    ),
+  ];
+}

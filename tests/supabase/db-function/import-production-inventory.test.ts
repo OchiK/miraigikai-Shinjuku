@@ -137,4 +137,161 @@ describe("import_production_inventory", () => {
     expect(faction).toBeNull();
     expect(member).toBeNull();
   });
+
+  describe("議員の質問要約（12引数版）", () => {
+    const questionRunId = `${runId}-questions`;
+    const qFaction = `${questionRunId}-faction`;
+    const qMember = `${questionRunId}-member`;
+    const qRosterKey = `${questionRunId}-roster`;
+
+    const baseArgs = () => ({
+      p_council_sessions: [],
+      p_tags: [],
+      p_bills: [],
+      p_bill_contents: [],
+      p_bills_tags: [],
+      p_bill_session_slug: "r8-2",
+      p_factions: [
+        {
+          name: qFaction,
+          display_name: `テスト会派 ${questionRunId}`,
+          alternative_names: [],
+          logo_url: null,
+          sort_order: 1,
+          is_active: true,
+        },
+      ],
+      p_committees: [],
+      p_council_members: [
+        {
+          name: qMember,
+          name_kana: `${questionRunId}-kana`,
+          faction_name: qFaction,
+          faction_role: null,
+          roster_key: qRosterKey,
+          official_url: null,
+          website_url: null,
+          terms: 1,
+          sort_order: 1,
+          is_active: true,
+        },
+      ],
+      p_council_member_committees: [],
+      p_council_roster_key: qRosterKey,
+    });
+
+    const question = (overrides: Record<string, unknown> = {}) => ({
+      member_name: qMember,
+      session_slug: null,
+      session_name: "令和7年 第4回定例会",
+      venue_type: "plenary",
+      question_kind: "general",
+      title: "テストの論点",
+      summary: "テストの要約",
+      topic_tags: ["防災"],
+      speech_date: "2025-11-27",
+      source_url: `https://example.com/minutes/${questionRunId}`,
+      ...overrides,
+    });
+
+    const fetchMember = async () => {
+      const { data, error } = await adminClient
+        .from("council_members")
+        .select("id")
+        .eq("name", qMember)
+        .maybeSingle();
+      if (error) throw new Error(error.message);
+      return data;
+    };
+
+    afterAll(async () => {
+      // 質問は議員の削除で cascade される
+      await adminClient.from("council_members").delete().eq("name", qMember);
+      await adminClient.from("factions").delete().eq("name", qFaction);
+    });
+
+    it("未知の議員を指す質問があれば、議員の upsert ごとロールバックする", async () => {
+      const { error } = await adminClient.rpc("import_production_inventory", {
+        ...baseArgs(),
+        p_council_member_questions: [
+          question({ member_name: `${questionRunId}-unknown` }),
+        ],
+      });
+
+      expect(error?.message).toContain(
+        "one or more council member questions reference an unknown council member name"
+      );
+      expect(await fetchMember()).toBeNull();
+    });
+
+    it("未知の会期 slug を指す質問があれば例外にする", async () => {
+      const { error } = await adminClient.rpc("import_production_inventory", {
+        ...baseArgs(),
+        p_council_member_questions: [
+          question({ session_slug: `${questionRunId}-unknown-session` }),
+        ],
+      });
+
+      expect(error?.message).toContain(
+        "one or more council member questions reference an unknown council session slug"
+      );
+      expect(await fetchMember()).toBeNull();
+    });
+
+    it("出典URLが空の質問は例外にする", async () => {
+      const { error } = await adminClient.rpc("import_production_inventory", {
+        ...baseArgs(),
+        p_council_member_questions: [question({ source_url: "" })],
+      });
+
+      expect(error?.message).toContain("must not be empty");
+      expect(await fetchMember()).toBeNull();
+    });
+
+    it("同じ内容で再実行しても質問の行は書き換えない（updated_at が変わらない）", async () => {
+      const args = { ...baseArgs(), p_council_member_questions: [question()] };
+      const first = await adminClient.rpc("import_production_inventory", args);
+      if (first.error) throw new Error(first.error.message);
+
+      const member = await fetchMember();
+      const fetchRow = async () => {
+        const { data, error } = await adminClient
+          .from("council_member_questions")
+          .select("id, updated_at")
+          .eq("council_member_id", member?.id ?? "")
+          .single();
+        if (error) throw new Error(error.message);
+        return data;
+      };
+      const before = await fetchRow();
+
+      const second = await adminClient.rpc("import_production_inventory", args);
+      if (second.error) throw new Error(second.error.message);
+      expect(await fetchRow()).toEqual(before);
+    });
+
+    it("同じ（議員・出典URL）の質問は更新として同じ行に当たる", async () => {
+      const first = await adminClient.rpc("import_production_inventory", {
+        ...baseArgs(),
+        p_council_member_questions: [question()],
+      });
+      if (first.error) throw new Error(first.error.message);
+
+      const second = await adminClient.rpc("import_production_inventory", {
+        ...baseArgs(),
+        p_council_member_questions: [question({ summary: "更新後の要約" })],
+      });
+      if (second.error) throw new Error(second.error.message);
+
+      const member = await fetchMember();
+      const { data, error } = await adminClient
+        .from("council_member_questions")
+        .select("summary, council_session_id")
+        .eq("council_member_id", member?.id ?? "");
+      if (error) throw new Error(error.message);
+      expect(data).toEqual([
+        { summary: "更新後の要約", council_session_id: null },
+      ]);
+    });
+  });
 });
