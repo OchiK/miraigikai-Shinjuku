@@ -370,3 +370,13 @@ Progress (2026-09-25, PR #64):
 - 会派内の議員カード（`CouncilorCard`）をスマホ1カラム／`sm`以上2カラムのグリッドで配置。カードから重複する会派名を外し、会派役職（幹事長等）を `bg-mirai-featured` でハイライト。カードの高さを `h-full` で揃え、44pxタップ領域を確保。
 - 議員詳細画面（`/councilors/[id]`）のヘッダーからもアバターを撤去し、自治体名・氏名・ふりがな・会派タグ・質問数バッジをスマートに整列。
 
+### P8-15 トップページ中段の重複した英語切替（Read the bills in English）の削除（Remove Redundant English Toggle from Top Banner）
+ヘッダー上に直接アクセス可能な言語切替（`[日本語 | English]`）が既に配置されているため、トップページ中段の多言語案内バナー内にある「Read the bills in English」および言語切替トグルが冗長となっている。これを削除してバナーを整理する。
+
+Acceptance:
+- トップページ中段の多言語案内バナー（`MultilingualGuideBanner`）から、「Read the bills in English」のラベル行および重複した言語切替トグル（`LanguageToggle`）を削除する
+- 言語切替はヘッダー（`HeaderClient`）のトグルに一本化する
+- 多言語案内バナーは、他言語案内ページ（`/guide/*`）への導線（`GuideLanguageLinks`）を中心としたシンプルな構成に整理する
+- 不要となった文言定数（`ENGLISH_BILLS_LABEL`）等のクリーンアップ
+- 関連するテスト（バナー表示や文言テスト）が正常に通過すること
+
