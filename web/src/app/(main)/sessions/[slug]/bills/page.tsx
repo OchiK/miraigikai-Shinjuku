@@ -6,6 +6,7 @@ import { getBillsByCouncilSession } from "@/features/bills/server/loaders/get-bi
 import { getComingSoonBillsBySession } from "@/features/bills/server/loaders/get-coming-soon-bills-by-session";
 import { CouncilSessionBillList } from "@/features/council-sessions/client/components/council-session-bill-list";
 import { getCouncilSessionBySlug } from "@/features/council-sessions/server/loaders/get-council-session-by-slug";
+import { getLocale } from "@/features/i18n/server/loaders/get-locale";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -33,9 +34,10 @@ export default async function SessionBillsPage({ params }: Props) {
     notFound();
   }
 
-  const [bills, comingSoonBills] = await Promise.all([
+  const [bills, comingSoonBills, locale] = await Promise.all([
     getBillsByCouncilSession(session.id),
     getComingSoonBillsBySession(session.id),
+    getLocale(),
   ]);
 
   return (
@@ -45,6 +47,7 @@ export default async function SessionBillsPage({ params }: Props) {
           session={session}
           bills={bills}
           comingSoonBills={comingSoonBills}
+          locale={locale}
         />
       </Suspense>
     </Container>

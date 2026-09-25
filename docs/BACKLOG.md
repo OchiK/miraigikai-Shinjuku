@@ -500,6 +500,13 @@ Acceptance:
 - 関連するテスト（`page-layout-utils.test.ts` 等）の更新・通過
 - タップ領域 44px（`min-h-11`）およびレスポンシブ表示（画面幅に応じた収納・メニュー連携）の確保
 
+Progress (2026-09-26):
+- `isMainPage` に `/sessions/[slug]/bills`（末尾一致、サブパス・末尾スラッシュは除外）を追加し、ヘッダーに `DifficultySelector` を出すようにした。チャットサイドバー（`hasChatSidebar`）は議案詳細のみのまま。
+- 議案カードの連動は既存の仕組みで満たしていた。`getBillsByCouncilSession` は Cookie の難易度で `bill_contents` を引き、キャッシュキーにも難易度を含む。セレクタの切り替えはページを読み直すため、カードの題名が選んだ難易度のものに替わる。
+- 44px とレスポンシブ表示はトップ・議案詳細と同じ扱いになる。難易度セレクタが並ぶページは `isCrowded` になり、狭い画面では言語切替とふりがなボタンをメニューに回す。
+- あわせて、議案一覧の `CompactBillCard` に表示言語（`locale`）を渡していなかったのを直した。英語表示でもステータスバッジや掲載日の文言が日本語のままだった。
+- テスト: `page-layout-utils.test.ts`（議案一覧で true、`/sessions`・`/sessions/[slug]`・末尾スラッシュで false、`hasChatSidebar` は false）、`header-client.test.tsx`（議案一覧でセレクタを出し、議員一覧では出さない）。
+
 ### P8-17 トップページの「本日の定例会」セクションの目的・必要性の再検討と整理（Re-evaluate "Current Council Session" Banner on Top Page）
 トップページ上部に表示されている「本日の定例会（会期中 / 令和8年第2回定例会）」バナー（`CurrentCouncilSession`）について、単に開会中かどうかを示すのみで導線としての役割が薄く、ファーストビューのスペースを圧迫している。特別な存在意義や機能がない限り、削除またはヘッダーの会期バッジ等へ集約・整理することを検討する。
 
