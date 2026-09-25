@@ -32,7 +32,7 @@ import { adminClient, cleanupTestUser, createTestUser } from "../utils";
  * 本番用インポーターを、実際のローカル Supabase に対して検証する。
  *
  * 押さえる点:
- *   1. 初回インポートで全27案件（区長提出23件＋議員提出4件）・69変種（解説は区長提出23件分）が投入されること
+ *   1. 初回インポートで全27案件（区長提出23件＋議員提出4件）・81変種（27件×3段）が投入されること
  *   2. 2回目以降も bills.id が変わらないこと（詳細ページURLと
  *      interview_configs の CASCADE を守るため、ここが最重要）
  *   3. 利用者データ（interview_sessions / interview_report）が消えないこと
@@ -274,14 +274,14 @@ describe("本番用インポーター", () => {
     if (userData?.userId) await cleanupTestUser(userData.userId);
   });
 
-  it("初回インポートで全27案件・69変種が投入される", async () => {
+  it("初回インポートで全27案件・81変種が投入される", async () => {
     const bills = await fetchBills();
     expect(bills).toHaveLength(r8SecondSessionItems.length);
     expect(bills).toHaveLength(27);
 
     const contents = await fetchContents(bills.map((b) => b.id));
     expect(contents).toHaveLength(billContentsWithBillSlug.length);
-    expect(contents).toHaveLength(69);
+    expect(contents).toHaveLength(81);
   });
 
   it("初回インポートで議員38名と委員会所属87件を投入する", async () => {
@@ -843,7 +843,7 @@ describe("本番用インポーター", () => {
     expect(byTable("council_member_committees")?.created).toHaveLength(87);
     expect(byTable("council_member_questions")?.created).toHaveLength(124);
     expect(byTable("bills")?.created).toHaveLength(27);
-    expect(byTable("bill_contents")?.created).toHaveLength(69);
+    expect(byTable("bill_contents")?.created).toHaveLength(81);
     expect(byTable("bills_tags")?.created).toHaveLength(23); // 議員提出議案4件にはまだ分類タグを付けていない
 
     // dry-run なので会期も議案も作られていない

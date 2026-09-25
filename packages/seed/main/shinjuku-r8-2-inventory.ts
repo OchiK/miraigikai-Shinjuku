@@ -106,23 +106,27 @@ export interface ShinjukuSessionItem {
    */
   committeeReferralOmitted?: boolean;
   /**
-   * 公開表示してよい案件かどうか。`published` / `coming_soon` に直結する。
+   * 解説を公開表示してよい案件かどうか。`published` / `coming_soon` に直結する。
    *
-   * 「解説が存在すること」と「公開してよいこと」は別である。
-   * 解説が未整備の案件を coming_soon にするのは当然として、
-   * 解説が出典突合済みでも、公開判断を行うレビューが済むまでは false に留める
-   * （実装計画ステップ4「Keep an item coming_soon until the required content is
-   * valid and reviewed for publication」）。
+   * 「解説が存在すること」と「公開してよいこと」は別であり、解説が未整備・出典未突合の
+   * 案件は false（coming_soon）に留める。区長提出議案23件は出典突合と公開レビューを
+   * 経て true にした。
    *
-   * ステップ4と公開レビューの完了により、23件すべてが出典突合済みの
-   * easy / normal / hard 解説を保有し、公開可能になっている。
-   *
-   * この値は bills.is_review_completed も兼ねる。同列が false の議案には
-   * 詳細ページで「レビュー中」バナーが出る（migration のカラムコメント参照）。
-   * つまり「公開はするがレビュー中バナーは残す」状態はここからは作れない。
-   * 必要になったら is_review_completed を別のフィールドに分ける。
+   * 議員提出議案第7〜10号は、出典突合を終えたうえで、公開レビュー前に公開すると
+   * 判断した（true）。レビューが済んでいないことは reviewCompleted: false で示し、
+   * 詳細ページにレビュー中の案内を出す（docs/20260925_2000_議員提出議案4件_解説の作成記録.md §5）。
    */
   hasPublishableContent: boolean;
+  /**
+   * 公開レビューが済んだか。bills.is_review_completed に入る。false の議案には
+   * 詳細ページで「レビュー中」バナーが出る（migration のカラムコメント参照）。
+   * 省略時は hasPublishableContent と同じ。解説を公開するがレビューは未了、という
+   * 議案（議員提出議案第7〜10号）だけ false を明示する。
+   *
+   * レビューを終えたら、ここの false を外して本番インポーターを流す。管理画面で
+   * is_review_completed を切り替えても、次の import:production がこの値で上書きする。
+   */
+  reviewCompleted?: boolean;
   /** トップページ等での注目表示 */
   isFeatured: boolean;
 }
@@ -424,7 +428,8 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
   // 議員提出議案。識別名・件名は議会公式の会期ページ、議決結果は会議録（6月19日）と
   // 「議案の概要と審議結果」で確認した。第7・8号は文教子ども家庭委員会に付託され、
   // 委員会・本会議とも起立少数で否決。第9・10号は説明と委員会付託を省略し、
-  // 異議なく原案可決。解説が整うまでは coming_soon に置く。
+  // 異議なく原案可決。解説は出典突合済みだが公開レビューは未了のため、
+  // 公開したうえで「レビュー中」バナーを出す（reviewCompleted: false）。
   // 第9・10号の全文は議会公式の「決議・意見書」ページのPDF（2026-09-25 取得、HTTP 200・
   // application/pdf、sha256: 000459264 = dfe433d8…、000459265 = 12942087…）。
   {
@@ -437,7 +442,8 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     decision: "否決",
     sourcePageUrl: R8_2_COUNCIL_SESSION_URL,
     decisionSourceUrl: R8_2_COUNCIL_RESULTS_PDF,
-    hasPublishableContent: false,
+    hasPublishableContent: true,
+    reviewCompleted: false,
     isFeatured: false,
   },
   {
@@ -450,7 +456,8 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     decision: "否決",
     sourcePageUrl: R8_2_COUNCIL_SESSION_URL,
     decisionSourceUrl: R8_2_COUNCIL_RESULTS_PDF,
-    hasPublishableContent: false,
+    hasPublishableContent: true,
+    reviewCompleted: false,
     isFeatured: false,
   },
   {
@@ -464,7 +471,8 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     sourcePageUrl: R8_2_COUNCIL_RESOLUTIONS_URL,
     decisionSourceUrl: R8_2_COUNCIL_RESULTS_PDF,
     committeeReferralOmitted: true,
-    hasPublishableContent: false,
+    hasPublishableContent: true,
+    reviewCompleted: false,
     isFeatured: false,
   },
   {
@@ -478,7 +486,8 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     sourcePageUrl: R8_2_COUNCIL_RESOLUTIONS_URL,
     decisionSourceUrl: R8_2_COUNCIL_RESULTS_PDF,
     committeeReferralOmitted: true,
-    hasPublishableContent: false,
+    hasPublishableContent: true,
+    reviewCompleted: false,
     isFeatured: false,
   },
 ];
@@ -557,7 +566,7 @@ export function toBillInsert(item: ShinjukuSessionItem): BillInsert {
     // 議決日時ではなくサイト掲載日時。詳細は R8_2_PUBLISHED_AT のコメントを参照。
     published_at: item.hasPublishableContent ? R8_2_PUBLISHED_AT : null,
     is_featured: item.isFeatured,
-    is_review_completed: item.hasPublishableContent,
+    is_review_completed: item.reviewCompleted ?? item.hasPublishableContent,
     // 外部プレースホルダ画像（placehold.co）は公開ページのOGP画像にそのまま出てしまうため使わない。
     // 公式素材のサムネイルが用意できるまで null とする。
     thumbnail_url: null,

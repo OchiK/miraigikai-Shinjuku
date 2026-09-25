@@ -7,6 +7,7 @@ import {
 import {
   buildItemKey,
   gianKey,
+  giinKey,
   r8SecondSessionItems,
   shoninKey,
 } from "./shinjuku-r8-2-inventory";
@@ -28,21 +29,19 @@ import {
 const EASY_MAX_SENTENCE_LENGTH = 40;
 
 /**
- * 令和8年第2回定例会の区長提出議案23件。
+ * 令和8年第2回定例会の全27件。
  * Phase 2 のパイロット3議案（第42・43・44号議案）に続き、
- * 承認第2・3号と第45〜62号議案の easy 版を整備して全件を満たした。
- * 議員提出議案4件（第7〜10号）は解説そのものを次の作業で加えるため、まだ含めない。
+ * 承認第2・3号と第45〜62号議案の easy 版を整備し、
+ * 議員提出議案4件（第7〜10号）の easy 版を加えて全件を満たした。
  */
-const ALL_BILL_SLUGS = r8SecondSessionItems
-  .filter((item) => item.itemType !== "giin")
-  .map(buildItemKey);
+const ALL_BILL_SLUGS = r8SecondSessionItems.map(buildItemKey);
 
 const easyContents = billContentsWithBillSlug.filter(
   (content) => content.difficulty_level === "easy"
 );
 
 describe("やさしい日本語版の整備状況", () => {
-  it("区長提出議案23件に easy 版がある", () => {
+  it("全27件に easy 版がある", () => {
     const slugs = easyContents.map((content) => content.bill_slug);
 
     expect(slugs.sort()).toEqual([...ALL_BILL_SLUGS].sort());
@@ -283,6 +282,39 @@ describe("やさしい日本語版が一次資料の数値を保っている", (
       "928万4,000円",
       "4.5%",
       "2025年6月20日（金）",
+      "原案可決",
+    ],
+    [giinKey(7)]: [
+      "2027年（令和9年）4月1日（木）",
+      "2億3,803万7,000円",
+      "5,657万2,000円",
+      "2億9,461万2,000円",
+      "3億9,000万円",
+      "75%",
+      "11区",
+      "否決",
+    ],
+    [giinKey(8)]: [
+      "2027年（令和9年）4月1日（木）",
+      "5,657万2,000円",
+      "2億9,461万2,000円",
+      "12区",
+      "4区",
+      "否決",
+    ],
+    [giinKey(9)]: [
+      "2,500グラム未満",
+      "約10人に 1人",
+      "1,500グラム未満",
+      "3か所",
+      "第99条",
+      "原案可決",
+    ],
+    [giinKey(10)]: [
+      "2025年（令和7年）12月19日（金）",
+      "2027年度（令和9年度）",
+      "固定資産税",
+      "第99条",
       "原案可決",
     ],
   };
