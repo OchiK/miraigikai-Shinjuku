@@ -231,7 +231,7 @@ Progress (2026-09-25):
 - 区長提出議案は一覧ページ（`index_gian01` / `index_giketsu01`）から会期ページをたどり、インベントリ未登録の会期・案件を下書き（`monitor/drafts/shinjuku-draft.json`、常に `reviewCompleted: false` / `hasPublishableContent: false`）にする。登録済み案件と公式サイトの食い違い（件名・全文PDF・議決結果・消失）はレポートに載せるだけで、インベントリ・DBは書き換えない。
 - 議員提出議案は議会側ページのURLに規則性がないため、定例会・臨時会一覧と決議・意見書ページのリンク増減、審議結果PDFの sha256 だけを見る。
 - 下書きPRは固定ブランチ `automation/shinjuku-council-update` に作る。下書きは (公式サイト, インベントリ) だけで決まるので、同じ状態では何度回してもPRは増えない。
-- 残り: リポジトリ設定で「Allow GitHub Actions to create and approve pull requests」を有効にすること。有効化後の初回実行で令和8年第3回定例会（第63〜80号議案・認定第1〜4号の22件）が下書きPRになる見込み。新しい会期のインベントリを作ったら `monitor/targets.ts` の `KNOWN_SESSIONS` に足すこと。
+- リポジトリ設定「Allow GitHub Actions to create and approve pull requests」は有効化済み。初回実行で令和8年第3回定例会（第63〜80号議案・認定第1〜4号の22件）の下書きPR（#80）ができた。取り込みは P5-2。新しい会期のインベントリを作ったら `monitor/targets.ts` の `KNOWN_SESSIONS` に足すこと。
 - 設計: `docs/20260925_1740_P5-1_自動化_新宿区議会更新検知とドラフト生成_設計.md`（§9 に実装時の変更点）。
 
 ### P5-2 令和8年第3回定例会の投入（ROADMAP Phase 5）

@@ -53,20 +53,23 @@ Phase の進行とは別軸の、本番環境そのものに対する作業。Ph
 - [x] 本番DBへ23案件・69変種を投入
 - [x] Vercel再デプロイとHTTP 200を確認
 - [x] セッション一覧で23案件を準備中として確認
-- [ ] Adminの本番配備経路・URL・配備SHA・認可を確認
-- [ ] 本番migration履歴、制約、出典列を直接確認
+- [ ] Adminの本番配備経路・URL・配備SHA・認可を確認（BACKLOG S5-1）
+- [ ] 本番migration履歴、制約、出典列を直接確認（BACKLOG S5-2）
 - [x] `clearAllData()` を使わない本番専用インポーターを整備し、本番で実行
-- [ ] 復旧手順をローカルまたは検証環境でリハーサル
+- [ ] 復旧手順をローカルまたは検証環境でリハーサル（BACKLOG S5-3）
 - [x] 公開レビューを完了し、23案件の詳細ページを公開
       （2026-09-19の破壊的シードで公開状態になった。2026-09-23に本番DBと
       公開画面で確認）
 - [x] 破壊的シードが本番に投入したデモのインタビュー・レポートを削除（2026-09-23）
 - [x] 本番environmentに `main` 限定のブランチ制限を設定（2026-09-23）
-- [ ] 難易度別本文・出典導線・AIチャットを本番画面で確認
-- [ ] 全23案件の一次資料リンクとモバイル表示を確認し、証跡を保存
+- [ ] 難易度別本文・出典導線・AIチャットを本番画面で確認（BACKLOG S5-4）
+- [ ] 全23案件の一次資料リンクとモバイル表示を確認し、証跡を保存（BACKLOG S5-4。議員提出議案4件も含める）
 - [ ] 注目議案から準備中案件を除外し、404リンクの再出現を解消
+      （コードは対応済み: `findFeaturedBillsWithContents` は公開済みだけを返す。本番確認はBACKLOG S5-4）
 - [ ] 公開前のAIチャットをサーバー側で停止し、コスト制御をfail-closedにする
+      （コードは対応済み: `handle-chat-request.ts` のサーバー側ゲート・未公開議案の拒否・fail-closed。本番確認はBACKLOG S5-4）
 - [ ] 再シード完了時に関連キャッシュを即時無効化する
+      （`import_production.yml` に実装済みだが、GitHub Secrets に `WEB_PUBLIC_URL` / `REVALIDATE_SECRET` がなくスキップされる。BACKLOG S5-5）
 
 2026-09-18: 23案件・69変種の投入と再デプロイは完了した。ただし、
 `clearAllData()` でチャット、インタビュー、レポートを含む既存データを削除する
@@ -115,6 +118,7 @@ Phase の進行とは別軸の、本番環境そのものに対する作業。Ph
 - [x] 全23案件の easy 本文整備
 - [x] easy/normal/hard切替（本番の代表4案件で切替表示を確認、2026-09-23）
 - [ ] インクルーシブデザイン・アクセシビリティ検証（AccessLint / WCAG 2.2 AA）
+      （自動検査の違反は #60 で0件にした。手動検証と回帰検知が残り。BACKLOG P2-3）
 
 Exit:
 easyが単なる短縮ではなく、行政日本語の平易化になっている。
@@ -138,14 +142,14 @@ easy / normal / hard の3難易度をシード側で公開対象としている
 
 - [x] i18nライブラリ選定（当面は入れない。決定記録 §3）
 - [x] locale config
-- [ ] UI translation（翻訳まわりの案内3種のみ済み。UI全体は未着手）
+- [ ] UI translation（ヘッダー・トップページ・議案カード・フッターは英語化済み（#54）。下層ページ・議案詳細の見出し・ネイティブ確認が残り。BACKLOG P8-12）
 - [x] translation table
 - [x] source hash / stale tracking（読み出し時照合。stale への自動更新は未着手）
 - [x] language switcher
 - [x] fallback
 - [x] 翻訳手動確認・編集・公開承認UI（Admin対照レビュー・stale検知・キャッシュ即時無効化、#36）
 - [x] 翻訳diff表示・一括確認の一覧画面（#41）
-- [ ] ルビ手動確認・辞書管理（P3-4 残作業）
+- [ ] ルビ手動確認・辞書管理（BACKLOG P3-4。読み替え辞書は #46 で実装済み、Admin での確認・管理が残り）
 - [x] 英語以外の翻訳を公開させない制限（P3-5）
 - [x] 5言語の案内ページ（P3-5。手順のスクリーンショットは未作成）
 
@@ -189,38 +193,42 @@ zh-Hans / ko / ne / my / vi は議案を翻訳せず、ブラウザ翻訳とや�
 
 ## Phase 4: AI chat
 
-- [ ] bill-context chat
-- [ ] source citation
-- [ ] language mirroring
-- [ ] off-topic guard
-- [ ] per-user daily cost
-- [ ] system daily cost
-- [ ] system monthly cost
-- [ ] AI disclaimer
-- [ ] usage logging
+- [x] bill-context chat（議案IDだけを信じ、本文はDBの公開データで置き換える）
+- [ ] source citation（BACKLOG P4-1）
+- [ ] language mirroring（BACKLOG P4-1）
+- [ ] off-topic guard（プロンプトのルールのみ。有料APIの前で止める仕組みはない。BACKLOG P4-1）
+- [x] per-user daily cost
+- [x] system daily cost
+- [x] system monthly cost
+- [x] AI disclaimer（入力欄の注意書き）
+- [x] usage logging（`chat_usage_events`）
+- [ ] 上限到達時の画面表示の確認（BACKLOG P4-2）
+
+2026-09-25: コードを見て現状を反映した。上限の確認に失敗したときは有料APIを呼ばない（fail-closed）。
+残りは出典表示・回答言語・話題外の事前ブロック・上限到達時の表示で、BACKLOG P4-1 / P4-2 にまとめた。
 
 Exit:
 設定上限を超えるAI費用が発生しない。
 
 ## Phase 5: 第3回定例会 live
 
-- [ ] 2026年第3回定例会を投入
-- [ ] new/updated bill検出
-- [ ] result未確定状態
-- [ ] 後日result update
+- [ ] 2026年第3回定例会を投入（BACKLOG P5-2。下書きPR #80 に22件）
+- [x] new/updated bill検出（#76, #78。会期中は平日毎日、会期外は週1回）
+- [ ] result未確定状態（BACKLOG P5-2）
+- [ ] 後日result update（BACKLOG P5-2）
 
 Exit:
 実際の会期更新を1人で運用できる。
 
 ## Phase 6: 半自動化
 
-- [ ] session page parser
-- [ ] PDF discovery
-- [ ] PDF text extraction
-- [ ] hash change detection
-- [ ] draft generation
-- [ ] admin review queue
-- [ ] scheduled run
+- [x] session page parser（#76）
+- [x] PDF discovery（#76。全文PDFのURLを会期ページから拾う）
+- [ ] PDF text extraction（BACKLOG P5-3）
+- [x] hash change detection（#76。議員提出議案の審議結果PDFの sha256）
+- [ ] draft generation（案件の下書きPRまでは #76 で自動。解説本文の下書きは未着手。BACKLOG P5-3）
+- [ ] admin review queue（BACKLOG P5-3）
+- [x] scheduled run（#76, #78）
 
 Exit:
 「更新を見つける」「下書きを作る」まで自動。
@@ -228,14 +236,17 @@ Exit:
 ## Phase 7: Optional
 
 - [x] council members Phase 7-A: 新宿区議会38名の議員一覧・詳細ページ（世田谷モデル、著作権配慮の顔写真不使用モノグラムアバター、#38）
-- [ ] council members Phase 7-B/C: 発言・質問要約連携および議案賛否連携
+- [x] council members Phase 7-B: 質問要約連携（#61、本番投入 2026-09-25）
+- [x] council members Phase 7-C: 議案・議員の相互連携と会派賛否（#66, #68）
 - [ ] minutes
 - [ ] speeches
 - [ ] committees
 - [ ] budget explorer
-- [ ] zh-Hant
+- [ ] zh-Hant（2026-09-24 の英語のみ方針で見送り）
 - [ ] AI interview
 - [ ] notifications
+
+未着手の候補は BACKLOG P7-2 にまとめた。
 
 2026-09-23: 「みらい議会＠世田谷区」（civictech-setagaya.org）をモデルとした議員ページ（`/councilors`, `/councilors/[id]`）の要件定義および設計書を作成した（`docs/20260923_1630_議員ページ要件定義_世田谷モデル.md`）。定数38名の基本名簿・会派・委員会表示（Phase 7-A）、発言・質問要約連携（Phase 7-B）、議案賛否連携（Phase 7-C）の段階的アプローチを計画。
 
