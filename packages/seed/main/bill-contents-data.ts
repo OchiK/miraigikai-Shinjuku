@@ -1,14 +1,17 @@
 import { type SeededBillRef, requireBillBySlug } from "./bill-ref";
+import { giinBillContents } from "./bill-contents-giin-data";
 import { gianKey, shoninKey } from "./shinjuku-r8-2-inventory";
 
 // やさしい日本語版（easy）は公式一次資料をもとに別途整備する。
 // 第42・43・44号議案の3件を先行整備し（Phase 2 パイロット）、
-// 残る承認第2・3号と第45〜62号議案を加えて全23案件に easy 版がある。
+// 残る承認第2・3号と第45〜62号議案を加えて区長提出議案23件に easy 版がある。
+// 議員提出議案第7〜10号の4件（easy / normal / hard）は bill-contents-giin-data.ts にあり、
+// 末尾で連結するので、全27案件に easy 版がある。
 // 1文40字以内・行政用語はアンカー保持プロトコルで残すという規約は
 // easy-japanese-validation.test.ts で機械的に検証する。
 type DifficultyLevel = "easy" | "normal" | "hard";
 
-interface BillContentWithBillSlug {
+export interface BillContentWithBillSlug {
   /** 対象議案の安定識別子。件名は重複しうるため slug で突合する。 */
   bill_slug: string;
   difficulty_level: DifficultyLevel;
@@ -4637,6 +4640,8 @@ export const billContentsWithBillSlug: BillContentWithBillSlug[] = [
 | 第62号議案 全文 | https://www.city.shinjuku.lg.jp/content/000458536.pdf |
 | 提出案件概要（条例関係）追加分 | https://www.city.shinjuku.lg.jp/content/000458106.pdf |`,
   },
+  // 議員提出議案4件（第7〜10号）の解説。出典と台帳は bill-contents-giin-data.ts を参照
+  ...giinBillContents,
 ];
 
 // bill_slug を bill_id に変換する関数

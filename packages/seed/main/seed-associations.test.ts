@@ -19,13 +19,8 @@ const billBySlug = (slug: string) => {
   return bill;
 };
 
-/**
- * 解説（bill_contents）をそろえた議案。区長提出議案23件。
- * 議員提出議案4件（第7〜10号）の解説は次の作業で加えるため、それまでは対象外。
- */
-const BILL_SLUGS_WITH_CONTENT = r8SecondSessionItems
-  .filter((i) => i.itemType !== "giin")
-  .map(buildItemKey);
+/** 解説（bill_contents）をそろえた議案。区長提出議案23件と議員提出議案4件の全27件 */
+const BILL_SLUGS_WITH_CONTENT = r8SecondSessionItems.map(buildItemKey);
 
 describe("bills seed", () => {
   it("公式インベントリ27件（区長提出23件＋議員提出4件）をそのまま投入する", () => {
@@ -56,15 +51,15 @@ describe("公開状態と解説の整合", () => {
     expect(publishedWithoutContent).toEqual([]);
   });
 
-  it("解説のある23件を published とし、解説がまだ無い議員提出議案4件は coming_soon に置く", () => {
+  it("全27件を published とし、coming_soon を残さない", () => {
     expect(
       bills
         .filter((b) => b.publish_status === "published")
         .map((b) => b.slug)
     ).toEqual(BILL_SLUGS_WITH_CONTENT);
-    expect(
-      bills.filter((b) => b.publish_status === "coming_soon").map((b) => b.slug)
-    ).toEqual(["giin-7", "giin-8", "giin-9", "giin-10"].map((k) => `shinjuku-2026-r2-${k}`));
+    expect(bills.filter((b) => b.publish_status === "coming_soon")).toEqual(
+      []
+    );
   });
 
   it("published の全議案に easy / normal / hard の解説がそろう", () => {
@@ -117,8 +112,9 @@ describe("createBillContents", () => {
     }
   });
 
-  it("令和8年第2回定例会の区長提出議案23件すべてが解説を持つ", () => {
-    // ステップ3の5件 + ステップ4パイロットの3件 + ステップ4残り15件 = 23件。
+  it("令和8年第2回定例会の27件すべてが解説を持つ", () => {
+    // 区長提出議案23件（ステップ3の5件 + ステップ4パイロットの3件 + ステップ4残り15件）
+    // と議員提出議案4件。
     // 対象の全件と一致することを確かめる（取りこぼしと余剰の双方を検出する）。
     // 期待値は令和8年第2回定例会のインベントリから導出する。
     // bills 全件と比べると、別会期の議案を seed に足した瞬間に無関係な理由で落ちる。

@@ -340,12 +340,22 @@ describe("公開可否", () => {
     ).toBe(true);
   });
 
-  it("coming_soon は解説がまだ無い議員提出議案4件だけ", () => {
+  it("coming_soon の案件を残さない", () => {
     expect(
-      toBillInserts()
-        .filter((b) => b.publish_status === "coming_soon")
-        .map((b) => b.bill_number)
-    ).toEqual(R8_2_COUNCILOR_BILL_LABELS);
+      toBillInserts().filter((b) => b.publish_status === "coming_soon")
+    ).toEqual([]);
+  });
+
+  it("議員提出議案4件は公開するが、公開レビュー未了として「レビュー中」を出す", () => {
+    const councilorBills = toBillInserts().filter((b) => !isWardBill(b));
+    expect(councilorBills.map((b) => b.bill_number)).toEqual(
+      R8_2_COUNCILOR_BILL_LABELS
+    );
+    for (const bill of councilorBills) {
+      expect(bill.publish_status).toBe("published");
+      expect(bill.published_at).toBe(R8_2_PUBLISHED_AT);
+      expect(bill.is_review_completed).toBe(false);
+    }
   });
 
   it("承認第2号・第3号はいずれも published で、slug で区別できる", () => {
