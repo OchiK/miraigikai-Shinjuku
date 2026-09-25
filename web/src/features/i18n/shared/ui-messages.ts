@@ -35,10 +35,6 @@ export type UiMessages = {
   home: {
     heroLines: [string, string];
     heroImageAlt: string;
-    today: string;
-    inSession: string;
-    notInSession: string;
-    sessionFrom: (date: string) => string;
     /** 議案名・要約・タグが日本語のままであることの案内。日本語表示では出さない */
     billsInJapaneseNotice: string | null;
     featuredTitle: string;
@@ -166,10 +162,6 @@ export const UI_MESSAGES: Record<PublicLocale, UiMessages> = {
         "やさしい言葉で説明します",
       ],
       heroImageAlt: siteConfig.councilName,
-      today: "本日は",
-      inSession: "開会中",
-      notInSession: "閉会中",
-      sessionFrom: (date) => `${date}〜`,
       billsInJapaneseNotice: null,
       featuredTitle: "注目の議案",
       featuredSubtitle: "議会に上程された注目議案",
@@ -268,10 +260,6 @@ export const UI_MESSAGES: Record<PublicLocale, UiMessages> = {
         "explained in plain language",
       ],
       heroImageAlt: en.councilName,
-      today: "Today",
-      inSession: "In session",
-      notInSession: "Not in session",
-      sessionFrom: (date) => `From ${date}`,
       billsInJapaneseNotice:
         "Bill titles, summaries, and topics on this page are shown in Japanese. Open a bill to read it in English when a translation is available.",
       featuredTitle: "Featured bills",
