@@ -1,6 +1,10 @@
 import type { Database } from "@mirai-gikai/supabase";
 import { type SeededBillRef, requireBillBySlug } from "./bill-ref";
 import {
+  r8_2BillVotes,
+  toFactionStanceImportRows,
+} from "./shinjuku-faction-stances";
+import {
   R8_2_SESSION,
   gianKey,
   shoninKey,
@@ -261,25 +265,25 @@ export function createBillsTags(
 
 // 会派見解データ
 //
-// 令和8年第2回定例会の会派ごとの賛否は、提出議案ページ・議決結果ページのいずれにも
-// 記載がなく、一次情報として取得できていない（docs/20260916_1400_令和8年第2回定例会_公式突合記録.md 11-2）。
-// 以前はデモ用に創作した賛成意見を実在会派（factions[0]）に紐づけて投入していたが、
-// 公開UIでは実際の会派見解と区別できないため削除した。
-// 実際の会派見解を出典付きで取得できるまで、この seed は会派見解を投入しない。
-const factionStancesBySlug: Record<
-  string,
-  Omit<FactionStanceInsert, "bill_id" | "faction_id">
-> = {};
-
+// 令和8年第2回定例会の会派ごとの賛否。出典は新宿区議会だより No.322 で、
+// 表の転記と会派の対応は shinjuku-faction-stances.ts にまとめてある
+// （本番インポーターと同じ行を使う）。
 export function createFactionStances(
   insertedBills: SeededBillRef[],
-  miraiFactionId: string
+  insertedFactions: { id: string; name: string }[]
 ): FactionStanceInsert[] {
-  return Object.entries(factionStancesBySlug).map(([slug, stance]) => ({
-    ...stance,
-    bill_id: requireBillBySlug(insertedBills, slug).id,
-    faction_id: miraiFactionId,
-  }));
+  return toFactionStanceImportRows(r8_2BillVotes, factions).map((row) => {
+    const faction = insertedFactions.find((f) => f.name === row.faction_name);
+    if (!faction) {
+      throw new Error(`Faction not found for name: ${row.faction_name}`);
+    }
+    return {
+      bill_id: requireBillBySlug(insertedBills, row.bill_slug).id,
+      faction_id: faction.id,
+      type: row.type,
+      faction_name_at_vote: row.faction_name_at_vote,
+    };
+  });
 }
 
 // インタビュー設定を作成（最初の議案用）

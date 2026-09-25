@@ -8,6 +8,7 @@
     "seed:csv": "tsx csv/import-csv.ts",
     "import:production": "tsx production/import.ts",
     "verify:council-questions": "tsx main/verify-council-questions.ts",
+    "verify:faction-stances": "tsx main/verify-faction-stances.ts",
     "import:production:dry-run": "tsx production/import.ts --dry-run",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

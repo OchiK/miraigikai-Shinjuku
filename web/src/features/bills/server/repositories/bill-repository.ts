@@ -145,6 +145,7 @@ export async function findFactionStancesByBillId(billId: string) {
       id,
       type,
       comment,
+      faction_name_at_vote,
       factions (
         id,
         name,

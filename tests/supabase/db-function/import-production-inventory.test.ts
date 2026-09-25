@@ -310,4 +310,160 @@ describe("import_production_inventory", () => {
       ]);
     });
   });
+
+  describe("会派の賛否（13引数版）", () => {
+    const stanceRunId = `${runId}-stances`;
+    const sFaction = `${stanceRunId}-faction`;
+    const sSessionSlug = `${stanceRunId}-session`;
+    const sBillSlug = `${stanceRunId}-bill`;
+    const sRosterKey = `${stanceRunId}-roster`;
+
+    // seed 済みの会期・議案に頼らず、テスト専用のものを毎回 upsert する（CI は空のDB）
+    const baseArgs = () => ({
+      p_council_sessions: [
+        {
+          name: `賛否テスト会期 ${stanceRunId}`,
+          slug: sSessionSlug,
+          council_url: null,
+          start_date: "2026-06-10",
+          end_date: null,
+          is_active: false,
+        },
+      ],
+      p_tags: [],
+      p_bills: [
+        {
+          name: `賛否テスト議案 ${stanceRunId}`,
+          bill_number: `${stanceRunId}-1`,
+          slug: sBillSlug,
+          status: "approved",
+          status_note: null,
+          publish_status: "draft",
+          published_at: null,
+          is_featured: false,
+          is_review_completed: false,
+          thumbnail_url: null,
+          pdf_url: null,
+          overview_pdf_url: null,
+          source_page_url: null,
+          decision_source_url: null,
+        },
+      ],
+      p_bill_contents: [],
+      p_bills_tags: [],
+      p_bill_session_slug: sSessionSlug,
+      p_factions: [
+        {
+          name: sFaction,
+          display_name: `テスト会派 ${stanceRunId}`,
+          alternative_names: [],
+          logo_url: null,
+          sort_order: 1,
+          is_active: true,
+        },
+      ],
+      p_committees: [],
+      p_council_members: [],
+      p_council_member_committees: [],
+      p_council_roster_key: sRosterKey,
+      p_council_member_questions: [],
+    });
+
+    const stance = (overrides: Record<string, unknown> = {}) => ({
+      bill_slug: sBillSlug,
+      faction_name: sFaction,
+      type: "for",
+      faction_name_at_vote: "採決時の会派名",
+      ...overrides,
+    });
+
+    const fetchBill = async () => {
+      const { data, error } = await adminClient
+        .from("bills")
+        .select("id")
+        .eq("slug", sBillSlug)
+        .maybeSingle();
+      if (error) throw new Error(error.message);
+      return data;
+    };
+
+    const fetchStance = async () => {
+      const bill = await fetchBill();
+      const { data, error } = await adminClient
+        .from("faction_stances")
+        .select("id, type, comment, faction_name_at_vote, updated_at")
+        .eq("bill_id", bill?.id ?? "")
+        .single();
+      if (error) throw new Error(error.message);
+      return data;
+    };
+
+    afterAll(async () => {
+      // 賛否は議案の削除で cascade される
+      await adminClient.from("bills").delete().eq("slug", sBillSlug);
+      await adminClient.from("factions").delete().eq("name", sFaction);
+      await adminClient
+        .from("council_sessions")
+        .delete()
+        .eq("slug", sSessionSlug);
+    });
+
+    it("未知の会派を指す賛否があれば、議案の upsert ごとロールバックする", async () => {
+      const { error } = await adminClient.rpc("import_production_inventory", {
+        ...baseArgs(),
+        p_faction_stances: [stance({ faction_name: `${stanceRunId}-unknown` })],
+      });
+
+      expect(error?.message).toContain(
+        "one or more faction stances reference an unknown bill slug or faction name"
+      );
+      expect(await fetchBill()).toBeNull();
+    });
+
+    it("採決時の会派名が空の賛否は例外にする", async () => {
+      const { error } = await adminClient.rpc("import_production_inventory", {
+        ...baseArgs(),
+        p_faction_stances: [stance({ faction_name_at_vote: "" })],
+      });
+
+      expect(error?.message).toContain("must not be empty");
+      expect(await fetchBill()).toBeNull();
+    });
+
+    it("同じ内容で再実行しても賛否の行は書き換えない（updated_at が変わらない）", async () => {
+      const args = { ...baseArgs(), p_faction_stances: [stance()] };
+      const first = await adminClient.rpc("import_production_inventory", args);
+      if (first.error) throw new Error(first.error.message);
+      const before = await fetchStance();
+
+      const second = await adminClient.rpc("import_production_inventory", args);
+      if (second.error) throw new Error(second.error.message);
+      expect(await fetchStance()).toEqual(before);
+    });
+
+    it("賛否の更新は同じ行に当たり、管理画面の comment は消さない", async () => {
+      const first = await adminClient.rpc("import_production_inventory", {
+        ...baseArgs(),
+        p_faction_stances: [stance()],
+      });
+      if (first.error) throw new Error(first.error.message);
+      const before = await fetchStance();
+      const { error: updateError } = await adminClient
+        .from("faction_stances")
+        .update({ comment: "管理画面で書いた見解" })
+        .eq("id", before.id);
+      if (updateError) throw new Error(updateError.message);
+
+      const second = await adminClient.rpc("import_production_inventory", {
+        ...baseArgs(),
+        p_faction_stances: [stance({ type: "against" })],
+      });
+      if (second.error) throw new Error(second.error.message);
+
+      const after = await fetchStance();
+      expect(after.id).toBe(before.id);
+      expect(after.type).toBe("against");
+      expect(after.comment).toBe("管理画面で書いた見解");
+    });
+  });
 });

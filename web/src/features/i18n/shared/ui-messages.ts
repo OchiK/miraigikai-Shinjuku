@@ -4,6 +4,10 @@ import {
   DIFFICULTY_LABELS,
   type DifficultyLevelEnum,
 } from "@/features/bill-difficulty/shared/types";
+import {
+  STANCE_LABELS,
+  type StanceTypeEnum,
+} from "@/features/bills/shared/types";
 
 /**
  * サイト全体の UI 文言（docs/BACKLOG.md P8-12）。
@@ -62,6 +66,22 @@ export type UiMessages = {
     contactAfter: string;
     sourceBefore: string;
     sourceAfter: string;
+  };
+  factionStances: {
+    headingFinal: string;
+    headingPending: string;
+    preparing: string;
+    stanceLabels: Record<StanceTypeEnum, string>;
+    otherLabel: string;
+    factionCount: (count: number) => string;
+    /**
+     * 採決後に会派名が変わったときに添える、採決時の会派名の前後の文言。
+     * 会派名は日本語のまま lang="ja" で挟むため、文言と分けて持つ
+     */
+    nameAtVote: { before: string; after: string };
+    councilorsOf: (factionName: string) => string;
+    source: string;
+    opensInNewTab: string;
   };
   billCouncilors: {
     heading: string;
@@ -169,6 +189,18 @@ export const UI_MESSAGES: Record<PublicLocale, UiMessages> = {
       sourceBefore: "本サービスのソースコード（AGPL-3.0）は ",
       sourceAfter: " で公開されています。",
     },
+    factionStances: {
+      headingFinal: "議決結果",
+      headingPending: "会派の賛否",
+      preparing: "議案上程後に各会派の賛否を表明します。",
+      stanceLabels: STANCE_LABELS,
+      otherLabel: "その他",
+      factionCount: (count) => `${count}会派`,
+      nameAtVote: { before: "（採決時：", after: "）" },
+      councilorsOf: (factionName) => `${factionName}の所属議員を見る`,
+      source: "出典：",
+      opensInNewTab: "（新しいタブで開きます）",
+    },
     billCouncilors: {
       heading: "この議案と議員",
       questionsInJapaneseNotice: null,
@@ -257,6 +289,27 @@ export const UI_MESSAGES: Record<PublicLocale, UiMessages> = {
       contactAfter: "), not the party.",
       sourceBefore: "The source code for this service (AGPL-3.0) is on ",
       sourceAfter: ".",
+    },
+    factionStances: {
+      headingFinal: "Vote results",
+      headingPending: "Positions by parliamentary group",
+      preparing:
+        "Each parliamentary group will state its position once the bill is submitted.",
+      stanceLabels: {
+        for: "For",
+        against: "Against",
+        neutral: "Neutral",
+        conditional_for: "For, with conditions",
+        conditional_against: "Against, with conditions",
+        considering: "Undecided",
+        continued_deliberation: "Carried over",
+      },
+      otherLabel: "Other",
+      factionCount: (count) => (count === 1 ? "1 group" : `${count} groups`),
+      nameAtVote: { before: "(called ", after: " at the time of the vote)" },
+      councilorsOf: (factionName) => `See councilors in ${factionName}`,
+      source: "Source: ",
+      opensInNewTab: "(opens in a new tab)",
     },
     billCouncilors: {
       heading: "Councilors and this bill",

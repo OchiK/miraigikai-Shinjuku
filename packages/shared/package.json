@@ -2,6 +2,7 @@
   "name": "@mirai-gikai/shared",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest"
@@ -62,6 +63,10 @@
     "./bills/decision-label": {
       "types": "./src/bills/decision-label.ts",
       "default": "./src/bills/decision-label.ts"
+    },
+    "./bills/faction-stance-sources": {
+      "types": "./src/bills/faction-stance-sources.ts",
+      "default": "./src/bills/faction-stance-sources.ts"
     },
     "./i18n/locales": {
       "types": "./src/i18n/locales.ts",

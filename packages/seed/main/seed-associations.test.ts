@@ -222,15 +222,38 @@ describe("createBillsTags", () => {
 });
 
 describe("createFactionStances", () => {
-  it("出典のない会派見解を投入しない", () => {
-    // 令和8年第2回定例会の会派ごとの賛否は一次情報として取得できていない。
-    // 創作した見解を実在会派に紐づけて公開UIに出すことがないよう、空であることを固定する。
-    //
-    // 出典のある会派見解を投入する際は、このテストを「slug で議案に結び付ける
-    // （配列の並び順に依存しない）」ことを検証する回帰テストに戻すこと。
+  const insertedFactions = [
+    "jimin-sansei",
+    "komei",
+    "kyosan",
+    "shinjuku-mirai",
+    "rikken",
+    "ishin",
+    "genekisedai",
+    "inochi",
+    "update",
+  ].map((name) => ({ id: `${name}-uuid`, name }));
+
+  it("議案には slug で結び付き、配列の並び順に依存しない", () => {
     // 以前 createFactionStances は insertedBills[index] による位置ベース割り当てで、
     // 議案が増えた時点で無関係な議案へ見解が付く不具合があった。
-    expect(createFactionStances(insertedBills, "faction-uuid")).toEqual([]);
+    const stances = createFactionStances(
+      [...insertedBills].reverse(),
+      insertedFactions
+    );
+    const against = stances.filter((stance) => stance.type === "against");
+    expect(against).toContainEqual(
+      expect.objectContaining({
+        bill_id: billBySlug("shinjuku-2026-r2-gian-54").id,
+        faction_id: "kyosan-uuid",
+      })
+    );
+    expect(stances).toHaveLength(184);
+  });
+
+  it("採決後に結成された会派には賛否を付けない", () => {
+    const stances = createFactionStances(insertedBills, insertedFactions);
+    expect(stances.some((s) => s.faction_id === "update-uuid")).toBe(false);
   });
 });
 
