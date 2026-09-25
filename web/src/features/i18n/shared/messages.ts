@@ -73,8 +73,5 @@ export function jaUnavailableNotice(languageName: string): string {
   return `この内容はまだ${languageName}に翻訳されていません。日本語で表示しています。`;
 }
 
-/** トップページの多言語案内で、議案の英訳へ切り替える行の見出し */
-export const ENGLISH_BILLS_LABEL = "Read the bills in English";
-
 /** 言語切替の見出し。どの言語の話者にも見つけられるよう日英併記 */
 export const LANGUAGE_SELECTOR_LABEL = "言語 / Language";

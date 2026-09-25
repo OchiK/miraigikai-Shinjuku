@@ -17,8 +17,9 @@ interface LanguageToggleProps {
 
 /**
  * 日本語 / English をワンタップで切り替えるセグメント。
- * メニューを開かずに切り替えられるよう、ヘッダーとトップページに直接置く
- * （docs/BACKLOG.md P8-4）。見た目は DifficultySelector に揃える。
+ * メニューを開かずに切り替えられるよう、ヘッダーに直接置く
+ * （docs/BACKLOG.md P8-4。トップページの重複配置は P8-15 で削除）。
+ * 見た目は DifficultySelector に揃える。
  */
 export function LanguageToggle({
   currentLocale,
