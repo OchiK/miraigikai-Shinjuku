@@ -68,8 +68,8 @@ Phase の進行とは別軸の、本番環境そのものに対する作業。Ph
       （コードは対応済み: `findFeaturedBillsWithContents` は公開済みだけを返す。本番確認はBACKLOG S5-4）
 - [ ] 公開前のAIチャットをサーバー側で停止し、コスト制御をfail-closedにする
       （コードは対応済み: `handle-chat-request.ts` のサーバー側ゲート・未公開議案の拒否・fail-closed。本番確認はBACKLOG S5-4）
-- [ ] 再シード完了時に関連キャッシュを即時無効化する
-      （`import_production.yml` に実装済みだが、GitHub Secrets に `WEB_PUBLIC_URL` / `REVALIDATE_SECRET` がなくスキップされる。BACKLOG S5-5）
+- [x] 再シード完了時に関連キャッシュを即時無効化する
+      （`production` environment secrets に `WEB_PUBLIC_URL` / `REVALIDATE_SECRET` を設定し、本番インポートでの `/api/revalidate` 成功を確認。BACKLOG S5-5）
 
 2026-09-18: 23案件・69変種の投入と再デプロイは完了した。ただし、
 `clearAllData()` でチャット、インタビュー、レポートを含む既存データを削除する
