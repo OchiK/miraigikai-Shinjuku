@@ -1,4 +1,4 @@
-"""新宿区議会だよりの「議案の概要と審議結果」表を JSON で出す（verify-faction-stances.ts から呼ぶ）。
+"""「議案の概要と審議結果」表（新宿区議会の公式PDF。区議会だよりにも同じ表）を JSON で出す（verify-faction-stances.ts から呼ぶ）。
 
     python3 extract-faction-stances.py <PDFのパス>
 
@@ -24,15 +24,13 @@ def clean(cell):
 def main(path):
     with pdfplumber.open(path) as pdf:
         for page in pdf.pages:
-            # 見出しの文字列は抽出時に空白が入るため、表の列見出しで判定する
-            text = page.extract_text() or ""
-            if "自参ク" not in text or "議決結果" not in text:
-                continue
+            # 見出しの文字列は PDF ごとに空白の入り方が違うため、
+            # ページの本文ではなく表の列見出し（自参ク…議決結果）で判定する
             for table in page.extract_tables():
                 headings, rows = None, []
                 for raw in table:
                     cells = [clean(c) for c in raw]
-                    if "自参ク" in cells:
+                    if "自参ク" in cells and "議決結果" in cells:
                         start = cells.index("自参ク")
                         headings = [c for c in cells[start:] if c][:-1]
                         continue
