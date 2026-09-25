@@ -19,6 +19,15 @@ import type { GuideLocale } from "@mirai-gikai/shared/i18n/locales";
  */
 export const GUIDE_LINKS_LABEL = "多言語の案内 / Language guides";
 
+/**
+ * トップのバナーとフッターの両方に同じリンク群の nav があるため、
+ * スクリーンリーダーのランドマーク一覧で区別できるよう位置を添えた名前を付ける。
+ */
+export const GUIDE_LINKS_NAV_LABEL_TOP =
+  "多言語の案内（ページ上部） / Language guides (top)";
+export const GUIDE_LINKS_NAV_LABEL_FOOTER =
+  "多言語の案内（フッター） / Language guides (footer)";
+
 export type GuideSection = {
   heading: string;
   paragraphs: string[];

@@ -41,7 +41,12 @@ export function GuideView({ locale }: GuideViewProps) {
         data-no-rubyful="true"
         className={cn(NO_RUBYFUL_CLASS, "flex flex-col gap-6")}
       >
-        <aside className="flex gap-3 rounded-xl bg-mirai-featured p-5 text-mirai-featured-text shadow-mirai-sm">
+        {/* article の中に aside（complementary ランドマーク）を置くとランドマーク構造が
+            崩れるため、注記は role="note" で示す */}
+        <div
+          role="note"
+          className="flex gap-3 rounded-xl bg-mirai-featured p-5 text-mirai-featured-text shadow-mirai-sm"
+        >
           <Languages
             aria-hidden="true"
             className="mt-1 size-5 shrink-0"
@@ -64,7 +69,7 @@ export function GuideView({ locale }: GuideViewProps) {
               />
             </a>
           </div>
-        </aside>
+        </div>
 
         <header className="flex flex-col gap-1">
           <h1 className="text-2xl">{text.title}</h1>
