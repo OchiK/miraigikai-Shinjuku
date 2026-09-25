@@ -24,6 +24,7 @@ const TABLES_TO_CLEAR = [
   "bills_tags",
   "bills",
   "tags",
+  "council_member_questions",
   "council_member_committees",
   "council_members",
   "factions",

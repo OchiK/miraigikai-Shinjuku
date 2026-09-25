@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { type CouncilorRow, toCouncilor } from "./to-councilor";
+import {
+  type CouncilorQuestionRow,
+  type CouncilorRow,
+  toCouncilor,
+  toCouncilorDetail,
+  toCouncilorQuestion,
+} from "./to-councilor";
 
 const row: CouncilorRow = {
   id: "member-1",
@@ -29,6 +35,28 @@ const row: CouncilorRow = {
       committees: { id: "c-3", name: "文教子ども家庭委員会", sort_order: 3 },
     },
   ],
+  council_member_questions: [
+    { venue_type: "plenary" },
+    { venue_type: "plenary" },
+    { venue_type: "committee" },
+  ],
+};
+
+const minuteUrl = (minuteId: number) =>
+  `https://ssp.kaigiroku.net/tenant/shinjuku/MinuteView.html?council_id=3193&schedule_id=3&minute_id=${minuteId}`;
+
+const questionRow: CouncilorQuestionRow = {
+  id: "q-1",
+  council_member_id: "member-1",
+  venue_type: "plenary",
+  question_kind: "general",
+  title: "飯田橋駅周辺のまちづくり",
+  summary: "要約",
+  topic_tags: ["まちづくり", "交通"],
+  speech_date: "2026-06-11",
+  source_url: minuteUrl(61),
+  committees: null,
+  council_sessions: { name: "令和8年 第2回定例会" },
 };
 
 describe("toCouncilor", () => {
@@ -75,5 +103,75 @@ describe("toCouncilor", () => {
       ],
     });
     expect(councilor.committees).toEqual([]);
+  });
+});
+
+describe("toCouncilor の質問件数", () => {
+  it("掲載中の質問を総数と発言の場ごとに数える", () => {
+    const councilor = toCouncilor(row);
+    expect(councilor.questionsCount).toBe(3);
+    expect(councilor.questionVenueCounts).toEqual({
+      plenary: 2,
+      budget: 0,
+      committee: 1,
+    });
+  });
+
+  it("質問がなければ0件", () => {
+    const councilor = toCouncilor({ ...row, council_member_questions: [] });
+    expect(councilor.questionsCount).toBe(0);
+    expect(councilor.questionVenueCounts).toEqual({
+      plenary: 0,
+      budget: 0,
+      committee: 0,
+    });
+  });
+});
+
+describe("toCouncilorQuestion", () => {
+  it("列名を画面用の形に変換する", () => {
+    expect(toCouncilorQuestion(questionRow)).toEqual({
+      id: "q-1",
+      councilMemberId: "member-1",
+      venueType: "plenary",
+      questionKind: "general",
+      title: "飯田橋駅周辺のまちづくり",
+      summary: "要約",
+      topicTags: ["まちづくり", "交通"],
+      speechDate: "2026-06-11",
+      sourceUrl: minuteUrl(61),
+      committeeName: null,
+      sessionName: "令和8年 第2回定例会",
+    });
+  });
+
+  it("未知の質問種別は null にする", () => {
+    expect(
+      toCouncilorQuestion({ ...questionRow, question_kind: "other" })
+        ?.questionKind
+    ).toBeNull();
+  });
+
+  it("未知の発言の場の行は落とす", () => {
+    expect(
+      toCouncilorQuestion({ ...questionRow, venue_type: "unknown" })
+    ).toBeNull();
+  });
+});
+
+describe("toCouncilorDetail", () => {
+  it("質問を新しい順・同じ日は発言順に並べ、未知の行は落とす", () => {
+    const detail = toCouncilorDetail(row, [
+      { ...questionRow, id: "feb", speech_date: "2026-02-25" },
+      { ...questionRow, id: "jun-late", source_url: minuteUrl(90) },
+      { ...questionRow, id: "broken", venue_type: "unknown" },
+      { ...questionRow, id: "jun-early", source_url: minuteUrl(10) },
+    ]);
+    expect(detail.questions.map((q) => q.id)).toEqual([
+      "jun-early",
+      "jun-late",
+      "feb",
+    ]);
+    expect(detail.name).toBe("木もと ひろゆき");
   });
 });

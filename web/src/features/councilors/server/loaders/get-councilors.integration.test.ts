@@ -18,6 +18,7 @@ describe("議員ローダー 統合テスト", () => {
   let specialId: string;
   let activeId: string;
   let inactiveId: string;
+  let sessionId: string;
 
   beforeAll(async () => {
     const { data: faction, error: factionError } = await adminClient
@@ -76,10 +77,64 @@ describe("議員ローダー 統合テスト", () => {
         },
       ]);
     if (membershipError) throw membershipError;
+
+    const { data: session, error: sessionError } = await adminClient
+      .from("council_sessions")
+      .insert({
+        name: `テスト定例会-${suffix}`,
+        slug: `test-${suffix}`,
+        start_date: "2026-06-01",
+        is_active: false,
+      })
+      .select("id")
+      .single();
+    if (sessionError) throw sessionError;
+    sessionId = session.id;
+
+    const minuteUrl = (minuteId: number) =>
+      `https://ssp.kaigiroku.net/tenant/shinjuku/MinuteView.html?council_id=1&schedule_id=1&minute_id=${minuteId}`;
+    // 同じ日の2件は発言番号の大きい順に入れ、画面側で発言順に並ぶことを確かめる
+    const { error: questionsError } = await adminClient
+      .from("council_member_questions")
+      .insert([
+        {
+          council_member_id: activeId,
+          council_session_id: sessionId,
+          venue_type: "plenary",
+          question_kind: "general",
+          title: "後の論点",
+          summary: "要約B",
+          topic_tags: ["防災"],
+          speech_date: "2026-06-11",
+          source_url: minuteUrl(30),
+        },
+        {
+          council_member_id: activeId,
+          council_session_id: sessionId,
+          venue_type: "plenary",
+          question_kind: "general",
+          title: "先の論点",
+          summary: "要約A",
+          topic_tags: ["防災", "子育て"],
+          speech_date: "2026-06-11",
+          source_url: minuteUrl(10),
+        },
+        {
+          council_member_id: activeId,
+          committee_id: standingId,
+          venue_type: "committee",
+          title: "委員会の質問",
+          summary: "要約C",
+          topic_tags: ["教育"],
+          speech_date: "2026-02-10",
+          source_url: null,
+        },
+      ]);
+    if (questionsError) throw questionsError;
   });
 
   afterAll(async () => {
-    // council_member_committees は議員・委員会の削除で cascade される
+    // council_member_committees・council_member_questions は議員の削除で cascade される
     await adminClient
       .from("council_members")
       .delete()
@@ -89,6 +144,7 @@ describe("議員ローダー 統合テスト", () => {
       .delete()
       .in("id", [standingId, specialId]);
     await adminClient.from("factions").delete().eq("id", factionId);
+    await adminClient.from("council_sessions").delete().eq("id", sessionId);
   });
 
   it("getCouncilors は現職だけを会派・委員会つきで返す", async () => {
@@ -116,6 +172,43 @@ describe("議員ローダー 統合テスト", () => {
       [standingId, "standing", "副委員長"],
       [specialId, "special", "委員"],
     ]);
+  });
+
+  it("getCouncilors は掲載中の質問を総数と発言の場ごとに数える", async () => {
+    const councilors = await getCouncilors();
+    const active = councilors.find((c) => c.id === activeId);
+
+    expect(active?.questionsCount).toBe(3);
+    expect(active?.questionVenueCounts).toEqual({
+      plenary: 2,
+      budget: 0,
+      committee: 1,
+    });
+  });
+
+  it("getCouncilorById は質問を新しい順・同じ日は発言順で、会期名・委員会名つきで返す", async () => {
+    const councilor = await getCouncilorById(activeId);
+
+    expect(councilor?.questions.map((q) => q.title)).toEqual([
+      "先の論点",
+      "後の論点",
+      "委員会の質問",
+    ]);
+    expect(councilor?.questions[0]).toMatchObject({
+      venueType: "plenary",
+      questionKind: "general",
+      topicTags: ["防災", "子育て"],
+      speechDate: "2026-06-11",
+      sessionName: `テスト定例会-${suffix}`,
+      committeeName: null,
+    });
+    expect(councilor?.questions[2]).toMatchObject({
+      venueType: "committee",
+      questionKind: null,
+      committeeName: `テスト常任委員会-${suffix}`,
+      sessionName: null,
+      sourceUrl: null,
+    });
   });
 
   it("getCouncilorById は現職でない議員に null を返す", async () => {

@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const faction = councilor.faction?.displayName;
   return {
     title: `${councilor.name}${faction ? `（${faction}）` : ""} | ${siteConfig.siteName}`,
-    description: `${siteConfig.councilName}議員 ${councilor.name}の所属会派と所属委員会です。`,
+    description: `${siteConfig.councilName}議員 ${councilor.name}の所属会派・所属委員会と、議会での質問の要約です。`,
     alternates: {
       canonical: routes.councilorDetail(councilor.id),
     },

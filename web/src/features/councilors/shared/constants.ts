@@ -18,5 +18,19 @@ export const COUNCILOR_SOURCES = {
   },
 } as const;
 
+/**
+ * 質問要約の出典と掲載範囲。seed（packages/seed/main/shinjuku-council-questions.ts）と
+ * 同じ範囲を指す。掲載範囲を広げたらここも更新する。
+ */
+export const QUESTION_SOURCES = {
+  /** 要約を作成した日 */
+  asOf: "2026年9月25日",
+  scope: "令和8年第1回・第2回定例会の本会議（代表質問・一般質問）",
+  minutes: {
+    label: "会議録検索システム",
+    url: "https://ssp.kaigiroku.net/tenant/shinjuku/",
+  },
+} as const;
+
 /** 区議会の議員定数 */
 export const COUNCIL_SEATS = 38;

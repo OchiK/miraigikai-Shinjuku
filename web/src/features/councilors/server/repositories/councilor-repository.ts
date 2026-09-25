@@ -1,7 +1,10 @@
 import "server-only";
 
 import { createAdminClient } from "@mirai-gikai/supabase";
-import type { CouncilorRow } from "../../shared/utils/to-councilor";
+import type {
+  CouncilorQuestionRow,
+  CouncilorRow,
+} from "../../shared/utils/to-councilor";
 
 const COUNCILOR_SELECT = `
   id,
@@ -13,7 +16,22 @@ const COUNCILOR_SELECT = `
   website_url,
   sort_order,
   factions (id, display_name, sort_order),
-  council_member_committees (role, committees (id, name, sort_order))
+  council_member_committees (role, committees (id, name, sort_order)),
+  council_member_questions (venue_type)
+`;
+
+const COUNCILOR_QUESTION_SELECT = `
+  id,
+  council_member_id,
+  venue_type,
+  question_kind,
+  title,
+  summary,
+  topic_tags,
+  speech_date,
+  source_url,
+  committees (name),
+  council_sessions (name)
 `;
 
 /**
@@ -57,4 +75,27 @@ export async function findActiveCouncilorById(
   }
 
   return data;
+}
+
+/**
+ * 議員1人の質問要約を新しい発言日順に取得
+ * 同じ日の発言順は画面側（sortQuestionsBySpeech）で整える
+ */
+export async function findQuestionsByCouncilorId(
+  councilMemberId: string
+): Promise<CouncilorQuestionRow[]> {
+  const supabase = createAdminClient();
+
+  const { data, error } = await supabase
+    .from("council_member_questions")
+    .select(COUNCILOR_QUESTION_SELECT)
+    .eq("council_member_id", councilMemberId)
+    .order("speech_date", { ascending: false });
+
+  // 空配列に丸めると unstable_cache が「質問0件」を1時間キャッシュするため、投げる
+  if (error) {
+    throw new Error(`Failed to fetch councilor questions: ${error.message}`);
+  }
+
+  return data ?? [];
 }

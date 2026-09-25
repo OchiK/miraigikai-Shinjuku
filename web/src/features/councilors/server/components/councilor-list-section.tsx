@@ -2,7 +2,11 @@ import "server-only";
 
 import { siteConfig } from "@/config/site.config";
 import { CouncilorListView } from "../../client/components/councilor-list-view";
-import { COUNCIL_SEATS, COUNCILOR_SOURCES } from "../../shared/constants";
+import {
+  COUNCIL_SEATS,
+  COUNCILOR_SOURCES,
+  QUESTION_SOURCES,
+} from "../../shared/constants";
 import type { Councilor } from "../../shared/types";
 import { CouncilorSources } from "./councilor-sources";
 
@@ -15,10 +19,16 @@ export function CouncilorListSection({ councilors }: Props) {
     councilors.flatMap((c) => (c.faction ? [c.faction.id] : []))
   ).size;
 
+  const questionCount = councilors.reduce(
+    (sum, c) => sum + c.questionsCount,
+    0
+  );
+
   const stats = [
     { label: "掲載議員", value: `${councilors.length}人` },
     { label: "定数", value: `${COUNCIL_SEATS}人` },
     { label: "会派", value: `${factionCount}会派` },
+    { label: "掲載質問", value: `${questionCount}件` },
   ];
 
   return (
@@ -32,9 +42,9 @@ export function CouncilorListSection({ councilors }: Props) {
         </h1>
         <p className="text-base text-mirai-text leading-[1.9]">
           {siteConfig.councilName}
-          の議員の所属会派と所属委員会をまとめています。
+          の議員の所属会派と所属委員会、議会での質問をまとめています。
         </p>
-        <dl className="grid grid-cols-3 gap-3">
+        <dl className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {stats.map((stat) => (
             <div
               key={stat.label}
@@ -47,8 +57,10 @@ export function CouncilorListSection({ councilors }: Props) {
             </div>
           ))}
         </dl>
-        <p className="text-mirai-text-muted text-xs">
-          {COUNCILOR_SOURCES.asOf}時点の公式名簿にもとづきます
+        <p className="text-mirai-text-muted text-xs leading-[1.9]">
+          {COUNCILOR_SOURCES.asOf}
+          時点の公式名簿にもとづきます。質問は{QUESTION_SOURCES.scope}
+          の会議録から掲載しています。
         </p>
       </header>
 

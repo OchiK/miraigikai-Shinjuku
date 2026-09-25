@@ -36,6 +36,11 @@ export function CouncilorCard({ councilor }: Props) {
               {councilor.terms}期
             </span>
           )}
+          {councilor.questionsCount > 0 && (
+            <span className="rounded-full bg-background px-3 py-0.5 font-bold text-mirai-text text-xs">
+              質問 {councilor.questionsCount}件
+            </span>
+          )}
         </div>
         {standing.length > 0 && (
           <p className="text-mirai-text-muted text-xs leading-[1.75]">

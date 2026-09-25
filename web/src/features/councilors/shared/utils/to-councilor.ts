@@ -1,9 +1,20 @@
-import type { Councilor, CouncilorCommittee } from "../types";
+import type {
+  Councilor,
+  CouncilorCommittee,
+  CouncilorDetail,
+  CouncilorQuestion,
+} from "../types";
 import {
   getCommitteeKind,
   isCommitteeRole,
   sortCommittees,
 } from "./committee-kind";
+import {
+  countQuestionVenues,
+  isQuestionKind,
+  isVenueType,
+  sortQuestionsBySpeech,
+} from "./councilor-questions";
 
 /** council_members を会派・委員会つきで select した1行 */
 export type CouncilorRow = {
@@ -20,6 +31,23 @@ export type CouncilorRow = {
     role: string;
     committees: { id: string; name: string; sort_order: number } | null;
   }[];
+  /** 件数の集計にだけ使うため、発言の場だけを select する */
+  council_member_questions: { venue_type: string }[];
+};
+
+/** council_member_questions を委員会名・会期名つきで select した1行 */
+export type CouncilorQuestionRow = {
+  id: string;
+  council_member_id: string;
+  venue_type: string;
+  question_kind: string | null;
+  title: string;
+  summary: string;
+  topic_tags: string[];
+  speech_date: string;
+  source_url: string | null;
+  committees: { name: string } | null;
+  council_sessions: { name: string } | null;
 };
 
 export function toCouncilor(row: CouncilorRow): Councilor {
@@ -55,5 +83,51 @@ export function toCouncilor(row: CouncilorRow): Councilor {
         }
       : null,
     committees: sortCommittees(committees),
+    questionsCount: row.council_member_questions.length,
+    questionVenueCounts: countQuestionVenues(
+      row.council_member_questions.map((q) => q.venue_type)
+    ),
+  };
+}
+
+/**
+ * 質問1行を画面用に変換する。発言の場が未知の行は null（表示しない）
+ */
+export function toCouncilorQuestion(
+  row: CouncilorQuestionRow
+): CouncilorQuestion | null {
+  if (!isVenueType(row.venue_type)) return null;
+  return {
+    id: row.id,
+    councilMemberId: row.council_member_id,
+    venueType: row.venue_type,
+    questionKind:
+      row.question_kind && isQuestionKind(row.question_kind)
+        ? row.question_kind
+        : null,
+    title: row.title,
+    summary: row.summary,
+    topicTags: row.topic_tags,
+    speechDate: row.speech_date,
+    sourceUrl: row.source_url,
+    committeeName: row.committees?.name ?? null,
+    sessionName: row.council_sessions?.name ?? null,
+  };
+}
+
+/**
+ * 詳細ページ用。質問は新しい発言日順・同じ日は発言順に並べる
+ */
+export function toCouncilorDetail(
+  row: CouncilorRow,
+  questionRows: CouncilorQuestionRow[]
+): CouncilorDetail {
+  const questions = questionRows.flatMap((q) => {
+    const question = toCouncilorQuestion(q);
+    return question ? [question] : [];
+  });
+  return {
+    ...toCouncilor(row),
+    questions: sortQuestionsBySpeech(questions),
   };
 }

@@ -6,13 +6,27 @@ import type { ReactNode } from "react";
 import { siteConfig } from "@/config/site.config";
 import { routes } from "@/lib/routes";
 import { CouncilorAvatar } from "../../client/components/councilor-avatar";
-import { COUNCILOR_SOURCES } from "../../shared/constants";
-import type { Councilor, CouncilorCommittee } from "../../shared/types";
+import { COUNCILOR_SOURCES, QUESTION_SOURCES } from "../../shared/constants";
+import type {
+  CouncilorCommittee,
+  CouncilorDetail,
+  CouncilorQuestion,
+  QuestionVenueCounts,
+} from "../../shared/types";
 import { groupCommitteesByKind } from "../../shared/utils/committee-kind";
+import {
+  VENUE_LABELS,
+  VENUE_TYPES,
+} from "../../shared/utils/councilor-questions";
+import {
+  buildTopicSummaryText,
+  summarizeCouncilorTopics,
+} from "../../shared/utils/summarize-councilor-topics";
+import { CouncilorQuestionCard } from "./councilor-question-card";
 import { CouncilorSources, ExternalSourceLink } from "./councilor-sources";
 
 type Props = {
-  councilor: Councilor;
+  councilor: CouncilorDetail;
 };
 
 function RoleTag({ role }: { role: string }) {
@@ -67,6 +81,70 @@ function CommitteeGroups({ committees }: { committees: CouncilorCommittee[] }) {
   );
 }
 
+function QuestionCountBadges({
+  total,
+  venueCounts,
+}: {
+  total: number;
+  venueCounts: QuestionVenueCounts;
+}) {
+  const venues = VENUE_TYPES.filter((venue) => venueCounts[venue] > 0).map(
+    (venue) => ({ label: VENUE_LABELS[venue], count: venueCounts[venue] })
+  );
+
+  return (
+    <ul className="flex flex-wrap gap-2 pt-2 text-xs" aria-label="掲載中の質問">
+      <li className="rounded-full bg-background px-3 py-0.5 font-bold text-mirai-text">
+        質問 {total}件
+      </li>
+      {venues.map((venue) => (
+        <li
+          key={venue.label}
+          className="rounded-full bg-background px-3 py-0.5 text-mirai-text-muted"
+        >
+          {venue.label} {venue.count}件
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function TopicSummary({ questions }: { questions: CouncilorQuestion[] }) {
+  const summary = summarizeCouncilorTopics(questions);
+  const text = buildTopicSummaryText(summary);
+
+  // 質問0件のときは呼び出し側で項目ごと出さない。ここで null なのはタグが1つもない場合
+  if (!text) {
+    return (
+      <p className="text-base text-mirai-text">テーマタグはまだありません</p>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      <ul className="flex flex-wrap gap-2" aria-label="主なテーマ">
+        {summary.topTags.map(({ tag, count }) => (
+          <li
+            key={tag}
+            className="rounded-full bg-background px-3 py-1 text-mirai-text text-sm"
+          >
+            {tag}
+            <span className="ml-1 text-mirai-text-muted text-xs">
+              {count}件
+            </span>
+          </li>
+        ))}
+      </ul>
+      <p className="text-base text-mirai-text leading-[1.9]">{text}</p>
+      <p className="text-mirai-text-muted text-xs leading-[1.9]">
+        このサイトで公開中の質問{summary.questionCount}
+        件に付けたテーマタグを数えたものです（{QUESTION_SOURCES.asOf}
+        時点）。タグはAIが付けたもので、議員の関心のすべてを表すものではありません。
+      </p>
+    </div>
+  );
+}
+
 export function CouncilorDetailSection({ councilor }: Props) {
   return (
     <div className="flex flex-col gap-8">
@@ -88,6 +166,12 @@ export function CouncilorDetailSection({ councilor }: Props) {
             {councilor.name}
           </h1>
           <p className="text-mirai-text-muted text-sm">{councilor.nameKana}</p>
+          {councilor.questionsCount > 0 && (
+            <QuestionCountBadges
+              total={councilor.questionsCount}
+              venueCounts={councilor.questionVenueCounts}
+            />
+          )}
         </div>
       </header>
 
@@ -117,6 +201,12 @@ export function CouncilorDetailSection({ councilor }: Props) {
             </ExternalSourceLink>
           </DetailItem>
 
+          {councilor.questions.length > 0 && (
+            <DetailItem label="掲載中の質問からの傾向">
+              <TopicSummary questions={councilor.questions} />
+            </DetailItem>
+          )}
+
           {councilor.terms && (
             <DetailItem label="当選回数">
               <p className="text-base text-mirai-text">{councilor.terms}期</p>
@@ -141,6 +231,35 @@ export function CouncilorDetailSection({ councilor }: Props) {
             )}
           </DetailItem>
         </dl>
+      </section>
+
+      <section
+        aria-labelledby="councilor-questions-heading"
+        className="flex flex-col gap-4"
+      >
+        <h2
+          id="councilor-questions-heading"
+          className="font-heading font-bold text-2xl text-mirai-text leading-[1.3] md:text-[32px]"
+        >
+          掲載中の質問
+        </h2>
+        <p className="text-mirai-text-muted text-sm leading-[1.9]">
+          {QUESTION_SOURCES.scope}
+          での質問を、論点ごとに新しい順で掲載しています。要約はAIが会議録の質問部分をもとに作成したもので、答弁の内容は含みません。正確な内容は会議録をご確認ください。
+        </p>
+        {councilor.questions.length === 0 ? (
+          <p className="rounded-xl bg-card p-5 text-base text-mirai-text shadow-mirai-sm">
+            質問はまだ登録されていません
+          </p>
+        ) : (
+          <ol className="flex flex-col gap-4">
+            {councilor.questions.map((question) => (
+              <li key={question.id}>
+                <CouncilorQuestionCard question={question} />
+              </li>
+            ))}
+          </ol>
+        )}
       </section>
 
       <CouncilorSources />
