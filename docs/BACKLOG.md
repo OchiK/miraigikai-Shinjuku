@@ -171,7 +171,7 @@ Acceptance:
 new Shinjuku page/PDF change creates draft, never silently overwrites reviewed content.
 
 Progress (2026-09-25):
-- 更新検知 `pnpm --filter @mirai-gikai/seed monitor:shinjuku`（`packages/seed/monitor/`）と、毎週月曜日 09:00 JST に回す `.github/workflows/monitor_shinjuku_council.yml` を追加した。
+- 更新検知 `pnpm --filter @mirai-gikai/seed monitor:shinjuku`（`packages/seed/monitor/`）と `.github/workflows/monitor_shinjuku_council.yml` を追加した。定例会の期間中（と下書きPRが開いている間）は平日毎日、会期外は月曜だけ実行する（判定は `monitor/schedule.ts`）。
 - 区長提出議案は一覧ページ（`index_gian01` / `index_giketsu01`）から会期ページをたどり、インベントリ未登録の会期・案件を下書き（`monitor/drafts/shinjuku-draft.json`、常に `reviewCompleted: false` / `hasPublishableContent: false`）にする。登録済み案件と公式サイトの食い違い（件名・全文PDF・議決結果・消失）はレポートに載せるだけで、インベントリ・DBは書き換えない。
 - 議員提出議案は議会側ページのURLに規則性がないため、定例会・臨時会一覧と決議・意見書ページのリンク増減、審議結果PDFの sha256 だけを見る。
 - 下書きPRは固定ブランチ `automation/shinjuku-council-update` に作る。下書きは (公式サイト, インベントリ) だけで決まるので、同じ状態では何度回してもPRは増えない。
