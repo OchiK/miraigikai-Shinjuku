@@ -247,3 +247,18 @@ export function getDecisionStepLabel(
 ): DecisionStepLabel {
   return resolveOfficialDecisionTerm(input)?.stepPair ?? KAKETSU;
 }
+
+/**
+ * 委員会への付託を省略して本会議で議決したことを status_note に示す文言。
+ * 会議録の「説明及び委員会付託を省略して採決します」に当たる（意見書など）。
+ * seed が status_note の先頭に付け、web の審議の経過がこれを見て
+ * 「委員会での審査」を省略として表示する。
+ */
+export const COMMITTEE_REFERRAL_OMITTED_NOTE = "委員会付託を省略し、";
+
+/** status_note に委員会付託の省略が記されているか */
+export function isCommitteeReferralOmitted(
+  statusNote: string | null | undefined
+): boolean {
+  return statusNote?.includes(COMMITTEE_REFERRAL_OMITTED_NOTE) ?? false;
+}

@@ -1,5 +1,5 @@
 import type { Database } from "@mirai-gikai/supabase";
-import { gianKey, shoninKey } from "./shinjuku-r8-2-inventory";
+import { giinKey, gianKey, shoninKey } from "./shinjuku-r8-2-inventory";
 
 export { FACTION_STANCE_SOURCES } from "@mirai-gikai/shared/bills/faction-stance-sources";
 
@@ -49,8 +49,8 @@ export type SeedBillVotes = {
   marks: string;
 };
 
-// 表の区長提出議案23件。並びは表のとおり（DB の議案番号順と同じ）。
-// 議員提出議案4件（条例2件・意見書2件）は DB に議案が無いため載せない。
+// 表の全27件。並びは表のとおり（区長提出議案23件のあとに議員提出議案4件で、
+// インベントリの並びと同じ）。
 export const r8_2BillVotes: SeedBillVotes[] = [
   {
     billKey: shoninKey(2),
@@ -177,6 +177,26 @@ export const r8_2BillVotes: SeedBillVotes[] = [
     billKey: gianKey(62),
     titleInSource:
       "新宿区立角筈区民ホール天井改修その他工事請負契約の変更について",
+    marks: "○○○○○○○○",
+  },
+  {
+    billKey: giinKey(7),
+    titleInSource: "新宿区立学校における学用品の給付に関する条例",
+    marks: "××○××××○",
+  },
+  {
+    billKey: giinKey(8),
+    titleInSource: "新宿区立学校における修学旅行費の無償化に関する条例",
+    marks: "××○××××○",
+  },
+  {
+    billKey: giinKey(9),
+    titleInSource: "ドナーミルクの利用拡大を求める意見書",
+    marks: "○○○○○○○○",
+  },
+  {
+    billKey: giinKey(10),
+    titleInSource: "「不合理な税制改正」に反対する意見書",
     marks: "○○○○○○○○",
   },
 ];

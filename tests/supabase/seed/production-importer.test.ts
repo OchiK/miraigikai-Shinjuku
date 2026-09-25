@@ -32,7 +32,7 @@ import { adminClient, cleanupTestUser, createTestUser } from "../utils";
  * 本番用インポーターを、実際のローカル Supabase に対して検証する。
  *
  * 押さえる点:
- *   1. 初回インポートで全23案件・69変種が投入されること
+ *   1. 初回インポートで全27案件（区長提出23件＋議員提出4件）・69変種（解説は区長提出23件分）が投入されること
  *   2. 2回目以降も bills.id が変わらないこと（詳細ページURLと
  *      interview_configs の CASCADE を守るため、ここが最重要）
  *   3. 利用者データ（interview_sessions / interview_report）が消えないこと
@@ -274,10 +274,10 @@ describe("本番用インポーター", () => {
     if (userData?.userId) await cleanupTestUser(userData.userId);
   });
 
-  it("初回インポートで全23案件・69変種が投入される", async () => {
+  it("初回インポートで全27案件・69変種が投入される", async () => {
     const bills = await fetchBills();
     expect(bills).toHaveLength(r8SecondSessionItems.length);
-    expect(bills).toHaveLength(23);
+    expect(bills).toHaveLength(27);
 
     const contents = await fetchContents(bills.map((b) => b.id));
     expect(contents).toHaveLength(billContentsWithBillSlug.length);
@@ -400,14 +400,14 @@ describe("本番用インポーター", () => {
     return data ?? [];
   };
 
-  it("初回インポートで会派の賛否184件を、採決時の会派名つきで投入する", async () => {
+  it("初回インポートで会派の賛否216件を、採決時の会派名つきで投入する", async () => {
     const stances = await fetchStances();
-    expect(stances).toHaveLength(184);
-    expect(stances.filter((row) => row.type === "against")).toHaveLength(4);
+    expect(stances).toHaveLength(216);
+    expect(stances.filter((row) => row.type === "against")).toHaveLength(16);
     const inochi = stances.filter(
       (row) => row.factions?.name === `${runId}-inochi`
     );
-    expect(inochi).toHaveLength(23);
+    expect(inochi).toHaveLength(27);
     expect(
       inochi.every((row) => row.faction_name_at_vote === "れいわ新選組 新宿")
     ).toBe(true);
@@ -461,7 +461,7 @@ describe("本番用インポーター", () => {
     expect(stancesDiff?.extraneous).toEqual([
       `${removed.bill_slug}::${removed.faction_name}`,
     ]);
-    expect(await fetchStances()).toHaveLength(184);
+    expect(await fetchStances()).toHaveLength(216);
   });
 
   it("管理画面で切り替えた注目設定を、再インポートで上書きしない", async () => {
@@ -627,7 +627,7 @@ describe("本番用インポーター", () => {
     await runImport();
     const after = await fetchBills();
 
-    expect(after).toHaveLength(23);
+    expect(after).toHaveLength(27);
 
     const idBySlug = (rows: typeof before) =>
       Object.fromEntries(rows.map((b) => [b.slug, b.id]));
@@ -741,7 +741,7 @@ describe("本番用インポーター", () => {
     };
 
     const before = await fetchBillsTags();
-    // インベントリは 23 議案すべてに分類を付けている
+    // インベントリは区長提出議案23件すべてに分類を付けている（議員提出議案4件はまだ付けていない）
     expect(before).toHaveLength(23);
 
     await runImport();
@@ -842,9 +842,9 @@ describe("本番用インポーター", () => {
     expect(byTable("council_members")?.created).toHaveLength(38);
     expect(byTable("council_member_committees")?.created).toHaveLength(87);
     expect(byTable("council_member_questions")?.created).toHaveLength(124);
-    expect(byTable("bills")?.created).toHaveLength(23);
+    expect(byTable("bills")?.created).toHaveLength(27);
     expect(byTable("bill_contents")?.created).toHaveLength(69);
-    expect(byTable("bills_tags")?.created).toHaveLength(23);
+    expect(byTable("bills_tags")?.created).toHaveLength(23); // 議員提出議案4件にはまだ分類タグを付けていない
 
     // dry-run なので会期も議案も作られていない
     const { data: created } = await adminClient
@@ -874,7 +874,7 @@ describe("本番用インポーター", () => {
     });
 
     const billsDiff = report.tables.find((table) => table.table === "bills");
-    expect(billsDiff?.updated).toHaveLength(23);
+    expect(billsDiff?.updated).toHaveLength(27);
     for (const row of billsDiff?.updated ?? []) {
       expect(row.changes).toContainEqual({
         field: "council_session_id",
@@ -884,7 +884,7 @@ describe("本番用インポーター", () => {
     }
 
     const bills = await fetchBills();
-    expect(bills).toHaveLength(23);
+    expect(bills).toHaveLength(27);
   });
 
   it("dry-run は DB へ書き込まず、差分だけを返す", async () => {

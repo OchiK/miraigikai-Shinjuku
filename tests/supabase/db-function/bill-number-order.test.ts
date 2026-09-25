@@ -16,6 +16,7 @@ const TOO_LARGE = 2147483646;
  * bills.bill_number_order（generated column）の検証。
  *
  * 一覧の並び順は (status_order, published_at, bill_number_order) で決まる。
+ * 議員提出議案は区長提出議案のあとに並ぶよう 1000000 を足している。
  * 同一会期の議案は published_at が全件同一になるため、
  * 実質この列だけが並びを決めている。アプリ層のユニットテストでは
  * 生成式の誤りを検出できないため、DBに実際に入れて確かめる。
@@ -63,6 +64,31 @@ describe("bills.bill_number_order", () => {
     const bill = await insertBill("承認第2号");
 
     expect(bill.bill_number_order).toBe(2);
+  });
+
+  it("議員提出議案は、同じ会期の区長提出議案（承認・議案）のあとに並ぶ", async () => {
+    // 先頭の番号だけを見ると「議員提出議案第7号」は 7 になり、
+    // 承認第3号と第42号議案のあいだに割り込む。公式の一覧は区長提出議案のあとに載せる。
+    const shonin = await insertBill("承認第3号");
+    const ward = await insertBill("第62号議案");
+    const councilor7 = await insertBill("議員提出議案第7号");
+    const councilor10 = await insertBill("議員提出議案第10号");
+
+    expect(councilor7.bill_number_order).toBe(1000007);
+    expect(shonin.bill_number_order).toBeLessThan(ward.bill_number_order ?? 0);
+    expect(ward.bill_number_order).toBeLessThan(
+      councilor7.bill_number_order ?? 0
+    );
+    // 議員提出議案どうしも番号順
+    expect(councilor7.bill_number_order).toBeLessThan(
+      councilor10.bill_number_order ?? 0
+    );
+  });
+
+  it("全角数字の議員提出議案も同じ値になる", async () => {
+    const zenkaku = await insertBill("議員提出議案第７号");
+
+    expect(zenkaku.bill_number_order).toBe(1000007);
   });
 
   it("桁数の異なる番号を数値として比較できる", async () => {

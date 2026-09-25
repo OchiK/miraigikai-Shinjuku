@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
+import { COMMITTEE_REFERRAL_OMITTED_NOTE } from "@mirai-gikai/shared/bills/decision-label";
 import {
+  R8_2_ALL_LABELS,
+  R8_2_COUNCIL_RESOLUTIONS_URL,
+  R8_2_COUNCIL_RESULTS_PDF,
+  R8_2_COUNCIL_SESSION_URL,
+  R8_2_COUNCILOR_BILL_LABELS,
   R8_2_DECISIONS_URL,
   R8_2_OFFICIAL_LABELS,
   R8_2_PUBLISHED_AT,
@@ -49,6 +55,14 @@ const VERIFIED_FULL_TEXT_PDFS: Record<string, string> = {
   "第62号議案": "000458536",
 };
 
+/** 区長提出議案（承認・議案）。全文PDF・提出議案一覧ページを持つ */
+const wardItems = r8SecondSessionItems.filter((i) => i.itemType !== "giin");
+/** 議員提出議案 */
+const councilorItems = r8SecondSessionItems.filter((i) => i.itemType === "giin");
+const councilorSlugs = new Set(councilorItems.map(buildItemKey));
+const isWardBill = (bill: { slug?: string | null }) =>
+  !councilorSlugs.has(bill.slug ?? "");
+
 const item = (slug: string): ShinjukuSessionItem => {
   const found = r8SecondSessionItems.find((i) => buildItemKey(i) === slug);
   if (!found) throw new Error(`fixture missing: ${slug}`);
@@ -75,8 +89,19 @@ describe("公式一覧との突合", () => {
     expect(R8_2_OFFICIAL_LABELS).toContain("第62号議案");
   });
 
-  it("インベントリは23件で、欠落・重複・想定外がゼロ", () => {
-    expect(r8SecondSessionItems).toHaveLength(23);
+  it("議会公式ページの議員提出議案は第7〜10号の4件", () => {
+    expect(R8_2_COUNCILOR_BILL_LABELS).toEqual([
+      "議員提出議案第7号",
+      "議員提出議案第8号",
+      "議員提出議案第9号",
+      "議員提出議案第10号",
+    ]);
+    expect(R8_2_ALL_LABELS).toHaveLength(27);
+  });
+
+  it("インベントリは区長提出23件＋議員提出4件の27件で、欠落・重複・想定外がゼロ", () => {
+    expect(wardItems).toHaveLength(23);
+    expect(councilorItems).toHaveLength(4);
     expect(reconcileInventory()).toEqual({
       missing: [],
       unexpected: [],
@@ -128,7 +153,13 @@ describe("安定識別子", () => {
     expect(new Set(shonin.map(buildItemKey)).size).toBe(2);
   });
 
-  it("全23件の識別子が一意", () => {
+  it("議員提出議案は giin の識別子を持つ", () => {
+    expect(buildItemKey({ itemType: "giin", itemNumber: 7 })).toBe(
+      "shinjuku-2026-r2-giin-7"
+    );
+  });
+
+  it("全27件の識別子が一意", () => {
     expect(findDuplicates(r8SecondSessionItems.map(buildItemKey))).toEqual([]);
   });
 });
@@ -141,6 +172,39 @@ describe("議決結果", () => {
       );
     expect(byType("gian")).toEqual(new Set(["原案可決"]));
     expect(byType("shonin")).toEqual(new Set(["承認"]));
+  });
+
+  it("議員提出議案は、条例2件が否決、意見書2件が原案可決", () => {
+    expect(
+      councilorItems.map((i) => [i.officialLabel, i.decision])
+    ).toEqual([
+      ["議員提出議案第7号", "否決"],
+      ["議員提出議案第8号", "否決"],
+      ["議員提出議案第9号", "原案可決"],
+      ["議員提出議案第10号", "原案可決"],
+    ]);
+  });
+
+  it("否決は rejected として status_note に否決と残す", () => {
+    expect(toBillStatus("否決")).toEqual({
+      status: "rejected",
+      statusNote: "本会議で否決",
+    });
+  });
+
+  it("委員会付託を省略した案件は、status_note にその旨を残す", () => {
+    expect(
+      toBillStatus("原案可決", { committeeReferralOmitted: true })
+    ).toEqual({
+      status: "approved",
+      statusNote: `${COMMITTEE_REFERRAL_OMITTED_NOTE}本会議で原案可決`,
+    });
+    // 付託を省略したのは意見書2件（第9・10号）だけ
+    expect(
+      r8SecondSessionItems
+        .filter((i) => i.committeeReferralOmitted)
+        .map((i) => i.officialLabel)
+    ).toEqual(["議員提出議案第9号", "議員提出議案第10号"]);
   });
 
   it("議決用語が status_note に反映される", () => {
@@ -156,8 +220,8 @@ describe("議決結果", () => {
 });
 
 describe("出典", () => {
-  it("全件が全文PDF・概要PDF・一覧ページ・議決結果ページのURLを持つ", () => {
-    for (const bill of toBillInserts()) {
+  it("区長提出議案は全文PDF・概要PDF・一覧ページ・議決結果ページのURLを持つ", () => {
+    for (const bill of toBillInserts().filter(isWardBill)) {
       // コンテンツIDは9桁ゼロ埋め。桁落ちすると実在しないURLになる
       expect(bill.pdf_url).toMatch(OFFICIAL_PDF_URL);
       expect(bill.overview_pdf_url).toMatch(OFFICIAL_PDF_URL);
@@ -166,8 +230,35 @@ describe("出典", () => {
     }
   });
 
+  it("議員提出議案は議会公式の「議案の概要と審議結果」を概要・議決結果の出典にする", () => {
+    for (const bill of toBillInserts().filter((b) => !isWardBill(b))) {
+      expect(bill.overview_pdf_url).toBe(R8_2_COUNCIL_RESULTS_PDF);
+      expect(bill.decision_source_url).toBe(R8_2_COUNCIL_RESULTS_PDF);
+    }
+  });
+
+  it("否決された条例案（第7・8号）は全文PDFを持たず、会期ページを出典にする", () => {
+    // 全文はオンラインで公開されていない（会議録は「巻末議案の部参照」とだけ記す）
+    for (const n of [7, 8]) {
+      const bill = toBillInsert(item(`shinjuku-2026-r2-giin-${n}`));
+      expect(bill.pdf_url).toBeNull();
+      expect(bill.source_page_url).toBe(R8_2_COUNCIL_SESSION_URL);
+    }
+  });
+
+  it("可決した意見書（第9・10号）は「決議・意見書」ページの全文PDFを持つ", () => {
+    const expected: Record<number, string> = { 9: "000459264", 10: "000459265" };
+    for (const n of [9, 10]) {
+      const bill = toBillInsert(item(`shinjuku-2026-r2-giin-${n}`));
+      expect(bill.pdf_url).toBe(
+        `https://www.city.shinjuku.lg.jp/content/${expected[n]}.pdf`
+      );
+      expect(bill.source_page_url).toBe(R8_2_COUNCIL_RESOLUTIONS_URL);
+    }
+  });
+
   it("全文PDFのURLが取得確認済みのURLと完全に一致する", () => {
-    for (const source of r8SecondSessionItems) {
+    for (const source of wardItems) {
       const contentId = VERIFIED_FULL_TEXT_PDFS[source.officialLabel];
       expect(contentId, `未検証の案件: ${source.officialLabel}`).toBeDefined();
       expect(source.fullTextPdfUrl).toBe(
@@ -177,7 +268,7 @@ describe("出典", () => {
   });
 
   it("全文PDFのURLは案件ごとに異なる", () => {
-    expect(findDuplicates(r8SecondSessionItems.map((i) => i.fullTextPdfUrl))).toEqual(
+    expect(findDuplicates(wardItems.map((i) => i.fullTextPdfUrl))).toEqual(
       []
     );
   });
@@ -201,8 +292,8 @@ describe("出典", () => {
 });
 
 describe("公開可否", () => {
-  it("全23件を published として会期末日に公開する", () => {
-    const bills = toBillInserts();
+  it("区長提出議案23件を published として会期末日に公開する", () => {
+    const bills = toBillInserts().filter(isWardBill);
 
     expect(bills).toHaveLength(23);
     expect(bills.every((bill) => bill.publish_status === "published")).toBe(
@@ -213,8 +304,8 @@ describe("公開可否", () => {
     ).toBe(true);
   });
 
-  it("全23件をレビュー完了として扱う", () => {
-    for (const bill of toBillInserts()) {
+  it("区長提出議案23件をレビュー完了として扱う", () => {
+    for (const bill of toBillInserts().filter(isWardBill)) {
       expect(bill.is_review_completed).toBe(true);
     }
   });
@@ -243,16 +334,18 @@ describe("公開可否", () => {
   it("公開時に使う published_at は会期末日であり、議決日時を推定しない", () => {
     expect(R8_2_PUBLISHED_AT).toBe("2026-06-19T00:00:00+09:00");
     expect(
-      toBillInserts().every(
-        (bill) => bill.published_at === R8_2_PUBLISHED_AT
-      )
+      toBillInserts()
+        .filter(isWardBill)
+        .every((bill) => bill.published_at === R8_2_PUBLISHED_AT)
     ).toBe(true);
   });
 
-  it("coming_soon の案件を残さない", () => {
+  it("coming_soon は解説がまだ無い議員提出議案4件だけ", () => {
     expect(
-      toBillInserts().filter((b) => b.publish_status === "coming_soon")
-    ).toEqual([]);
+      toBillInserts()
+        .filter((b) => b.publish_status === "coming_soon")
+        .map((b) => b.bill_number)
+    ).toEqual(R8_2_COUNCILOR_BILL_LABELS);
   });
 
   it("承認第2号・第3号はいずれも published で、slug で区別できる", () => {

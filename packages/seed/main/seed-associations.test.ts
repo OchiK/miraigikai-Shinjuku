@@ -19,9 +19,17 @@ const billBySlug = (slug: string) => {
   return bill;
 };
 
+/**
+ * 解説（bill_contents）をそろえた議案。区長提出議案23件。
+ * 議員提出議案4件（第7〜10号）の解説は次の作業で加えるため、それまでは対象外。
+ */
+const BILL_SLUGS_WITH_CONTENT = r8SecondSessionItems
+  .filter((i) => i.itemType !== "giin")
+  .map(buildItemKey);
+
 describe("bills seed", () => {
-  it("公式インベントリ23件をそのまま投入する", () => {
-    expect(bills).toHaveLength(23);
+  it("公式インベントリ27件（区長提出23件＋議員提出4件）をそのまま投入する", () => {
+    expect(bills).toHaveLength(27);
     expect(bills.map((b) => b.slug)).toEqual(r8SecondSessionItems.map(buildItemKey));
   });
 
@@ -48,13 +56,15 @@ describe("公開状態と解説の整合", () => {
     expect(publishedWithoutContent).toEqual([]);
   });
 
-  it("全23件を published とし、coming_soon を残さない", () => {
-    expect(bills.filter((b) => b.publish_status === "published")).toHaveLength(
-      23
-    );
-    expect(bills.filter((b) => b.publish_status === "coming_soon")).toEqual(
-      []
-    );
+  it("解説のある23件を published とし、解説がまだ無い議員提出議案4件は coming_soon に置く", () => {
+    expect(
+      bills
+        .filter((b) => b.publish_status === "published")
+        .map((b) => b.slug)
+    ).toEqual(BILL_SLUGS_WITH_CONTENT);
+    expect(
+      bills.filter((b) => b.publish_status === "coming_soon").map((b) => b.slug)
+    ).toEqual(["giin-7", "giin-8", "giin-9", "giin-10"].map((k) => `shinjuku-2026-r2-${k}`));
   });
 
   it("published の全議案に easy / normal / hard の解説がそろう", () => {
@@ -107,13 +117,13 @@ describe("createBillContents", () => {
     }
   });
 
-  it("令和8年第2回定例会の23件すべてが解説を持つ", () => {
+  it("令和8年第2回定例会の区長提出議案23件すべてが解説を持つ", () => {
     // ステップ3の5件 + ステップ4パイロットの3件 + ステップ4残り15件 = 23件。
-    // インベントリの全件と一致することを確かめる（取りこぼしと余剰の双方を検出する）。
+    // 対象の全件と一致することを確かめる（取りこぼしと余剰の双方を検出する）。
     // 期待値は令和8年第2回定例会のインベントリから導出する。
     // bills 全件と比べると、別会期の議案を seed に足した瞬間に無関係な理由で落ちる。
     expect([...new Set(billContentsWithBillSlug.map((c) => c.bill_slug))].sort()).toEqual(
-      r8SecondSessionItems.map(buildItemKey).sort()
+      [...BILL_SLUGS_WITH_CONTENT].sort()
     );
   });
 
@@ -248,7 +258,7 @@ describe("createFactionStances", () => {
         faction_id: "kyosan-uuid",
       })
     );
-    expect(stances).toHaveLength(184);
+    expect(stances).toHaveLength(216);
   });
 
   it("採決後に結成された会派には賛否を付けない", () => {
