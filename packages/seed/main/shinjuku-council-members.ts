@@ -12,6 +12,9 @@ import type { Database } from "@mirai-gikai/supabase";
 //
 // 顔写真は使わない。公式名簿にある住所・電話番号・メールアドレスは持たない。
 // ウェブサイトは公式名簿の「URL」欄に掲載されたものだけを入れる。
+// X（旧Twitter）は、本人サイト（名簿のURL）からのリンク、またはプロフィールに
+// 「新宿区議会議員」と明記されたアカウントだけを入れる。基準と確認日は画面側の
+// COUNCILOR_SOURCES.xAccounts（web/src/features/councilors/shared/constants.ts）。
 
 export const COUNCIL_ROSTER_URL =
   "https://www.city.shinjuku.lg.jp/kusei/gikai01_000112.html";
@@ -28,6 +31,11 @@ export type SeedCouncilMember = {
   factionRole: string | null;
   terms: number;
   websiteUrl: string | null;
+  /**
+   * 議員本人の公式X（旧Twitter）。本人サイトからのリンク、またはプロフィールに
+   * 「新宿区議会議員」と明記されたアカウントだけを入れる
+   */
+  xUrl: string | null;
   /** committees.name → 委員会内の役職 */
   committees: Record<string, CommitteeRole>;
 };
@@ -41,6 +49,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: "会計",
     terms: 3,
     websiteUrl: "https://www.komei.or.jp/km/kimoto/",
+    xUrl: null,
     committees: {
       文教子ども家庭委員会: "委員長",
       防災等安全対策特別委員会: "委員",
@@ -53,6 +62,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: null,
     terms: 2,
     websiteUrl: "https://www.komei.or.jp/km/tokimitsu-junko-shinjuku/",
+    xUrl: "https://x.com/tokimitsu5223",
     committees: {
       環境建設委員会: "委員",
       議会運営委員会: "委員",
@@ -66,6 +76,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: null,
     terms: 1,
     websiteUrl: "https://m-kousaka.com",
+    xUrl: null,
     committees: {
       総務区民委員会: "委員",
       議会運営委員会: "委員",
@@ -79,6 +90,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: "会計",
     terms: 1,
     websiteUrl: "https://ishikawakouichi.com",
+    xUrl: "https://x.com/kouichiishikaw1",
     committees: {
       総務区民委員会: "委員",
       文化観光産業等特別委員会: "委員",
@@ -91,6 +103,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: null,
     terms: 1,
     websiteUrl: null,
+    xUrl: "https://x.com/Naxako75",
     committees: {
       環境建設委員会: "委員",
       本庁舎対策等特別委員会: "委員",
@@ -103,6 +116,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: null,
     terms: 1,
     websiteUrl: "https://tanae-hisashi.net/",
+    xUrl: "https://x.com/tanaehis",
     committees: {
       総務区民委員会: "委員",
       文化観光産業等特別委員会: "委員",
@@ -115,6 +129,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: "会計",
     terms: 1,
     websiteUrl: "https://jcp-net.info/sugiyamanaoko/",
+    xUrl: "https://x.com/NaoS0508",
     committees: {
       福祉健康委員会: "委員",
       本庁舎対策等特別委員会: "委員",
@@ -127,6 +142,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: null,
     terms: 2,
     websiteUrl: null,
+    xUrl: null,
     committees: {
       環境建設委員会: "副委員長",
       文化観光産業等特別委員会: "委員",
@@ -139,6 +155,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: null,
     terms: 3,
     websiteUrl: "https://www.misawahideko.com",
+    xUrl: "https://x.com/misawa_hideko",
     committees: {
       総務区民委員会: "委員",
       文化観光産業等特別委員会: "委員",
@@ -151,6 +168,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: "幹事長",
     terms: 4,
     websiteUrl: "https://www.komei.or.jp/km/igeta/",
+    xUrl: "https://x.com/eiichi_igeta",
     committees: {
       文教子ども家庭委員会: "委員",
       議会運営委員会: "委員",
@@ -164,6 +182,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: "副幹事長",
     terms: 2,
     websiteUrl: null,
+    xUrl: null,
     committees: {
       環境建設委員会: "委員長",
       議会運営委員会: "委員",
@@ -177,6 +196,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: null,
     terms: 1,
     websiteUrl: "https://aokihitomi.com",
+    xUrl: "https://x.com/aokihitomi55",
     committees: {
       文教子ども家庭委員会: "委員",
       "自治・議会・行財政改革等特別委員会": "委員",
@@ -189,6 +209,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: "幹事長・会計",
     terms: 3,
     websiteUrl: "http://sachiedaimon.com/",
+    xUrl: null,
     committees: {
       福祉健康委員会: "委員",
       本庁舎対策等特別委員会: "委員",
@@ -201,6 +222,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: "会計",
     terms: 1,
     websiteUrl: "http://www.yamaguchikaoru.com",
+    xUrl: "https://x.com/YamaguchiKaoru_",
     committees: {
       文教子ども家庭委員会: "委員",
       文化観光産業等特別委員会: "委員",
@@ -213,6 +235,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: "副幹事長",
     terms: 3,
     websiteUrl: "https://www.y-ono.net",
+    xUrl: null,
     committees: {
       福祉健康委員会: "委員",
       議会運営委員会: "委員",
@@ -226,6 +249,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: "幹事長",
     terms: 7,
     websiteUrl: "https://shida-you.jimdofree.com",
+    xUrl: null,
     committees: {
       環境建設委員会: "委員",
       本庁舎対策等特別委員会: "副委員長",
@@ -238,6 +262,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: "幹事長",
     terms: 4,
     websiteUrl: "https://hiromi163.com/",
+    xUrl: "https://x.com/hiromi163_szk",
     committees: {
       環境建設委員会: "委員",
       議会運営委員会: "委員",
@@ -251,6 +276,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: "副幹事長",
     terms: 3,
     websiteUrl: "https://itoyohei.com",
+    xUrl: "https://x.com/itoyohei_tw",
     committees: {
       文教子ども家庭委員会: "委員",
       本庁舎対策等特別委員会: "委員長",
@@ -263,6 +289,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: null,
     terms: 2,
     websiteUrl: null,
+    xUrl: "https://x.com/f_takeki",
     committees: {
       総務区民委員会: "委員長",
       "自治・議会・行財政改革等特別委員会": "委員",
@@ -275,6 +302,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: "副幹事長",
     terms: 3,
     websiteUrl: null,
+    xUrl: "https://x.com/keiichi1958",
     committees: {
       福祉健康委員会: "副委員長",
       議会運営委員会: "委員",
@@ -288,6 +316,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: "副幹事長",
     terms: 4,
     websiteUrl: "https://www.komei.or.jp/km/toyoshima-komei/",
+    xUrl: "https://x.com/toyoshima_komei",
     committees: {
       環境建設委員会: "委員",
       議会運営委員会: "委員",
@@ -301,6 +330,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: null,
     terms: 5,
     websiteUrl: null,
+    xUrl: "https://x.com/a_nomoto",
     committees: {
       福祉健康委員会: "委員",
       "自治・議会・行財政改革等特別委員会": "委員",
@@ -314,6 +344,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: null,
     terms: 3,
     websiteUrl: null,
+    xUrl: null,
     committees: {
       環境建設委員会: "委員",
     },
@@ -325,6 +356,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: null,
     terms: 4,
     websiteUrl: "https://capoeira.or.jp/ikedadaisuke/",
+    xUrl: null,
     committees: {
       文教子ども家庭委員会: "委員",
       文化観光産業等特別委員会: "委員長",
@@ -337,6 +369,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: "副幹事長・会計",
     terms: 1,
     websiteUrl: "https://watanabe-yasushi.tokyo/",
+    xUrl: "https://x.com/nabe_yas1985",
     committees: {
       文教子ども家庭委員会: "委員",
       "自治・議会・行財政改革等特別委員会": "委員",
@@ -349,6 +382,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: "幹事長",
     terms: 2,
     websiteUrl: "http://www.tanakayukie.com",
+    xUrl: null,
     committees: {
       総務区民委員会: "委員",
       文化観光産業等特別委員会: "委員",
@@ -361,6 +395,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: "副幹事長・会計",
     terms: 1,
     websiteUrl: "https://www.shizuka-oyamada.jp/",
+    xUrl: "https://x.com/zuka_shinjuku",
     committees: {
       文教子ども家庭委員会: "委員",
       文化観光産業等特別委員会: "委員",
@@ -373,6 +408,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: "幹事長",
     terms: 1,
     websiteUrl: "https://go2senkyo.com/seijika/185645",
+    xUrl: "https://x.com/Furuhata_SJK",
     committees: {
       総務区民委員会: "委員",
       議会運営委員会: "委員",
@@ -386,6 +422,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: null,
     terms: 7,
     websiteUrl: null,
+    xUrl: null,
     committees: {
       福祉健康委員会: "委員",
       議会運営委員会: "副委員長",
@@ -399,6 +436,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: "会計",
     terms: 8,
     websiteUrl: "https://profile.ameba.jp/ameba/enokihidetaka1",
+    xUrl: null,
     committees: {
       福祉健康委員会: "委員長",
       防災等安全対策特別委員会: "委員",
@@ -411,6 +449,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: "幹事長",
     terms: 6,
     websiteUrl: "https://kawamura-noriaki.com",
+    xUrl: "https://x.com/kawamuranoriaki",
     committees: {
       総務区民委員会: "委員",
       議会運営委員会: "委員",
@@ -424,6 +463,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: "副団長",
     terms: 8,
     websiteUrl: null,
+    xUrl: "https://x.com/ktnatsu86",
     committees: {
       文教子ども家庭委員会: "副委員長",
       防災等安全対策特別委員会: "委員",
@@ -436,6 +476,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: null,
     terms: 5,
     websiteUrl: "https://www.komei.or.jp/km/s-nakamura/",
+    xUrl: "https://x.com/nakamura_komei",
     committees: {
       福祉健康委員会: "委員",
       防災等安全対策特別委員会: "委員",
@@ -448,6 +489,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: null,
     terms: 6,
     websiteUrl: null,
+    xUrl: null,
     committees: {
       総務区民委員会: "副委員長",
       本庁舎対策等特別委員会: "委員",
@@ -460,6 +502,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: "幹事長",
     terms: 4,
     websiteUrl: null,
+    xUrl: null,
     committees: {
       福祉健康委員会: "委員",
       議会運営委員会: "委員長",
@@ -473,6 +516,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: "団長",
     terms: 6,
     websiteUrl: "http://e-shimomura.seesaa.net/",
+    xUrl: null,
     committees: {
       総務区民委員会: "委員",
       "自治・議会・行財政改革等特別委員会": "副委員長",
@@ -485,6 +529,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: "幹事長・会計",
     terms: 1,
     websiteUrl: "https://sawaimegumi.net",
+    xUrl: "https://x.com/sawaimegumi0",
     committees: {
       環境建設委員会: "委員",
       "自治・議会・行財政改革等特別委員会": "委員",
@@ -497,6 +542,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: "団長",
     terms: 8,
     websiteUrl: "https://sawadaayumi.blog.jp",
+    xUrl: "https://x.com/sawadaayumijcps",
     committees: {
       環境建設委員会: "委員",
       本庁舎対策等特別委員会: "委員",
@@ -534,6 +580,7 @@ export function createCouncilMemberInserts(
     faction_role: member.factionRole,
     official_url: COUNCIL_ROSTER_URL,
     website_url: member.websiteUrl,
+    x_url: member.xUrl,
     terms: member.terms,
     sort_order: index + 1,
     is_active: true,

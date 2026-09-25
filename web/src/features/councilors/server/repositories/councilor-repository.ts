@@ -15,6 +15,7 @@ const COUNCILOR_SELECT = `
   terms,
   official_url,
   website_url,
+  x_url,
   sort_order,
   factions (id, name, display_name, sort_order),
   council_member_committees (role, committees (id, name, sort_order)),

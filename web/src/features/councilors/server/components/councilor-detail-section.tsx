@@ -293,6 +293,16 @@ export function CouncilorDetailSection({ councilor, activeSession }: Props) {
                 </p>
               </>
             )}
+            {councilor.xUrl && (
+              <>
+                <ExternalSourceLink href={councilor.xUrl}>
+                  議員本人のX（旧Twitter）
+                </ExternalSourceLink>
+                <p className="text-mirai-text-muted text-xs">
+                  {COUNCILOR_SOURCES.xAccounts.rule}です
+                </p>
+              </>
+            )}
           </DetailItem>
         </dl>
       </section>

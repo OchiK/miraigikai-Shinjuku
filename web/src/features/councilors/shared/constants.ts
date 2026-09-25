@@ -4,6 +4,11 @@
  */
 export const COUNCILOR_SOURCES = {
   asOf: "2026年8月7日",
+  /** X（旧Twitter）アカウントの掲載基準と、本人のものと確認した日 */
+  xAccounts: {
+    rule: "本人のウェブサイトからのリンク、またはプロフィールの「新宿区議会議員」の記載で本人のものと確認したアカウント",
+    asOf: "2026年9月26日",
+  },
   roster: {
     label: "議員名簿",
     url: "https://www.city.shinjuku.lg.jp/kusei/gikai01_000112.html",

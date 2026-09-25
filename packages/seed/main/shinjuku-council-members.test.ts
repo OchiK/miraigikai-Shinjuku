@@ -71,6 +71,17 @@ describe("議員名簿 seed", () => {
     }
   });
 
+  it("XのURLは x.com のプロフィールURLで、同じアカウントを2人に付けない", () => {
+    const xUrls = councilMembers.flatMap((m) => (m.xUrl ? [m.xUrl] : []));
+    for (const url of xUrls) {
+      expect(url).toMatch(/^https:\/\/x\.com\/[A-Za-z0-9_]{1,15}$/);
+    }
+    expect(
+      new Set(xUrls.map((url) => url.toLowerCase())).size,
+      "重複あり"
+    ).toBe(xUrls.length);
+  });
+
   it("全議員が常任委員会にちょうど1つ所属する", () => {
     const standing = [
       "総務区民委員会",
@@ -96,6 +107,9 @@ describe("createCouncilMemberInserts", () => {
       sort_order: 1,
     });
     expect(rows[37].sort_order).toBe(38);
+    expect(rows.map((r) => r.x_url)).toEqual(
+      councilMembers.map((m) => m.xUrl)
+    );
   });
 
   it("存在しない会派キーは投入前に止める", () => {

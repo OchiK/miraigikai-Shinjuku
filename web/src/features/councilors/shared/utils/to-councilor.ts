@@ -27,6 +27,7 @@ export type CouncilorRow = {
   terms: number | null;
   official_url: string | null;
   website_url: string | null;
+  x_url: string | null;
   sort_order: number;
   factions: {
     id: string;
@@ -92,6 +93,7 @@ export function toCouncilor(row: CouncilorRow): Councilor {
     terms: row.terms,
     officialUrl: row.official_url,
     websiteUrl: row.website_url,
+    xUrl: row.x_url,
     sortOrder: row.sort_order,
     faction: row.factions
       ? {
