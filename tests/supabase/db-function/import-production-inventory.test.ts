@@ -144,13 +144,25 @@ describe("import_production_inventory", () => {
     const qMember = `${questionRunId}-member`;
     const qRosterKey = `${questionRunId}-roster`;
 
+    const qSessionSlug = `${questionRunId}-session`;
+
+    // seed 済みの会期に頼らず、テスト専用の会期を毎回 upsert する（CI は空のDB）
     const baseArgs = () => ({
-      p_council_sessions: [],
+      p_council_sessions: [
+        {
+          name: `質問テスト会期 ${questionRunId}`,
+          slug: qSessionSlug,
+          council_url: null,
+          start_date: "2025-11-20",
+          end_date: null,
+          is_active: false,
+        },
+      ],
       p_tags: [],
       p_bills: [],
       p_bill_contents: [],
       p_bills_tags: [],
-      p_bill_session_slug: "r8-2",
+      p_bill_session_slug: qSessionSlug,
       p_factions: [
         {
           name: qFaction,
@@ -208,6 +220,10 @@ describe("import_production_inventory", () => {
       // 質問は議員の削除で cascade される
       await adminClient.from("council_members").delete().eq("name", qMember);
       await adminClient.from("factions").delete().eq("name", qFaction);
+      await adminClient
+        .from("council_sessions")
+        .delete()
+        .eq("slug", qSessionSlug);
     });
 
     it("未知の議員を指す質問があれば、議員の upsert ごとロールバックする", async () => {
