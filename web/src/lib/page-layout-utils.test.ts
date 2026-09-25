@@ -29,6 +29,17 @@ describe("isMainPage", () => {
     expect(isMainPage("/bills")).toBe(false);
     expect(isMainPage("/bills/")).toBe(false);
   });
+
+  it("returns true for a council session bills page", () => {
+    expect(isMainPage("/sessions/r8-2/bills")).toBe(true);
+    expect(isMainPage("/sessions/r8-3/bills")).toBe(true);
+  });
+
+  it("returns false for session paths other than the bills page", () => {
+    expect(isMainPage("/sessions")).toBe(false);
+    expect(isMainPage("/sessions/r8-2")).toBe(false);
+    expect(isMainPage("/sessions/r8-2/bills/")).toBe(false);
+  });
 });
 
 describe("hasChatSidebar", () => {
@@ -51,6 +62,10 @@ describe("hasChatSidebar", () => {
 
   it("returns false for an unrelated path", () => {
     expect(hasChatSidebar("/about")).toBe(false);
+  });
+
+  it("returns false for a council session bills page", () => {
+    expect(hasChatSidebar("/sessions/r8-2/bills")).toBe(false);
   });
 });
 

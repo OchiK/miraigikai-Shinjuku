@@ -1,16 +1,19 @@
 /**
  * ページレイアウトに関するユーティリティ
  *
- * TOPページと議案詳細ページは「メインページ」として扱い、DifficultySelectorを表示する。
+ * TOPページ・議案詳細ページ・定例会の議案一覧ページは「メインページ」として扱い、
+ * DifficultySelectorを表示する。
  * チャットサイドバー用のオフセットは議案詳細ページのみ（デザインシステム定義 §5・§10）。
  */
 
-/** メインページ（TOP、議案詳細）かどうかを判定 */
+/** メインページ（TOP、議案詳細、定例会の議案一覧）かどうかを判定 */
 export function isMainPage(pathname: string): boolean {
   // トップページ
   if (pathname === "/") return true;
   // 議案詳細ページ（/bills/[id]）- サブパスは除外
   if (/\/bills\/[^/]+$/.test(pathname)) return true;
+  // 定例会の議案一覧ページ（/sessions/[slug]/bills）
+  if (/^\/sessions\/[^/]+\/bills$/.test(pathname)) return true;
   return false;
 }
 

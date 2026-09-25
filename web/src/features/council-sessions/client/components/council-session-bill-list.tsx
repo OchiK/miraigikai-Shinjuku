@@ -1,3 +1,4 @@
+import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
 import { ExternalLink } from "lucide-react";
 import Image from "next/image";
 import type {
@@ -12,12 +13,14 @@ type Props = {
   session: CouncilSession;
   bills: BillWithContent[];
   comingSoonBills?: ComingSoonBill[];
+  locale?: PublicLocale;
 };
 
 export function CouncilSessionBillList({
   session,
   bills,
   comingSoonBills = [],
+  locale = "ja",
 }: Props) {
   const startDate = new Date(session.start_date);
   const endDate = new Date(session.end_date ?? session.start_date);
@@ -61,6 +64,7 @@ export function CouncilSessionBillList({
         <BillListWithStatusFilter
           bills={bills}
           comingSoonBills={comingSoonBills}
+          locale={locale}
         />
       )}
 

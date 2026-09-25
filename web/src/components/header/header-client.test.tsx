@@ -151,6 +151,29 @@ describe("HeaderClient", () => {
     });
   });
 
+  describe("定例会の議案一覧での難易度切り替え（P8-16）", () => {
+    it("議案一覧ページでは難易度セレクタを出す", () => {
+      renderHeader("/sessions/r8-2/bills", [r82]);
+
+      const difficulty = screen.getByRole("group", {
+        name: "説明の詳しさを切り替え",
+      });
+      for (const label of ["やさしい", "ふつう", "くわしく"]) {
+        expect(
+          within(difficulty).getByRole("button", { name: label })
+        ).toBeInTheDocument();
+      }
+    });
+
+    it("議員一覧など、ほかの下層ページでは出さない", () => {
+      renderHeader("/councilors", [r82]);
+
+      expect(
+        screen.queryByRole("group", { name: "説明の詳しさを切り替え" })
+      ).not.toBeInTheDocument();
+    });
+  });
+
   describe("英語表示（P8-12）", () => {
     it("ナビ・難易度・ホーム導線・メニューを英語で出し、サイト名は日本語のまま", async () => {
       renderHeader("/", [r82, r81], "en");

@@ -1,5 +1,6 @@
 "use client";
 
+import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -18,6 +19,7 @@ type StatusFilterType = "all" | "approved" | "rejected" | "other";
 type Props = {
   bills: BillWithContent[];
   comingSoonBills?: ComingSoonBill[];
+  locale?: PublicLocale;
 };
 
 function filterBillsByStatus(
@@ -89,6 +91,7 @@ function getUniqueTags(
 export function BillListWithStatusFilter({
   bills,
   comingSoonBills = [],
+  locale = "ja",
 }: Props) {
   const searchParams = useSearchParams();
   const initialTagId = searchParams.get("tag");
@@ -193,7 +196,7 @@ export function BillListWithStatusFilter({
             <div className="flex flex-col gap-3">
               {filteredBills.map((bill) => (
                 <Link key={bill.id} href={`/bills/${bill.id}`}>
-                  <CompactBillCard bill={bill} />
+                  <CompactBillCard bill={bill} locale={locale} />
                 </Link>
               ))}
             </div>
