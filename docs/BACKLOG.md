@@ -386,3 +386,21 @@ Progress (2026-09-25, PR #65):
 - `MultilingualGuideBanner` を同期コンポーネント化し、未使用の `ENGLISH_BILLS_LABEL` 定数を削除。
 - `header-client.tsx` と `language-toggle.tsx` のコメントを「ヘッダーに一本化」へ更新。
 
+### P8-16 定例会アーカイブ・議案一覧ページでの難易度（日本語レベル）切替トグルの表示（Difficulty Selector in Bills Archive）
+定例会の議案一覧・アーカイブページ（`/sessions/[slug]/bills`）において、ヘッダーに日本語レベル（やさしい／ふつう／くわしく）のトグル（`DifficultySelector`）が表示されていないため、議案一覧画面でも難易度を切り替えられるようにする。
+
+Acceptance:
+- `isMainPage`（`web/src/lib/page-layout-utils.ts`）等を見直し、定例会議案一覧（`/sessions/[slug]/bills`）でもヘッダーに `DifficultySelector` が表示されること
+- 議案一覧ページ内の議案カード表示（要約等）が、選択された難易度レベルに応じた内容で正しく連動・更新されること
+- 関連するテスト（`page-layout-utils.test.ts` 等）の更新・通過
+- タップ領域 44px（`min-h-11`）およびレスポンシブ表示（画面幅に応じた収納・メニュー連携）の確保
+
+### P8-17 トップページの「本日の定例会」セクションの目的・必要性の再検討と整理（Re-evaluate "Current Council Session" Banner on Top Page）
+トップページ上部に表示されている「本日の定例会（会期中 / 令和8年第2回定例会）」バナー（`CurrentCouncilSession`）について、単に開会中かどうかを示すのみで導線としての役割が薄く、ファーストビューのスペースを圧迫している。特別な存在意義や機能がない限り、削除またはヘッダーの会期バッジ等へ集約・整理することを検討する。
+
+Acceptance:
+- 「本日の定例会」セクションの存在意義（ユーザーにとっての価値、公式ページや会期詳細へのリンク有無等）の精査
+- 不要と判断された場合、トップページからの削除、またはヘッダー中央の会期バッジ（`NavLinks`）やHero周辺への情報統合
+- 関連するコンポーネント・テスト（`CurrentCouncilSession`、`loadHomeData` の呼び出し等）のクリーンアップ
+
+
