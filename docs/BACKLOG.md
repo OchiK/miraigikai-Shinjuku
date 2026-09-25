@@ -427,3 +427,8 @@ Acceptance:
 - 議員提出議案4件（第7・8・9・10号）の解説文（やさしい／ふつう／くわしく）について、一次情報（議会公式PDF・会議録・区議会だより）との突合・独立ファクトチェック・公開レビューを実施する
 - レビュー完了後、`packages/seed/main/shinjuku-r8-2-inventory.ts` の該当4件から `reviewCompleted: false` を削除（または `true` に更新）する
 - インポートスクリプト（`pnpm seed` / seed import）を再実行し、DB（`is_review_completed` フラグ）および公開画面に反映させ、「レビュー中」バナーが解除されることを確認する
+
+Progress (2026-09-25):
+- 議員提出議案4件（第7〜10号）の解説文について、起案者による手動確認・一次情報突合レビューを完了した。
+- `packages/seed/main/shinjuku-r8-2-inventory.ts` から `reviewCompleted: false` を削除し、`is_review_completed: true` に更新。
+- 単体テスト `shinjuku-r8-2-inventory.test.ts` をレビュー完了を期待するアサーションに更新。

@@ -428,8 +428,7 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
   // 議員提出議案。識別名・件名は議会公式の会期ページ、議決結果は会議録（6月19日）と
   // 「議案の概要と審議結果」で確認した。第7・8号は文教子ども家庭委員会に付託され、
   // 委員会・本会議とも起立少数で否決。第9・10号は説明と委員会付託を省略し、
-  // 異議なく原案可決。解説は出典突合済みだが公開レビューは未了のため、
-  // 公開したうえで「レビュー中」バナーを出す（reviewCompleted: false）。
+  // 異議なく原案可決。解説は出典突合済みで公開レビュー完了（P8-18）。
   // 第9・10号の全文は議会公式の「決議・意見書」ページのPDF（2026-09-25 取得、HTTP 200・
   // application/pdf、sha256: 000459264 = dfe433d8…、000459265 = 12942087…）。
   {
@@ -443,7 +442,6 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     sourcePageUrl: R8_2_COUNCIL_SESSION_URL,
     decisionSourceUrl: R8_2_COUNCIL_RESULTS_PDF,
     hasPublishableContent: true,
-    reviewCompleted: false,
     isFeatured: false,
   },
   {
@@ -457,7 +455,6 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     sourcePageUrl: R8_2_COUNCIL_SESSION_URL,
     decisionSourceUrl: R8_2_COUNCIL_RESULTS_PDF,
     hasPublishableContent: true,
-    reviewCompleted: false,
     isFeatured: false,
   },
   {
@@ -472,7 +469,6 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     decisionSourceUrl: R8_2_COUNCIL_RESULTS_PDF,
     committeeReferralOmitted: true,
     hasPublishableContent: true,
-    reviewCompleted: false,
     isFeatured: false,
   },
   {
@@ -487,7 +483,6 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     decisionSourceUrl: R8_2_COUNCIL_RESULTS_PDF,
     committeeReferralOmitted: true,
     hasPublishableContent: true,
-    reviewCompleted: false,
     isFeatured: false,
   },
 ];
