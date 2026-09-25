@@ -76,12 +76,17 @@ Acceptance:
   - 注目議案は `publish_status = "published"` だけを出す（`findFeaturedBillsWithContents`）。準備中案件の404リンクが出ないこと
   - チャットAPIは `siteConfig.features.aiChat` のサーバー側ゲート、未公開議案の拒否、上限確認失敗時の fail-closed を持つ（`handle-chat-request.ts`）
 
-### S5-5 本番インポート後のキャッシュ即時無効化
-`import_production.yml` は `WEB_PUBLIC_URL` と `REVALIDATE_SECRET` がないとキャッシュ無効化を飛ばす。2026-09-25 時点でリポジトリの Secrets にどちらも入っていない。
+### S5-5 本番インポート後のキャッシュ即時無効化 ✅
+`import_production.yml` は `WEB_PUBLIC_URL` と `REVALIDATE_SECRET` がないとキャッシュ無効化を飛ばす。
 
 Acceptance:
 - GitHub の Secrets（または production environment）に `WEB_PUBLIC_URL` と、web の Vercel と同じ `REVALIDATE_SECRET` を入れる
 - 次の本番インポートで「スキップした」ではなく `/api/revalidate` の 200 がログに出ることを確認する
+
+Progress (2026-09-25):
+- GitHub Actions の `production` environment secrets に `WEB_PUBLIC_URL`（`https://miraigikai-shinjuku-web.vercel.app`）および `REVALIDATE_SECRET`（`.env.production` の検証済みキー）を設定した。
+- `import_production.yml`（run 36135018218、apply モード）を実行し、議員提出議案第7〜10号のレビュー完了フラグ4件を本番反映。
+- `Invalidate bills cache` ステップにて `/api/revalidate` が呼び出され、`{"success":true,"revalidated":true,"tags":["bills","council-sessions","councilors"]}` の 200 応答を受信してキャッシュ即時無効化が正常に完了することを確認した。
 
 ## P2
 
