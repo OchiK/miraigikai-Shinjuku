@@ -17,6 +17,7 @@ const row: CouncilorRow = {
   terms: 3,
   official_url: "https://example.jp/roster",
   website_url: null,
+  x_url: null,
   sort_order: 1,
   factions: {
     id: "faction-1",
@@ -93,6 +94,20 @@ describe("toCouncilor", () => {
         sortOrder: 6,
       },
     ]);
+  });
+
+  it("本人のウェブサイトとXのURLをそのまま渡し、無ければ null のまま", () => {
+    expect(
+      toCouncilor({
+        ...row,
+        website_url: "https://example.jp/site",
+        x_url: "https://x.com/example",
+      })
+    ).toMatchObject({
+      websiteUrl: "https://example.jp/site",
+      xUrl: "https://x.com/example",
+    });
+    expect(toCouncilor(row)).toMatchObject({ websiteUrl: null, xUrl: null });
   });
 
   it("会派が無い議員は faction を null にする", () => {

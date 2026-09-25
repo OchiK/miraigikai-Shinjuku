@@ -26,6 +26,7 @@ const councilor = (
   terms: 1,
   officialUrl: null,
   websiteUrl: null,
+  xUrl: null,
   sortOrder: 0,
   faction: null,
   committees: [],

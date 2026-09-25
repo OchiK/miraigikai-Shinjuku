@@ -174,6 +174,7 @@ const COUNCIL_MEMBER_FIELDS: FieldSpec[] = [
   { field: "faction_role" },
   { field: "official_url" },
   { field: "website_url" },
+  { field: "x_url" },
   { field: "terms" },
   { field: "sort_order" },
   { field: "is_active" },
@@ -751,7 +752,7 @@ async function fetchCouncilMembers(supabase: AdminClient, rosterKey: string) {
   const { data, error } = await supabase
     .from("council_members")
     .select(
-      "name, name_kana, faction_role, official_url, website_url, terms, sort_order, is_active, roster_key, factions(name)"
+      "name, name_kana, faction_role, official_url, website_url, x_url, terms, sort_order, is_active, roster_key, factions(name)"
     )
     .eq("roster_key", rosterKey);
   if (error) {
@@ -927,6 +928,7 @@ function councilMemberRows(
     roster_key: councilRosterKey,
     official_url: councilRosterUrl,
     website_url: member.websiteUrl,
+    x_url: member.xUrl,
     terms: member.terms,
     sort_order: index + 1,
     is_active: true,

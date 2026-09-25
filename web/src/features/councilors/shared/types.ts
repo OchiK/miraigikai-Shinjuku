@@ -74,6 +74,8 @@ export type Councilor = {
   terms: number | null;
   officialUrl: string | null;
   websiteUrl: string | null;
+  /** 議員本人の公式X（旧Twitter）プロフィールURL */
+  xUrl: string | null;
   sortOrder: number;
   faction: CouncilorFaction | null;
   committees: CouncilorCommittee[];

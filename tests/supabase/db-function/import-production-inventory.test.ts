@@ -466,4 +466,122 @@ describe("import_production_inventory", () => {
       expect(after.comment).toBe("管理画面で書いた見解");
     });
   });
+
+  describe("議員のXアカウント（x_url）", () => {
+    const xRunId = `${runId}-x-url`;
+    const xFaction = `${xRunId}-faction`;
+    const xMember = `${xRunId}-member`;
+    const xRosterKey = `${xRunId}-roster`;
+    const xSessionSlug = `${xRunId}-session`;
+
+    // CLI と同じ13引数版から呼び、11引数版まで x_url が届くことを確かめる
+    const args = (xUrl: string | null) => ({
+      p_council_sessions: [
+        {
+          name: `Xテスト会期 ${xRunId}`,
+          slug: xSessionSlug,
+          council_url: null,
+          start_date: "2026-09-26",
+          end_date: null,
+          is_active: false,
+        },
+      ],
+      p_tags: [],
+      p_bills: [],
+      p_bill_contents: [],
+      p_bills_tags: [],
+      p_bill_session_slug: xSessionSlug,
+      p_factions: [
+        {
+          name: xFaction,
+          display_name: `テスト会派 ${xRunId}`,
+          alternative_names: [],
+          logo_url: null,
+          sort_order: 1,
+          is_active: true,
+        },
+      ],
+      p_committees: [],
+      p_council_members: [
+        {
+          name: xMember,
+          name_kana: `${xRunId}-kana`,
+          faction_name: xFaction,
+          faction_role: null,
+          roster_key: xRosterKey,
+          official_url: null,
+          website_url: null,
+          x_url: xUrl,
+          terms: 1,
+          sort_order: 1,
+          is_active: true,
+        },
+      ],
+      p_council_member_committees: [],
+      p_council_roster_key: xRosterKey,
+      p_council_member_questions: [],
+      p_faction_stances: [],
+    });
+
+    const fetchRow = async () => {
+      const { data, error } = await adminClient
+        .from("council_members")
+        .select("id, x_url, updated_at")
+        .eq("name", xMember)
+        .single();
+      if (error) throw new Error(error.message);
+      return data;
+    };
+
+    afterAll(async () => {
+      await adminClient.from("council_members").delete().eq("name", xMember);
+      await adminClient.from("factions").delete().eq("name", xFaction);
+      await adminClient
+        .from("council_sessions")
+        .delete()
+        .eq("slug", xSessionSlug);
+    });
+
+    it("x_url を保存し、同じ内容の再実行では行を書き換えない", async () => {
+      const first = await adminClient.rpc(
+        "import_production_inventory",
+        args("https://x.com/example_first")
+      );
+      if (first.error) throw new Error(first.error.message);
+      const before = await fetchRow();
+      expect(before.x_url).toBe("https://x.com/example_first");
+
+      const second = await adminClient.rpc(
+        "import_production_inventory",
+        args("https://x.com/example_first")
+      );
+      if (second.error) throw new Error(second.error.message);
+      expect(await fetchRow()).toEqual(before);
+    });
+
+    it("x_url だけが変わっても同じ行を更新し、null で消せる", async () => {
+      const first = await adminClient.rpc(
+        "import_production_inventory",
+        args("https://x.com/example_first")
+      );
+      if (first.error) throw new Error(first.error.message);
+      const before = await fetchRow();
+
+      const changed = await adminClient.rpc(
+        "import_production_inventory",
+        args("https://x.com/example_second")
+      );
+      if (changed.error) throw new Error(changed.error.message);
+      const after = await fetchRow();
+      expect(after.id).toBe(before.id);
+      expect(after.x_url).toBe("https://x.com/example_second");
+
+      const cleared = await adminClient.rpc(
+        "import_production_inventory",
+        args(null)
+      );
+      if (cleared.error) throw new Error(cleared.error.message);
+      expect((await fetchRow()).x_url).toBeNull();
+    });
+  });
 });

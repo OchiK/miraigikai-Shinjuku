@@ -53,6 +53,10 @@ export function CouncilorSources() {
             の公式ページ（{COUNCILOR_SOURCES.asOf}
             更新）を転記したものです。肖像権に配慮し、顔写真は掲載していません。
           </p>
+          <p className="text-mirai-text-muted text-xs leading-[1.9]">
+            議員本人のX（旧Twitter）は、{COUNCILOR_SOURCES.xAccounts.rule}
+            だけを掲載しています（{COUNCILOR_SOURCES.xAccounts.asOf}確認）。
+          </p>
           <ul className="flex flex-col">
             {SOURCE_LINKS.map((source) => (
               <li key={source.url}>
