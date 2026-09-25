@@ -7,6 +7,7 @@ import {
   getUiMessages,
   type UiMessages,
 } from "@/features/i18n/shared/ui-messages";
+import { cn } from "@/lib/utils";
 import type {
   BillStatusEnum,
   FactionStance,
@@ -17,7 +18,10 @@ import {
   getRenamedFactionNameAtVote,
   hasSourcedStance,
 } from "../../../shared/utils/faction-name-at-vote";
-import { summarizeFactionVotes } from "../../../shared/utils/summarize-faction-votes";
+import {
+  describeVoteSplit,
+  summarizeFactionVotes,
+} from "../../../shared/utils/summarize-faction-votes";
 
 /**
  * 会派別の賛否バッジの配色。
@@ -52,7 +56,8 @@ function getStanceBadgeStyle(type: StanceTypeEnum) {
  * 議決結果の賛否バー（デザインシステム定義 §9-6）。
  *
  * 賛成は sage-500、反対は neutral-300。反対は異常ではないので赤を使わない。
- * 色だけで判別させないため、バーの下に「賛成◯会派・反対◯会派」を必ず併記する。
+ * 色だけで判別させないため、バーの下に「賛成◯会派・反対◯会派」（全会一致なら
+ * 「全会派が賛成（◯会派）」）を必ず併記する。分かれたときは少ない側の会派名も添える。
  */
 type Messages = UiMessages["factionStances"];
 
@@ -64,10 +69,29 @@ function FactionVoteBar({
   messages: Messages;
 }) {
   const summary = summarizeFactionVotes(stances);
+  const split = describeVoteSplit(
+    stances.map((s) => ({
+      stance: s.stance,
+      factionName: s.faction.display_name,
+    }))
+  );
 
   if (summary.total === 0) {
     return null;
   }
+
+  // 少ない側の件数に、その会派名を添える（8行の一覧を読まずに誰が反対したかわかる）。
+  // 名前は下の一覧のリンクと同じ現在の会派名にする。採決時の名前は一覧の行に出る
+  const minorityNames = (bucket: "for" | "against") =>
+    split.kind === "split" && split.minority?.bucket === bucket ? (
+      <span className="text-mirai-text-muted">
+        {messages.minorityNames.before}
+        <span lang="ja">
+          {split.minority.factionNames.join(messages.minorityNames.separator)}
+        </span>
+        {messages.minorityNames.after}
+      </span>
+    ) : null;
 
   return (
     <div className="rounded-xl bg-card p-6 shadow-mirai-sm">
@@ -91,34 +115,52 @@ function FactionVoteBar({
         />
       </div>
 
-      <dl className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
-        <div className="flex items-center gap-2">
-          <dt className="font-bold text-mirai-vote-for-text">
-            {messages.stanceLabels.for}
-          </dt>
-          <dd className="text-mirai-text">
-            {messages.factionCount(summary.for)}
-          </dd>
-        </div>
-        <div className="flex items-center gap-2">
-          <dt className="font-bold text-mirai-vote-against-text">
-            {messages.stanceLabels.against}
-          </dt>
-          <dd className="text-mirai-text">
-            {messages.factionCount(summary.against)}
-          </dd>
-        </div>
-        {summary.other > 0 && (
-          <div className="flex items-center gap-2">
-            <dt className="font-bold text-mirai-text-muted">
-              {messages.otherLabel}
+      {split.kind === "unanimous" && split.bucket !== "other" ? (
+        // 全会一致は「賛成8会派・反対0会派」より一文のほうが読み取りやすい
+        <p
+          className={cn(
+            "mt-4 font-bold text-sm",
+            split.bucket === "for"
+              ? "text-mirai-vote-for-text"
+              : "text-mirai-vote-against-text"
+          )}
+        >
+          {split.bucket === "for"
+            ? messages.unanimousFor(split.count)
+            : messages.unanimousAgainst(split.count)}
+        </p>
+      ) : (
+        <dl className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+          <div className="flex items-baseline gap-2">
+            <dt className="shrink-0 font-bold text-mirai-vote-for-text">
+              {messages.stanceLabels.for}
             </dt>
             <dd className="text-mirai-text">
-              {messages.factionCount(summary.other)}
+              {messages.factionCount(summary.for)}
+              {minorityNames("for")}
             </dd>
           </div>
-        )}
-      </dl>
+          <div className="flex items-baseline gap-2">
+            <dt className="shrink-0 font-bold text-mirai-vote-against-text">
+              {messages.stanceLabels.against}
+            </dt>
+            <dd className="text-mirai-text">
+              {messages.factionCount(summary.against)}
+              {minorityNames("against")}
+            </dd>
+          </div>
+          {summary.other > 0 && (
+            <div className="flex items-baseline gap-2">
+              <dt className="shrink-0 font-bold text-mirai-text-muted">
+                {messages.otherLabel}
+              </dt>
+              <dd className="text-mirai-text">
+                {messages.factionCount(summary.other)}
+              </dd>
+            </div>
+          )}
+        </dl>
+      )}
     </div>
   );
 }

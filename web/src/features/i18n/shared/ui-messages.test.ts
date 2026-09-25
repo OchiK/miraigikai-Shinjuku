@@ -81,6 +81,25 @@ describe("英語の差し込み文言", () => {
     expect(factionStances.factionCount(7)).toBe("7 groups");
   });
 
+  it("全会一致の一文に会派数を入れる", () => {
+    expect(factionStances.unanimousFor(8)).toBe(
+      "All 8 parliamentary groups voted in favor"
+    );
+    expect(factionStances.unanimousAgainst(8)).toBe(
+      "All 8 parliamentary groups voted against"
+    );
+    expect(factionStances.unanimousFor(1)).toBe(
+      "The only parliamentary group voted in favor"
+    );
+  });
+
+  it("少ない側の会派名を括弧と区切りで挟める", () => {
+    const { before, after, separator } = factionStances.minorityNames;
+    expect(`1 group${before}${["A", "B"].join(separator)}${after}`).toBe(
+      "1 group (A, B)"
+    );
+  });
+
   it("採決時の会派名を前後の文言で挟める", () => {
     const { before, after } = factionStances.nameAtVote;
     expect(`${before}X${after}`).toBe("(called X at the time of the vote)");

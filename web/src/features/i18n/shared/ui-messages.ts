@@ -74,6 +74,14 @@ export type UiMessages = {
     stanceLabels: Record<StanceTypeEnum, string>;
     otherLabel: string;
     factionCount: (count: number) => string;
+    /** 全会派が同じ賛否のとき、件数の代わりに出す一文 */
+    unanimousFor: (count: number) => string;
+    unanimousAgainst: (count: number) => string;
+    /**
+     * 賛否が分かれたとき、少ない側の件数に添える会派名の括弧と区切り。
+     * 会派名は日本語のまま lang="ja" で挟むため、文言と分けて持つ
+     */
+    minorityNames: { before: string; after: string; separator: string };
     /**
      * 採決後に会派名が変わったときに添える、採決時の会派名の前後の文言。
      * 会派名は日本語のまま lang="ja" で挟むため、文言と分けて持つ
@@ -196,6 +204,9 @@ export const UI_MESSAGES: Record<PublicLocale, UiMessages> = {
       stanceLabels: STANCE_LABELS,
       otherLabel: "その他",
       factionCount: (count) => `${count}会派`,
+      unanimousFor: (count) => `全会派が賛成（${count}会派）`,
+      unanimousAgainst: (count) => `全会派が反対（${count}会派）`,
+      minorityNames: { before: "（", after: "）", separator: "、" },
       nameAtVote: { before: "（採決時：", after: "）" },
       councilorsOf: (factionName) => `${factionName}の所属議員を見る`,
       source: "出典：",
@@ -306,6 +317,15 @@ export const UI_MESSAGES: Record<PublicLocale, UiMessages> = {
       },
       otherLabel: "Other",
       factionCount: (count) => (count === 1 ? "1 group" : `${count} groups`),
+      unanimousFor: (count) =>
+        count === 1
+          ? "The only parliamentary group voted in favor"
+          : `All ${count} parliamentary groups voted in favor`,
+      unanimousAgainst: (count) =>
+        count === 1
+          ? "The only parliamentary group voted against"
+          : `All ${count} parliamentary groups voted against`,
+      minorityNames: { before: " (", after: ")", separator: ", " },
       nameAtVote: { before: "(called ", after: " at the time of the vote)" },
       councilorsOf: (factionName) => `See councilors in ${factionName}`,
       source: "Source: ",
