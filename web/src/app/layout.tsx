@@ -50,6 +50,9 @@ export const metadata: Metadata = {
   title: siteConfig.siteName,
   description: siteConfig.siteDescription,
   keywords: [...siteConfig.keywords],
+  verification: {
+    google: "ZWBAdiv-s3vO9lgW4elAD490nEeuwrwbYZvV9MrDOwY",
+  },
   icons: {
     icon: isDev
       ? "/icons/pwa/icon_dev_192_v3.png"
