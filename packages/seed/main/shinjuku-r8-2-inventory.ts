@@ -38,6 +38,12 @@ export const R8_2_COUNCIL_SESSION_URL =
 export const R8_2_COUNCIL_RESULTS_PDF =
   "https://www.city.shinjuku.lg.jp/content/000459252.pdf";
 
+/**
+ * 議会公式の「決議・意見書」ページ（令和8年）。可決した意見書の全文PDFを載せている。
+ */
+export const R8_2_COUNCIL_RESOLUTIONS_URL =
+  "https://www.city.shinjuku.lg.jp/kusei/file08_05_0004020210118_00006.html";
+
 /** 公式ページの「条例案等（概要）」概要PDF（承認第2号・第3号および第44〜60号議案を収録） */
 const OVERVIEW_JOREI = "https://www.city.shinjuku.lg.jp/content/000456353.pdf";
 
@@ -81,8 +87,9 @@ export interface ShinjukuSessionItem {
   officialTitle: string;
   /**
    * 全文PDF URL（実ファイルを取得し、当該案件の全文であることを確認済み）。
-   * 議員提出議案は全文がオンラインで公開されていない（会議録は「巻末議案の部参照」とだけ
-   * 記す）ため null。推測で他のPDFを入れないこと。
+   * 議員提出議案のうち否決された条例案（第7・8号）は全文がオンラインで公開されていない
+   * （会議録は「巻末議案の部参照」とだけ記す）ため null。推測で他のPDFを入れないこと。
+   * 可決した意見書（第9・10号）は「決議・意見書」ページに全文PDFがある。
    */
   fullTextPdfUrl: string | null;
   /** 当該案件を収録した概要PDF URL */
@@ -418,6 +425,8 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
   // 「議案の概要と審議結果」で確認した。第7・8号は文教子ども家庭委員会に付託され、
   // 委員会・本会議とも起立少数で否決。第9・10号は説明と委員会付託を省略し、
   // 異議なく原案可決。解説が整うまでは coming_soon に置く。
+  // 第9・10号の全文は議会公式の「決議・意見書」ページのPDF（2026-09-25 取得、HTTP 200・
+  // application/pdf、sha256: 000459264 = dfe433d8…、000459265 = 12942087…）。
   {
     itemType: "giin",
     itemNumber: 7,
@@ -449,10 +458,10 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     itemNumber: 9,
     officialLabel: "議員提出議案第9号",
     officialTitle: "ドナーミルクの利用拡大を求める意見書",
-    fullTextPdfUrl: null,
+    fullTextPdfUrl: officialPdfUrl("000459264"),
     overviewPdfUrl: R8_2_COUNCIL_RESULTS_PDF,
     decision: "原案可決",
-    sourcePageUrl: R8_2_COUNCIL_SESSION_URL,
+    sourcePageUrl: R8_2_COUNCIL_RESOLUTIONS_URL,
     decisionSourceUrl: R8_2_COUNCIL_RESULTS_PDF,
     committeeReferralOmitted: true,
     hasPublishableContent: false,
@@ -463,10 +472,10 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     itemNumber: 10,
     officialLabel: "議員提出議案第10号",
     officialTitle: "「不合理な税制改正」に反対する意見書",
-    fullTextPdfUrl: null,
+    fullTextPdfUrl: officialPdfUrl("000459265"),
     overviewPdfUrl: R8_2_COUNCIL_RESULTS_PDF,
     decision: "原案可決",
-    sourcePageUrl: R8_2_COUNCIL_SESSION_URL,
+    sourcePageUrl: R8_2_COUNCIL_RESOLUTIONS_URL,
     decisionSourceUrl: R8_2_COUNCIL_RESULTS_PDF,
     committeeReferralOmitted: true,
     hasPublishableContent: false,

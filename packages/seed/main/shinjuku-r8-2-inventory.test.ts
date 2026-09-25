@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { COMMITTEE_REFERRAL_OMITTED_NOTE } from "@mirai-gikai/shared/bills/decision-label";
 import {
   R8_2_ALL_LABELS,
+  R8_2_COUNCIL_RESOLUTIONS_URL,
   R8_2_COUNCIL_RESULTS_PDF,
   R8_2_COUNCIL_SESSION_URL,
   R8_2_COUNCILOR_BILL_LABELS,
@@ -229,13 +230,30 @@ describe("出典", () => {
     }
   });
 
-  it("議員提出議案は全文PDFを持たず、議会公式ページと「議案の概要と審議結果」を出典にする", () => {
-    // 全文はオンラインで公開されていない（会議録は「巻末議案の部参照」とだけ記す）
+  it("議員提出議案は議会公式の「議案の概要と審議結果」を概要・議決結果の出典にする", () => {
     for (const bill of toBillInserts().filter((b) => !isWardBill(b))) {
-      expect(bill.pdf_url).toBeNull();
       expect(bill.overview_pdf_url).toBe(R8_2_COUNCIL_RESULTS_PDF);
-      expect(bill.source_page_url).toBe(R8_2_COUNCIL_SESSION_URL);
       expect(bill.decision_source_url).toBe(R8_2_COUNCIL_RESULTS_PDF);
+    }
+  });
+
+  it("否決された条例案（第7・8号）は全文PDFを持たず、会期ページを出典にする", () => {
+    // 全文はオンラインで公開されていない（会議録は「巻末議案の部参照」とだけ記す）
+    for (const n of [7, 8]) {
+      const bill = toBillInsert(item(`shinjuku-2026-r2-giin-${n}`));
+      expect(bill.pdf_url).toBeNull();
+      expect(bill.source_page_url).toBe(R8_2_COUNCIL_SESSION_URL);
+    }
+  });
+
+  it("可決した意見書（第9・10号）は「決議・意見書」ページの全文PDFを持つ", () => {
+    const expected: Record<number, string> = { 9: "000459264", 10: "000459265" };
+    for (const n of [9, 10]) {
+      const bill = toBillInsert(item(`shinjuku-2026-r2-giin-${n}`));
+      expect(bill.pdf_url).toBe(
+        `https://www.city.shinjuku.lg.jp/content/${expected[n]}.pdf`
+      );
+      expect(bill.source_page_url).toBe(R8_2_COUNCIL_RESOLUTIONS_URL);
     }
   });
 
