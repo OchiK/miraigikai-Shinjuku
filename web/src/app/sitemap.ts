@@ -3,13 +3,11 @@ import type { MetadataRoute } from "next";
 import { getBills } from "@/features/bills/server/loaders/get-bills";
 import { getCouncilors } from "@/features/councilors/server/loaders/get-councilors";
 import { buildGuideLanguageAlternates } from "@/features/guide/shared/utils/guide-alternates";
-import { env } from "@/lib/env";
 import { routes } from "@/lib/routes";
+import { resolveSiteUrl } from "@/lib/utils/url";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : env.webUrl;
+  const baseUrl = resolveSiteUrl();
 
   const [bills, councilors] = await Promise.all([getBills(), getCouncilors()]);
 
