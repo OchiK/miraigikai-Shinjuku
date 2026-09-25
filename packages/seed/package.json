@@ -10,6 +10,7 @@
     "verify:council-questions": "tsx main/verify-council-questions.ts",
     "verify:faction-stances": "tsx main/verify-faction-stances.ts",
     "import:production:dry-run": "tsx production/import.ts --dry-run",
+    "monitor:shinjuku": "tsx monitor/run.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
