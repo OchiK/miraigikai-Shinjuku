@@ -24,7 +24,7 @@ const chipClass = (active: boolean) =>
 
 /**
  * 議員一覧。会派の絞り込みと氏名・ふりがな検索ができる。
- * 会派ごとに見出しを立て、会派内は議席番号順に並べる。
+ * 会派ごとに面を分けて見出しを立て、会派内は議席番号順に並べる。
  */
 export function CouncilorListView({ councilors }: Props) {
   const searchId = useId();
@@ -107,21 +107,23 @@ export function CouncilorListView({ councilors }: Props) {
           該当する議員がいません
         </p>
       ) : (
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-6">
           {visibleGroups.map(({ faction, councilors: members }) => (
             <section
               key={faction?.id ?? "unaffiliated"}
-              className="flex flex-col gap-3"
+              className="flex flex-col gap-4 rounded-xl bg-mirai-surface-sunken p-5 shadow-mirai-sm md:p-6"
             >
-              <h2 className="font-heading font-bold text-mirai-text text-xl leading-[1.4] md:text-[25px]">
-                {faction?.displayName ?? "会派なし"}
-                <span className="ml-2 font-normal text-mirai-text-muted text-sm">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="font-heading font-bold text-mirai-text text-xl leading-[1.3] md:text-2xl">
+                  {faction?.displayName ?? "会派なし"}
+                </h2>
+                <span className="rounded-full bg-card px-3 py-1 font-bold text-mirai-text text-xs shadow-mirai-sm">
                   {members.length}人
                 </span>
-              </h2>
-              <ul className="flex flex-col gap-3">
+              </div>
+              <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {members.map((councilor) => (
-                  <li key={councilor.id}>
+                  <li key={councilor.id} className="h-full">
                     <CouncilorCard councilor={councilor} />
                   </li>
                 ))}
