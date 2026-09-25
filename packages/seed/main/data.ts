@@ -265,7 +265,7 @@ export function createBillsTags(
 
 // 会派見解データ
 //
-// 令和8年第2回定例会の会派ごとの賛否。出典は新宿区議会だより No.322 で、
+// 令和8年第2回定例会の会派ごとの賛否。出典は新宿区議会「議案の概要と審議結果」で、
 // 表の転記と会派の対応は shinjuku-faction-stances.ts にまとめてある
 // （本番インポーターと同じ行を使う）。
 export function createFactionStances(

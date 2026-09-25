@@ -15,7 +15,7 @@ export function getRenamedFactionNameAtVote(stance: {
 
 /**
  * 出典から転記した賛否（採決時の会派名を持つ行）が1件でもあるか。
- * 管理画面で入れた賛否だけの議案に、区議会だよりの出典を付けないために使う。
+ * 管理画面で入れた賛否だけの議案に、議会公式の表の出典を付けないために使う。
  */
 export function hasSourcedStance(
   stances: { factionNameAtVote: string | null }[]

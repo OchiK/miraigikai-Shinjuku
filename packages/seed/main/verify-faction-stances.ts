@@ -1,4 +1,4 @@
-// 会派賛否 seed を、出典の区議会だよりPDFと突き合わせる（ネットワークを使う手動検証）。
+// 会派賛否 seed を、出典の「議案の概要と審議結果」PDFと突き合わせる（ネットワークを使う手動検証）。
 //
 //   pnpm --filter @mirai-gikai/seed verify:faction-stances
 //
