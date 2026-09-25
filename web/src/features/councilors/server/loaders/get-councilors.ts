@@ -14,8 +14,8 @@ export const getCouncilors = unstable_cache(
     const rows = await findActiveCouncilors();
     return rows.map(toCouncilor);
   },
-  // v2: 質問件数を追加。旧形のキャッシュを読まないようキーを変える
-  ["councilors-v2"],
+  // v3: 会派の slug を追加。旧形のキャッシュを読まないようキーを変える
+  ["councilors-v3"],
   {
     revalidate: 3600, // 1時間
     tags: [CACHE_TAGS.COUNCILORS],

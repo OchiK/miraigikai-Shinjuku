@@ -8,11 +8,13 @@ import {
 
 const komei: CouncilorFaction = {
   id: "komei",
+  slug: "komei",
   displayName: "新宿区議会公明党",
   sortOrder: 2,
 };
 const jimin: CouncilorFaction = {
   id: "jimin",
+  slug: "jimin-sansei",
   displayName: "自民・参政クラブ",
   sortOrder: 1,
 };

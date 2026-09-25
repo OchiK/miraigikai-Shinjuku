@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Container } from "@/components/layouts/container";
 import { siteConfig } from "@/config/site.config";
-import { getCouncilorById } from "@/features/councilors/server/loaders/get-councilor-by-id";
+import { getActiveCouncilSession } from "@/features/council-sessions/server/loaders/get-active-council-session";
 import { CouncilorDetailSection } from "@/features/councilors/server/components/councilor-detail-section";
+import { getCouncilorById } from "@/features/councilors/server/loaders/get-councilor-by-id";
 import { routes } from "@/lib/routes";
 
 type Props = {
@@ -30,7 +31,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function CouncilorDetailPage({ params }: Props) {
   const { id } = await params;
-  const councilor = await getCouncilorById(id);
+  const [councilor, activeSession] = await Promise.all([
+    getCouncilorById(id),
+    getActiveCouncilSession(),
+  ]);
 
   if (!councilor) {
     notFound();
@@ -38,7 +42,14 @@ export default async function CouncilorDetailPage({ params }: Props) {
 
   return (
     <Container className="pt-24 pb-8 md:pt-8">
-      <CouncilorDetailSection councilor={councilor} />
+      <CouncilorDetailSection
+        councilor={councilor}
+        activeSession={
+          activeSession?.slug
+            ? { name: activeSession.name, slug: activeSession.slug }
+            : null
+        }
+      />
     </Container>
   );
 }

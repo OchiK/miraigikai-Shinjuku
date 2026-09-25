@@ -28,10 +28,11 @@ const _getCachedCouncilorById = unstable_cache(
     const questionRows = await findQuestionsByCouncilorId(row.id);
     return toCouncilorDetail(row, questionRows);
   },
-  // v2: 質問一覧を追加。旧形のキャッシュを読まないようキーを変える
-  ["councilor-by-id-v2"],
+  // v3: 会派の slug と質問の関連議案を追加。旧形のキャッシュを読まないようキーを変える
+  ["councilor-by-id-v3"],
   {
     revalidate: 3600, // 1時間
-    tags: [CACHE_TAGS.COUNCILORS],
+    // 質問の関連議案は公開中のものだけ持つため、議案の公開状態が変わったときにも作り直す
+    tags: [CACHE_TAGS.COUNCILORS, CACHE_TAGS.BILLS],
   }
 );

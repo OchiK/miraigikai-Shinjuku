@@ -1,3 +1,6 @@
+import { ChevronRight } from "lucide-react";
+import Link from "next/link";
+import { getFactionCouncilorsHref } from "@/features/councilors/shared/utils/faction-anchor";
 import type {
   BillStatusEnum,
   FactionStance,
@@ -101,9 +104,19 @@ function FactionStanceRow({ stance }: FactionStanceRowProps) {
   return (
     <div className="flex flex-col gap-2 border-mirai-border border-b py-4 last:border-0">
       <div className="flex items-center justify-between gap-4">
-        <span className="font-semibold text-base">
+        {/* 会派名から、議員一覧のその会派のセクションへ移る */}
+        <Link
+          href={getFactionCouncilorsHref(stance.faction.name)}
+          aria-label={`${stance.faction.display_name}の所属議員を見る`}
+          className="inline-flex min-h-11 items-center gap-1 rounded-full font-semibold text-base text-mirai-accent-text underline-offset-4 hover:underline focus-visible:underline"
+        >
           {stance.faction.display_name}
-        </span>
+          <ChevronRight
+            aria-hidden="true"
+            className="size-4 shrink-0"
+            strokeWidth={2.75}
+          />
+        </Link>
         <span
           className={`shrink-0 rounded-full px-4 py-1.5 font-bold text-sm ${style.bg} ${style.textColor}`}
         >

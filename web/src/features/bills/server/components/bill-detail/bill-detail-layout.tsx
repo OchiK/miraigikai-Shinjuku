@@ -2,6 +2,7 @@ import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
 import { Container } from "@/components/layouts/container";
 import { siteConfig } from "@/config/site.config";
 import type { DifficultyLevelEnum } from "@/features/bill-difficulty/shared/types";
+import { getQuestionsByBillId } from "@/features/councilors/server/loaders/get-questions-by-bill-id";
 import { TranslationNotice } from "@/features/i18n/server/components/translation-notice";
 import type { BillLocalization } from "@/features/i18n/shared/types";
 import { InterviewLandingSection } from "@/features/interview-config/client/components/interview-landing-section";
@@ -19,6 +20,7 @@ import type { BillWithContent } from "../../../shared/types";
 import { BillShareButtons } from "../share/bill-share-buttons";
 import { BillAiSummary } from "./bill-ai-summary";
 import { BillContent } from "./bill-content";
+import { BillCouncilorsSection } from "./bill-councilors-section";
 import { BillDetailHeader } from "./bill-detail-header";
 import { BillSourceLinks } from "./bill-source-links";
 
@@ -36,7 +38,7 @@ interface BillDetailLayoutProps {
  *
  * 順序は固定で、原文より要約を上に置く。
  * 1. 上部ナビ / 2. 議決ステータス+議案番号 / 3. 表題 / 4. 分野タグ /
- * 5. かんたん要約 / 6. 議決結果 / 7. 審議の経過 / 8. 議案の原文 /
+ * 5. かんたん要約 / 6. 議決結果 / 7. 審議の経過 / 7-2. この議案と議員 / 8. 議案の原文 /
  * 9. 区議会の公式ページ / 10. 質問する / 11. 免責
  *
  * テキスト選択とチャットの状態は BillDetailClient が持つ。中身は Server Component の
@@ -58,10 +60,12 @@ export async function BillDetailLayout({
       ? localization.requestedLocale
       : undefined;
 
-  const [interviewConfig, publicReportsResult] = await Promise.all([
-    getInterviewConfig(bill.id),
-    getPublicReportsByBillId(bill.id),
-  ]);
+  const [interviewConfig, publicReportsResult, relatedQuestions] =
+    await Promise.all([
+      getInterviewConfig(bill.id),
+      getPublicReportsByBillId(bill.id),
+      getQuestionsByBillId(bill.id),
+    ]);
 
   // サイトヘッダーは fixed top-4。md 未満では MainLayout の mt-24 が効かないため、
   // 上部ナビがヘッダーに潜らないようここで逃がす。
@@ -103,6 +107,12 @@ export async function BillDetailLayout({
             <BillDeliberationTimeline
               status={bill.status}
               statusNote={bill.status_note}
+            />
+
+            {/* 7-2. この議案と議員（議員一覧・議案に紐づく質問） */}
+            <BillCouncilorsSection
+              questions={relatedQuestions}
+              locale={locale}
             />
 
             {/* 8. 議案の原文（既定では開かない） */}

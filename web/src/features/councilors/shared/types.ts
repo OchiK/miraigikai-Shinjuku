@@ -13,6 +13,8 @@ export type CouncilorCommittee = {
 
 export type CouncilorFaction = {
   id: string;
+  /** factions.name。議員一覧のアンカーIDに使う（例: jimin-sansei） */
+  slug: string;
   displayName: string;
   sortOrder: number;
 };
@@ -43,6 +45,17 @@ export type CouncilorQuestion = {
   committeeName: string | null;
   /** 会議録上の会期名（例: 令和8年 第2回定例会） */
   sessionName: string;
+  /** 質問が扱った議案。公開中の議案に紐づくときだけ持つ */
+  bill: { id: string; name: string } | null;
+};
+
+/** 議案詳細に出す質問1件。質問した議員を添える */
+export type BillRelatedQuestion = CouncilorQuestion & {
+  councilor: {
+    id: string;
+    name: string;
+    factionDisplayName: string | null;
+  };
 };
 
 /** 掲載中の質問のテーマタグ集計 */

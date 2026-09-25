@@ -1,4 +1,5 @@
 import type {
+  BillRelatedQuestion,
   Councilor,
   CouncilorCommittee,
   CouncilorDetail,
@@ -27,7 +28,12 @@ export type CouncilorRow = {
   official_url: string | null;
   website_url: string | null;
   sort_order: number;
-  factions: { id: string; display_name: string; sort_order: number } | null;
+  factions: {
+    id: string;
+    name: string;
+    display_name: string;
+    sort_order: number;
+  } | null;
   council_member_committees: {
     role: string;
     committees: { id: string; name: string; sort_order: number } | null;
@@ -49,6 +55,17 @@ export type CouncilorQuestionRow = {
   source_url: string | null;
   session_name: string;
   committees: { name: string } | null;
+  bills: { id: string; name: string; publish_status: string } | null;
+};
+
+/** 議案に紐づく質問を、質問した議員つきで select した1行 */
+export type BillQuestionRow = CouncilorQuestionRow & {
+  council_members: {
+    id: string;
+    name: string;
+    is_active: boolean;
+    factions: { display_name: string } | null;
+  } | null;
 };
 
 export function toCouncilor(row: CouncilorRow): Councilor {
@@ -79,6 +96,7 @@ export function toCouncilor(row: CouncilorRow): Councilor {
     faction: row.factions
       ? {
           id: row.factions.id,
+          slug: row.factions.name,
           displayName: row.factions.display_name,
           sortOrder: row.factions.sort_order,
         }
@@ -118,6 +136,11 @@ export function toCouncilorQuestion(
     sourceUrl: row.source_url,
     committeeName: row.committees?.name ?? null,
     sessionName: row.session_name,
+    // 非公開の議案の詳細ページは 404 になるため、公開中のものだけリンクする
+    bill:
+      row.bills?.publish_status === "published"
+        ? { id: row.bills.id, name: row.bills.name }
+        : null,
   };
 }
 
@@ -136,4 +159,30 @@ export function toCouncilorDetail(
     ...toCouncilor(row),
     questions: sortQuestionsBySpeech(questions),
   };
+}
+
+/**
+ * 議案詳細用。質問した議員が現職のものだけを残し（議員詳細は現職のみ表示するため）、
+ * 新しい発言日順・同じ日は発言順に並べる
+ */
+export function toBillRelatedQuestions(
+  rows: BillQuestionRow[]
+): BillRelatedQuestion[] {
+  const questions = rows.flatMap((row) => {
+    const member = row.council_members;
+    if (!member?.is_active) return [];
+    const question = toCouncilorQuestion(row);
+    if (!question) return [];
+    return [
+      {
+        ...question,
+        councilor: {
+          id: member.id,
+          name: member.name,
+          factionDisplayName: member.factions?.display_name ?? null,
+        },
+      },
+    ];
+  });
+  return sortQuestionsBySpeech(questions);
 }
