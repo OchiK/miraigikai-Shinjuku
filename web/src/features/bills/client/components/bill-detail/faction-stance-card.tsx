@@ -273,7 +273,7 @@ export function FactionStanceCard({
           )}
         </div>
 
-        {/* 区議会だよりから転記した賛否には出典を必ず添える（デザインシステム §9）。
+        {/* 議会公式の表から転記した賛否には出典を必ず添える（デザインシステム §9）。
             管理画面で入れただけの賛否には付けない */}
         {source && hasSourcedStance(stances) && (
           <p className="flex flex-wrap items-center gap-x-1 text-mirai-text-muted text-sm">

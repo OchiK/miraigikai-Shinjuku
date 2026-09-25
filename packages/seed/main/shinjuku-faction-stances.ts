@@ -5,12 +5,14 @@ export { FACTION_STANCE_SOURCES } from "@mirai-gikai/shared/bills/faction-stance
 
 // 新宿区議会 会派ごとの賛否（令和8年第2回定例会）
 //
-// 出典: 新宿区議会だより No.322（令和8年7月25日発行）2面
-//   「議案の概要と審議結果（賛成…○、反対…×）」
-//   https://www.city.shinjuku.lg.jp/content/000461727.pdf
+// 出典: 新宿区議会「議案の概要と審議結果（賛成…○、反対…×）」（令和8年第2回定例会）
+//   https://www.city.shinjuku.lg.jp/content/000459252.pdf
+//   （掲載ページ: https://www.city.shinjuku.lg.jp/kusei/file08_05_0003820210204_00014.html）
+//   同じ表は新宿区議会だより No.322（令和8年7月25日発行）2面にも載っており、
+//   27行すべての議案名・○×が一致することを確認した（2026-09-25）。
 //
 // 会議録は起立採決を「起立多数」とだけ記録し、誰が起立したかを残さない。
-// そのため賛否の出典は区議会だよりとし、会議録の討論は照合にだけ使う
+// そのため賛否の出典はこの表とし、会議録の討論は照合にだけ使う
 // （docs/20260925_1330_会派賛否データ投入計画.md §7）。
 //
 // 表の列は採決時点の8会派。DB の会派（令和8年8月7日時点の9会派）とは
@@ -23,7 +25,7 @@ export { FACTION_STANCE_SOURCES } from "@mirai-gikai/shared/bills/faction-stance
 type StanceType = Database["public"]["Enums"]["stance_type_enum"];
 
 /**
- * 区議会だよりの賛否の列。左から表の並び順。
+ * 表の賛否の列。左から表の並び順。
  * nameAtVote は表の欄外にある「会派略称」の正式名称で、採決時の会派名として保存する。
  * DB の会派とは、nameAtVote が display_name か alternative_names に一致するもので対応させる。
  */
@@ -41,7 +43,7 @@ export const R8_2_VOTE_COLUMNS = [
 export type SeedBillVotes = {
   /** 議案の安定識別子（bills.slug） */
   billKey: string;
-  /** 区議会だよりの表の議案名（照合用） */
+  /** 表の議案名（照合用） */
   titleInSource: string;
   /** R8_2_VOTE_COLUMNS の順に ○（賛成）/ ×（反対）を並べたもの */
   marks: string;
@@ -167,7 +169,7 @@ export const r8_2BillVotes: SeedBillVotes[] = [
   },
   {
     billKey: gianKey(61),
-    // 区議会だよりはローマ数字「第Ⅰ期」。DB は提出議案一覧ページの「第1期」
+    // 表はローマ数字「第Ⅰ期」。DB は提出議案一覧ページの「第1期」
     titleInSource: "道路改良工事（江戸川橋通り第Ⅰ期）（その2）請負契約",
     marks: "○○○○○○○○",
   },
@@ -288,7 +290,7 @@ export function toFactionStanceImportRows(
   );
 }
 
-/** extract-faction-stances.py が出す、区議会だよりの表 */
+/** extract-faction-stances.py が出す「議案の概要と審議結果」の表 */
 export type ExtractedStanceTable = {
   headings: string[];
   rows: { title: string; marks: string; result: string }[];
