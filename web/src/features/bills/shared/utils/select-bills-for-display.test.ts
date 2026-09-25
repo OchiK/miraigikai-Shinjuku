@@ -40,6 +40,28 @@ describe("selectBillsForDisplay", () => {
       expect(result.displayBills).toHaveLength(1);
       expect(result.showMoreLink).toBe(false);
     });
+
+    it("注目議案を含む場合は除外し、残りだけ表示する", () => {
+      const bills = [makeBill("1"), makeBill("2"), makeBill("3")];
+      const result = selectBillsForDisplay(
+        bills,
+        new Set(["2"]),
+        deterministicRandom
+      );
+      expect(result.displayBills.map((b) => b.id)).toEqual(["1", "3"]);
+      expect(result.showMoreLink).toBe(false);
+    });
+
+    it("全件が注目議案の場合は空配列を返す", () => {
+      const bills = [makeBill("1"), makeBill("2")];
+      const result = selectBillsForDisplay(
+        bills,
+        new Set(["1", "2"]),
+        deterministicRandom
+      );
+      expect(result.displayBills).toEqual([]);
+      expect(result.showMoreLink).toBe(false);
+    });
   });
 
   describe("4件以上の場合", () => {
@@ -135,6 +157,56 @@ describe("selectBillsForDisplay", () => {
       );
       expect(result.displayBills).toHaveLength(2);
       expect(result.showMoreLink).toBe(true);
+    });
+
+    it("4件のうち1件が注目議案なら残り3件を表示し、showMoreLinkはtrue", () => {
+      const bills = [
+        makeBill("1"),
+        makeBill("2"),
+        makeBill("3"),
+        makeBill("4"),
+      ];
+      const result = selectBillsForDisplay(
+        bills,
+        new Set(["1"]),
+        deterministicRandom
+      );
+      expect(result.displayBills.map((b) => b.id)).toEqual(["2", "3", "4"]);
+      expect(result.showMoreLink).toBe(true);
+    });
+
+    it("注目議案除外後に1件になってもshowMoreLinkはtrue", () => {
+      const bills = [
+        makeBill("1"),
+        makeBill("2"),
+        makeBill("3"),
+        makeBill("4"),
+      ];
+      const featuredIds = new Set(["1", "2", "3"]);
+      const result = selectBillsForDisplay(
+        bills,
+        featuredIds,
+        deterministicRandom
+      );
+      expect(result.displayBills.map((b) => b.id)).toEqual(["4"]);
+      expect(result.showMoreLink).toBe(true);
+    });
+
+    it("全件が注目議案の場合は空配列を返し、showMoreLinkはfalse", () => {
+      const bills = [
+        makeBill("1"),
+        makeBill("2"),
+        makeBill("3"),
+        makeBill("4"),
+      ];
+      const featuredIds = new Set(["1", "2", "3", "4"]);
+      const result = selectBillsForDisplay(
+        bills,
+        featuredIds,
+        deterministicRandom
+      );
+      expect(result.displayBills).toEqual([]);
+      expect(result.showMoreLink).toBe(false);
     });
   });
 });
