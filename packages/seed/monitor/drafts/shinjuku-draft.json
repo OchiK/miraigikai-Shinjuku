@@ -1,0 +1,248 @@
+{
+  "notice": "自動検知ジョブ（pnpm monitor:shinjuku）が生成した下書き。どのインポーターも読まない。一次資料と突合してからインベントリへ転記すること。reviewCompleted / hasPublishableContent は常に false。",
+  "items": [
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "第63号議案",
+      "officialTitle": "令和8年度新宿区一般会計補正予算（第4号）",
+      "fullTextPdfUrl": "https://www.city.shinjuku.lg.jp/content/000466336.pdf",
+      "decision": null,
+      "sourcePageUrl": "https://www.city.shinjuku.lg.jp/kusei/kuseijoho01_001109_03.html",
+      "decisionSourceUrl": null,
+      "reviewCompleted": false,
+      "hasPublishableContent": false
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "第64号議案",
+      "officialTitle": "令和8年度新宿区一般会計補正予算（第5号）",
+      "fullTextPdfUrl": "https://www.city.shinjuku.lg.jp/content/000466337.pdf",
+      "decision": null,
+      "sourcePageUrl": "https://www.city.shinjuku.lg.jp/kusei/kuseijoho01_001109_03.html",
+      "decisionSourceUrl": null,
+      "reviewCompleted": false,
+      "hasPublishableContent": false
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "第65号議案",
+      "officialTitle": "令和8年度新宿区介護保険特別会計補正予算（第2号）",
+      "fullTextPdfUrl": "https://www.city.shinjuku.lg.jp/content/000466338.pdf",
+      "decision": null,
+      "sourcePageUrl": "https://www.city.shinjuku.lg.jp/kusei/kuseijoho01_001109_03.html",
+      "decisionSourceUrl": null,
+      "reviewCompleted": false,
+      "hasPublishableContent": false
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "第66号議案",
+      "officialTitle": "令和8年度新宿区後期高齢者医療特別会計補正予算（第1号）",
+      "fullTextPdfUrl": "https://www.city.shinjuku.lg.jp/content/000466339.pdf",
+      "decision": null,
+      "sourcePageUrl": "https://www.city.shinjuku.lg.jp/kusei/kuseijoho01_001109_03.html",
+      "decisionSourceUrl": null,
+      "reviewCompleted": false,
+      "hasPublishableContent": false
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "認定第1号",
+      "officialTitle": "令和7年度新宿区一般会計歳入歳出決算",
+      "fullTextPdfUrl": "https://www.city.shinjuku.lg.jp/content/000466361.pdf",
+      "decision": null,
+      "sourcePageUrl": "https://www.city.shinjuku.lg.jp/kusei/kuseijoho01_001109_03.html",
+      "decisionSourceUrl": null,
+      "reviewCompleted": false,
+      "hasPublishableContent": false
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "認定第2号",
+      "officialTitle": "令和7年度新宿区国民健康保険特別会計歳入歳出決算",
+      "fullTextPdfUrl": "https://www.city.shinjuku.lg.jp/content/000466362.pdf",
+      "decision": null,
+      "sourcePageUrl": "https://www.city.shinjuku.lg.jp/kusei/kuseijoho01_001109_03.html",
+      "decisionSourceUrl": null,
+      "reviewCompleted": false,
+      "hasPublishableContent": false
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "認定第3号",
+      "officialTitle": "令和7年度新宿区介護保険特別会計歳入歳出決算",
+      "fullTextPdfUrl": "https://www.city.shinjuku.lg.jp/content/000466363.pdf",
+      "decision": null,
+      "sourcePageUrl": "https://www.city.shinjuku.lg.jp/kusei/kuseijoho01_001109_03.html",
+      "decisionSourceUrl": null,
+      "reviewCompleted": false,
+      "hasPublishableContent": false
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "認定第4号",
+      "officialTitle": "令和7年度新宿区後期高齢者医療特別会計歳入歳出決算",
+      "fullTextPdfUrl": "https://www.city.shinjuku.lg.jp/content/000466364.pdf",
+      "decision": null,
+      "sourcePageUrl": "https://www.city.shinjuku.lg.jp/kusei/kuseijoho01_001109_03.html",
+      "decisionSourceUrl": null,
+      "reviewCompleted": false,
+      "hasPublishableContent": false
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "第67号議案",
+      "officialTitle": "新宿区公益保護のための通報に関する条例の一部を改正する条例",
+      "fullTextPdfUrl": "https://www.city.shinjuku.lg.jp/content/000466368.pdf",
+      "decision": null,
+      "sourcePageUrl": "https://www.city.shinjuku.lg.jp/kusei/kuseijoho01_001109_03.html",
+      "decisionSourceUrl": null,
+      "reviewCompleted": false,
+      "hasPublishableContent": false
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "第68号議案",
+      "officialTitle": "新宿区立しんじゅく多文化共生プラザ条例の一部を改正する条例",
+      "fullTextPdfUrl": "https://www.city.shinjuku.lg.jp/content/000466369.pdf",
+      "decision": null,
+      "sourcePageUrl": "https://www.city.shinjuku.lg.jp/kusei/kuseijoho01_001109_03.html",
+      "decisionSourceUrl": null,
+      "reviewCompleted": false,
+      "hasPublishableContent": false
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "第69号議案",
+      "officialTitle": "新宿区乳児等通園支援事業の実施に関する条例の一部を改正する条例",
+      "fullTextPdfUrl": "https://www.city.shinjuku.lg.jp/content/000466370.pdf",
+      "decision": null,
+      "sourcePageUrl": "https://www.city.shinjuku.lg.jp/kusei/kuseijoho01_001109_03.html",
+      "decisionSourceUrl": null,
+      "reviewCompleted": false,
+      "hasPublishableContent": false
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "第70号議案",
+      "officialTitle": "新宿区家庭的保育事業等の設備及び運営に関する基準を定める条例及び新宿区乳児等通園支援事業の設備及び運営に関する基準を定める条例の一部を改正する条例",
+      "fullTextPdfUrl": "https://www.city.shinjuku.lg.jp/content/000466371.pdf",
+      "decision": null,
+      "sourcePageUrl": "https://www.city.shinjuku.lg.jp/kusei/kuseijoho01_001109_03.html",
+      "decisionSourceUrl": null,
+      "reviewCompleted": false,
+      "hasPublishableContent": false
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "第71号議案",
+      "officialTitle": "新宿区景観まちづくり条例の一部を改正する条例",
+      "fullTextPdfUrl": "https://www.city.shinjuku.lg.jp/content/000466374.pdf",
+      "decision": null,
+      "sourcePageUrl": "https://www.city.shinjuku.lg.jp/kusei/kuseijoho01_001109_03.html",
+      "decisionSourceUrl": null,
+      "reviewCompleted": false,
+      "hasPublishableContent": false
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "第72号議案",
+      "officialTitle": "新宿区立の小学校、中学校及び特別支援学校の非常勤の学校医、学校歯科医及び学校薬剤師の公務災害補償に関する条例の一部を改正する条例",
+      "fullTextPdfUrl": "https://www.city.shinjuku.lg.jp/content/000466375.pdf",
+      "decision": null,
+      "sourcePageUrl": "https://www.city.shinjuku.lg.jp/kusei/kuseijoho01_001109_03.html",
+      "decisionSourceUrl": null,
+      "reviewCompleted": false,
+      "hasPublishableContent": false
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "第73号議案",
+      "officialTitle": "ＥＳＣＯ事業による新宿区立防災センター外11施設照明ＬＥＤ化工事等委託契約",
+      "fullTextPdfUrl": "https://www.city.shinjuku.lg.jp/content/000466376.pdf",
+      "decision": null,
+      "sourcePageUrl": "https://www.city.shinjuku.lg.jp/kusei/kuseijoho01_001109_03.html",
+      "decisionSourceUrl": null,
+      "reviewCompleted": false,
+      "hasPublishableContent": false
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "第74号議案",
+      "officialTitle": "ＥＳＣＯ事業による新宿区四谷特別出張所外6施設照明ＬＥＤ化工事等委託契約",
+      "fullTextPdfUrl": "https://www.city.shinjuku.lg.jp/content/000466377.pdf",
+      "decision": null,
+      "sourcePageUrl": "https://www.city.shinjuku.lg.jp/kusei/kuseijoho01_001109_03.html",
+      "decisionSourceUrl": null,
+      "reviewCompleted": false,
+      "hasPublishableContent": false
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "第75号議案",
+      "officialTitle": "ＥＳＣＯ事業による新宿区大久保特別出張所外10施設照明ＬＥＤ化工事等委託契約",
+      "fullTextPdfUrl": "https://www.city.shinjuku.lg.jp/content/000466378.pdf",
+      "decision": null,
+      "sourcePageUrl": "https://www.city.shinjuku.lg.jp/kusei/kuseijoho01_001109_03.html",
+      "decisionSourceUrl": null,
+      "reviewCompleted": false,
+      "hasPublishableContent": false
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "第76号議案",
+      "officialTitle": "道路改良工事（江戸川橋通り第2)期）請負契約",
+      "fullTextPdfUrl": "https://www.city.shinjuku.lg.jp/content/000466379.pdf",
+      "decision": null,
+      "sourcePageUrl": "https://www.city.shinjuku.lg.jp/kusei/kuseijoho01_001109_03.html",
+      "decisionSourceUrl": null,
+      "reviewCompleted": false,
+      "hasPublishableContent": false
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "第77号議案",
+      "officialTitle": "イントラネットシステム及び情報システム統合基盤に係るマイクロソフト社ソフトウェアライセンスの買入れについて",
+      "fullTextPdfUrl": "https://www.city.shinjuku.lg.jp/content/000466380.pdf",
+      "decision": null,
+      "sourcePageUrl": "https://www.city.shinjuku.lg.jp/kusei/kuseijoho01_001109_03.html",
+      "decisionSourceUrl": null,
+      "reviewCompleted": false,
+      "hasPublishableContent": false
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "第78号議案",
+      "officialTitle": "権利の放棄について",
+      "fullTextPdfUrl": "https://www.city.shinjuku.lg.jp/content/000466381.pdf",
+      "decision": null,
+      "sourcePageUrl": "https://www.city.shinjuku.lg.jp/kusei/kuseijoho01_001109_03.html",
+      "decisionSourceUrl": null,
+      "reviewCompleted": false,
+      "hasPublishableContent": false
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "第79号議案",
+      "officialTitle": "損害賠償の額の決定について",
+      "fullTextPdfUrl": "https://www.city.shinjuku.lg.jp/content/000466382.pdf",
+      "decision": null,
+      "sourcePageUrl": "https://www.city.shinjuku.lg.jp/kusei/kuseijoho01_001109_03.html",
+      "decisionSourceUrl": null,
+      "reviewCompleted": false,
+      "hasPublishableContent": false
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "第80号議案",
+      "officialTitle": "訴えの提起について",
+      "fullTextPdfUrl": "https://www.city.shinjuku.lg.jp/content/000466383.pdf",
+      "decision": null,
+      "sourcePageUrl": "https://www.city.shinjuku.lg.jp/kusei/kuseijoho01_001109_03.html",
+      "decisionSourceUrl": null,
+      "reviewCompleted": false,
+      "hasPublishableContent": false
+    }
+  ],
+  "proposedChanges": []
+}
