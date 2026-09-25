@@ -1,0 +1,84 @@
+# 新宿区議会の公式サイトの更新検知（P5-1）。
+#
+# 新しい会期・議案・議決結果、議会側ページのリンク増減、審議結果PDFの差し替えを検知し、
+# 下書き（packages/seed/monitor/drafts/）と監視状態を載せた下書きPRを作る。
+#
+# DB・インベントリ・解説には一切書き込まない（本番DBの認証情報も渡さない）。
+# 本番への反映は、人間がインベントリへ転記したうえで import_production.yml を使う。
+#
+# ブランチ名は固定。コミットする下書きは (公式サイト, インベントリ) だけで決まるため、
+# 定期実行のたびにPRが増えることはなく、変化があれば同じPRが更新される。
+# リンクの増減・PDFの差し替えはPR本文と実行サマリーにだけ載せる（state.json の更新として残る）。
+# PR作成ステップは変更の有無にかかわらず毎回走らせる。転記が済んで下書きが消えたときも、
+# その削除をPRにするため。main と差分がなければ create-pull-request は何もしない。
+#
+# 前提: リポジトリ設定の「Allow GitHub Actions to create and approve pull requests」を有効にすること。
+# GITHUB_TOKEN で作ったPRでは Code Check などのワークフローが自動では走らない。
+name: Monitor Shinjuku Council (更新検知)
+
+on:
+  schedule:
+    # 平日 09:00 / 18:00 JST
+    - cron: "0 0,9 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "検知結果の表示だけ（PRを作らない）"
+        type: boolean
+        default: false
+
+concurrency:
+  group: monitor-shinjuku-council
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # 取得・解析に失敗したら非ゼロで止まる（「変更なし」と誤認させない）
+      - name: Detect changes
+        id: monitor
+        env:
+          DRY_RUN: ${{ inputs.dry_run }}
+          MONITOR_PR_BODY_PATH: ${{ runner.temp }}/shinjuku-pr-body.md
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            pnpm --filter @mirai-gikai/seed monitor:shinjuku --dry-run
+          else
+            pnpm --filter @mirai-gikai/seed monitor:shinjuku
+          fi
+
+      - name: Create or update draft PR
+        if: ${{ inputs.dry_run != true }}
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          branch: automation/shinjuku-council-update
+          base: main
+          delete-branch: true
+          draft: true
+          # 検知ジョブが書くのは monitor/state.json と monitor/drafts/ だけ。
+          # drafts/ が無い（下書きなし・未コミット）ときに pathspec エラーにならないよう、ディレクトリで指定する
+          add-paths: packages/seed/monitor
+          commit-message: "chore(monitor): 新宿区議会の更新を検知した（下書き）"
+          title: "draft: 新宿区議会の更新を検知（要レビュー・自動生成）"
+          body-path: ${{ runner.temp }}/shinjuku-pr-body.md
