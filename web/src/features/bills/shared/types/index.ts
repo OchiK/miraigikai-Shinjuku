@@ -51,6 +51,8 @@ export type FactionStance = {
   id: string;
   stance: StanceTypeEnum;
   comment: string | null;
+  /** 出典に載っている採決時の会派名。出典の無い賛否は null */
+  factionNameAtVote: string | null;
   faction: {
     id: string;
     name: string;

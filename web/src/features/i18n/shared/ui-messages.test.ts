@@ -69,11 +69,21 @@ describe("getUiMessages", () => {
 });
 
 describe("英語の差し込み文言", () => {
-  const { home, card } = getUiMessages("en");
+  const { home, card, factionStances } = getUiMessages("en");
 
   it("件数は1件だけ単数形にする", () => {
     expect(home.billCount(1)).toBe("1 bill");
     expect(home.billCount(23)).toBe("23 bills");
+  });
+
+  it("会派の数は1会派だけ単数形にする", () => {
+    expect(factionStances.factionCount(1)).toBe("1 group");
+    expect(factionStances.factionCount(7)).toBe("7 groups");
+  });
+
+  it("採決時の会派名を前後の文言で挟める", () => {
+    const { before, after } = factionStances.nameAtVote;
+    expect(`${before}X${after}`).toBe("(called X at the time of the vote)");
   });
 
   it("会期の説明に月名を入れる", () => {

@@ -16,6 +16,10 @@ import {
   toCouncilMemberQuestionImportRows,
 } from "../../../packages/seed/main/shinjuku-council-questions";
 import {
+  r8_2BillVotes,
+  toFactionStanceImportRows,
+} from "../../../packages/seed/main/shinjuku-faction-stances";
+import {
   R8_2_SESSION,
   r8SecondSessionItems,
   toBillInserts,
@@ -35,6 +39,7 @@ import { adminClient, cleanupTestUser, createTestUser } from "../utils";
  *   4. 解説の更新が同一の (bill_id, difficulty_level) に当たること
  *   5. インベントリ外の議案を削除せず、報告だけ行うこと
  *   6. 議員の質問要約が投入され、再インポートでも id が変わらず削除もされないこと
+ *   7. 会派の賛否が投入され、再インポートで comment を消さず、削除もしないこと
  *
  * seed 済みのデータや他テストと衝突しないよう、実行ごとに一意な接頭辞を
  * 付けた複製インベントリ（ImportDataset）を流し込む。変換ロジックそのものは
@@ -110,6 +115,14 @@ function buildDataset(idPrefix: string): ImportDataset {
           ? prefixed(row.session_slug)
           : null,
     })),
+    // 採決時の会派名は本番の会派で解決してから、自然キーだけ名前空間に入れる
+    factionStances: toFactionStanceImportRows(r8_2BillVotes, factions).map(
+      (row) => ({
+        ...row,
+        bill_slug: prefixed(row.bill_slug),
+        faction_name: prefixed(row.faction_name),
+      })
+    ),
     // bill_number は会期単位で一意なため、テスト会期の中では接頭辞が要らない
     bills: toBillInserts().map((bill) => ({
       ...bill,
@@ -370,6 +383,85 @@ describe("本番用インポーター", () => {
       .eq("source_url", removed.source_url)
       .maybeSingle();
     expect(survived?.id).toBeDefined();
+  });
+
+  const fetchStances = async () => {
+    const bills = await fetchBills();
+    const { data, error } = await adminClient
+      .from("faction_stances")
+      .select(
+        "id, type, comment, faction_name_at_vote, bill_id, factions(name)"
+      )
+      .in(
+        "bill_id",
+        bills.map((bill) => bill.id)
+      );
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  };
+
+  it("初回インポートで会派の賛否184件を、採決時の会派名つきで投入する", async () => {
+    const stances = await fetchStances();
+    expect(stances).toHaveLength(184);
+    expect(stances.filter((row) => row.type === "against")).toHaveLength(4);
+    const inochi = stances.filter(
+      (row) => row.factions?.name === `${runId}-inochi`
+    );
+    expect(inochi).toHaveLength(23);
+    expect(
+      inochi.every((row) => row.faction_name_at_vote === "れいわ新選組 新宿")
+    ).toBe(true);
+  });
+
+  it("再インポートで賛否を戻しても同じ行に当たり、管理画面の comment は消さない", async () => {
+    const target = dataset.factionStances[0];
+    if (!target) throw new Error("賛否データがない");
+    const [bill] = (await fetchBills()).filter(
+      (row) => row.slug === target.bill_slug
+    );
+    const findTarget = async () =>
+      (await fetchStances()).find(
+        (row) =>
+          row.bill_id === bill?.id && row.factions?.name === target.faction_name
+      );
+
+    const before = await findTarget();
+    if (!before) throw new Error("投入済みの賛否がない");
+    const { error: updateError } = await adminClient
+      .from("faction_stances")
+      .update({ type: "against", comment: "管理画面で書いた見解" })
+      .eq("id", before.id);
+    if (updateError) throw new Error(updateError.message);
+
+    const report = await runImport();
+    const stancesDiff = report.tables.find(
+      (table) => table.table === "faction_stances"
+    );
+    expect(stancesDiff?.updated.map((row) => row.key)).toEqual([
+      `${target.bill_slug}::${target.faction_name}`,
+    ]);
+
+    const after = await findTarget();
+    expect(after?.id).toBe(before.id);
+    expect(after?.type).toBe(target.type);
+    expect(after?.comment).toBe("管理画面で書いた見解");
+  });
+
+  it("インベントリから外れた賛否を削除せず、インベントリ外として報告する", async () => {
+    const [removed, ...rest] = dataset.factionStances;
+    if (!removed) throw new Error("賛否データがない");
+
+    const report = await importInventory(adminClient, {
+      dryRun: false,
+      dataset: { ...dataset, factionStances: rest },
+    });
+    const stancesDiff = report.tables.find(
+      (table) => table.table === "faction_stances"
+    );
+    expect(stancesDiff?.extraneous).toEqual([
+      `${removed.bill_slug}::${removed.faction_name}`,
+    ]);
+    expect(await fetchStances()).toHaveLength(184);
   });
 
   it("管理画面で切り替えた注目設定を、再インポートで上書きしない", async () => {

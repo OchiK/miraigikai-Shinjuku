@@ -1,3 +1,4 @@
+import { getFactionStanceSource } from "@mirai-gikai/shared/bills/faction-stance-sources";
 import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
 import { Container } from "@/components/layouts/container";
 import { siteConfig } from "@/config/site.config";
@@ -100,6 +101,8 @@ export async function BillDetailLayout({
               <FactionStanceCard
                 billStatus={bill.status}
                 stances={bill.faction_stances ?? []}
+                source={getFactionStanceSource(bill.council_session?.slug)}
+                locale={locale}
               />
             )}
 

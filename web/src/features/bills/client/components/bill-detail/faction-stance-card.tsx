@@ -1,13 +1,22 @@
-import { ChevronRight } from "lucide-react";
+import type { FactionStanceSource } from "@mirai-gikai/shared/bills/faction-stance-sources";
+import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
+import { ChevronRight, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { getFactionCouncilorsHref } from "@/features/councilors/shared/utils/faction-anchor";
+import {
+  getUiMessages,
+  type UiMessages,
+} from "@/features/i18n/shared/ui-messages";
 import type {
   BillStatusEnum,
   FactionStance,
   StanceTypeEnum,
 } from "../../../shared/types";
-import { STANCE_LABELS } from "../../../shared/types";
 import { hasFinalVoteResult } from "../../../shared/utils/bill-vote-status";
+import {
+  getRenamedFactionNameAtVote,
+  hasSourcedStance,
+} from "../../../shared/utils/faction-name-at-vote";
 import { summarizeFactionVotes } from "../../../shared/utils/summarize-faction-votes";
 
 /**
@@ -15,7 +24,7 @@ import { summarizeFactionVotes } from "../../../shared/utils/summarize-faction-v
  *
  * 反対に赤を使わない（デザインシステム定義 §9）。反対は異常ではない。
  * 赤の `--color-status-rejected` は議案そのものが否決されたステータスにのみ使う。
- * 色だけで判別させないため、必ず STANCE_LABELS の文字列と併記する。
+ * 色だけで判別させないため、必ず賛否の文字列（ui-messages の stanceLabels）と併記する。
  */
 function getStanceBadgeStyle(type: StanceTypeEnum) {
   switch (type) {
@@ -45,7 +54,15 @@ function getStanceBadgeStyle(type: StanceTypeEnum) {
  * 賛成は sage-500、反対は neutral-300。反対は異常ではないので赤を使わない。
  * 色だけで判別させないため、バーの下に「賛成◯会派・反対◯会派」を必ず併記する。
  */
-function FactionVoteBar({ stances }: { stances: FactionStance[] }) {
+type Messages = UiMessages["factionStances"];
+
+function FactionVoteBar({
+  stances,
+  messages,
+}: {
+  stances: FactionStance[];
+  messages: Messages;
+}) {
   const summary = summarizeFactionVotes(stances);
 
   if (summary.total === 0) {
@@ -76,17 +93,29 @@ function FactionVoteBar({ stances }: { stances: FactionStance[] }) {
 
       <dl className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
         <div className="flex items-center gap-2">
-          <dt className="font-bold text-mirai-vote-for-text">賛成</dt>
-          <dd className="text-mirai-text">{summary.for}会派</dd>
+          <dt className="font-bold text-mirai-vote-for-text">
+            {messages.stanceLabels.for}
+          </dt>
+          <dd className="text-mirai-text">
+            {messages.factionCount(summary.for)}
+          </dd>
         </div>
         <div className="flex items-center gap-2">
-          <dt className="font-bold text-mirai-vote-against-text">反対</dt>
-          <dd className="text-mirai-text">{summary.against}会派</dd>
+          <dt className="font-bold text-mirai-vote-against-text">
+            {messages.stanceLabels.against}
+          </dt>
+          <dd className="text-mirai-text">
+            {messages.factionCount(summary.against)}
+          </dd>
         </div>
         {summary.other > 0 && (
           <div className="flex items-center gap-2">
-            <dt className="font-bold text-mirai-text-muted">その他</dt>
-            <dd className="text-mirai-text">{summary.other}会派</dd>
+            <dt className="font-bold text-mirai-text-muted">
+              {messages.otherLabel}
+            </dt>
+            <dd className="text-mirai-text">
+              {messages.factionCount(summary.other)}
+            </dd>
           </div>
         )}
       </dl>
@@ -96,35 +125,50 @@ function FactionVoteBar({ stances }: { stances: FactionStance[] }) {
 
 type FactionStanceRowProps = {
   stance: FactionStance;
+  messages: Messages;
 };
 
-function FactionStanceRow({ stance }: FactionStanceRowProps) {
+function FactionStanceRow({ stance, messages }: FactionStanceRowProps) {
   const style = getStanceBadgeStyle(stance.stance);
+  const nameAtVote = getRenamedFactionNameAtVote(stance);
 
   return (
     <div className="flex flex-col gap-2 border-mirai-border border-b py-4 last:border-0">
       <div className="flex items-center justify-between gap-4">
-        {/* 会派名から、議員一覧のその会派のセクションへ移る */}
-        <Link
-          href={getFactionCouncilorsHref(stance.faction.name)}
-          aria-label={`${stance.faction.display_name}の所属議員を見る`}
-          className="inline-flex min-h-11 items-center gap-1 rounded-full font-semibold text-base text-mirai-accent-text underline-offset-4 hover:underline focus-visible:underline"
-        >
-          {stance.faction.display_name}
-          <ChevronRight
-            aria-hidden="true"
-            className="size-4 shrink-0"
-            strokeWidth={2.75}
-          />
-        </Link>
+        <div className="flex flex-col">
+          {/* 会派名から、議員一覧のその会派のセクションへ移る */}
+          <Link
+            href={getFactionCouncilorsHref(stance.faction.name)}
+            aria-label={messages.councilorsOf(stance.faction.display_name)}
+            className="inline-flex min-h-11 items-center gap-1 rounded-full font-semibold text-base text-mirai-accent-text underline-offset-4 hover:underline focus-visible:underline"
+          >
+            {/* 会派名は DB のまま日本語。英語表示でも日本語として読ませる */}
+            <span lang="ja">{stance.faction.display_name}</span>
+            <ChevronRight
+              aria-hidden="true"
+              className="size-4 shrink-0"
+              strokeWidth={2.75}
+            />
+          </Link>
+          {nameAtVote && (
+            <span className="text-mirai-text-muted text-xs">
+              {messages.nameAtVote.before}
+              <span lang="ja">{nameAtVote}</span>
+              {messages.nameAtVote.after}
+            </span>
+          )}
+        </div>
         <span
           className={`shrink-0 rounded-full px-4 py-1.5 font-bold text-sm ${style.bg} ${style.textColor}`}
         >
-          {STANCE_LABELS[stance.stance]}
+          {messages.stanceLabels[stance.stance]}
         </span>
       </div>
       {stance.comment && (
-        <p className="whitespace-pre-wrap text-mirai-text-secondary text-sm leading-relaxed">
+        <p
+          lang="ja"
+          className="whitespace-pre-wrap text-mirai-text-secondary text-sm leading-relaxed"
+        >
           {stance.comment}
         </p>
       )}
@@ -135,12 +179,19 @@ function FactionStanceRow({ stance }: FactionStanceRowProps) {
 interface FactionStanceCardProps {
   stances: FactionStance[];
   billStatus?: BillStatusEnum;
+  /** 賛否の出典。出典の無い会期では出さない */
+  source?: FactionStanceSource | null;
+  /** UI 文言の言語。会派名は DB のまま日本語で出す */
+  locale?: PublicLocale;
 }
 
 export function FactionStanceCard({
   stances,
   billStatus,
+  source,
+  locale = "ja",
 }: FactionStanceCardProps) {
+  const messages = getUiMessages(locale).factionStances;
   const isPreparing = billStatus === "preparing";
   const isVoteFinal = hasFinalVoteResult(billStatus);
 
@@ -149,30 +200,58 @@ export function FactionStanceCard({
   }
 
   return (
-    <section aria-labelledby="bill-vote-result-heading">
+    <section aria-labelledby="bill-vote-result-heading" lang={locale}>
       <h2
         className="mb-4 font-bold font-heading text-mirai-text text-xl"
         id="bill-vote-result-heading"
       >
-        {isVoteFinal ? "議決結果" : "会派の賛否"}
+        {isVoteFinal ? messages.headingFinal : messages.headingPending}
       </h2>
 
       <div className="flex flex-col gap-4">
-        {isVoteFinal && <FactionVoteBar stances={stances} />}
+        {isVoteFinal && (
+          <FactionVoteBar stances={stances} messages={messages} />
+        )}
 
         <div className="rounded-xl bg-card px-6 py-2 shadow-mirai-sm">
           {isPreparing && stances.length === 0 ? (
             <p className="py-6 text-center text-mirai-text-muted text-sm">
-              議案上程後に各会派の賛否を表明します。
+              {messages.preparing}
             </p>
           ) : (
             <div>
               {stances.map((stance) => (
-                <FactionStanceRow key={stance.id} stance={stance} />
+                <FactionStanceRow
+                  key={stance.id}
+                  stance={stance}
+                  messages={messages}
+                />
               ))}
             </div>
           )}
         </div>
+
+        {/* 区議会だよりから転記した賛否には出典を必ず添える（デザインシステム §9）。
+            管理画面で入れただけの賛否には付けない */}
+        {source && hasSourcedStance(stances) && (
+          <p className="flex flex-wrap items-center gap-x-1 text-mirai-text-muted text-sm">
+            {messages.source}
+            <a
+              href={source.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-11 items-center gap-1 font-bold text-mirai-accent-text underline-offset-4 hover:underline"
+            >
+              <span lang="ja">{source.label}</span>
+              <ExternalLink
+                aria-hidden="true"
+                className="size-3.5 shrink-0"
+                strokeWidth={2.75}
+              />
+              <span className="sr-only">{messages.opensInNewTab}</span>
+            </a>
+          </p>
+        )}
       </div>
     </section>
   );

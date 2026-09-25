@@ -19,6 +19,11 @@ import {
   findUnknownQuestionSessionSlugs,
   toCouncilMemberQuestionImportRows,
 } from "../main/shinjuku-council-questions";
+import {
+  type FactionStanceImportRow,
+  r8_2BillVotes,
+  toFactionStanceImportRows,
+} from "../main/shinjuku-faction-stances";
 import { R8_2_SESSION, toBillInserts } from "../main/shinjuku-r8-2-inventory";
 import type { AdminClient } from "../shared/helper";
 import {
@@ -66,6 +71,8 @@ export interface ImportDataset {
   councilMembers: SeedCouncilMember[];
   /** 議員の質問要約。議員は名簿の氏名、会期は slug の自然キーで表す */
   councilMemberQuestions: CouncilMemberQuestionImportRow[];
+  /** 会派の賛否。議案は slug、会派は name の自然キーで表す */
+  factionStances: FactionStanceImportRow[];
   bills: BillInsert[];
   createBillContents: (bills: SeededBillRef[]) => BillContentInsert[];
   createBillsTags: (bills: SeededBillRef[], tags: TagRef[]) => BillsTagsInsert[];
@@ -85,6 +92,7 @@ export const productionDataset: ImportDataset = {
     councilMemberQuestions,
     councilMembers
   ),
+  factionStances: toFactionStanceImportRows(r8_2BillVotes, factions),
   bills: toBillInserts(),
   createBillContents,
   createBillsTags,
@@ -184,6 +192,12 @@ const COUNCIL_MEMBER_QUESTION_FIELDS: FieldSpec[] = [
   { field: "speech_date" },
 ];
 
+// comment は管理画面の AI 収集が持つ値なので比較も上書きもしない（RPC と揃える）
+const FACTION_STANCE_FIELDS: FieldSpec[] = [
+  { field: "type" },
+  { field: "faction_name_at_vote" },
+];
+
 /**
  * 自然キーによる非破壊 upsert で、一次資料層を最新インベントリに揃える。
  *
@@ -194,6 +208,8 @@ const COUNCIL_MEMBER_QUESTION_FIELDS: FieldSpec[] = [
  *   CASCADE で利用者データまで失われる。
  * - 議員の質問要約は（議員の氏名・出典URL）で突合して upsert する。
  *   インベントリから外れた質問は削除せず、インベントリ外として報告する。
+ * - 会派の賛否は（議案 slug・会派名）で突合して upsert する。comment は触らず、
+ *   インベントリ外の賛否は削除せず報告する。
  * - interview_configs / interview_questions は Admin 側の運用対象なので触らない。
  */
 export async function importInventory(
@@ -215,6 +231,7 @@ export async function importInventory(
   const bill = await syncBills(context, session.billSessionId);
   const contents = await syncBillContents(context, bill);
   const billsTags = await syncBillsTags(context, bill);
+  const factionStances = await syncFactionStances(context, bill);
 
   const report: ImportReport = {
     dryRun: options.dryRun,
@@ -229,6 +246,7 @@ export async function importInventory(
       bill.diff,
       contents,
       billsTags,
+      factionStances,
     ],
   };
 
@@ -590,6 +608,48 @@ async function syncBillsTags(
   return diff;
 }
 
+async function syncFactionStances(
+  context: ImportContext,
+  bill: BillSyncResult
+): Promise<TableDiff> {
+  const { supabase, dataset } = context;
+  const desired = dataset.factionStances;
+  // RPC と同じ検証を dry-run でも行い、本番実行で初めて失敗するのを防ぐ
+  const billSlugs = new Set(dataset.bills.map(requireSlug));
+  const factionNames = new Set(dataset.factions.map((f) => f.name));
+  const unknown = desired.filter(
+    (row) => !billSlugs.has(row.bill_slug) || !factionNames.has(row.faction_name)
+  );
+  if (unknown.length > 0) {
+    throw new Error(
+      `会派の賛否が投入対象にない議案・会派を参照している: ${unknown
+        .map((row) => `${row.bill_slug}/${row.faction_name}`)
+        .join(", ")}`
+    );
+  }
+  const current = await fetchFactionStances(supabase, bill.inventoryBillIds);
+
+  return diffTable({
+    table: "faction_stances",
+    label: "会派の賛否",
+    fields: FACTION_STANCE_FIELDS,
+    current: current.map((row) =>
+      toDiffRow(
+        compositeKey(
+          bill.slugById.get(row.bill_id) ?? row.bill_id,
+          row.factions?.name ?? row.faction_id
+        ),
+        row
+      )
+    ),
+    desired: desired.map((row) =>
+      toDiffRow(compositeKey(row.bill_slug, row.faction_name), row)
+    ),
+    // 管理画面で足された賛否は削除せず報告する
+    reportExtraneous: true,
+  });
+}
+
 /** 全対象テーブルの書き込みを1トランザクションで確定する。 */
 async function applyInventoryTransaction(
   supabase: AdminClient,
@@ -626,6 +686,7 @@ async function applyInventoryTransaction(
     p_council_member_committees: toJson(memberCommittees),
     p_council_roster_key: dataset.councilRosterKey,
     p_council_member_questions: toJson(dataset.councilMemberQuestions),
+    p_faction_stances: toJson(dataset.factionStances),
   });
   if (error) {
     throw new Error(`本番インポートのトランザクションに失敗: ${error.message}`);
@@ -805,6 +866,18 @@ async function fetchBillsTags(supabase: AdminClient, billIds: string[]) {
     throw new Error(`bills_tags の取得に失敗: ${error.message}`);
   }
   return assertWithinRowLimit(data ?? [], "bills_tags");
+}
+
+async function fetchFactionStances(supabase: AdminClient, billIds: string[]) {
+  if (billIds.length === 0) return [];
+  const { data, error } = await supabase
+    .from("faction_stances")
+    .select("bill_id, faction_id, type, faction_name_at_vote, factions(name)")
+    .in("bill_id", billIds);
+  if (error) {
+    throw new Error(`faction_stances の取得に失敗: ${error.message}`);
+  }
+  return assertWithinRowLimit(data ?? [], "faction_stances");
 }
 
 /**

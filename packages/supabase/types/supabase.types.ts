@@ -647,6 +647,7 @@ export type Database = {
           comment: string | null
           created_at: string
           faction_id: string
+          faction_name_at_vote: string | null
           id: string
           type: Database["public"]["Enums"]["stance_type_enum"]
           updated_at: string
@@ -656,6 +657,7 @@ export type Database = {
           comment?: string | null
           created_at?: string
           faction_id: string
+          faction_name_at_vote?: string | null
           id?: string
           type: Database["public"]["Enums"]["stance_type_enum"]
           updated_at?: string
@@ -665,6 +667,7 @@ export type Database = {
           comment?: string | null
           created_at?: string
           faction_id?: string
+          faction_name_at_vote?: string | null
           id?: string
           type?: Database["public"]["Enums"]["stance_type_enum"]
           updated_at?: string
@@ -1436,6 +1439,24 @@ export type Database = {
               p_council_members: Json
               p_council_roster_key: string
               p_council_sessions: Json
+              p_factions: Json
+              p_tags: Json
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              p_bill_contents: Json
+              p_bill_session_slug: string
+              p_bills: Json
+              p_bills_tags: Json
+              p_committees: Json
+              p_council_member_committees: Json
+              p_council_member_questions: Json
+              p_council_members: Json
+              p_council_roster_key: string
+              p_council_sessions: Json
+              p_faction_stances: Json
               p_factions: Json
               p_tags: Json
             }

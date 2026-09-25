@@ -50,6 +50,7 @@ const _getCachedBillById = unstable_cache(
         id: fs.id,
         stance: fs.type,
         comment: fs.comment,
+        factionNameAtVote: fs.faction_name_at_vote,
         faction: {
           id: fs.factions.id,
           name: fs.factions.name,
@@ -76,7 +77,8 @@ const _getCachedBillById = unstable_cache(
       tags,
     };
   },
-  ["bill-by-id"],
+  // v2: 採決時の会派名を追加。旧形のキャッシュを読まないようキーを変える
+  ["bill-by-id-v2"],
   {
     revalidate: 600, // 10分（600秒）
     tags: [CACHE_TAGS.BILLS],
