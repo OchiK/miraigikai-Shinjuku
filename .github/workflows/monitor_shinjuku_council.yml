@@ -12,14 +12,18 @@
 # PR作成ステップは変更の有無にかかわらず毎回走らせる。転記が済んで下書きが消えたときも、
 # その削除をPRにするため。main と差分がなければ create-pull-request は何もしない。
 #
+# 実行頻度: 平日毎日起動し、判定ジョブ（packages/seed/monitor/schedule.ts）が
+# 「定例会の期間中」「下書きPRが開いている」「月曜」「手動実行」のどれかに当たる日だけ本体を走らせる。
+# 会期中は平日毎日、会期外は週1回になる。判定ジョブは依存パッケージを入れないので、見送る日は数秒で終わる。
+#
 # 前提: リポジトリ設定の「Allow GitHub Actions to create and approve pull requests」を有効にすること。
 # GITHUB_TOKEN で作ったPRでは Code Check などのワークフローが自動では走らない。
 name: Monitor Shinjuku Council (更新検知)
 
 on:
   schedule:
-    # 毎週月曜日 09:00 JST (00:00 UTC)
-    - cron: "0 0 * * 1"
+    # 平日 09:00 JST (00:00 UTC)。実際に走らせるかは decide ジョブが決める
+    - cron: "0 0 * * 1-5"
   workflow_dispatch:
     inputs:
       dry_run:
@@ -31,14 +35,52 @@ concurrency:
   group: monitor-shinjuku-council
   cancel-in-progress: false
 
-permissions:
-  contents: write
-  pull-requests: write
+permissions: {}
 
 jobs:
+  decide:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      run: ${{ steps.decide.outputs.run }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: packages/seed/monitor
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+
+      # 下書きPRが開いている間は、会期外でも平日毎日走らせる（時期の決まっていない臨時会を追う）
+      - name: Count open draft PRs
+        id: open_pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          COUNT=$(gh pr list --repo "$GITHUB_REPOSITORY" --head automation/shinjuku-council-update --state open --json number --jq length)
+          echo "count=$COUNT" >> "$GITHUB_OUTPUT"
+
+      # tsx のバージョンは pnpm-lock.yaml に揃える
+      - name: Decide whether to run
+        id: decide
+        env:
+          OPEN_DRAFT_PR_COUNT: ${{ steps.open_pr.outputs.count }}
+        run: npx --yes tsx@4.20.6 packages/seed/monitor/should-run.ts
+
   monitor:
+    needs: decide
+    if: ${{ needs.decide.outputs.run == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
