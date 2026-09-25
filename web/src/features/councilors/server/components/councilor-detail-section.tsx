@@ -5,7 +5,6 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { siteConfig } from "@/config/site.config";
 import { routes } from "@/lib/routes";
-import { CouncilorAvatar } from "../../client/components/councilor-avatar";
 import { COUNCILOR_SOURCES, QUESTION_SOURCES } from "../../shared/constants";
 import type {
   CouncilorCommittee,
@@ -94,7 +93,7 @@ function QuestionCountBadges({
   );
 
   return (
-    <ul className="flex flex-wrap gap-2 pt-2 text-xs" aria-label="掲載中の質問">
+    <ul className="flex flex-wrap gap-2 text-xs" aria-label="掲載中の質問">
       <li className="rounded-full bg-background px-3 py-0.5 font-bold text-mirai-text">
         質問 {total}件
       </li>
@@ -195,16 +194,18 @@ export function CouncilorDetailSection({ councilor }: Props) {
         議員一覧へ
       </Link>
 
-      <header className="flex items-center gap-5 rounded-xl bg-card p-6 shadow-mirai-sm">
-        <CouncilorAvatar id={councilor.id} name={councilor.name} size="lg" />
-        <div className="flex min-w-0 flex-col gap-1">
-          <p className="text-mirai-text-muted text-sm">
-            {siteConfig.councilName}議員
-          </p>
-          <h1 className="font-heading font-bold text-3xl text-mirai-text leading-[1.28] md:text-[42px]">
-            {councilor.name}
-          </h1>
-          <p className="text-mirai-text-muted text-sm">{councilor.nameKana}</p>
+      <header className="flex flex-col gap-1 rounded-xl bg-card p-6 shadow-mirai-sm">
+        <p className="text-mirai-text-muted text-sm">
+          {siteConfig.councilName}議員
+        </p>
+        <h1 className="font-heading font-bold text-3xl text-mirai-text leading-[1.28] md:text-[42px]">
+          {councilor.name}
+        </h1>
+        <p className="text-mirai-text-muted text-sm">{councilor.nameKana}</p>
+        <div className="flex flex-wrap items-center gap-2 pt-2">
+          <span className="rounded-full bg-mirai-tag px-3 py-0.5 text-mirai-tag-text text-xs">
+            {councilor.faction?.displayName ?? "会派なし"}
+          </span>
           {councilor.questionsCount > 0 && (
             <QuestionCountBadges
               total={councilor.questionsCount}
