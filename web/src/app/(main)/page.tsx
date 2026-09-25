@@ -9,17 +9,13 @@ import { BillsByTagSection } from "@/features/bills/server/components/bills-by-t
 import { FeaturedBillSection } from "@/features/bills/server/components/featured-bill-section";
 import { PreviousSessionSection } from "@/features/bills/server/components/previous-session-section";
 import { loadHomeData } from "@/features/bills/server/loaders/load-home-data";
-import { getCurrentCouncilSession } from "@/features/council-sessions/server/loaders/get-current-council-session";
-import { CurrentCouncilSession } from "@/features/council-sessions/client/components/current-council-session";
 import { BillsInJapaneseNotice } from "@/features/i18n/client/components/bills-in-japanese-notice";
 import { getLocale } from "@/features/i18n/server/loaders/get-locale";
-import { getJapanTime } from "@/lib/utils/date";
 
 export default async function Home() {
   const { billsByTag, featuredBills, previousSessionData, activeSessionSlug } =
     await loadHomeData();
 
-  const currentSession = await getCurrentCouncilSession(getJapanTime());
   const locale = await getLocale();
 
   const featuredBillIds = new Set(featuredBills.map((b) => b.id));
@@ -30,9 +26,6 @@ export default async function Home() {
 
       {/* 多言語案内（議案の翻訳を公開していない5言語） */}
       <MultilingualGuideBanner />
-
-      {/* 本日の定例会セクション */}
-      <CurrentCouncilSession session={currentSession} locale={locale} />
 
       {/* 議案一覧セクション */}
       <Container className="">
