@@ -2,6 +2,7 @@ import "server-only";
 
 import { createAdminClient } from "@mirai-gikai/supabase";
 import type {
+  BillQuestionRow,
   CouncilorQuestionRow,
   CouncilorRow,
 } from "../../shared/utils/to-councilor";
@@ -15,7 +16,7 @@ const COUNCILOR_SELECT = `
   official_url,
   website_url,
   sort_order,
-  factions (id, display_name, sort_order),
+  factions (id, name, display_name, sort_order),
   council_member_committees (role, committees (id, name, sort_order)),
   council_member_questions (venue_type, speech_date)
 `;
@@ -31,7 +32,13 @@ const COUNCILOR_QUESTION_SELECT = `
   speech_date,
   source_url,
   session_name,
-  committees (name)
+  committees (name),
+  bills (id, name, publish_status)
+`;
+
+const BILL_QUESTION_SELECT = `
+  ${COUNCILOR_QUESTION_SELECT},
+  council_members (id, name, is_active, factions (display_name))
 `;
 
 /**
@@ -95,6 +102,29 @@ export async function findQuestionsByCouncilorId(
   // 空配列に丸めると unstable_cache が「質問0件」を1時間キャッシュするため、投げる
   if (error) {
     throw new Error(`Failed to fetch councilor questions: ${error.message}`);
+  }
+
+  return data ?? [];
+}
+
+/**
+ * 議案に紐づく質問要約を、質問した議員つきで新しい発言日順に取得
+ * 現職かどうかの絞り込みと発言順の整列は画面側（toBillRelatedQuestions）で行う
+ */
+export async function findQuestionsByBillId(
+  billId: string
+): Promise<BillQuestionRow[]> {
+  const supabase = createAdminClient();
+
+  const { data, error } = await supabase
+    .from("council_member_questions")
+    .select(BILL_QUESTION_SELECT)
+    .eq("bill_id", billId)
+    .order("speech_date", { ascending: false });
+
+  // 空配列に丸めると unstable_cache が「質問0件」を1時間キャッシュするため、投げる
+  if (error) {
+    throw new Error(`Failed to fetch bill questions: ${error.message}`);
   }
 
   return data ?? [];

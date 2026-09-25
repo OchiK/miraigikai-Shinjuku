@@ -1,6 +1,6 @@
 import "server-only";
 
-import { ArrowLeft, Info } from "lucide-react";
+import { ArrowLeft, ChevronRight, Info } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { siteConfig } from "@/config/site.config";
@@ -27,6 +27,8 @@ import { CouncilorSources, ExternalSourceLink } from "./councilor-sources";
 
 type Props = {
   councilor: CouncilorDetail;
+  /** 開催中（最新）の定例会。議案一覧ページを持つときだけ渡す */
+  activeSession?: { name: string; slug: string } | null;
 };
 
 function RoleTag({ role }: { role: string }) {
@@ -177,7 +179,7 @@ function EarlierSessionsNotice({ sessionName }: { sessionName: string }) {
   );
 }
 
-export function CouncilorDetailSection({ councilor }: Props) {
+export function CouncilorDetailSection({ councilor, activeSession }: Props) {
   const earlierNoticeSession = getEarlierSessionNoticeName(
     councilor.latestQuestionDate,
     councilor.questions,
@@ -233,6 +235,25 @@ export function CouncilorDetailSection({ councilor }: Props) {
               公式の{COUNCILOR_SOURCES.factions.label}
             </ExternalSourceLink>
           </DetailItem>
+
+          {activeSession && (
+            <DetailItem label="審議している議案">
+              <p className="text-base text-mirai-text leading-[1.9]">
+                議案は本会議で採決され、各会派が賛否を示します。
+              </p>
+              <Link
+                href={routes.sessionBills(activeSession.slug)}
+                className="inline-flex min-h-11 w-fit items-center gap-1 font-bold text-mirai-accent-text text-sm underline-offset-4 hover:underline"
+              >
+                {activeSession.name}の議案一覧を見る
+                <ChevronRight
+                  aria-hidden="true"
+                  className="size-4 shrink-0"
+                  strokeWidth={2.75}
+                />
+              </Link>
+            </DetailItem>
+          )}
 
           <DetailItem label="所属委員会">
             <CommitteeGroups committees={councilor.committees} />

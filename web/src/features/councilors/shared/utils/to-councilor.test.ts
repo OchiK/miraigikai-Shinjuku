@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  type BillQuestionRow,
   type CouncilorQuestionRow,
   type CouncilorRow,
+  toBillRelatedQuestions,
   toCouncilor,
   toCouncilorDetail,
   toCouncilorQuestion,
@@ -18,6 +20,7 @@ const row: CouncilorRow = {
   sort_order: 1,
   factions: {
     id: "faction-1",
+    name: "komei",
     display_name: "新宿区議会公明党",
     sort_order: 2,
   },
@@ -57,6 +60,7 @@ const questionRow: CouncilorQuestionRow = {
   source_url: minuteUrl(61),
   session_name: "令和8年 第2回定例会",
   committees: null,
+  bills: null,
 };
 
 describe("toCouncilor", () => {
@@ -67,7 +71,11 @@ describe("toCouncilor", () => {
       id: "member-1",
       nameKana: "きもと ひろゆき",
       factionRole: "会計",
-      faction: { id: "faction-1", displayName: "新宿区議会公明党" },
+      faction: {
+        id: "faction-1",
+        slug: "komei",
+        displayName: "新宿区議会公明党",
+      },
     });
     expect(councilor.committees).toEqual([
       {
@@ -158,7 +166,26 @@ describe("toCouncilorQuestion", () => {
       sourceUrl: minuteUrl(61),
       committeeName: null,
       sessionName: "令和8年 第2回定例会",
+      bill: null,
     });
+  });
+
+  it("公開中の議案に紐づく質問は議案を持つ", () => {
+    expect(
+      toCouncilorQuestion({
+        ...questionRow,
+        bills: { id: "bill-1", name: "議案名", publish_status: "published" },
+      })?.bill
+    ).toEqual({ id: "bill-1", name: "議案名" });
+  });
+
+  it("非公開の議案はリンク先が 404 になるため持たない", () => {
+    expect(
+      toCouncilorQuestion({
+        ...questionRow,
+        bills: { id: "bill-1", name: "議案名", publish_status: "draft" },
+      })?.bill
+    ).toBeNull();
   });
 
   it("未知の質問種別は null にする", () => {
@@ -189,5 +216,57 @@ describe("toCouncilorDetail", () => {
       "feb",
     ]);
     expect(detail.name).toBe("木もと ひろゆき");
+  });
+});
+
+describe("toBillRelatedQuestions", () => {
+  const member = {
+    id: "member-1",
+    name: "木もと ひろゆき",
+    is_active: true,
+    factions: { display_name: "新宿区議会公明党" },
+  };
+  const billQuestionRow: BillQuestionRow = {
+    ...questionRow,
+    council_members: member,
+  };
+
+  it("質問した議員を添えて、新しい順・同じ日は発言順に並べる", () => {
+    const questions = toBillRelatedQuestions([
+      { ...billQuestionRow, id: "feb", speech_date: "2026-02-25" },
+      { ...billQuestionRow, id: "jun-late", source_url: minuteUrl(90) },
+      { ...billQuestionRow, id: "jun-early", source_url: minuteUrl(10) },
+    ]);
+    expect(questions.map((q) => q.id)).toEqual([
+      "jun-early",
+      "jun-late",
+      "feb",
+    ]);
+    expect(questions[0].councilor).toEqual({
+      id: "member-1",
+      name: "木もと ひろゆき",
+      factionDisplayName: "新宿区議会公明党",
+    });
+  });
+
+  it("会派に属さない議員は会派名を null にする", () => {
+    const [question] = toBillRelatedQuestions([
+      { ...billQuestionRow, council_members: { ...member, factions: null } },
+    ]);
+    expect(question.councilor.factionDisplayName).toBeNull();
+  });
+
+  it("現職でない議員・議員の無い行・未知の発言の場の行は落とす", () => {
+    expect(
+      toBillRelatedQuestions([
+        {
+          ...billQuestionRow,
+          id: "retired",
+          council_members: { ...member, is_active: false },
+        },
+        { ...billQuestionRow, id: "orphan", council_members: null },
+        { ...billQuestionRow, id: "broken", venue_type: "unknown" },
+      ])
+    ).toEqual([]);
   });
 });

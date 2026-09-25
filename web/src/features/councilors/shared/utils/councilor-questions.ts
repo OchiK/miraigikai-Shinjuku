@@ -91,9 +91,9 @@ export function getSourceMinuteId(sourceUrl: string | null): number | null {
  * 新しい発言日順。同じ日は会議録の発言順（minute_id の小さい順）、
  * 発言番号がないものはその日の最後に置く
  */
-export function sortQuestionsBySpeech(
-  questions: CouncilorQuestion[]
-): CouncilorQuestion[] {
+export function sortQuestionsBySpeech<T extends CouncilorQuestion>(
+  questions: T[]
+): T[] {
   return [...questions].sort((a, b) => {
     if (a.speechDate !== b.speechDate) {
       return a.speechDate < b.speechDate ? 1 : -1;

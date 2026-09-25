@@ -32,6 +32,7 @@ function question(
     sourceUrl,
     committeeName: null,
     sessionName: "令和8年 第2回定例会",
+    bill: null,
   };
 }
 

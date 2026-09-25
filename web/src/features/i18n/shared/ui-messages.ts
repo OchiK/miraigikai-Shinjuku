@@ -63,6 +63,13 @@ export type UiMessages = {
     sourceBefore: string;
     sourceAfter: string;
   };
+  billCouncilors: {
+    heading: string;
+    /** 議員の質問が日本語のままであることの案内。日本語表示では出さない */
+    questionsInJapaneseNotice: string | null;
+    body: string;
+    councilorsLink: string;
+  };
   disclaimer: {
     contentTitle: string;
     contentBody: string;
@@ -162,6 +169,12 @@ export const UI_MESSAGES: Record<PublicLocale, UiMessages> = {
       sourceBefore: "本サービスのソースコード（AGPL-3.0）は ",
       sourceAfter: " で公開されています。",
     },
+    billCouncilors: {
+      heading: "この議案と議員",
+      questionsInJapaneseNotice: null,
+      body: "議案は区議会の本会議で採決されます。どの会派にどの議員がいるかは、議員一覧で確認できます。",
+      councilorsLink: "議員一覧を見る",
+    },
     disclaimer: {
       contentTitle: "掲載コンテンツについて",
       contentBody: `掲載されている議案情報は、${siteConfig.councilName}に上程された議案などの公開情報を基に、AIを活用しながら背景情報を整理したものです。`,
@@ -244,6 +257,13 @@ export const UI_MESSAGES: Record<PublicLocale, UiMessages> = {
       contactAfter: "), not the party.",
       sourceBefore: "The source code for this service (AGPL-3.0) is on ",
       sourceAfter: ".",
+    },
+    billCouncilors: {
+      heading: "Councilors and this bill",
+      questionsInJapaneseNotice:
+        "Councilors' questions about this bill are shown in Japanese.",
+      body: "Bills are put to a vote at a plenary session of the council. The list of councilors shows which councilors belong to each parliamentary group.",
+      councilorsLink: "See the list of councilors",
     },
     disclaimer: {
       contentTitle: "About this content",

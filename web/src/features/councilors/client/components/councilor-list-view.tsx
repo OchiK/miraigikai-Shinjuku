@@ -5,6 +5,7 @@ import { useId, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { Councilor } from "../../shared/types";
+import { getFactionAnchorId } from "../../shared/utils/faction-anchor";
 import {
   filterCouncilors,
   groupCouncilorsByFaction,
@@ -111,7 +112,9 @@ export function CouncilorListView({ councilors }: Props) {
           {visibleGroups.map(({ faction, councilors: members }) => (
             <section
               key={faction?.id ?? "unaffiliated"}
-              className="flex flex-col gap-4 rounded-xl bg-mirai-surface-sunken p-5 shadow-mirai-sm md:p-6"
+              // 議案詳細の会派賛否から #faction-{slug} で着地する。固定ヘッダーに潜らないよう余白を取る
+              id={getFactionAnchorId(faction?.slug ?? null)}
+              className="flex scroll-mt-28 flex-col gap-4 rounded-xl bg-mirai-surface-sunken p-5 shadow-mirai-sm md:p-6"
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h2 className="font-heading font-bold text-mirai-text text-xl leading-[1.3] md:text-2xl">

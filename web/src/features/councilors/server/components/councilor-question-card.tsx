@@ -1,7 +1,12 @@
 import "server-only";
 
-import { Quote } from "lucide-react";
-import type { CouncilorQuestion } from "../../shared/types";
+import { ChevronRight, FileText, Quote } from "lucide-react";
+import Link from "next/link";
+import { routes } from "@/lib/routes";
+import type {
+  BillRelatedQuestion,
+  CouncilorQuestion,
+} from "../../shared/types";
 import {
   formatSpeechDate,
   QUESTION_KIND_LABELS,
@@ -11,13 +16,24 @@ import { ExternalSourceLink } from "./councilor-sources";
 
 type Props = {
   question: CouncilorQuestion;
+  /** 質問した議員。議案詳細など、議員のページの外で出すときに渡す */
+  speaker?: BillRelatedQuestion["councilor"];
+  /** 関連議案へのリンクを出すか。議案詳細ではその議案自身を指すため出さない */
+  showBillLink?: boolean;
 };
+
+const internalLinkClass =
+  "inline-flex min-h-11 items-center gap-1 font-bold text-mirai-accent-text text-sm underline-offset-4 hover:underline";
 
 /**
  * 質問1件のカード。見出しは議員が示した項目名、要約はAI生成。
  * 要約はデザインシステム §9 に従い AI の地色・ラベルに置き、会議録と見分けられるようにする。
  */
-export function CouncilorQuestionCard({ question }: Props) {
+export function CouncilorQuestionCard({
+  question,
+  speaker,
+  showBillLink = true,
+}: Props) {
   const venue =
     question.venueType === "committee" && question.committeeName
       ? question.committeeName
@@ -25,6 +41,24 @@ export function CouncilorQuestionCard({ question }: Props) {
 
   return (
     <article className="flex flex-col gap-3 rounded-xl bg-card p-5 shadow-mirai-sm">
+      {speaker && (
+        <Link
+          href={routes.councilorDetail(speaker.id)}
+          className="inline-flex min-h-11 w-fit flex-wrap items-center gap-x-2 gap-y-1 text-mirai-text underline-offset-4 hover:underline"
+        >
+          <span className="font-bold text-base">{speaker.name}</span>
+          <span className="text-mirai-text-muted text-sm">
+            {speaker.factionDisplayName ?? "会派なし"}
+          </span>
+          <span className="sr-only">（議員の詳細を見る）</span>
+          <ChevronRight
+            aria-hidden="true"
+            className="size-4 shrink-0 text-mirai-accent-text"
+            strokeWidth={2.75}
+          />
+        </Link>
+      )}
+
       <div className="flex flex-wrap items-center gap-2 text-xs">
         <span className="rounded-full bg-mirai-tag px-3 py-0.5 font-bold text-mirai-tag-text">
           {venue}
@@ -72,6 +106,25 @@ export function CouncilorQuestionCard({ question }: Props) {
             </li>
           ))}
         </ul>
+      )}
+
+      {showBillLink && question.bill && (
+        <Link
+          href={routes.billDetail(question.bill.id)}
+          className={internalLinkClass}
+        >
+          <FileText
+            aria-hidden="true"
+            className="size-4 shrink-0"
+            strokeWidth={2.75}
+          />
+          関連議案：{question.bill.name}
+          <ChevronRight
+            aria-hidden="true"
+            className="size-4 shrink-0"
+            strokeWidth={2.75}
+          />
+        </Link>
       )}
 
       {question.sourceUrl && (
