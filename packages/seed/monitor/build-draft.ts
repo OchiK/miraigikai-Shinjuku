@@ -64,6 +64,7 @@ const FIELD_LABELS: Record<ProposedChange["field"], string> = {
   officialTitle: "件名",
   fullTextPdfUrl: "全文PDF",
   decision: "議決結果",
+  decisionsUrl: "議決結果ページ",
   missingOnOfficialPage: "公式ページに見当たらない",
 };
 
@@ -127,7 +128,7 @@ export function buildReport(result: DetectionResult): string {
     );
     for (const change of result.proposedChanges) {
       lines.push(
-        `| ${change.sessionId} | ${cell(change.officialLabel)} | ${FIELD_LABELS[change.field]} | ${cell(change.current)} | ${cell(change.official)} | ${change.reviewCompleted ? "**済（要注意）**" : "未"} |`
+        `| ${change.sessionId} | ${cell(change.officialLabel)} | ${FIELD_LABELS[change.field]} | ${cell(change.current ?? (change.field === "decision" ? "未議決" : null))} | ${cell(change.official)} | ${change.reviewCompleted ? "**済（要注意）**" : "未"} |`
       );
     }
     lines.push("");

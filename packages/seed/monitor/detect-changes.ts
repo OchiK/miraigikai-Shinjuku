@@ -81,6 +81,29 @@ export function mergeSessionPages(
   return [...pages.values()];
 }
 
+/**
+ * 登録済み会期の取得先を決める。
+ *
+ * 議決結果が未掲載のまま登録した会期（decisionsUrl: null）は、議決結果の一覧から
+ * 同じ会期IDのページを探す。登録済みの会期は selectNewSessions が新規扱いしないため、
+ * ここで拾わないと議決結果の掲載を検知できない。
+ */
+export function resolveKnownSessionPages(
+  knownSessions: KnownSession[],
+  decisionsIndex: IndexEntry[]
+): SessionPages[] {
+  return knownSessions.map((known) => ({
+    sessionId: known.sessionId,
+    sessionName: known.sessionId,
+    submissionsUrl: known.submissionsUrl,
+    decisionsUrl:
+      known.decisionsUrl ??
+      decisionsIndex.find((entry) => entry.sessionId === known.sessionId)
+        ?.url ??
+      null,
+  }));
+}
+
 /** 比較用に空白の揺れだけを吸収する（文字そのものは変えない） */
 function normalize(text: string | null): string | null {
   return text === null ? null : text.replace(/[\s　]+/g, " ").trim();
@@ -149,9 +172,16 @@ export function compareKnownSession(
       `${known.sessionId} の提出議案ページから案件を1件も読み取れない。公式サイトの構成が変わった可能性がある`
     );
   }
-  if (known.items.length > 0 && snapshot.decisions.length === 0) {
+  // 議決結果ページが未掲載（取得していない）なら、議決結果が0件なのは正常
+  if (
+    known.items.length > 0 &&
+    snapshot.decisionsUrl !== null &&
+    snapshot.decisions.length === 0
+  ) {
     throw new Error(
-      `${known.sessionId} の議決結果ページから案件を1件も読み取れない。公式サイトの構成が変わった可能性がある`
+      known.decisionsUrl === null
+        ? `${known.sessionId} の議決結果ページが一覧に載ったが、案件を1件も読み取れない（${snapshot.decisionsUrl}）。準備中のページか、公式サイトの構成が変わった可能性がある`
+        : `${known.sessionId} の議決結果ページから案件を1件も読み取れない。公式サイトの構成が変わった可能性がある`
     );
   }
 
@@ -196,6 +226,18 @@ export function compareKnownSession(
     if (decision && normalize(decision.decision) !== normalize(item.decision)) {
       change("decision", item.decision, decision.decision);
     }
+  }
+
+  // 未掲載で登録した会期の議決結果ページが見つかったら、転記すべきURLとして知らせる
+  if (known.decisionsUrl === null && snapshot.decisionsUrl !== null) {
+    proposedChanges.push({
+      sessionId: known.sessionId,
+      officialLabel: "（会期全体）",
+      field: "decisionsUrl",
+      current: null,
+      official: snapshot.decisionsUrl,
+      reviewCompleted: false,
+    });
   }
 
   const knownLabels = new Set(known.items.map((item) => item.officialLabel));

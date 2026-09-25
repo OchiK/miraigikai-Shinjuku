@@ -128,6 +128,38 @@ describe("buildReport", () => {
     );
   });
 
+  it("未議決で登録した案件の議決結果と、見つかった議決結果ページを載せる", () => {
+    const base = {
+      sessionId: "r8-3",
+      current: null,
+      reviewCompleted: false,
+    } as const;
+    const report = buildReport({
+      ...empty,
+      proposedChanges: [
+        {
+          ...base,
+          officialLabel: "第63号議案",
+          field: "decision",
+          official: "原案可決",
+        },
+        {
+          ...base,
+          officialLabel: "（会期全体）",
+          field: "decisionsUrl",
+          official: "https://example.jp/dec3",
+        },
+      ],
+    });
+
+    expect(report).toContain(
+      "| r8-3 | 第63号議案 | 議決結果 | 未議決 | 原案可決 | 未 |"
+    );
+    expect(report).toContain(
+      "| r8-3 | （会期全体） | 議決結果ページ | — | https://example.jp/dec3 | 未 |"
+    );
+  });
+
   it("表のセルを壊すパイプと改行を無害化する", () => {
     const report = buildReport({
       ...empty,

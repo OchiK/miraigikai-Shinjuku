@@ -5,6 +5,10 @@ import {
   R8_2_SUBMISSIONS_URL,
   r8SecondSessionItems,
 } from "../main/shinjuku-r8-2-inventory";
+import {
+  R8_3_SUBMISSIONS_URL,
+  r8ThirdSessionItems,
+} from "../main/shinjuku-r8-3-inventory";
 import type { KnownSession } from "./types";
 
 /**
@@ -45,6 +49,21 @@ export const PDF_WATCH_URLS: string[] = [R8_2_COUNCIL_RESULTS_PDF];
  * 足さないと、その会期の案件が毎回ドラフトとして出続ける。
  */
 export const KNOWN_SESSIONS: KnownSession[] = [
+  {
+    // R8_3_SESSION.slug と同じ値（テストで一致を確かめている）
+    sessionId: "r8-3",
+    submissionsUrl: R8_3_SUBMISSIONS_URL,
+    // 会期中で議決結果ページが未掲載。掲載されたら議決結果の一覧から自動で見つけ、
+    // 議決結果の食い違いとしてレポートに出る。そのときにURLと各案件の decision を転記する
+    decisionsUrl: null,
+    items: r8ThirdSessionItems.map((item) => ({
+      officialLabel: item.officialLabel,
+      officialTitle: item.officialTitle,
+      fullTextPdfUrl: item.fullTextPdfUrl,
+      decision: item.decision,
+      reviewCompleted: item.reviewCompleted,
+    })),
+  },
   {
     // R8_2_SESSION.slug と同じ値（テストで一致を確かめている）
     sessionId: "r8-2",
