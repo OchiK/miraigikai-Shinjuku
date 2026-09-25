@@ -1,6 +1,7 @@
 import {
   getBillStatusLabel,
   getDecisionStepLabel,
+  isCommitteeReferralOmitted,
 } from "@mirai-gikai/shared/bills/decision-label";
 import type { BillStatusEnum } from "../types";
 import { getCurrentStep } from "./bill-progress";
@@ -24,8 +25,11 @@ export interface BillTimelineEvent {
   /** レンダリング時の key。ステップ順に固定の識別子を振る */
   key: "submitted" | "in_committee" | "plenary_session" | "decision";
   label: string;
-  /** 実日付が保存されていないことを利用者に伝える表示ラベル */
-  dateLabel: "日付未登録" | "日付未定";
+  /**
+   * 実日付が保存されていないことを利用者に伝える表示ラベル。
+   * 委員会付託を省略した議案の「委員会での審査」は、行われていないので「省略」
+   */
+  dateLabel: "日付未登録" | "日付未定" | "省略";
   /** 補足（議決済みの場合の status_note など）。無ければ undefined */
   detail?: string;
   state: BillTimelineEventState;
@@ -66,10 +70,22 @@ export function buildBillTimeline(
 ): BillTimelineEvent[] {
   const currentStep = getCurrentStep(input.status);
   const decision = getDecisionStepLabel(input);
+  const committeeOmitted = isCommitteeReferralOmitted(input.statusNote);
 
   const events: BillTimelineEvent[] = PRE_DECISION_EVENTS.map(
     ({ key, label }, index) => {
       const state = resolveState(index + 1, currentStep);
+
+      // 付託を省略した議案で、委員会の審査を済んだものとして示さない
+      if (key === "in_committee" && committeeOmitted && state !== "upcoming") {
+        return {
+          key,
+          label,
+          dateLabel: "省略",
+          detail: "委員会への付託を省略し、本会議で採決",
+          state,
+        };
+      }
 
       return {
         key,

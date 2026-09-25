@@ -1,3 +1,4 @@
+import { COMMITTEE_REFERRAL_OMITTED_NOTE } from "@mirai-gikai/shared/bills/decision-label";
 import type { Database } from "@mirai-gikai/supabase";
 
 type BillInsert = Database["public"]["Tables"]["bills"]["Insert"];
@@ -23,6 +24,20 @@ export const R8_2_SUBMISSIONS_URL =
 export const R8_2_DECISIONS_URL =
   "https://www.city.shinjuku.lg.jp/kusei/soumu01_002090_00016.html";
 
+/**
+ * 議会公式ページ（議会事務局）の会期ページ。議員提出議案の識別名・件名の出典。
+ * 区長提出議案の提出議案一覧ページには議員提出議案が載らないため、別に持つ。
+ */
+export const R8_2_COUNCIL_SESSION_URL =
+  "https://www.city.shinjuku.lg.jp/kusei/file08_05_0003820210204_00014.html";
+
+/**
+ * 議会公式の「議案の概要と審議結果」PDF。議員提出議案の概要と議決結果の出典
+ * （会派ごとの賛否の出典でもある）。
+ */
+export const R8_2_COUNCIL_RESULTS_PDF =
+  "https://www.city.shinjuku.lg.jp/content/000459252.pdf";
+
 /** 公式ページの「条例案等（概要）」概要PDF（承認第2号・第3号および第44〜60号議案を収録） */
 const OVERVIEW_JOREI = "https://www.city.shinjuku.lg.jp/content/000456353.pdf";
 
@@ -42,17 +57,18 @@ const OVERVIEW_BUDGET_3 =
  * 案件の種別。
  * - `gian`: 第N号議案（区長提出議案）
  * - `shonin`: 承認第N号（専決処分の承認）
+ * - `giin`: 議員提出議案第N号（議員が提出した条例案・意見書）
  *
  * 承認案件は件名が「専決処分の承認について」で重複するため、
  * 種別と番号を含む識別子でのみ一意に特定できる。
  */
-export type ShinjukuItemType = "gian" | "shonin";
+export type ShinjukuItemType = "gian" | "shonin" | "giin";
 
 /**
- * 公式の議決結果の文言。議案は「原案可決」、承認案件は「承認」であり、
+ * 公式の議決結果の文言。議案は「原案可決」または「否決」、承認案件は「承認」であり、
  * 用語を混同して表示しないこと。
  */
-export type ShinjukuDecision = "原案可決" | "承認";
+export type ShinjukuDecision = "原案可決" | "否決" | "承認";
 
 export interface ShinjukuSessionItem {
   /** 案件種別 */
@@ -63,12 +79,25 @@ export interface ShinjukuSessionItem {
   officialLabel: string;
   /** 公式ページ表記の件名（原文どおり） */
   officialTitle: string;
-  /** 全文PDF URL（実ファイルを取得し、当該案件の全文であることを確認済み） */
-  fullTextPdfUrl: string;
+  /**
+   * 全文PDF URL（実ファイルを取得し、当該案件の全文であることを確認済み）。
+   * 議員提出議案は全文がオンラインで公開されていない（会議録は「巻末議案の部参照」とだけ
+   * 記す）ため null。推測で他のPDFを入れないこと。
+   */
+  fullTextPdfUrl: string | null;
   /** 当該案件を収録した概要PDF URL */
   overviewPdfUrl: string;
   /** 公式議決結果 */
   decision: ShinjukuDecision;
+  /** 識別名・件名の出典ページ。既定は区長提出議案の提出議案一覧ページ */
+  sourcePageUrl?: string;
+  /** 議決結果の出典。既定は区長提出議案の議決結果ページ */
+  decisionSourceUrl?: string;
+  /**
+   * 委員会への付託を省略して本会議で議決した案件（会議録「説明及び委員会付託を省略して
+   * 採決します」）。審議の経過で「委員会での審査」を済んだものとして出さないために使う。
+   */
+  committeeReferralOmitted?: boolean;
   /**
    * 公開表示してよい案件かどうか。`published` / `coming_soon` に直結する。
    *
@@ -385,6 +414,64 @@ export const r8SecondSessionItems: ShinjukuSessionItem[] = [
     hasPublishableContent: true,
     isFeatured: false,
   },
+  // 議員提出議案。識別名・件名は議会公式の会期ページ、議決結果は会議録（6月19日）と
+  // 「議案の概要と審議結果」で確認した。第7・8号は文教子ども家庭委員会に付託され、
+  // 委員会・本会議とも起立少数で否決。第9・10号は説明と委員会付託を省略し、
+  // 異議なく原案可決。解説が整うまでは coming_soon に置く。
+  {
+    itemType: "giin",
+    itemNumber: 7,
+    officialLabel: "議員提出議案第7号",
+    officialTitle: "新宿区立学校における学用品の給付に関する条例",
+    fullTextPdfUrl: null,
+    overviewPdfUrl: R8_2_COUNCIL_RESULTS_PDF,
+    decision: "否決",
+    sourcePageUrl: R8_2_COUNCIL_SESSION_URL,
+    decisionSourceUrl: R8_2_COUNCIL_RESULTS_PDF,
+    hasPublishableContent: false,
+    isFeatured: false,
+  },
+  {
+    itemType: "giin",
+    itemNumber: 8,
+    officialLabel: "議員提出議案第8号",
+    officialTitle: "新宿区立学校における修学旅行費の無償化に関する条例",
+    fullTextPdfUrl: null,
+    overviewPdfUrl: R8_2_COUNCIL_RESULTS_PDF,
+    decision: "否決",
+    sourcePageUrl: R8_2_COUNCIL_SESSION_URL,
+    decisionSourceUrl: R8_2_COUNCIL_RESULTS_PDF,
+    hasPublishableContent: false,
+    isFeatured: false,
+  },
+  {
+    itemType: "giin",
+    itemNumber: 9,
+    officialLabel: "議員提出議案第9号",
+    officialTitle: "ドナーミルクの利用拡大を求める意見書",
+    fullTextPdfUrl: null,
+    overviewPdfUrl: R8_2_COUNCIL_RESULTS_PDF,
+    decision: "原案可決",
+    sourcePageUrl: R8_2_COUNCIL_SESSION_URL,
+    decisionSourceUrl: R8_2_COUNCIL_RESULTS_PDF,
+    committeeReferralOmitted: true,
+    hasPublishableContent: false,
+    isFeatured: false,
+  },
+  {
+    itemType: "giin",
+    itemNumber: 10,
+    officialLabel: "議員提出議案第10号",
+    officialTitle: "「不合理な税制改正」に反対する意見書",
+    fullTextPdfUrl: null,
+    overviewPdfUrl: R8_2_COUNCIL_RESULTS_PDF,
+    decision: "原案可決",
+    sourcePageUrl: R8_2_COUNCIL_SESSION_URL,
+    decisionSourceUrl: R8_2_COUNCIL_RESULTS_PDF,
+    committeeReferralOmitted: true,
+    hasPublishableContent: false,
+    isFeatured: false,
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -418,22 +505,37 @@ export function shoninKey(itemNumber: number): string {
   return buildItemKey({ itemType: "shonin", itemNumber });
 }
 
+/** 議員提出議案第N号の安定識別子 */
+export function giinKey(itemNumber: number): string {
+  return buildItemKey({ itemType: "giin", itemNumber });
+}
+
 /** 公式の議決結果を DB の status / status_note に対応付ける */
-export function toBillStatus(decision: ShinjukuDecision): {
+export function toBillStatus(
+  decision: ShinjukuDecision,
+  options: { committeeReferralOmitted?: boolean } = {}
+): {
   status: NonNullable<BillInsert["status"]>;
   statusNote: string;
 } {
+  const prefix = options.committeeReferralOmitted
+    ? COMMITTEE_REFERRAL_OMITTED_NOTE
+    : "";
   switch (decision) {
     case "原案可決":
-      return { status: "approved", statusNote: "本会議で原案可決" };
+      return { status: "approved", statusNote: `${prefix}本会議で原案可決` };
+    case "否決":
+      return { status: "rejected", statusNote: `${prefix}本会議で否決` };
     case "承認":
-      return { status: "approved", statusNote: "本会議で承認" };
+      return { status: "approved", statusNote: `${prefix}本会議で承認` };
   }
 }
 
 /** インベントリ1件を bills テーブルの Insert に変換する */
 export function toBillInsert(item: ShinjukuSessionItem): BillInsert {
-  const { status, statusNote } = toBillStatus(item.decision);
+  const { status, statusNote } = toBillStatus(item.decision, {
+    committeeReferralOmitted: item.committeeReferralOmitted,
+  });
 
   return {
     name: item.officialTitle,
@@ -452,8 +554,8 @@ export function toBillInsert(item: ShinjukuSessionItem): BillInsert {
     thumbnail_url: null,
     pdf_url: item.fullTextPdfUrl,
     overview_pdf_url: item.overviewPdfUrl,
-    source_page_url: R8_2_SUBMISSIONS_URL,
-    decision_source_url: R8_2_DECISIONS_URL,
+    source_page_url: item.sourcePageUrl ?? R8_2_SUBMISSIONS_URL,
+    decision_source_url: item.decisionSourceUrl ?? R8_2_DECISIONS_URL,
   };
 }
 
@@ -468,11 +570,23 @@ export function toBillInserts(
 // 突合用ユーティリティ（公式一覧との照合・重複検出）
 // ---------------------------------------------------------------------------
 
-/** 公式一覧に載っている識別名の集合（承認2件 + 第42〜62号議案の21件 = 23件） */
+/** 区長提出議案の公式一覧に載っている識別名（承認2件 + 第42〜62号議案の21件 = 23件） */
 export const R8_2_OFFICIAL_LABELS: string[] = [
   "承認第2号",
   "承認第3号",
   ...Array.from({ length: 21 }, (_, i) => `第${42 + i}号議案`),
+];
+
+/** 議会公式の会期ページに載っている議員提出議案の識別名（第7〜10号の4件） */
+export const R8_2_COUNCILOR_BILL_LABELS: string[] = Array.from(
+  { length: 4 },
+  (_, i) => `議員提出議案第${7 + i}号`
+);
+
+/** 会期の全案件の識別名（区長提出23件 + 議員提出4件 = 27件） */
+export const R8_2_ALL_LABELS: string[] = [
+  ...R8_2_OFFICIAL_LABELS,
+  ...R8_2_COUNCILOR_BILL_LABELS,
 ];
 
 export interface InventoryReconciliation {
@@ -489,7 +603,7 @@ export interface InventoryReconciliation {
 /** インベントリを公式一覧と突合し、欠落・重複・想定外を洗い出す */
 export function reconcileInventory(
   items: ShinjukuSessionItem[] = r8SecondSessionItems,
-  officialLabels: string[] = R8_2_OFFICIAL_LABELS
+  officialLabels: string[] = R8_2_ALL_LABELS
 ): InventoryReconciliation {
   const labels = items.map((i) => i.officialLabel);
   const keys = items.map(buildItemKey);

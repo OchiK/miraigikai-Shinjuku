@@ -34,7 +34,20 @@ const SOURCE_LINK_ORDER: {
   { kind: "decisions", label: "議決結果", field: "decision_source_url" },
 ];
 
-/** 値が入っている出典だけを、決まった順序で返す */
+const PDF_SUFFIX = "（PDF）";
+
+/** 同じURLを指す2つのラベルを1つにまとめる（例: 提出案件概要・議決結果（PDF）） */
+function mergeLabels(first: string, second: string): string {
+  const hasPdf = first.endsWith(PDF_SUFFIX) || second.endsWith(PDF_SUFFIX);
+  const strip = (label: string) => label.replace(PDF_SUFFIX, "");
+  return `${strip(first)}・${strip(second)}${hasPdf ? PDF_SUFFIX : ""}`;
+}
+
+/**
+ * 値が入っている出典だけを、決まった順序で返す。
+ * 議員提出議案のように概要と議決結果が同じPDFに載っている場合は、
+ * 同じリンクを2つ並べず、ラベルをまとめた1つにする。
+ */
 export function buildBillSourceLinks(
   bill: BillSourceLinkInput
 ): BillSourceLink[] {
@@ -42,9 +55,13 @@ export function buildBillSourceLinks(
 
   for (const { kind, label, field } of SOURCE_LINK_ORDER) {
     const url = bill[field]?.trim();
-    if (url) {
-      links.push({ kind, label, url });
+    if (!url) continue;
+    const existing = links.find((link) => link.url === url);
+    if (existing) {
+      existing.label = mergeLabels(existing.label, label);
+      continue;
     }
+    links.push({ kind, label, url });
   }
 
   return links;

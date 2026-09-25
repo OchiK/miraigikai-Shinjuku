@@ -90,16 +90,16 @@ describe("令和8年第2回定例会インベントリの取り込み", () => {
     await cleanupTestCouncilSession(sessionId);
   });
 
-  it("23件すべてが欠落・重複なく取り込まれる", async () => {
+  it("27件（区長提出23件＋議員提出4件）すべてが欠落・重複なく取り込まれる", async () => {
     await importInventory();
     const imported = await fetchImported();
 
-    expect(imported).toHaveLength(23);
+    expect(imported).toHaveLength(27);
 
     const labels = imported.map((b) => b.bill_number).sort();
     const expected = r8SecondSessionItems.map(testBillNumber).sort();
     expect(labels).toEqual(expected);
-    expect(new Set(imported.map((b) => b.slug)).size).toBe(23);
+    expect(new Set(imported.map((b) => b.slug)).size).toBe(27);
   });
 
   it("件名が同一の承認第2号・第3号が別レコードとして区別される", async () => {
@@ -140,7 +140,7 @@ describe("令和8年第2回定例会インベントリの取り込み", () => {
     await importInventory();
     const second = await fetchImported();
 
-    expect(second).toHaveLength(23);
+    expect(second).toHaveLength(27);
 
     const idBySlug = (rows: typeof first) =>
       Object.fromEntries(rows.map((b) => [b.slug, b.id]));
@@ -206,6 +206,6 @@ describe("令和8年第2回定例会インベントリの取り込み", () => {
 
     expect(error).not.toBeNull();
     expect(error?.code).toBe("23505");
-    expect(await fetchImported()).toHaveLength(23);
+    expect(await fetchImported()).toHaveLength(27);
   });
 });

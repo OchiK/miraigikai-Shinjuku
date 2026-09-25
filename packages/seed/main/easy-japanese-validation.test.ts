@@ -28,18 +28,21 @@ import {
 const EASY_MAX_SENTENCE_LENGTH = 40;
 
 /**
- * 令和8年第2回定例会の全23案件。
+ * 令和8年第2回定例会の区長提出議案23件。
  * Phase 2 のパイロット3議案（第42・43・44号議案）に続き、
  * 承認第2・3号と第45〜62号議案の easy 版を整備して全件を満たした。
+ * 議員提出議案4件（第7〜10号）は解説そのものを次の作業で加えるため、まだ含めない。
  */
-const ALL_BILL_SLUGS = r8SecondSessionItems.map(buildItemKey);
+const ALL_BILL_SLUGS = r8SecondSessionItems
+  .filter((item) => item.itemType !== "giin")
+  .map(buildItemKey);
 
 const easyContents = billContentsWithBillSlug.filter(
   (content) => content.difficulty_level === "easy"
 );
 
 describe("やさしい日本語版の整備状況", () => {
-  it("全23案件に easy 版がある", () => {
+  it("区長提出議案23件に easy 版がある", () => {
     const slugs = easyContents.map((content) => content.bill_slug);
 
     expect(slugs.sort()).toEqual([...ALL_BILL_SLUGS].sort());

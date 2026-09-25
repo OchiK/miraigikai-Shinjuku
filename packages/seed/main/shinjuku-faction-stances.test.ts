@@ -8,23 +8,37 @@ import {
   resolveFactionAtVote,
   toFactionStanceImportRows,
 } from "./shinjuku-faction-stances";
-import { gianKey, toBillInserts } from "./shinjuku-r8-2-inventory";
+import {
+  buildItemKey,
+  gianKey,
+  giinKey,
+  r8SecondSessionItems,
+  toBillInserts,
+} from "./shinjuku-r8-2-inventory";
 
 const rows = toFactionStanceImportRows(r8_2BillVotes, factions);
+/** 議員提出議案の slug（区長提出議案の反対と分けて数えるため） */
+const councilorSlugs = new Set(
+  r8SecondSessionItems.filter((i) => i.itemType === "giin").map(buildItemKey)
+);
 
 describe("令和8年第2回定例会の会派賛否", () => {
-  it("DB の議案23件すべてを、表の並び（議案番号順）で1回ずつ持つ", () => {
+  it("DB の議案27件すべてを、表の並び（区長提出→議員提出）で1回ずつ持つ", () => {
     const billSlugs = toBillInserts().map((bill) => bill.slug);
     expect(r8_2BillVotes.map((bill) => bill.billKey)).toEqual(billSlugs);
   });
 
-  it("23議案×8会派＝184行になる", () => {
-    expect(rows).toHaveLength(184);
+  it("27議案×8会派＝216行になる", () => {
+    expect(rows).toHaveLength(216);
   });
 
-  it("反対は4行だけ（第42号・現役、第45号・第49号・れいわ、第54号・共産）", () => {
+  it("区長提出議案の反対は4行だけ（第42号・現役、第45号・第49号・れいわ、第54号・共産）", () => {
     const against = rows
-      .filter((row) => row.type === "against")
+      .filter(
+        (row) =>
+          row.type === "against" &&
+          !councilorSlugs.has(row.bill_slug)
+      )
       .map((row) => [row.bill_slug, row.faction_name]);
     expect(against).toEqual([
       [gianKey(42), "genekisedai"],
@@ -34,13 +48,30 @@ describe("令和8年第2回定例会の会派賛否", () => {
     ]);
   });
 
+  it("否決された議員提出議案第7・8号は、共産とれいわだけが賛成", () => {
+    for (const key of [giinKey(7), giinKey(8)]) {
+      const forFactions = rows
+        .filter((row) => row.bill_slug === key && row.type === "for")
+        .map((row) => row.faction_name);
+      expect(forFactions).toEqual(["kyosan", "inochi"]);
+    }
+  });
+
+  it("意見書（第9・10号）は全会派が賛成", () => {
+    for (const key of [giinKey(9), giinKey(10)]) {
+      expect(
+        rows.filter((row) => row.bill_slug === key).map((row) => row.type)
+      ).toEqual(Array(8).fill("for"));
+    }
+  });
+
   it("採決後に結成されたアップデート新宿の行は作らない", () => {
     expect(rows.some((row) => row.faction_name === "update")).toBe(false);
   });
 
   it("れいわ新選組 新宿の列は、名称変更後の inochi に採決時の名前つきで入る", () => {
     const inochi = rows.filter((row) => row.faction_name === "inochi");
-    expect(inochi).toHaveLength(23);
+    expect(inochi).toHaveLength(27);
     expect(
       new Set(inochi.map((row) => row.faction_name_at_vote))
     ).toEqual(new Set(["れいわ新選組 新宿"]));

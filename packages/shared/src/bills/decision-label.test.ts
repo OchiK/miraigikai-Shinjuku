@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  COMMITTEE_REFERRAL_OMITTED_NOTE,
   getBillCardStatusLabel,
   getBillStatusLabel,
   getDecisionStepLabel,
   getBillStatusVariant,
+  isCommitteeReferralOmitted,
   resolveOfficialDecisionTerm,
 } from "./decision-label";
 
@@ -257,5 +259,30 @@ describe("getDecisionStepLabel", () => {
     expect(
       getDecisionStepLabel({ status: "approved", statusNote: "本会議で認定" })
     ).toEqual({ positive: "認定", negative: "不認定" });
+  });
+});
+
+describe("isCommitteeReferralOmitted", () => {
+  it("status_note に委員会付託の省略があれば true", () => {
+    expect(
+      isCommitteeReferralOmitted(
+        `${COMMITTEE_REFERRAL_OMITTED_NOTE}本会議で原案可決`
+      )
+    ).toBe(true);
+  });
+
+  it("省略の記載が無い・空のときは false", () => {
+    expect(isCommitteeReferralOmitted("本会議で原案可決")).toBe(false);
+    expect(isCommitteeReferralOmitted(null)).toBe(false);
+    expect(isCommitteeReferralOmitted(undefined)).toBe(false);
+  });
+
+  it("省略して可決しても、議決用語は原案可決として読める", () => {
+    expect(
+      getBillStatusLabel({
+        status: "approved",
+        statusNote: `${COMMITTEE_REFERRAL_OMITTED_NOTE}本会議で原案可決`,
+      })
+    ).toBe("可決");
   });
 });

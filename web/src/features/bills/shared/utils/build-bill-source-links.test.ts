@@ -56,6 +56,25 @@ describe("buildBillSourceLinks", () => {
     expect(links.map((l) => l.kind)).toEqual(["decisions"]);
   });
 
+  it("同じURLの出典は1つにまとめ、ラベルを併記する（議員提出議案の概要と議決結果）", () => {
+    const pdf = "https://example.jp/gaiyou.pdf";
+    const links = buildBillSourceLinks({
+      pdf_url: null,
+      overview_pdf_url: pdf,
+      source_page_url: "https://example.jp/session",
+      decision_source_url: pdf,
+    });
+
+    expect(links).toEqual([
+      { kind: "overview", label: "提出案件概要・議決結果（PDF）", url: pdf },
+      {
+        kind: "submissions",
+        label: "提出議案一覧",
+        url: "https://example.jp/session",
+      },
+    ]);
+  });
+
   it("出典が1件も無ければ空配列を返す", () => {
     expect(
       buildBillSourceLinks({
