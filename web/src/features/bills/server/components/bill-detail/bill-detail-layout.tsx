@@ -118,11 +118,13 @@ export async function BillDetailLayout({
               locale={locale}
             />
 
-            {/* 7-2. この議案と議員（議員一覧・議案に紐づく質問） */}
-            <BillCouncilorsSection
-              questions={relatedQuestions}
-              locale={locale}
-            />
+            {/* 7-2. この議案と議員（議案に紐づく質問） */}
+            {relatedQuestions.length > 0 && (
+              <BillCouncilorsSection
+                questions={relatedQuestions}
+                locale={locale}
+              />
+            )}
 
             {/* 8. 議案の原文（既定では開かない） */}
             {bill.bill_content?.content && (

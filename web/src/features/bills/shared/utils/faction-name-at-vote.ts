@@ -14,6 +14,16 @@ export function getRenamedFactionNameAtVote(stance: {
 }
 
 /**
+ * 採決結果の会派名として、記録があれば採決時の名前を、なければ現在名を返す。
+ */
+export function getFactionNameAtVote(stance: {
+  factionNameAtVote: string | null;
+  faction: { display_name: string };
+}): string {
+  return getRenamedFactionNameAtVote(stance) ?? stance.faction.display_name;
+}
+
+/**
  * 出典から転記した賛否（採決時の会派名を持つ行）が1件でもあるか。
  * 管理画面で入れた賛否だけの議案に、議会公式の表の出典を付けないために使う。
  */

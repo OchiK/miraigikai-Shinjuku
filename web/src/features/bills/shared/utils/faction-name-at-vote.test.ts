@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  getFactionNameAtVote,
   getRenamedFactionNameAtVote,
   hasSourcedStance,
 } from "./faction-name-at-vote";
@@ -29,6 +30,23 @@ describe("getRenamedFactionNameAtVote", () => {
     expect(
       getRenamedFactionNameAtVote({ factionNameAtVote: null, faction })
     ).toBeNull();
+  });
+});
+
+describe("getFactionNameAtVote", () => {
+  it("採決時の名前が現在名と異なる場合は採決時の名前を返す", () => {
+    expect(
+      getFactionNameAtVote({
+        factionNameAtVote: "れいわ新選組 新宿",
+        faction,
+      })
+    ).toBe("れいわ新選組 新宿");
+  });
+
+  it("採決時の名前が無い場合は現在名を返す", () => {
+    expect(getFactionNameAtVote({ factionNameAtVote: null, faction })).toBe(
+      "いのちの党 新宿"
+    );
   });
 });
 
