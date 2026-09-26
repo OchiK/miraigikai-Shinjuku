@@ -575,3 +575,21 @@ Progress (2026-09-25):
 - 議員提出議案4件（第7〜10号）の解説文について、起案者による手動確認・一次情報突合レビューを完了した。
 - `packages/seed/main/shinjuku-r8-2-inventory.ts` から `reviewCompleted: false` を削除し、`is_review_completed: true` に更新。
 - 単体テスト `shinjuku-r8-2-inventory.test.ts` をレビュー完了を期待するアサーションに更新。
+
+### P8-19 議案一覧の会派投票バーを横棒のみに簡略化（Simplify Faction Vote Bar in Bill List）
+議案一覧（`/sessions/[slug]/bills`）の各議案カードに表示されている会派スタンス表示について、賛成/反対の会派名リンクは不要。少数会派が視覚的にわかる横棒（`FactionVoteBar`）だけで十分である。
+
+Acceptance:
+- 議案一覧の `CompactBillCard`（または議案一覧に使用されている bill card コンポーネント）から、会派ごとの賛成・反対リンク/バッジを削除する
+- 少数会派を示す横棒のみを残し、スリムで読みやすいカードレイアウトを実現する
+- 議案詳細ページ（`/bills/[id]`）の `FactionStanceCard` は変更しない（詳細側は引き続き全情報を表示する）
+- UI変更後、スクリーンショットで確認する
+
+### P8-20 議案詳細の「この議案と議員」セクションの表示条件を絞る（Conditional Display of "Bill and Councilors" Section）
+議案詳細ページ（`/bills/[id]`）の下部にある「この議案と議員」（`BillCouncilorsSection`）セクションは、特定の議員が賛否の立場で発言・質問している場合にのみ有意義な情報となる。発言・質問が存在しない議案には不要なセクションとして表示スペースを圧迫している。
+
+Acceptance:
+- `BillCouncilorsSection` を、関連する議員の質問・発言（`questions` や関連スタンス）が1件以上存在する場合のみ表示する
+- 条件判定ロジックを `bill-detail` ページ（Server Component 側）または `BillCouncilorsSection` コンポーネント内に実装する
+- 質問・発言がない場合はセクション自体を非表示にする（空状態UIは設けない）
+- 英語表示（`locale === "en"`）でも同じ条件が適用されること
