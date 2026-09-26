@@ -5,10 +5,6 @@ import {
   type DifficultyLevelEnum,
 } from "@/features/bill-difficulty/shared/types";
 import {
-  STANCE_LABELS,
-  type StanceTypeEnum,
-} from "@/features/bills/shared/types";
-import {
   type BillSourceLinkFormat,
   JA_BILL_SOURCE_LINK_FORMAT,
 } from "@/features/bills/shared/utils/build-bill-source-links";
@@ -88,7 +84,10 @@ export type UiMessages = {
     headingFinal: string;
     headingPending: string;
     preparing: string;
-    stanceLabels: Record<StanceTypeEnum, string>;
+    stanceLabels: {
+      for: string;
+      against: string;
+    };
     otherLabel: string;
     factionCount: (count: number) => string;
     /** 全会派が同じ賛否のとき、件数の代わりに出す一文 */
@@ -99,12 +98,6 @@ export type UiMessages = {
      * 会派名は日本語のまま lang="ja" で挟むため、文言と分けて持つ
      */
     minorityNames: { before: string; after: string; separator: string };
-    /**
-     * 採決後に会派名が変わったときに添える、採決時の会派名の前後の文言。
-     * 会派名は日本語のまま lang="ja" で挟むため、文言と分けて持つ
-     */
-    nameAtVote: { before: string; after: string };
-    councilorsOf: (factionName: string) => string;
     source: string;
     opensInNewTab: string;
   };
@@ -112,8 +105,6 @@ export type UiMessages = {
     heading: string;
     /** 議員の質問が日本語のままであることの案内。日本語表示では出さない */
     questionsInJapaneseNotice: string | null;
-    body: string;
-    councilorsLink: string;
   };
   disclaimer: {
     contentTitle: string;
@@ -363,22 +354,21 @@ export const UI_MESSAGES: Record<PublicLocale, UiMessages> = {
       headingFinal: "議決結果",
       headingPending: "会派の賛否",
       preparing: "議案上程後に各会派の賛否を表明します。",
-      stanceLabels: STANCE_LABELS,
+      stanceLabels: {
+        for: "賛成",
+        against: "反対",
+      },
       otherLabel: "その他",
       factionCount: (count) => `${count}会派`,
       unanimousFor: (count) => `全会派が賛成（${count}会派）`,
       unanimousAgainst: (count) => `全会派が反対（${count}会派）`,
       minorityNames: { before: "（", after: "）", separator: "、" },
-      nameAtVote: { before: "（採決時：", after: "）" },
-      councilorsOf: (factionName) => `${factionName}の所属議員を見る`,
       source: "出典：",
       opensInNewTab: "（新しいタブで開きます）",
     },
     billCouncilors: {
       heading: "この議案と議員",
       questionsInJapaneseNotice: null,
-      body: "議案は区議会の本会議で採決されます。どの会派にどの議員がいるかは、議員一覧で確認できます。",
-      councilorsLink: "議員一覧を見る",
     },
     disclaimer: {
       contentTitle: "掲載コンテンツについて",
@@ -636,11 +626,6 @@ export const UI_MESSAGES: Record<PublicLocale, UiMessages> = {
       stanceLabels: {
         for: "For",
         against: "Against",
-        neutral: "Neutral",
-        conditional_for: "For, with conditions",
-        conditional_against: "Against, with conditions",
-        considering: "Undecided",
-        continued_deliberation: "Carried over",
       },
       otherLabel: "Other",
       factionCount: (count) => (count === 1 ? "1 group" : `${count} groups`),
@@ -653,8 +638,6 @@ export const UI_MESSAGES: Record<PublicLocale, UiMessages> = {
           ? "The only parliamentary group voted against"
           : `All ${count} parliamentary groups voted against`,
       minorityNames: { before: " (", after: ")", separator: ", " },
-      nameAtVote: { before: "(called ", after: " at the time of the vote)" },
-      councilorsOf: (factionName) => `See councilors in ${factionName}`,
       source: "Source: ",
       opensInNewTab: "(opens in a new tab)",
     },
@@ -662,8 +645,6 @@ export const UI_MESSAGES: Record<PublicLocale, UiMessages> = {
       heading: "Councilors and this bill",
       questionsInJapaneseNotice:
         "Councilors' questions about this bill are shown in Japanese.",
-      body: "Bills are put to a vote at a plenary session of the council. The list of councilors shows which councilors belong to each parliamentary group.",
-      councilorsLink: "See the list of councilors",
     },
     disclaimer: {
       contentTitle: "About this content",

@@ -100,11 +100,6 @@ describe("英語の差し込み文言", () => {
     );
   });
 
-  it("採決時の会派名を前後の文言で挟める", () => {
-    const { before, after } = factionStances.nameAtVote;
-    expect(`${before}X${after}`).toBe("(called X at the time of the vote)");
-  });
-
   it("会期の説明に月名を入れる", () => {
     expect(
       home.sessionPeriod({
