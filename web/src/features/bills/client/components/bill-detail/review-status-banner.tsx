@@ -76,14 +76,18 @@ export function ReviewCompleteBadge({
   top,
   locale = "ja",
 }: ReviewCompleteBadgeProps) {
-  const label = getUiMessages(locale).card.reviewComplete;
+  const { card, billDetail } = getUiMessages(locale);
+  const label = card.reviewComplete;
+  const [tooltipFirst, tooltipSecond] = billDetail.reviewCompleteTooltip;
   const [open, setOpen] = useState(false);
 
   const hasCustomSize = size != null;
   const hasCustomTop = top != null;
 
+  // 議案名（日本語）の横に置くため、読み上げ名の言語を明示する
   const icon = (
     <span
+      lang={locale}
       className={`inline-flex items-center relative ${hasCustomTop ? "" : "top-[1px]"} ml-0.5`}
       style={hasCustomTop ? { top } : undefined}
     >
@@ -108,6 +112,7 @@ export function ReviewCompleteBadge({
       <TooltipTrigger asChild>
         <button
           type="button"
+          lang={locale}
           className={`inline-flex items-center relative ${hasCustomTop ? "" : "top-[1px]"} ml-0.5`}
           style={hasCustomTop ? { top } : undefined}
           onClick={() => setOpen(true)}
@@ -126,11 +131,12 @@ export function ReviewCompleteBadge({
       <TooltipContent
         side="bottom"
         align="start"
+        lang={locale}
         className="bg-neutral-200 text-mirai-text font-medium text-xs rounded-lg px-4 py-2"
       >
-        この記事は公式一次資料との照合および
+        {tooltipFirst}
         <br />
-        内容の確認が完了しています
+        {tooltipSecond}
       </TooltipContent>
     </Tooltip>
   );

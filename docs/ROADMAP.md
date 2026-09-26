@@ -142,7 +142,7 @@ easy / normal / hard の3難易度をシード側で公開対象としている
 
 - [x] i18nライブラリ選定（当面は入れない。決定記録 §3）
 - [x] locale config
-- [ ] UI translation（ヘッダー・トップページ・議案カード・フッターは英語化済み（#54）。下層ページ・議案詳細の見出し・ネイティブ確認が残り。BACKLOG P8-12）
+- [ ] UI translation（ヘッダー・トップページ・議案カード・フッター（#54）、定例会の議案一覧・議員一覧・議員詳細・議案詳細の見出しと操作は英語化済み。FAQ/規約・ページタイトル・ネイティブ確認が残り。`<html lang>` は `ja` のまま。BACKLOG P8-12）
 - [x] translation table
 - [x] source hash / stale tracking（読み出し時照合。stale への自動更新は未着手）
 - [x] language switcher

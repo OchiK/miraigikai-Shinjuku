@@ -5,7 +5,9 @@ import type {
   BillWithContent,
   ComingSoonBill,
 } from "@/features/bills/shared/types";
-import { siteConfig } from "@/config/site.config";
+import { AroundJapanese } from "@/features/i18n/client/components/around-japanese";
+import { BillsInJapaneseNotice } from "@/features/i18n/client/components/bills-in-japanese-notice";
+import { getUiMessages } from "@/features/i18n/shared/ui-messages";
 import type { CouncilSession } from "../../shared/types";
 import { BillListWithStatusFilter } from "./bill-list-with-status-filter";
 
@@ -24,10 +26,11 @@ export function CouncilSessionBillList({
 }: Props) {
   const startDate = new Date(session.start_date);
   const endDate = new Date(session.end_date ?? session.start_date);
-  const sessionDescription = `${startDate.getFullYear()}.${startDate.getMonth() + 1}月〜${endDate.getMonth() + 1}月に実施された${session.name}`;
+  const year = startDate.getFullYear();
+  const { sessionBills, home, factionStances } = getUiMessages(locale);
 
   return (
-    <div className="flex flex-col gap-8">
+    <div lang={locale} className="flex flex-col gap-8">
       {/* Archiveヘッダー */}
       <div className="flex flex-col gap-1">
         <h1>
@@ -40,25 +43,44 @@ export function CouncilSessionBillList({
           />
         </h1>
         <p className="text-sm font-bold text-mirai-accent-text">
-          {session.name}に上程された議案
+          <AroundJapanese around={sessionBills.archiveSubtitle}>
+            {session.name}
+          </AroundJapanese>
         </p>
       </div>
 
       {/* セクションヘッダー */}
       <div className="flex flex-col gap-0.5">
         <h2 className="text-[22px] font-bold text-black leading-[1.48] flex items-center gap-4">
-          {startDate.getFullYear()}年 {session.name}の提出議案
-          <span>{bills.length}件</span>
+          <span>
+            <AroundJapanese around={sessionBills.heading(year)}>
+              {session.name}
+            </AroundJapanese>
+          </span>
+          <span className="whitespace-nowrap">
+            {home.billCount(bills.length)}
+          </span>
         </h2>
         <p className="text-xs font-medium text-mirai-text">
-          {sessionDescription}
+          <AroundJapanese
+            around={sessionBills.period(
+              year,
+              startDate.getMonth() + 1,
+              endDate.getMonth() + 1
+            )}
+          >
+            {session.name}
+          </AroundJapanese>
         </p>
       </div>
+
+      {/* 議案名・タグが日本語のままであることの案内（日本語表示では出さない） */}
+      <BillsInJapaneseNotice locale={locale} />
 
       {/* フィルター付き議案リスト（coming soon含む） */}
       {bills.length === 0 && comingSoonBills.length === 0 ? (
         <p className="text-center py-12 text-muted-foreground">
-          この定例会の議案はまだありません
+          {sessionBills.emptyNotice}
         </p>
       ) : (
         <BillListWithStatusFilter
@@ -70,16 +92,25 @@ export function CouncilSessionBillList({
 
       {/* 議会リンク */}
       {session.council_url && (
-        <div className="flex items-center gap-1 text-[13px] font-medium text-mirai-text">
-          {startDate.getFullYear()}年{session.name}に上程された全ての議案は
+        <div className="flex flex-wrap items-center gap-1 text-[13px] font-medium text-mirai-text">
+          <span>
+            <AroundJapanese around={sessionBills.councilLinkLead(year)}>
+              {session.name}
+            </AroundJapanese>
+          </span>
           <a
             href={session.council_url}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1"
           >
-            {siteConfig.councilName}情報へ
-            <ExternalLink className="h-3 w-3" />
+            {sessionBills.councilLinkText}
+            <ExternalLink
+              aria-hidden="true"
+              className="h-3 w-3"
+              strokeWidth={2.75}
+            />
+            <span className="sr-only">{factionStances.opensInNewTab}</span>
           </a>
         </div>
       )}

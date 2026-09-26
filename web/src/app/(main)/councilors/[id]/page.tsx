@@ -5,6 +5,7 @@ import { siteConfig } from "@/config/site.config";
 import { getActiveCouncilSession } from "@/features/council-sessions/server/loaders/get-active-council-session";
 import { CouncilorDetailSection } from "@/features/councilors/server/components/councilor-detail-section";
 import { getCouncilorById } from "@/features/councilors/server/loaders/get-councilor-by-id";
+import { getLocale } from "@/features/i18n/server/loaders/get-locale";
 import { routes } from "@/lib/routes";
 
 type Props = {
@@ -31,9 +32,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function CouncilorDetailPage({ params }: Props) {
   const { id } = await params;
-  const [councilor, activeSession] = await Promise.all([
+  const [councilor, activeSession, locale] = await Promise.all([
     getCouncilorById(id),
     getActiveCouncilSession(),
+    getLocale(),
   ]);
 
   if (!councilor) {
@@ -49,6 +51,7 @@ export default async function CouncilorDetailPage({ params }: Props) {
             ? { name: activeSession.name, slug: activeSession.slug }
             : null
         }
+        locale={locale}
       />
     </Container>
   );

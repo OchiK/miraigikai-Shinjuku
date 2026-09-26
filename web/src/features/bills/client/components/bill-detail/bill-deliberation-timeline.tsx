@@ -1,10 +1,14 @@
+import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
+import { getUiMessages } from "@/features/i18n/shared/ui-messages";
 import type { BillStatusEnum } from "../../../shared/types";
 import type { BillTimelineEvent } from "../../../shared/utils/bill-timeline";
 import { buildBillTimeline } from "../../../shared/utils/bill-timeline";
+import { localizeBillTimelineEvent } from "../../../shared/utils/localize-bill-timeline";
 
 interface BillDeliberationTimelineProps {
   status: BillStatusEnum;
   statusNote?: string | null;
+  locale?: PublicLocale;
 }
 
 /** 到達済みの節だけテラコッタで塗り、未到達は面の色に落とす */
@@ -32,21 +36,24 @@ function labelClassName(state: BillTimelineEvent["state"]): string {
 export function BillDeliberationTimeline({
   status,
   statusNote,
+  locale = "ja",
 }: BillDeliberationTimelineProps) {
-  const events = buildBillTimeline({ status, statusNote });
+  const input = { status, statusNote };
+  const events = buildBillTimeline(input);
 
   return (
-    <section aria-labelledby="bill-timeline-heading">
+    <section aria-labelledby="bill-timeline-heading" lang={locale}>
       <h2
         className="mb-4 font-bold font-heading text-mirai-text text-xl"
         id="bill-timeline-heading"
       >
-        審議の経過
+        {getUiMessages(locale).billDetail.timeline.heading}
       </h2>
 
       <ol className="rounded-xl bg-card p-6 shadow-mirai-sm">
         {events.map((event, index) => {
           const isLast = index === events.length - 1;
+          const text = localizeBillTimelineEvent(event, input, locale);
 
           return (
             <li className="flex gap-4" key={event.key}>
@@ -66,16 +73,19 @@ export function BillDeliberationTimeline({
 
               <div className={isLast ? "pb-0" : "pb-6"}>
                 <p className="text-mirai-text-muted text-sm leading-[1.75]">
-                  {event.dateLabel}
+                  {text.dateLabel}
                 </p>
                 <p
                   className={`font-bold text-base leading-[1.9] ${labelClassName(event.state)}`}
                 >
-                  {event.label}
+                  {text.label}
                 </p>
-                {event.detail && (
-                  <p className="text-mirai-text-muted text-sm leading-[1.9]">
-                    {event.detail}
+                {text.detail && (
+                  <p
+                    className="text-mirai-text-muted text-sm leading-[1.9]"
+                    lang={text.detailLang}
+                  >
+                    {text.detail}
                   </p>
                 )}
               </div>

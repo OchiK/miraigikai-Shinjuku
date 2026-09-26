@@ -198,3 +198,61 @@ describe("localizeCardStatusLabel", () => {
     expect(localizeCardStatusLabel("未知の用語", "en")).toBe("未知の用語");
   });
 });
+
+describe("P8-12 残作業の英語文言", () => {
+  const { sessionBills, councilors, councilorDetail, billDetail } =
+    getUiMessages("en");
+  const around = ({ before, after }: { before: string; after: string }) =>
+    `${before}[S]${after}`;
+
+  it("議員数・質問数・当選回数は1だけ単数形にする", () => {
+    expect(councilors.showing(1)).toBe("Showing 1 councilor");
+    expect(councilors.showing(38)).toBe("Showing 38 councilors");
+    expect(councilors.memberCount(1)).toBe("1 member");
+    expect(councilors.memberCount(7)).toBe("7 members");
+    expect(councilors.questions(1)).toBe("1 question");
+    expect(councilors.questions(4)).toBe("4 questions");
+    expect(councilors.terms(1)).toBe("1 term");
+    expect(councilors.terms(3)).toBe("3 terms");
+  });
+
+  it("会期名は文言の間に差し込み、日本語部分を分けて持つ", () => {
+    expect(around(sessionBills.heading(2026))).toBe(
+      "Bills submitted to [S] (2026)"
+    );
+    expect(around(sessionBills.period(2026, 2, 3))).toBe(
+      "[S], held February–March 2026"
+    );
+    expect(around(sessionBills.period(2026, 6, 6))).toBe(
+      "[S], held in June 2026"
+    );
+    expect(around(billDetail.backToSession)).toBe("Bills: [S]");
+    expect(around(councilorDetail.viewSessionBills)).toBe("See bills from [S]");
+  });
+
+  it("傾向の注記は以前の会期名を括弧で挟める", () => {
+    const note = councilorDetail.topicsNote(1);
+    expect(`${note.before}${around(note.session)}`).toBe(
+      "Counts of the topic tags on the 1 question on this site (from [S])"
+    );
+  });
+
+  it("日本語の文言は従来の表記のまま", () => {
+    const ja = getUiMessages("ja");
+    expect(around(ja.sessionBills.heading(2026))).toBe("2026年 [S]の提出議案");
+    expect(around(ja.sessionBills.period(2026, 2, 3))).toBe(
+      "2026.2月〜3月に実施された[S]"
+    );
+    expect(ja.councilors.terms(3)).toBe("3期");
+    expect(ja.councilors.questions(4)).toBe("質問 4件");
+    expect(around(ja.billDetail.backToSession)).toBe("[S]");
+  });
+
+  it("委員会の役職は日本語の3種すべてに英語がある", () => {
+    expect(councilors.committeeRoles).toEqual({
+      委員長: "Chair",
+      副委員長: "Vice Chair",
+      委員: "Member",
+    });
+  });
+});

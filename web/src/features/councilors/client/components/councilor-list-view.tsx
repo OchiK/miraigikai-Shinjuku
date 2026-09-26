@@ -1,9 +1,11 @@
 "use client";
 
+import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
 import { Search } from "lucide-react";
 import { useId, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { getUiMessages } from "@/features/i18n/shared/ui-messages";
 import type { Councilor } from "../../shared/types";
 import { getFactionAnchorId } from "../../shared/utils/faction-anchor";
 import {
@@ -14,6 +16,7 @@ import { CouncilorCard } from "./councilor-card";
 
 type Props = {
   councilors: Councilor[];
+  locale?: PublicLocale;
 };
 
 const chipClass = (active: boolean) =>
@@ -27,7 +30,8 @@ const chipClass = (active: boolean) =>
  * 議員一覧。会派の絞り込みと氏名・ふりがな検索ができる。
  * 会派ごとに面を分けて見出しを立て、会派内は議席番号順に並べる。
  */
-export function CouncilorListView({ councilors }: Props) {
+export function CouncilorListView({ councilors, locale = "ja" }: Props) {
+  const { councilors: messages } = getUiMessages(locale);
   const searchId = useId();
   const [factionId, setFactionId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -52,7 +56,7 @@ export function CouncilorListView({ councilors }: Props) {
     <div className="flex flex-col gap-6">
       <div className="relative">
         <label htmlFor={searchId} className="sr-only">
-          氏名・ふりがなで探す
+          {messages.searchLabel}
         </label>
         <Search
           aria-hidden="true"
@@ -64,14 +68,14 @@ export function CouncilorListView({ councilors }: Props) {
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="氏名・ふりがなで探す"
+          placeholder={messages.searchLabel}
           className="h-11 rounded-full border-0 bg-card pl-11 text-base shadow-mirai-sm md:text-base"
         />
       </div>
 
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-2 font-bold text-mirai-text text-sm">
-          会派で絞り込む
+          {messages.filterLegend}
         </legend>
         <div className="flex flex-wrap gap-2">
           <Button
@@ -80,7 +84,7 @@ export function CouncilorListView({ councilors }: Props) {
             onClick={() => setFactionId(null)}
             className={chipClass(factionId === null)}
           >
-            すべて {councilors.length}
+            {messages.filterAll(councilors.length)}
           </Button>
           {factionGroups.map(
             ({ faction, councilors: members }) =>
@@ -92,7 +96,7 @@ export function CouncilorListView({ councilors }: Props) {
                   onClick={() => setFactionId(faction.id)}
                   className={chipClass(factionId === faction.id)}
                 >
-                  {faction.displayName} {members.length}
+                  <span lang="ja">{faction.displayName}</span> {members.length}
                 </Button>
               )
           )}
@@ -100,12 +104,12 @@ export function CouncilorListView({ councilors }: Props) {
       </fieldset>
 
       <p aria-live="polite" className="text-mirai-text-muted text-sm">
-        {visibleCount}人を表示しています
+        {messages.showing(visibleCount)}
       </p>
 
       {visibleCount === 0 ? (
         <p className="py-12 text-center text-mirai-text-muted">
-          該当する議員がいません
+          {messages.noResults}
         </p>
       ) : (
         <div className="flex flex-col gap-6">
@@ -118,16 +122,20 @@ export function CouncilorListView({ councilors }: Props) {
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h2 className="font-heading font-bold text-mirai-text text-xl leading-[1.3] md:text-2xl">
-                  {faction?.displayName ?? "会派なし"}
+                  {faction ? (
+                    <span lang="ja">{faction.displayName}</span>
+                  ) : (
+                    messages.unaffiliated
+                  )}
                 </h2>
                 <span className="rounded-full bg-card px-3 py-1 font-bold text-mirai-text text-xs shadow-mirai-sm">
-                  {members.length}人
+                  {messages.memberCount(members.length)}
                 </span>
               </div>
               <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {members.map((councilor) => (
                   <li key={councilor.id} className="h-full">
-                    <CouncilorCard councilor={councilor} />
+                    <CouncilorCard councilor={councilor} locale={locale} />
                   </li>
                 ))}
               </ul>

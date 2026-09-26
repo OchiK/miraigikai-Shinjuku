@@ -1,9 +1,14 @@
 import "server-only";
 
-import { ArrowLeft, ChevronRight, Info } from "lucide-react";
+import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
+import { ArrowLeft, ChevronRight, Info, Languages } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { siteConfig } from "@/config/site.config";
+import { AroundJapanese } from "@/features/i18n/client/components/around-japanese";
+import {
+  getUiMessages,
+  type UiMessages,
+} from "@/features/i18n/shared/ui-messages";
 import { routes } from "@/lib/routes";
 import { COUNCILOR_SOURCES, QUESTION_SOURCES } from "../../shared/constants";
 import type {
@@ -15,7 +20,6 @@ import type {
 import { groupCommitteesByKind } from "../../shared/utils/committee-kind";
 import {
   getEarlierSessionNoticeName,
-  VENUE_LABELS,
   VENUE_TYPES,
 } from "../../shared/utils/councilor-questions";
 import {
@@ -29,11 +33,18 @@ type Props = {
   councilor: CouncilorDetail;
   /** 開催中（最新）の定例会。議案一覧ページを持つときだけ渡す */
   activeSession?: { name: string; slug: string } | null;
+  locale?: PublicLocale;
 };
 
-function RoleTag({ role }: { role: string }) {
+type DetailMessages = UiMessages["councilorDetail"];
+
+/** 役職タグ。会派内の役職は DB のまま日本語なので lang を渡す */
+function RoleTag({ role, lang }: { role: string; lang?: "ja" }) {
   return (
-    <span className="rounded-full bg-mirai-featured px-3 py-0.5 font-bold text-mirai-featured-text text-xs">
+    <span
+      lang={lang}
+      className="rounded-full bg-mirai-featured px-3 py-0.5 font-bold text-mirai-featured-text text-xs"
+    >
       {role}
     </span>
   );
@@ -54,26 +65,38 @@ function DetailItem({
   );
 }
 
-function CommitteeGroups({ committees }: { committees: CouncilorCommittee[] }) {
+function CommitteeGroups({
+  committees,
+  messages,
+  roles,
+}: {
+  committees: CouncilorCommittee[];
+  messages: DetailMessages;
+  roles: UiMessages["councilors"]["committeeRoles"];
+}) {
   const groups = groupCommitteesByKind(committees);
 
   if (groups.length === 0) {
-    return <p className="text-base text-mirai-text">所属なし</p>;
+    return <p className="text-base text-mirai-text">{messages.noCommittees}</p>;
   }
 
   return (
     <div className="flex flex-col gap-4">
       {groups.map((group) => (
         <div key={group.kind} className="flex flex-col gap-1">
-          <p className="text-mirai-text-muted text-xs">{group.label}</p>
+          <p className="text-mirai-text-muted text-xs">
+            {messages.committeeKinds[group.kind]}
+          </p>
           <ul className="flex flex-col gap-1">
             {group.committees.map((committee) => (
               <li
                 key={committee.id}
                 className="flex flex-wrap items-center gap-2 text-base text-mirai-text"
               >
-                {committee.name}
-                {committee.role !== "委員" && <RoleTag role={committee.role} />}
+                <span lang="ja">{committee.name}</span>
+                {committee.role !== "委員" && (
+                  <RoleTag role={roles[committee.role]} />
+                )}
               </li>
             ))}
           </ul>
@@ -86,25 +109,35 @@ function CommitteeGroups({ committees }: { committees: CouncilorCommittee[] }) {
 function QuestionCountBadges({
   total,
   venueCounts,
+  messages,
+  questionsLabel,
 }: {
   total: number;
   venueCounts: QuestionVenueCounts;
+  messages: DetailMessages;
+  questionsLabel: (count: number) => string;
 }) {
   const venues = VENUE_TYPES.filter((venue) => venueCounts[venue] > 0).map(
-    (venue) => ({ label: VENUE_LABELS[venue], count: venueCounts[venue] })
+    (venue) => ({
+      label: messages.venueLabels[venue],
+      count: venueCounts[venue],
+    })
   );
 
   return (
-    <ul className="flex flex-wrap gap-2 text-xs" aria-label="掲載中の質問">
+    <ul
+      className="flex flex-wrap gap-2 text-xs"
+      aria-label={messages.questionCountsLabel}
+    >
       <li className="rounded-full bg-background px-3 py-0.5 font-bold text-mirai-text">
-        質問 {total}件
+        {questionsLabel(total)}
       </li>
       {venues.map((venue) => (
         <li
           key={venue.label}
           className="rounded-full bg-background px-3 py-0.5 text-mirai-text-muted"
         >
-          {venue.label} {venue.count}件
+          {venue.label} {messages.venueCount(venue.count)}
         </li>
       ))}
     </ul>
@@ -114,42 +147,55 @@ function QuestionCountBadges({
 function TopicSummary({
   questions,
   earlierSessionName,
+  messages,
+  showSummaryText,
 }: {
   questions: CouncilorQuestion[];
   /** 以前の定例会の質問を載せているとき、その会期名 */
   earlierSessionName: string | null;
+  messages: DetailMessages;
+  /**
+   * タグ集計の1文を出すか。文中にタグ名（日本語）を埋め込むため日本語表示だけで出す。
+   * 英語表示ではタグと件数の一覧が同じ情報を示す
+   */
+  showSummaryText: boolean;
 }) {
   const summary = summarizeCouncilorTopics(questions);
   const text = buildTopicSummaryText(summary);
 
   // 質問0件のときは呼び出し側で項目ごと出さない。ここで null なのはタグが1つもない場合
   if (!text) {
-    return (
-      <p className="text-base text-mirai-text">テーマタグはまだありません</p>
-    );
+    return <p className="text-base text-mirai-text">{messages.noTopicTags}</p>;
   }
+
+  const note = messages.topicsNote(summary.questionCount);
 
   return (
     <div className="flex flex-col gap-3">
-      <ul className="flex flex-wrap gap-2" aria-label="主なテーマ">
+      <ul className="flex flex-wrap gap-2" aria-label={messages.topicTagsLabel}>
         {summary.topTags.map(({ tag, count }) => (
           <li
             key={tag}
             className="rounded-full bg-background px-3 py-1 text-mirai-text text-sm"
           >
-            {tag}
+            <span lang="ja">{tag}</span>
             <span className="ml-1 text-mirai-text-muted text-xs">
-              {count}件
+              {messages.topicTagCount(count)}
             </span>
           </li>
         ))}
       </ul>
-      <p className="text-base text-mirai-text leading-[1.9]">{text}</p>
+      {showSummaryText && (
+        <p className="text-base text-mirai-text leading-[1.9]">{text}</p>
+      )}
       <p className="text-mirai-text-muted text-xs leading-[1.9]">
-        このサイトで公開中の質問{summary.questionCount}件
-        {earlierSessionName && `（${earlierSessionName}の質問）`}
-        に付けたテーマタグを数えたものです（{QUESTION_SOURCES.asOf}
-        時点）。タグはAIが付けたもので、議員の関心のすべてを表すものではありません。
+        {note.before}
+        {earlierSessionName && (
+          <AroundJapanese around={note.session}>
+            {earlierSessionName}
+          </AroundJapanese>
+        )}
+        {note.after}
       </p>
     </div>
   );
@@ -158,7 +204,13 @@ function TopicSummary({
 /**
  * 令和8年の質問がなく、以前の定例会の質問を載せている議員への注記
  */
-function EarlierSessionsNotice({ sessionName }: { sessionName: string }) {
+function EarlierSessionsNotice({
+  sessionName,
+  messages,
+}: {
+  sessionName: string;
+  messages: DetailMessages;
+}) {
   return (
     <div
       className="flex items-start gap-3 rounded-xl bg-mirai-surface-sunken px-5 py-4 text-mirai-text"
@@ -170,16 +222,29 @@ function EarlierSessionsNotice({ sessionName }: { sessionName: string }) {
         strokeWidth={2.75}
       />
       <p className="text-sm leading-[1.9]">
-        {QUESTION_SOURCES.scopeSessionsLabel}
-        の本会議では、この議員の代表質問・一般質問はありません。それ以前で最も新しい
-        {sessionName}
-        の質問を掲載しています。
+        <AroundJapanese around={messages.earlierNotice}>
+          {sessionName}
+        </AroundJapanese>
       </p>
     </div>
   );
 }
 
-export function CouncilorDetailSection({ councilor, activeSession }: Props) {
+export function CouncilorDetailSection({
+  councilor,
+  activeSession,
+  locale = "ja",
+}: Props) {
+  const {
+    councilorDetail: messages,
+    councilors: listMessages,
+    councilorSources,
+  } = getUiMessages(locale);
+  const factionName = councilor.faction ? (
+    <span lang="ja">{councilor.faction.displayName}</span>
+  ) : (
+    listMessages.unaffiliated
+  );
   const earlierNoticeSession = getEarlierSessionNoticeName(
     councilor.latestQuestionDate,
     councilor.questions,
@@ -187,31 +252,36 @@ export function CouncilorDetailSection({ councilor, activeSession }: Props) {
   );
 
   return (
-    <div className="flex flex-col gap-8">
+    <div lang={locale} className="flex flex-col gap-8">
       <Link
         href={routes.councilors()}
         className="inline-flex min-h-11 w-fit items-center gap-2 font-bold text-mirai-accent-text text-sm"
       >
         <ArrowLeft aria-hidden="true" className="size-4" strokeWidth={2.75} />
-        議員一覧へ
+        {messages.backToList}
       </Link>
 
       <header className="flex flex-col gap-1 rounded-xl bg-card p-6 shadow-mirai-sm">
-        <p className="text-mirai-text-muted text-sm">
-          {siteConfig.councilName}議員
-        </p>
-        <h1 className="font-heading font-bold text-3xl text-mirai-text leading-[1.28] md:text-[42px]">
+        <p className="text-mirai-text-muted text-sm">{messages.memberTitle}</p>
+        <h1
+          lang="ja"
+          className="font-heading font-bold text-3xl text-mirai-text leading-[1.28] md:text-[42px]"
+        >
           {councilor.name}
         </h1>
-        <p className="text-mirai-text-muted text-sm">{councilor.nameKana}</p>
+        <p lang="ja" className="text-mirai-text-muted text-sm">
+          {councilor.nameKana}
+        </p>
         <div className="flex flex-wrap items-center gap-2 pt-2">
           <span className="rounded-full bg-mirai-tag px-3 py-0.5 text-mirai-tag-text text-xs">
-            {councilor.faction?.displayName ?? "会派なし"}
+            {factionName}
           </span>
           {councilor.questionsCount > 0 && (
             <QuestionCountBadges
               total={councilor.questionsCount}
               venueCounts={councilor.questionVenueCounts}
+              messages={messages}
+              questionsLabel={listMessages.questions}
             />
           )}
         </div>
@@ -219,33 +289,38 @@ export function CouncilorDetailSection({ councilor, activeSession }: Props) {
 
       <section className="flex flex-col gap-4">
         <h2 className="font-heading font-bold text-2xl text-mirai-text leading-[1.3] md:text-[32px]">
-          この議員について
+          {messages.aboutHeading}
         </h2>
         <dl className="flex flex-col gap-3">
-          <DetailItem label="会派等">
+          <DetailItem label={messages.labels.faction}>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-base text-mirai-text">
-                {councilor.faction?.displayName ?? "会派なし"}
-              </span>
+              <span className="text-base text-mirai-text">{factionName}</span>
               {councilor.factionRole && (
-                <RoleTag role={councilor.factionRole} />
+                <RoleTag role={councilor.factionRole} lang="ja" />
               )}
             </div>
-            <ExternalSourceLink href={COUNCILOR_SOURCES.factions.url}>
-              公式の{COUNCILOR_SOURCES.factions.label}
+            <ExternalSourceLink
+              href={COUNCILOR_SOURCES.factions.url}
+              locale={locale}
+            >
+              {messages.officialFactionsLink}
             </ExternalSourceLink>
           </DetailItem>
 
           {activeSession && (
-            <DetailItem label="審議している議案">
+            <DetailItem label={messages.labels.bills}>
               <p className="text-base text-mirai-text leading-[1.9]">
-                議案は本会議で採決され、各会派が賛否を示します。
+                {messages.billsLead}
               </p>
               <Link
                 href={routes.sessionBills(activeSession.slug)}
                 className="inline-flex min-h-11 w-fit items-center gap-1 font-bold text-mirai-accent-text text-sm underline-offset-4 hover:underline"
               >
-                {activeSession.name}の議案一覧を見る
+                <span>
+                  <AroundJapanese around={messages.viewSessionBills}>
+                    {activeSession.name}
+                  </AroundJapanese>
+                </span>
                 <ChevronRight
                   aria-hidden="true"
                   className="size-4 shrink-0"
@@ -255,51 +330,63 @@ export function CouncilorDetailSection({ councilor, activeSession }: Props) {
             </DetailItem>
           )}
 
-          <DetailItem label="所属委員会">
-            <CommitteeGroups committees={councilor.committees} />
-            <ExternalSourceLink href={COUNCILOR_SOURCES.committees.url}>
-              公式の{COUNCILOR_SOURCES.committees.label}
+          <DetailItem label={messages.labels.committees}>
+            <CommitteeGroups
+              committees={councilor.committees}
+              messages={messages}
+              roles={listMessages.committeeRoles}
+            />
+            <ExternalSourceLink
+              href={COUNCILOR_SOURCES.committees.url}
+              locale={locale}
+            >
+              {messages.officialCommitteesLink}
             </ExternalSourceLink>
           </DetailItem>
 
           {councilor.questions.length > 0 && (
-            <DetailItem label="掲載中の質問からの傾向">
+            <DetailItem label={messages.labels.topics}>
               <TopicSummary
                 questions={councilor.questions}
                 earlierSessionName={earlierNoticeSession}
+                messages={messages}
+                showSummaryText={locale === "ja"}
               />
             </DetailItem>
           )}
 
           {councilor.terms && (
-            <DetailItem label="当選回数">
-              <p className="text-base text-mirai-text">{councilor.terms}期</p>
+            <DetailItem label={messages.labels.terms}>
+              <p className="text-base text-mirai-text">
+                {listMessages.terms(councilor.terms)}
+              </p>
             </DetailItem>
           )}
 
-          <DetailItem label="公式の情報">
+          <DetailItem label={messages.labels.officialInfo}>
             <ExternalSourceLink
               href={councilor.officialUrl ?? COUNCILOR_SOURCES.roster.url}
+              locale={locale}
             >
-              {siteConfig.councilName} {COUNCILOR_SOURCES.roster.label}
+              {councilorSources.linkLabels.roster}
             </ExternalSourceLink>
             {councilor.websiteUrl && (
               <>
-                <ExternalSourceLink href={councilor.websiteUrl}>
-                  議員本人のウェブサイト
+                <ExternalSourceLink href={councilor.websiteUrl} locale={locale}>
+                  {messages.websiteLink}
                 </ExternalSourceLink>
                 <p className="text-mirai-text-muted text-xs">
-                  公式名簿に掲載されているURLです
+                  {messages.websiteNote}
                 </p>
               </>
             )}
             {councilor.xUrl && (
               <>
-                <ExternalSourceLink href={councilor.xUrl}>
-                  議員本人のX（旧Twitter）
+                <ExternalSourceLink href={councilor.xUrl} locale={locale}>
+                  {messages.xLink}
                 </ExternalSourceLink>
                 <p className="text-mirai-text-muted text-xs">
-                  {COUNCILOR_SOURCES.xAccounts.rule}です
+                  {messages.xNote}
                 </p>
               </>
             )}
@@ -315,23 +402,37 @@ export function CouncilorDetailSection({ councilor, activeSession }: Props) {
           id="councilor-questions-heading"
           className="font-heading font-bold text-2xl text-mirai-text leading-[1.3] md:text-[32px]"
         >
-          掲載中の質問
+          {messages.questionsHeading}
         </h2>
         <p className="text-mirai-text-muted text-sm leading-[1.9]">
-          {QUESTION_SOURCES.scope}
-          での質問を、論点ごとに新しい順で掲載しています。
-          {!earlierNoticeSession && QUESTION_SOURCES.earlierSessionsRule}
-          要約はAIが会議録の質問部分をもとに作成したもので、答弁の内容は含みません。正確な内容は会議録をご確認ください。
+          {messages.questionsLead}
+          {!earlierNoticeSession && messages.earlierSessionsRule}
+          {messages.questionsTail}
         </p>
         {earlierNoticeSession && (
-          <EarlierSessionsNotice sessionName={earlierNoticeSession} />
+          <EarlierSessionsNotice
+            sessionName={earlierNoticeSession}
+            messages={messages}
+          />
         )}
+        {councilor.questions.length > 0 &&
+          messages.questionsInJapaneseNotice && (
+            <p className="flex items-start gap-3 rounded-xl bg-terracotta-200 px-5 py-4 text-mirai-ai-text text-sm leading-[1.9]">
+              <Languages
+                aria-hidden="true"
+                className="mt-1 size-5 shrink-0"
+                strokeWidth={2.75}
+              />
+              <span>{messages.questionsInJapaneseNotice}</span>
+            </p>
+          )}
         {councilor.questions.length === 0 ? (
           <p className="rounded-xl bg-card p-5 text-base text-mirai-text shadow-mirai-sm">
-            質問はまだ登録されていません
+            {messages.noQuestions}
           </p>
         ) : (
-          <ol className="flex flex-col gap-4">
+          // 質問の見出し・要約・カード内の表記は DB のまま日本語（議案詳細と同じ扱い）
+          <ol lang="ja" className="flex flex-col gap-4">
             {councilor.questions.map((question) => (
               <li key={question.id}>
                 <CouncilorQuestionCard question={question} />
@@ -341,7 +442,7 @@ export function CouncilorDetailSection({ councilor, activeSession }: Props) {
         )}
       </section>
 
-      <CouncilorSources />
+      <CouncilorSources locale={locale} />
     </div>
   );
 }

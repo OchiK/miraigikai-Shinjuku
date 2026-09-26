@@ -6,6 +6,7 @@ import type { DifficultyLevelEnum } from "@/features/bill-difficulty/shared/type
 import { getQuestionsByBillId } from "@/features/councilors/server/loaders/get-questions-by-bill-id";
 import { TranslationNotice } from "@/features/i18n/server/components/translation-notice";
 import type { BillLocalization } from "@/features/i18n/shared/types";
+import { getUiMessages } from "@/features/i18n/shared/ui-messages";
 import { InterviewLandingSection } from "@/features/interview-config/client/components/interview-landing-section";
 import { getInterviewConfig } from "@/features/interview-config/server/loaders/get-interview-config";
 import { BillInterviewOpinionsSection } from "@/features/interview-report/server/components/bill-interview-opinions-section";
@@ -79,7 +80,10 @@ export async function BillDetailLayout({
       >
         <Container>
           {/* 1. 上部ナビゲーション */}
-          <BillDetailNav councilSession={bill.council_session} />
+          <BillDetailNav
+            councilSession={bill.council_session}
+            locale={locale}
+          />
 
           <div className="flex flex-col gap-8">
             {/* 2〜4. 議決ステータス・議案番号 / 表題 / 分野タグ */}
@@ -94,6 +98,7 @@ export async function BillDetailLayout({
               title={bill.bill_content?.title}
               isReviewCompleted={bill.is_review_completed}
               lang={contentLang}
+              locale={locale}
             />
 
             {/* 6. 議決結果 */}
@@ -110,6 +115,7 @@ export async function BillDetailLayout({
             <BillDeliberationTimeline
               status={bill.status}
               statusNote={bill.status_note}
+              locale={locale}
             />
 
             {/* 7-2. この議案と議員（議員一覧・議案に紐づく質問） */}
@@ -120,7 +126,7 @@ export async function BillDetailLayout({
 
             {/* 8. 議案の原文（既定では開かない） */}
             {bill.bill_content?.content && (
-              <BillOriginalAccordion>
+              <BillOriginalAccordion locale={locale}>
                 <div lang={contentLang}>
                   <BillContent bill={bill} />
                 </div>
@@ -128,13 +134,13 @@ export async function BillDetailLayout({
             )}
 
             {/* 9. 区議会の公式ページ（PDF） */}
-            <BillSourceLinks bill={bill} />
+            <BillSourceLinks bill={bill} locale={locale} />
 
             {/* 10. 質問・参加・共有（追尾するボタンは置かない） */}
-            <BillChatCtaBanner />
+            <BillChatCtaBanner locale={locale} />
 
             <div
-              aria-label="この議案への参加と共有"
+              aria-label={getUiMessages(locale).billDetail.participationLabel}
               className="flex flex-col gap-8"
               role="group"
             >
@@ -150,7 +156,7 @@ export async function BillDetailLayout({
                 <InterviewLandingSection billId={bill.id} />
               )}
 
-              <BillShareButtons bill={bill} />
+              <BillShareButtons bill={bill} locale={locale} />
             </div>
 
             {/* 11. 免責 */}

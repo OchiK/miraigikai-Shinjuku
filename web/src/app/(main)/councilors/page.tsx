@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Container } from "@/components/layouts/container";
 import { siteConfig } from "@/config/site.config";
-import { getCouncilors } from "@/features/councilors/server/loaders/get-councilors";
 import { CouncilorListSection } from "@/features/councilors/server/components/councilor-list-section";
+import { getCouncilors } from "@/features/councilors/server/loaders/get-councilors";
+import { getLocale } from "@/features/i18n/server/loaders/get-locale";
 import { routes } from "@/lib/routes";
 
 export const metadata: Metadata = {
@@ -14,11 +15,14 @@ export const metadata: Metadata = {
 };
 
 export default async function CouncilorsPage() {
-  const councilors = await getCouncilors();
+  const [councilors, locale] = await Promise.all([
+    getCouncilors(),
+    getLocale(),
+  ]);
 
   return (
     <Container className="pt-24 pb-8 md:pt-8">
-      <CouncilorListSection councilors={councilors} />
+      <CouncilorListSection councilors={councilors} locale={locale} />
     </Container>
   );
 }

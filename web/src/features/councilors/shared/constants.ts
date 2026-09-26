@@ -21,6 +21,13 @@ export const COUNCILOR_SOURCES = {
     label: "委員会名簿",
     url: "https://www.city.shinjuku.lg.jp/kusei/file08_01_00013.html",
   },
+  /** 英語表示用。上の日付・基準を変えたらここも合わせる */
+  en: {
+    asOf: "August 7, 2026",
+    xAccountsRule:
+      "accounts we confirmed as the councilor's own, either through a link from their website or a profile that names them as a Shinjuku City Council member",
+    xAccountsAsOf: "September 26, 2026",
+  },
 } as const;
 
 /**
@@ -41,6 +48,15 @@ export const QUESTION_SOURCES = {
   minutes: {
     label: "会議録検索システム",
     url: "https://ssp.kaigiroku.net/tenant/shinjuku/",
+  },
+  /** 英語表示用。上の掲載範囲・日付を変えたらここも合わせる */
+  en: {
+    asOf: "September 25, 2026",
+    scope:
+      "plenary sessions (representative and general questions) of the 1st and 2nd regular sessions of 2026",
+    scopeSessionsLabel: "the 1st and 2nd regular sessions of 2026",
+    earlierSessionsRule:
+      "For councilors who asked no representative or general questions in this period, we show their questions from the most recent earlier session.",
   },
 } as const;
 

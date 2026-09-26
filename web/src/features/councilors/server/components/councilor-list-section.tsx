@@ -1,20 +1,20 @@
 import "server-only";
 
-import { siteConfig } from "@/config/site.config";
+import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
+import { getUiMessages } from "@/features/i18n/shared/ui-messages";
 import { CouncilorListView } from "../../client/components/councilor-list-view";
-import {
-  COUNCIL_SEATS,
-  COUNCILOR_SOURCES,
-  QUESTION_SOURCES,
-} from "../../shared/constants";
+import { COUNCIL_SEATS } from "../../shared/constants";
 import type { Councilor } from "../../shared/types";
 import { CouncilorSources } from "./councilor-sources";
 
 type Props = {
   councilors: Councilor[];
+  locale?: PublicLocale;
 };
 
-export function CouncilorListSection({ councilors }: Props) {
+export function CouncilorListSection({ councilors, locale = "ja" }: Props) {
+  const { councilors: messages } = getUiMessages(locale);
+
   const factionCount = new Set(
     councilors.flatMap((c) => (c.faction ? [c.faction.id] : []))
   ).size;
@@ -25,24 +25,29 @@ export function CouncilorListSection({ councilors }: Props) {
   );
 
   const stats = [
-    { label: "掲載議員", value: `${councilors.length}人` },
-    { label: "定数", value: `${COUNCIL_SEATS}人` },
-    { label: "会派", value: `${factionCount}会派` },
-    { label: "掲載質問", value: `${questionCount}件` },
+    {
+      label: messages.stats.listed,
+      value: messages.personCount(councilors.length),
+    },
+    { label: messages.stats.seats, value: messages.personCount(COUNCIL_SEATS) },
+    { label: messages.stats.groups, value: messages.groupCount(factionCount) },
+    {
+      label: messages.stats.questions,
+      value: messages.questionCount(questionCount),
+    },
   ];
 
   return (
-    <div className="flex flex-col gap-8">
+    <div lang={locale} className="flex flex-col gap-8">
       <header className="flex flex-col gap-3">
         <p className="font-display text-mirai-accent-text text-xs tracking-[0.1em]">
           COUNCILORS
         </p>
         <h1 className="font-heading font-bold text-3xl text-mirai-text leading-[1.28] md:text-[42px]">
-          {siteConfig.councilName}議員
+          {messages.heading}
         </h1>
         <p className="text-base text-mirai-text leading-[1.9]">
-          {siteConfig.councilName}
-          の議員の所属会派と所属委員会、議会での質問をまとめています。
+          {messages.lead}
         </p>
         <dl className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {stats.map((stat) => (
@@ -58,21 +63,19 @@ export function CouncilorListSection({ councilors }: Props) {
           ))}
         </dl>
         <p className="text-mirai-text-muted text-xs leading-[1.9]">
-          {COUNCILOR_SOURCES.asOf}
-          時点の公式名簿にもとづきます。質問は{QUESTION_SOURCES.scope}
-          の会議録から掲載しています。{QUESTION_SOURCES.earlierSessionsRule}
+          {messages.sourceNotice}
         </p>
       </header>
 
       {councilors.length === 0 ? (
         <p className="py-12 text-center text-mirai-text-muted">
-          議員情報はまだ掲載されていません
+          {messages.emptyNotice}
         </p>
       ) : (
-        <CouncilorListView councilors={councilors} />
+        <CouncilorListView councilors={councilors} locale={locale} />
       )}
 
-      <CouncilorSources />
+      <CouncilorSources locale={locale} />
     </div>
   );
 }

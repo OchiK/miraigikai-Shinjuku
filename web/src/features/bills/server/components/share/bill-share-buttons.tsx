@@ -1,3 +1,4 @@
+import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
 import { getBillShareData } from "@/features/bills/client/utils/share";
 import type { BillWithContent } from "@/features/bills/shared/types";
 import { BillShareButtonsClient } from "../../../client/components/share/bill-share-buttons-client";
@@ -5,11 +6,13 @@ import { BillShareButtonsClient } from "../../../client/components/share/bill-sh
 interface BillShareButtonsProps {
   bill: BillWithContent;
   className?: string;
+  locale?: PublicLocale;
 }
 
 export async function BillShareButtons({
   bill,
   className,
+  locale = "ja",
 }: BillShareButtonsProps) {
   const { shareUrl, shareMessage, thumbnailUrl } = await getBillShareData(bill);
 
@@ -19,6 +22,7 @@ export async function BillShareButtons({
         shareMessage={shareMessage}
         shareUrl={shareUrl}
         thumbnailUrl={thumbnailUrl}
+        locale={locale}
       />
     </div>
   );
