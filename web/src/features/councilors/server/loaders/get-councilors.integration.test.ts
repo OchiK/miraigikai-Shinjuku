@@ -216,11 +216,13 @@ describe("議員ローダー 統合テスト", () => {
     });
   });
 
-  it("seed の実データを委員会別にまとめると、9委員会・延べ87件で各委員会に委員長と副委員長が1人ずつ", async () => {
+  it("seed の実データを委員会別にまとめると、9委員会・延べ87件で各委員会に委員長と副委員長が1人ずつ", async (ctx) => {
     // このファイルや並行する統合テストが入れた「テスト」委員会は除く
     const groups = groupCouncilorsByCommittee(await getCouncilors()).filter(
       (g) => !g.committee.name.startsWith("テスト")
     );
+    // CI の DB には議員の seed が入らないため、pnpm seed 済みのローカルでだけ確かめる
+    if (groups.length === 0) ctx.skip();
 
     expect(groups.map((g) => g.committee.kind)).toEqual([
       "standing",
