@@ -233,7 +233,7 @@ describe("P8-12 残作業の英語文言", () => {
   it("傾向の注記は以前の会期名を括弧で挟める", () => {
     const note = councilorDetail.topicsNote(1);
     expect(`${note.before}${around(note.session)}`).toBe(
-      "Counts of the topic tags on the 1 question on this site (from [S])"
+      "Based on the topic tags attached to the 1 question on this site (from [S])"
     );
   });
 

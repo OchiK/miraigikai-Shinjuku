@@ -711,7 +711,7 @@ export const UI_MESSAGES: Record<PublicLocale, UiMessages> = {
     },
     councilors: {
       heading: `${en.councilName} members`,
-      lead: `The parliamentary groups, committees, and council questions of each member of ${en.councilName}.`,
+      lead: `This page lists the parliamentary groups, committees, and council questions of each member of ${en.councilName}.`,
       stats: {
         listed: "Councilors listed",
         seats: "Seats",
@@ -723,7 +723,7 @@ export const UI_MESSAGES: Record<PublicLocale, UiMessages> = {
       questionCount: (count) => `${count}`,
       sourceNotice: `Based on the official roster as of ${cs.en.asOf}. Questions are taken from the minutes of the ${qs.en.scope}. ${qs.en.earlierSessionsRule}`,
       emptyNotice: "No councilor information has been added yet.",
-      searchLabel: "Search by name or reading",
+      searchLabel: "Search by name (kanji or kana)",
       filterLegend: "Filter by parliamentary group",
       filterAll: (total) => `All ${total}`,
       showing: (count) => `Showing ${plural(count, "councilor", "councilors")}`,
@@ -776,7 +776,7 @@ export const UI_MESSAGES: Record<PublicLocale, UiMessages> = {
       topicTagCount: (count) => `${count}`,
       noTopicTags: "No topic tags yet.",
       topicsNote: (count) => ({
-        before: `Counts of the topic tags on the ${plural(count, "question", "questions")} on this site`,
+        before: `Based on the topic tags attached to the ${plural(count, "question", "questions")} on this site`,
         session: { before: " (from ", after: ")" },
         after: `, as of ${qs.en.asOf}. The tags were assigned by AI and do not cover everything the councilor works on.`,
       }),
@@ -826,7 +826,7 @@ export const UI_MESSAGES: Record<PublicLocale, UiMessages> = {
         "the official documents and reviewed.",
       ],
       timeline: {
-        heading: "Deliberation progress",
+        heading: "How this bill has progressed",
         events: {
           submitted: "Bill submitted",
           in_committee: "Committee review",

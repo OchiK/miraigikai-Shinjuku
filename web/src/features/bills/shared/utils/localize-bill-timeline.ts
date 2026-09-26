@@ -8,6 +8,8 @@ import type { BillTimelineEvent, BillTimelineInput } from "./bill-timeline";
 
 export interface LocalizedBillTimelineEvent {
   label: string;
+  /** 英語が無く日本語のまま出すとき "ja" */
+  labelLang?: "ja";
   dateLabel: string;
   detail?: string;
   /** detail が DB の status_note（日本語）のとき "ja" */
@@ -65,6 +67,8 @@ export function localizeBillTimelineEvent(
 
   return {
     label,
+    // 対応表に無い用語は日本語のまま出るので、言語を明示する
+    labelLang: /[぀-ヿ一-鿿]/.test(label) ? "ja" : undefined,
     dateLabel,
     detail: event.detail,
     detailLang: isStatusNote ? "ja" : undefined,

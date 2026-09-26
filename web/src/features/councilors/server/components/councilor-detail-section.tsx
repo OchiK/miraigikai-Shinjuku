@@ -1,10 +1,11 @@
 import "server-only";
 
 import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
-import { ArrowLeft, ChevronRight, Info, Languages } from "lucide-react";
+import { ArrowLeft, ChevronRight, Info } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { AroundJapanese } from "@/features/i18n/client/components/around-japanese";
+import { BillsInJapaneseNotice } from "@/features/i18n/client/components/bills-in-japanese-notice";
 import {
   getUiMessages,
   type UiMessages,
@@ -415,17 +416,12 @@ export function CouncilorDetailSection({
             messages={messages}
           />
         )}
-        {councilor.questions.length > 0 &&
-          messages.questionsInJapaneseNotice && (
-            <p className="flex items-start gap-3 rounded-xl bg-terracotta-200 px-5 py-4 text-mirai-ai-text text-sm leading-[1.9]">
-              <Languages
-                aria-hidden="true"
-                className="mt-1 size-5 shrink-0"
-                strokeWidth={2.75}
-              />
-              <span>{messages.questionsInJapaneseNotice}</span>
-            </p>
-          )}
+        {councilor.questions.length > 0 && (
+          <BillsInJapaneseNotice
+            locale={locale}
+            message={messages.questionsInJapaneseNotice}
+          />
+        )}
         {councilor.questions.length === 0 ? (
           <p className="rounded-xl bg-card p-5 text-base text-mirai-text shadow-mirai-sm">
             {messages.noQuestions}

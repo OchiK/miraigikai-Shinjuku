@@ -4,6 +4,8 @@ import { getUiMessages } from "../../shared/ui-messages";
 
 interface BillsInJapaneseNoticeProps {
   locale: PublicLocale;
+  /** 案内文。省略時は議案一覧向けの文言。null なら出さない */
+  message?: string | null;
 }
 
 /**
@@ -11,8 +13,14 @@ interface BillsInJapaneseNoticeProps {
  * （docs/BACKLOG.md P8-12「フォールバック（日本語表示＋注記）」）。
  * 日本語表示では何も出さない。
  */
-export function BillsInJapaneseNotice({ locale }: BillsInJapaneseNoticeProps) {
-  const notice = getUiMessages(locale).home.billsInJapaneseNotice;
+export function BillsInJapaneseNotice({
+  locale,
+  message,
+}: BillsInJapaneseNoticeProps) {
+  const notice =
+    message === undefined
+      ? getUiMessages(locale).home.billsInJapaneseNotice
+      : message;
   if (!notice) {
     return null;
   }

@@ -77,6 +77,7 @@ export function BillDeliberationTimeline({
                 </p>
                 <p
                   className={`font-bold text-base leading-[1.9] ${labelClassName(event.state)}`}
+                  lang={text.labelLang}
                 >
                   {text.label}
                 </p>

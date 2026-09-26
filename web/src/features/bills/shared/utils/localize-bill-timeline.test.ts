@@ -75,4 +75,26 @@ describe("localizeBillTimelineEvent", () => {
     );
     expect(committee.detailLang).toBeUndefined();
   });
+
+  it("日本語表示でも status_note には lang=ja を付ける。空なら補足も lang も出さない", () => {
+    const [, , , withNote] = localize(
+      { status: "rejected", statusNote: "本会議で否決" },
+      "ja"
+    );
+    expect(withNote.detail).toBe("本会議で否決");
+    expect(withNote.detailLang).toBe("ja");
+
+    const [, , , withoutNote] = localize({ status: "approved" }, "en");
+    expect(withoutNote.label).toBe("Passed");
+    expect(withoutNote.detail).toBeUndefined();
+    expect(withoutNote.detailLang).toBeUndefined();
+  });
+
+  it("議決済みの否決は英語でも否決として出す", () => {
+    const [, , , decision] = localize(
+      { status: "rejected", statusNote: "本会議で否決" },
+      "en"
+    );
+    expect(decision.label).toBe("Rejected");
+  });
 });
