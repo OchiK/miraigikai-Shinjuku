@@ -146,6 +146,10 @@
   --color-mirai-tag-text: var(--color-neutral-800);
   --color-mirai-featured: var(--color-terracotta-200);
   --color-mirai-featured-text: var(--color-terracotta-800);
+  /* 委員会別の議員一覧で、委員長・副委員長を示すバッジ。
+     会派内役職（featured）と見分けるため sage 系にする。約8:1 */
+  --color-mirai-committee-role: var(--color-sage-200);
+  --color-mirai-committee-role-text: var(--color-sage-800);
 
   /* ══ shadcn/ui ブリッジ ═════════════════════════════════════════════════ */
   --color-background: var(--background);

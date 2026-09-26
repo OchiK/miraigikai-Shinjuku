@@ -1,5 +1,6 @@
 import { adminClient } from "@test-utils/utils";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { groupCouncilorsByCommittee } from "../../shared/utils/filter-councilors";
 
 // unstable_cache はモジュール初期化時に評価されるため、
 // テストファイル内で vi.mock → 動的インポートの順序を保証する。
@@ -213,6 +214,34 @@ describe("議員ローダー 統合テスト", () => {
       sessionName: "令和7年 第4回定例会",
       sourceUrl: null,
     });
+  });
+
+  it("seed の実データを委員会別にまとめると、9委員会・延べ87件で各委員会に委員長と副委員長が1人ずつ", async (ctx) => {
+    // このファイルや並行する統合テストが入れた「テスト」委員会は除く
+    const groups = groupCouncilorsByCommittee(await getCouncilors()).filter(
+      (g) => !g.committee.name.startsWith("テスト")
+    );
+    // CI の DB には議員の seed が入らないため、pnpm seed 済みのローカルでだけ確かめる
+    if (groups.length === 0) ctx.skip();
+
+    expect(groups.map((g) => g.committee.kind)).toEqual([
+      "standing",
+      "standing",
+      "standing",
+      "standing",
+      "steering",
+      "special",
+      "special",
+      "special",
+      "special",
+    ]);
+    expect(groups.reduce((sum, g) => sum + g.members.length, 0)).toBe(87);
+    for (const { members } of groups) {
+      expect(members.filter((m) => m.role === "委員長")).toHaveLength(1);
+      expect(members.filter((m) => m.role === "副委員長")).toHaveLength(1);
+      expect(members[0].role).toBe("委員長");
+      expect(members[1].role).toBe("副委員長");
+    }
   });
 
   it("getCouncilorById は現職でない議員に null を返す", async () => {

@@ -20,21 +20,32 @@ export const COMMITTEE_KIND_LABELS: Record<CommitteeKind, string> = {
   special: "特別委員会",
 };
 
-const KIND_ORDER: CommitteeKind[] = ["standing", "steering", "special"];
+/** 委員会の種別の表示順。常任 → 議会運営 → 特別 */
+export const KIND_ORDER: CommitteeKind[] = ["standing", "steering", "special"];
+
+/** 委員会内の役職の表示順。委員長 → 副委員長 → 委員 */
+export const ROLE_ORDER: CommitteeRole[] = ["委員長", "副委員長", "委員"];
 
 export function isCommitteeRole(value: string): value is CommitteeRole {
   return value === "委員長" || value === "副委員長" || value === "委員";
 }
 
 /** 常任 → 議会運営 → 特別の順、同じ種別の中は委員会の表示順 */
+export function compareCommittees(
+  a: Pick<CouncilorCommittee, "kind" | "sortOrder">,
+  b: Pick<CouncilorCommittee, "kind" | "sortOrder">
+): number {
+  return (
+    KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind) ||
+    a.sortOrder - b.sortOrder
+  );
+}
+
+/** 常任 → 議会運営 → 特別の順、同じ種別の中は委員会の表示順 */
 export function sortCommittees(
   committees: CouncilorCommittee[]
 ): CouncilorCommittee[] {
-  return [...committees].sort(
-    (a, b) =>
-      KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind) ||
-      a.sortOrder - b.sortOrder
-  );
+  return [...committees].sort(compareCommittees);
 }
 
 /** 種別ごとにまとめる。所属の無い種別は含めない */

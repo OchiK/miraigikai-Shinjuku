@@ -256,3 +256,24 @@ describe("P8-12 残作業の英語文言", () => {
     });
   });
 });
+
+describe("P7-1 委員会別表示の件数", () => {
+  it("英語は人数と委員会数をそれぞれ1だけ単数形にする", () => {
+    const { councilors } = getUiMessages("en");
+    expect(councilors.showingByCommittee(1, 1)).toBe(
+      "Showing 1 councilor in 1 committee"
+    );
+    expect(councilors.showingByCommittee(3, 1)).toBe(
+      "Showing 1 councilor in 3 committees"
+    );
+    expect(councilors.showingByCommittee(9, 38)).toBe(
+      "Showing 38 councilors in 9 committees"
+    );
+  });
+
+  it("日本語は委員会数と重複を除いた人数を並べる", () => {
+    expect(getUiMessages("ja").councilors.showingByCommittee(3, 1)).toBe(
+      "3委員会・1人を表示しています"
+    );
+  });
+});

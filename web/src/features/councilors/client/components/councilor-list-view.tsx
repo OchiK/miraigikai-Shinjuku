@@ -3,54 +3,91 @@
 import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
 import { Search } from "lucide-react";
 import { useId, useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getUiMessages } from "@/features/i18n/shared/ui-messages";
 import type { Councilor } from "../../shared/types";
-import { getFactionAnchorId } from "../../shared/utils/faction-anchor";
 import {
+  countCommitteeView,
+  filterCommitteeGroups,
   filterCouncilors,
+  groupCouncilorsByCommittee,
   groupCouncilorsByFaction,
 } from "../../shared/utils/filter-councilors";
-import { CouncilorCard } from "./councilor-card";
+import { CommitteeListSections } from "./committee-list-sections";
+import { FactionListSections } from "./faction-list-sections";
+import { FilterChipGroup } from "./filter-chip-group";
+
+type ViewMode = "faction" | "committee";
 
 type Props = {
   councilors: Councilor[];
   locale?: PublicLocale;
 };
 
-const chipClass = (active: boolean) =>
-  `h-11 rounded-full px-4 py-1.5 font-bold text-xs transition-colors ${
-    active
-      ? "bg-primary text-mirai-text hover:bg-primary-accent hover:text-mirai-text"
-      : "bg-neutral-200 text-mirai-text-muted hover:bg-neutral-300 hover:text-mirai-text-muted"
-  }`;
-
 /**
- * 議員一覧。会派の絞り込みと氏名・ふりがな検索ができる。
- * 会派ごとに面を分けて見出しを立て、会派内は議席番号順に並べる。
+ * 議員一覧。会派別と委員会別を切り替えられ、氏名・ふりがな検索は両方で共有する。
+ * 絞り込みは表示ごとに持ち、会派別の会派フィルタは委員会別には効かせない。
+ * 会派別は会派内を議席番号順、委員会別は委員長 → 副委員長 → 委員の順に並べる。
  */
 export function CouncilorListView({ councilors, locale = "ja" }: Props) {
   const { councilors: messages } = getUiMessages(locale);
   const searchId = useId();
+  const [viewMode, setViewMode] = useState<ViewMode>("faction");
   const [factionId, setFactionId] = useState<string | null>(null);
+  const [committeeId, setCommitteeId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
 
   const factionGroups = useMemo(
     () => groupCouncilorsByFaction(councilors),
     [councilors]
   );
-  const visibleGroups = useMemo(
+  const visibleFactionGroups = useMemo(
     () =>
       groupCouncilorsByFaction(
         filterCouncilors(councilors, { factionId, query })
       ),
     [councilors, factionId, query]
   );
-  const visibleCount = visibleGroups.reduce(
+  const factionCount = visibleFactionGroups.reduce(
     (sum, g) => sum + g.councilors.length,
     0
   );
+
+  const committeeGroups = useMemo(
+    () => groupCouncilorsByCommittee(councilors),
+    [councilors]
+  );
+  const visibleCommitteeGroups = useMemo(
+    () =>
+      filterCommitteeGroups(
+        groupCouncilorsByCommittee(
+          filterCouncilors(councilors, { factionId: null, query })
+        ),
+        committeeId
+      ),
+    [councilors, committeeId, query]
+  );
+  const committeeCount = countCommitteeView(visibleCommitteeGroups);
+
+  const byCommittee = viewMode === "committee";
+  const isEmpty = byCommittee
+    ? committeeCount.people === 0
+    : factionCount === 0;
+
+  const renderResults = () => {
+    if (isEmpty) {
+      return (
+        <p className="py-12 text-center text-mirai-text-muted">
+          {messages.noResults}
+        </p>
+      );
+    }
+    return byCommittee ? (
+      <CommitteeListSections groups={visibleCommitteeGroups} locale={locale} />
+    ) : (
+      <FactionListSections groups={visibleFactionGroups} locale={locale} />
+    );
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -73,76 +110,75 @@ export function CouncilorListView({ councilors, locale = "ja" }: Props) {
         />
       </div>
 
-      <fieldset className="flex flex-col gap-2">
-        <legend className="mb-2 font-bold text-mirai-text text-sm">
-          {messages.filterLegend}
-        </legend>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant="ghost"
-            aria-pressed={factionId === null}
-            onClick={() => setFactionId(null)}
-            className={chipClass(factionId === null)}
-          >
-            {messages.filterAll(councilors.length)}
-          </Button>
-          {factionGroups.map(
-            ({ faction, councilors: members }) =>
-              faction && (
-                <Button
-                  key={faction.id}
-                  variant="ghost"
-                  aria-pressed={factionId === faction.id}
-                  onClick={() => setFactionId(faction.id)}
-                  className={chipClass(factionId === faction.id)}
-                >
-                  <span lang="ja">{faction.displayName}</span> {members.length}
-                </Button>
-              )
-          )}
-        </div>
-      </fieldset>
+      <FilterChipGroup<ViewMode>
+        legend={messages.viewMode.legend}
+        options={[
+          { value: "faction", label: messages.viewMode.byFaction },
+          { value: "committee", label: messages.viewMode.byCommittee },
+        ]}
+        selected={viewMode}
+        onSelect={setViewMode}
+      />
+
+      {byCommittee ? (
+        <FilterChipGroup
+          legend={messages.committeeFilterLegend}
+          options={[
+            {
+              value: null,
+              // 延べ人数ではなく、委員会に所属する議員を重複なしで数える
+              label: messages.filterAll(
+                countCommitteeView(committeeGroups).people
+              ),
+            },
+            ...committeeGroups.map(({ committee, members }) => ({
+              value: committee.id,
+              label: (
+                <>
+                  <span lang="ja">{committee.name}</span> {members.length}
+                </>
+              ),
+            })),
+          ]}
+          selected={committeeId}
+          onSelect={setCommitteeId}
+        />
+      ) : (
+        <FilterChipGroup
+          legend={messages.filterLegend}
+          options={[
+            { value: null, label: messages.filterAll(councilors.length) },
+            ...factionGroups.flatMap(({ faction, councilors: members }) =>
+              faction
+                ? [
+                    {
+                      value: faction.id,
+                      label: (
+                        <>
+                          <span lang="ja">{faction.displayName}</span>{" "}
+                          {members.length}
+                        </>
+                      ),
+                    },
+                  ]
+                : []
+            ),
+          ]}
+          selected={factionId}
+          onSelect={setFactionId}
+        />
+      )}
 
       <p aria-live="polite" className="text-mirai-text-muted text-sm">
-        {messages.showing(visibleCount)}
+        {byCommittee
+          ? messages.showingByCommittee(
+              committeeCount.committees,
+              committeeCount.people
+            )
+          : messages.showing(factionCount)}
       </p>
 
-      {visibleCount === 0 ? (
-        <p className="py-12 text-center text-mirai-text-muted">
-          {messages.noResults}
-        </p>
-      ) : (
-        <div className="flex flex-col gap-6">
-          {visibleGroups.map(({ faction, councilors: members }) => (
-            <section
-              key={faction?.id ?? "unaffiliated"}
-              // 議案詳細の会派賛否から #faction-{slug} で着地する。固定ヘッダーに潜らないよう余白を取る
-              id={getFactionAnchorId(faction?.slug ?? null)}
-              className="flex scroll-mt-28 flex-col gap-4 rounded-xl bg-mirai-surface-sunken p-5 shadow-mirai-sm md:p-6"
-            >
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 className="font-heading font-bold text-mirai-text text-xl leading-[1.3] md:text-2xl">
-                  {faction ? (
-                    <span lang="ja">{faction.displayName}</span>
-                  ) : (
-                    messages.unaffiliated
-                  )}
-                </h2>
-                <span className="rounded-full bg-card px-3 py-1 font-bold text-mirai-text text-xs shadow-mirai-sm">
-                  {messages.memberCount(members.length)}
-                </span>
-              </div>
-              <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {members.map((councilor) => (
-                  <li key={councilor.id} className="h-full">
-                    <CouncilorCard councilor={councilor} locale={locale} />
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ))}
-        </div>
-      )}
+      {renderResults()}
     </div>
   );
 }
