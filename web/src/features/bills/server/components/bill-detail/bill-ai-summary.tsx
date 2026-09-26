@@ -1,6 +1,8 @@
 import "server-only";
 
+import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
 import { Info } from "lucide-react";
+import { getUiMessages } from "@/features/i18n/shared/ui-messages";
 
 interface BillAiSummaryProps {
   /** AIが付けた読みやすい題名。正式名称は表題として別に出す */
@@ -9,9 +11,17 @@ interface BillAiSummaryProps {
   isReviewCompleted: boolean;
   /** 題名と要約の言語。翻訳を表示しているときだけ渡す */
   lang?: string;
+  /** UI 文言の言語 */
+  locale?: PublicLocale;
 }
 
-function ReviewInProgressNotice({ className = "" }: { className?: string }) {
+function ReviewInProgressNotice({
+  locale,
+  className = "",
+}: {
+  locale: PublicLocale;
+  className?: string;
+}) {
   return (
     <div
       className={`flex items-start gap-2 rounded-xl bg-terracotta-200 px-4 py-3 text-mirai-ai-text ${className}`}
@@ -22,8 +32,8 @@ function ReviewInProgressNotice({ className = "" }: { className?: string }) {
         className="mt-1 size-4 shrink-0"
         strokeWidth={2.75}
       />
-      <p className="text-sm leading-[1.9]">
-        この記事はAI生成による下書きを含みます。公式一次資料との照合を進めているため、内容が変更されることがあります。
+      <p lang={locale} className="text-sm leading-[1.9]">
+        {getUiMessages(locale).billDetail.reviewInProgress}
       </p>
     </div>
   );
@@ -41,12 +51,16 @@ export function BillAiSummary({
   summary,
   isReviewCompleted,
   lang,
+  locale = "ja",
 }: BillAiSummaryProps) {
+  const { billDetail } = getUiMessages(locale);
   const readableTitle = title?.trim();
   const text = summary?.trim();
 
   if (!readableTitle && !text) {
-    return isReviewCompleted ? null : <ReviewInProgressNotice />;
+    return isReviewCompleted ? null : (
+      <ReviewInProgressNotice locale={locale} />
+    );
   }
 
   return (
@@ -61,8 +75,9 @@ export function BillAiSummary({
         <h2
           className="font-bold font-heading text-lg"
           id="bill-ai-summary-heading"
+          lang={locale}
         >
-          かんたん要約
+          {billDetail.summaryHeading}
         </h2>
       </div>
 
@@ -81,11 +96,13 @@ export function BillAiSummary({
         </p>
       )}
 
-      <p className="mt-4 text-sm leading-[1.9]">
-        AIによる要約です。正確な内容は原文をご確認ください。
+      <p className="mt-4 text-sm leading-[1.9]" lang={locale}>
+        {billDetail.summaryNote}
       </p>
 
-      {!isReviewCompleted && <ReviewInProgressNotice className="mt-4" />}
+      {!isReviewCompleted && (
+        <ReviewInProgressNotice locale={locale} className="mt-4" />
+      )}
     </section>
   );
 }

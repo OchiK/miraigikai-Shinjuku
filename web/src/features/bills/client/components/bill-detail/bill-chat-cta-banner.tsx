@@ -1,16 +1,23 @@
 "use client";
 
+import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
 import { MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useBillChat } from "@/features/chat/client/components/bill-chat-provider";
+import { getUiMessages } from "@/features/i18n/shared/ui-messages";
 
 /**
  * 「この議案について質問する」バナー（デザインシステム定義 §9-10）。
  *
  * チャットの起動導線はこのフッターの1枚だけにする。追尾するボタンは置かない。
  */
-export function BillChatCtaBanner() {
+export function BillChatCtaBanner({
+  locale = "ja",
+}: {
+  locale?: PublicLocale;
+}) {
   const chat = useBillChat();
+  const messages = getUiMessages(locale).billDetail.chat;
 
   // AIチャットを無効にしている場合はプロバイダが無いので導線も出さない
   if (!chat) {
@@ -18,7 +25,10 @@ export function BillChatCtaBanner() {
   }
 
   return (
-    <section className="rounded-xl bg-sage-200 p-6 shadow-mirai-sm">
+    <section
+      lang={locale}
+      className="rounded-xl bg-sage-200 p-6 shadow-mirai-sm"
+    >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-3">
           <MessageSquare
@@ -28,10 +38,10 @@ export function BillChatCtaBanner() {
           />
           <div>
             <h2 className="font-bold font-heading text-lg text-sage-900">
-              この議案について質問する
+              {messages.heading}
             </h2>
             <p className="mt-1 text-sage-900 text-sm leading-[1.9]">
-              この議案の資料をもとにAIが答えます。答えは間違うことがあります。
+              {messages.body}
             </p>
           </div>
         </div>
@@ -42,7 +52,7 @@ export function BillChatCtaBanner() {
           type="button"
           variant="ghost"
         >
-          質問する
+          {messages.button}
         </Button>
       </div>
     </section>

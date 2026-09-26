@@ -1,7 +1,9 @@
 "use client";
 
-import type { MouseEvent, KeyboardEvent } from "react";
+import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
 import Image from "next/image";
+import type { KeyboardEvent, MouseEvent } from "react";
+import { Button } from "@/components/ui/button";
 import {
   shareNative,
   shareOnFacebook,
@@ -9,7 +11,7 @@ import {
   shareOnThreads,
   shareOnTwitter,
 } from "@/features/bills/client/utils/share-handlers";
-import { Button } from "@/components/ui/button";
+import { getUiMessages } from "@/features/i18n/shared/ui-messages";
 
 interface BillShareModalProps {
   isOpen: boolean;
@@ -17,6 +19,7 @@ interface BillShareModalProps {
   shareMessage: string;
   shareUrl: string;
   thumbnailUrl?: string | null;
+  locale?: PublicLocale;
 }
 
 export function BillShareModal({
@@ -25,8 +28,11 @@ export function BillShareModal({
   shareMessage,
   shareUrl,
   thumbnailUrl,
+  locale = "ja",
 }: BillShareModalProps) {
   if (!isOpen) return null;
+
+  const messages = getUiMessages(locale).billDetail.share;
 
   // 共有ボタンの設定
   const shareButtons = [
@@ -53,7 +59,7 @@ export function BillShareModal({
       className: "md:hidden",
     },
     {
-      name: "共有",
+      name: messages.nativeShare,
       iconPath: "/icons/share-general.png",
       onClick: () => shareNative(shareMessage, shareUrl),
       className: "md:hidden",
@@ -78,6 +84,8 @@ export function BillShareModal({
     <div
       role="dialog"
       aria-modal="true"
+      aria-labelledby="bill-share-modal-title"
+      lang={locale}
       className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 p-3"
       onClick={handleBackgroundClick}
       onKeyDown={handleBackgroundKeyDown}
@@ -85,8 +93,11 @@ export function BillShareModal({
     >
       <div className="bg-card rounded-2xl p-7 w-[370px] max-w-full flex flex-col items-center gap-9">
         {/* タイトル */}
-        <h2 className="text-xl font-bold text-mirai-text text-center w-full">
-          記事を共有する
+        <h2
+          id="bill-share-modal-title"
+          className="text-xl font-bold text-mirai-text text-center w-full"
+        >
+          {messages.modalTitle}
         </h2>
 
         {/* サムネイル画像エリア */}
@@ -94,7 +105,7 @@ export function BillShareModal({
           <div className="w-full h-[180px] relative rounded-md overflow-hidden">
             <Image
               src={thumbnailUrl}
-              alt="記事のサムネイル"
+              alt={messages.thumbnailAlt}
               fill
               className="object-cover"
             />
@@ -104,7 +115,7 @@ export function BillShareModal({
         {/* シェアセクション */}
         <div className="flex flex-col items-center gap-4 w-full">
           <p className="text-base font-bold text-mirai-text text-center">
-            シェアして議会の議論をオープンに
+            {messages.modalSubtitle}
           </p>
 
           {/* SNSアイコン */}
@@ -137,7 +148,7 @@ export function BillShareModal({
           onClick={onClose}
           className="w-[287px] max-w-full rounded-full px-6 py-3 h-auto font-bold text-base"
         >
-          このまま閉じる
+          {messages.close}
         </Button>
       </div>
     </div>

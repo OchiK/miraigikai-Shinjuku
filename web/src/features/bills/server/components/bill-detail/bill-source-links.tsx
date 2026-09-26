@@ -1,9 +1,12 @@
+import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
 import { ExternalLink } from "lucide-react";
+import { getUiMessages } from "@/features/i18n/shared/ui-messages";
 import type { BillWithContent } from "../../../shared/types";
 import { buildBillSourceLinks } from "../../../shared/utils/build-bill-source-links";
 
 interface BillSourceLinksProps {
   bill: BillWithContent;
+  locale?: PublicLocale;
 }
 
 /**
@@ -12,8 +15,9 @@ interface BillSourceLinksProps {
  * 解説は公式PDFをもとに整理した二次的な文章のため、読者がいつでも原典に当たれるよう
  * 議案詳細ページに出典を並べる。
  */
-export function BillSourceLinks({ bill }: BillSourceLinksProps) {
-  const links = buildBillSourceLinks(bill);
+export function BillSourceLinks({ bill, locale = "ja" }: BillSourceLinksProps) {
+  const { billDetail, factionStances } = getUiMessages(locale);
+  const links = buildBillSourceLinks(bill, billDetail.sourceLinks);
 
   if (links.length === 0) {
     return null;
@@ -23,12 +27,13 @@ export function BillSourceLinks({ bill }: BillSourceLinksProps) {
     <section
       aria-labelledby="bill-source-links-heading"
       className="rounded-xl bg-card p-6 shadow-mirai-sm"
+      lang={locale}
     >
       <h2
         className="mb-4 font-bold font-heading text-lg text-mirai-text"
         id="bill-source-links-heading"
       >
-        区議会の公式ページ
+        {billDetail.sourcesHeading}
       </h2>
       <ul className="space-y-1">
         {links.map((link) => (
@@ -45,7 +50,7 @@ export function BillSourceLinks({ bill }: BillSourceLinksProps) {
                 className="size-4 shrink-0"
                 strokeWidth={2.75}
               />
-              <span className="sr-only">（新しいタブで開きます）</span>
+              <span className="sr-only">{factionStances.opensInNewTab}</span>
             </a>
           </li>
         ))}

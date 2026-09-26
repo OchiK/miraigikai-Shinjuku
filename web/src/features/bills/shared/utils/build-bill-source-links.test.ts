@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { getUiMessages } from "@/features/i18n/shared/ui-messages";
 import {
   type BillSourceLinkInput,
   buildBillSourceLinks,
@@ -71,6 +72,27 @@ describe("buildBillSourceLinks", () => {
         kind: "submissions",
         label: "提出議案一覧",
         url: "https://example.jp/session",
+      },
+    ]);
+  });
+
+  it("英語の表示名でも同じURLの出典をまとめ、PDFの表記を1つにする", () => {
+    const pdf = "https://example.jp/gaiyou.pdf";
+    const links = buildBillSourceLinks(
+      {
+        pdf_url: null,
+        overview_pdf_url: pdf,
+        source_page_url: null,
+        decision_source_url: pdf,
+      },
+      getUiMessages("en").billDetail.sourceLinks
+    );
+
+    expect(links).toEqual([
+      {
+        kind: "overview",
+        label: "Summary of submitted bills / Voting results (PDF)",
+        url: pdf,
       },
     ]);
   });

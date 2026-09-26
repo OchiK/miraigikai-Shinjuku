@@ -1,25 +1,29 @@
 import "server-only";
 
+import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
 import { CircleHelp, ExternalLink } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { siteConfig } from "@/config/site.config";
+import { getUiMessages } from "@/features/i18n/shared/ui-messages";
 import { routes } from "@/lib/routes";
 import { COUNCILOR_SOURCES, QUESTION_SOURCES } from "../../shared/constants";
 
 const SOURCE_LINKS = [
-  COUNCILOR_SOURCES.roster,
-  COUNCILOR_SOURCES.factions,
-  COUNCILOR_SOURCES.committees,
-];
+  { key: "roster", url: COUNCILOR_SOURCES.roster.url },
+  { key: "factions", url: COUNCILOR_SOURCES.factions.url },
+  { key: "committees", url: COUNCILOR_SOURCES.committees.url },
+] as const;
 
 export function ExternalSourceLink({
   href,
   children,
+  locale = "ja",
 }: {
   href: string;
   children: ReactNode;
+  /** 「新しいタブで開きます」の読み上げの言語 */
+  locale?: PublicLocale;
 }) {
   return (
     <a
@@ -34,7 +38,9 @@ export function ExternalSourceLink({
         className="size-3.5 shrink-0"
         strokeWidth={2.75}
       />
-      <span className="sr-only">（新しいタブで開きます）</span>
+      <span lang={locale} className="sr-only">
+        {getUiMessages(locale).factionStances.opensInNewTab}
+      </span>
     </a>
   );
 }
@@ -42,26 +48,27 @@ export function ExternalSourceLink({
 /**
  * 出典と免責。議員情報は公式ページの転記であることと基準日を必ず示す。
  */
-export function CouncilorSources() {
+export function CouncilorSources({ locale = "ja" }: { locale?: PublicLocale }) {
+  const messages = getUiMessages(locale).councilorSources;
+
   return (
-    <section className="rounded-xl bg-mirai-surface-sunken p-6">
+    <section lang={locale} className="rounded-xl bg-mirai-surface-sunken p-6">
       <div className="space-y-6">
         <div className="space-y-2">
-          <h2 className="font-bold text-mirai-text text-sm">議員情報の出典</h2>
+          <h2 className="font-bold text-mirai-text text-sm">
+            {messages.councilorsHeading}
+          </h2>
           <p className="text-mirai-text-muted text-xs leading-[1.9]">
-            氏名・当選回数・所属会派・所属委員会は、{siteConfig.councilName}
-            の公式ページ（{COUNCILOR_SOURCES.asOf}
-            更新）を転記したものです。肖像権に配慮し、顔写真は掲載していません。
+            {messages.councilorsBody}
           </p>
           <p className="text-mirai-text-muted text-xs leading-[1.9]">
-            議員本人のX（旧Twitter）は、{COUNCILOR_SOURCES.xAccounts.rule}
-            だけを掲載しています（{COUNCILOR_SOURCES.xAccounts.asOf}確認）。
+            {messages.xBody}
           </p>
           <ul className="flex flex-col">
             {SOURCE_LINKS.map((source) => (
               <li key={source.url}>
-                <ExternalSourceLink href={source.url}>
-                  {siteConfig.councilName} {source.label}
+                <ExternalSourceLink href={source.url} locale={locale}>
+                  {messages.linkLabels[source.key]}
                 </ExternalSourceLink>
               </li>
             ))}
@@ -69,25 +76,26 @@ export function CouncilorSources() {
         </div>
 
         <div className="space-y-2">
-          <h2 className="font-bold text-mirai-text text-sm">質問要約の出典</h2>
+          <h2 className="font-bold text-mirai-text text-sm">
+            {messages.questionsHeading}
+          </h2>
           <p className="text-mirai-text-muted text-xs leading-[1.9]">
-            質問の見出しと要約は、{siteConfig.councilName}の
-            {QUESTION_SOURCES.minutes.label}に掲載された
-            {QUESTION_SOURCES.scope}
-            の会議録をもとに、AIが作成したものです（{QUESTION_SOURCES.asOf}
-            作成）。{QUESTION_SOURCES.earlierSessionsRule}
-            要約に答弁の内容は含みません。テーマタグもAIが付けたものです。正確な内容は会議録をご確認ください。
+            {messages.questionsBody}
           </p>
-          <ExternalSourceLink href={QUESTION_SOURCES.minutes.url}>
-            {siteConfig.councilName} {QUESTION_SOURCES.minutes.label}
+          <ExternalSourceLink
+            href={QUESTION_SOURCES.minutes.url}
+            locale={locale}
+          >
+            {messages.linkLabels.minutes}
           </ExternalSourceLink>
         </div>
 
         <div className="space-y-2">
-          <h2 className="font-bold text-mirai-text text-sm">免責事項</h2>
+          <h2 className="font-bold text-mirai-text text-sm">
+            {messages.disclaimerHeading}
+          </h2>
           <p className="text-mirai-text-muted text-xs leading-[1.9]">
-            本サイトは{siteConfig.councilName}
-            の公式サイトではありません。会派や委員会の構成は年度途中でも変わることがあります。正確な情報は、公式ページをご確認ください。
+            {messages.disclaimerBody}
           </p>
         </div>
 
@@ -100,7 +108,7 @@ export function CouncilorSources() {
             className="size-4"
             strokeWidth={2.75}
           />
-          よくある質問
+          {messages.faq}
         </Link>
       </div>
     </section>

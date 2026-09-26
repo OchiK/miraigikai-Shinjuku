@@ -13,6 +13,8 @@ import type {
   ComingSoonBill,
 } from "@/features/bills/shared/types";
 import { buildComingSoonBillHeading } from "@/features/bills/shared/utils/build-coming-soon-bill-heading";
+import { getUiMessages } from "@/features/i18n/shared/ui-messages";
+import { routes } from "@/lib/routes";
 
 type StatusFilterType = "all" | "approved" | "rejected" | "other";
 
@@ -118,17 +120,13 @@ export function BillListWithStatusFilter({
     return filterByTag(byStatus, activeTagId);
   }, [comingSoonBills, activeStatusFilter, activeTagId]);
 
-  const statusFilters: {
-    key: StatusFilterType;
-    label: string;
-  }[] = [
-    { key: "all", label: "ALL" },
-    // status 列挙での絞り込みであり、approved には原案可決の議案と
-    // 専決処分の承認（承認第2号・第3号）が混在する。「可決」だけを掲げると
-    // 承認案件を可決と呼ぶことになるため、両方の用語を label に出す。
-    { key: "approved", label: "可決・承認" },
-    { key: "rejected", label: "否決・不承認" },
-    { key: "other", label: "その他" },
+  const { sessionBills } = getUiMessages(locale);
+  // ラベルは ui-messages の statusFilters。approved に可決と承認が混在する理由もそちらに記す
+  const statusFilters: StatusFilterType[] = [
+    "all",
+    "approved",
+    "rejected",
+    "other",
   ];
 
   const noResults =
@@ -137,28 +135,38 @@ export function BillListWithStatusFilter({
   return (
     <div className="flex flex-col gap-4">
       {/* ステータスフィルターボタン */}
-      <div className="flex flex-wrap gap-3">
+      <div
+        role="group"
+        aria-label={sessionBills.statusFilterLabel}
+        className="flex flex-wrap gap-3"
+      >
         {statusFilters.map((filter) => (
           <Button
-            key={filter.key}
+            key={filter}
             variant="ghost"
-            onClick={() => setActiveStatusFilter(filter.key)}
+            aria-pressed={activeStatusFilter === filter}
+            onClick={() => setActiveStatusFilter(filter)}
             className={`h-11 px-4 py-1.5 rounded-full text-sm font-bold transition-colors ${
-              activeStatusFilter === filter.key
+              activeStatusFilter === filter
                 ? "bg-primary text-mirai-text hover:bg-primary-accent hover:text-mirai-text"
                 : "bg-neutral-200 text-mirai-text-muted hover:bg-neutral-300 hover:text-mirai-text-muted"
             }`}
           >
-            {filter.label}
+            {sessionBills.statusFilters[filter]}
           </Button>
         ))}
       </div>
 
       {/* タグフィルターボタン */}
       {uniqueTags.length > 0 && (
-        <div className="flex flex-wrap gap-2">
+        <div
+          role="group"
+          aria-label={sessionBills.tagFilterLabel}
+          className="flex flex-wrap gap-2"
+        >
           <Button
             variant="ghost"
+            aria-pressed={activeTagId === null}
             onClick={() => setActiveTagId(null)}
             className={`h-11 px-4 py-1.5 rounded-full text-xs font-bold transition-colors ${
               activeTagId === null
@@ -166,12 +174,14 @@ export function BillListWithStatusFilter({
                 : "bg-neutral-200 text-mirai-text-muted hover:bg-neutral-300 hover:text-mirai-text-muted"
             }`}
           >
-            すべてのタグ
+            {sessionBills.allTags}
           </Button>
           {uniqueTags.map((tag) => (
             <Button
               key={tag.id}
+              lang="ja"
               variant="ghost"
+              aria-pressed={activeTagId === tag.id}
               onClick={() => setActiveTagId(tag.id)}
               className={`h-11 px-4 py-1.5 rounded-full text-xs font-bold transition-colors ${
                 activeTagId === tag.id
@@ -188,14 +198,15 @@ export function BillListWithStatusFilter({
       {/* 議案リスト */}
       {noResults ? (
         <p className="text-center py-12 text-muted-foreground">
-          該当する議案がありません
+          {sessionBills.noResults}
         </p>
       ) : (
         <>
           {filteredBills.length > 0 && (
-            <div className="flex flex-col gap-3">
+            // 議案名は DB のまま日本語。カード内の UI 文言は各自 lang を付ける
+            <div lang="ja" className="flex flex-col gap-3">
               {filteredBills.map((bill) => (
-                <Link key={bill.id} href={`/bills/${bill.id}`}>
+                <Link key={bill.id} href={routes.billDetail(bill.id)}>
                   <CompactBillCard bill={bill} locale={locale} />
                 </Link>
               ))}
@@ -207,10 +218,10 @@ export function BillListWithStatusFilter({
             <div className="flex flex-col gap-6 mt-4">
               <div className="flex flex-col gap-2">
                 <h3 className="text-[22px] font-bold text-black leading-[1.48]">
-                  これから掲載される議案
+                  {sessionBills.upcomingHeading}
                 </h3>
                 <p className="text-xs text-mirai-text-secondary">
-                  順次掲載されていきます
+                  {sessionBills.upcomingSubtitle}
                 </p>
               </div>
               <div className="flex flex-col gap-3">
@@ -219,7 +230,11 @@ export function BillListWithStatusFilter({
                     buildComingSoonBillHeading(bill);
 
                   return (
-                    <Card key={bill.id} className="border border-black">
+                    <Card
+                      key={bill.id}
+                      lang="ja"
+                      className="border border-black"
+                    >
                       <CardContent className="flex items-center justify-between py-4 px-5">
                         <div className="flex flex-col gap-1 min-w-0">
                           {identifier && (

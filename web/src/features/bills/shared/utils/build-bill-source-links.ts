@@ -23,24 +23,44 @@ export interface BillSourceLink {
   url: string;
 }
 
+/** リンクの表示名と、同じURLのラベルをまとめるときの区切り。UI 文言として言語ごとに持つ */
+export interface BillSourceLinkFormat {
+  labels: Record<BillSourceLink["kind"], string>;
+  separator: string;
+  /** PDF を指すラベルの末尾。まとめるときに1つにする */
+  pdfSuffix: string;
+}
+
+export const JA_BILL_SOURCE_LINK_FORMAT: BillSourceLinkFormat = {
+  labels: {
+    fullText: "議案全文（PDF）",
+    overview: "提出案件概要（PDF）",
+    submissions: "提出議案一覧",
+    decisions: "議決結果",
+  },
+  separator: "・",
+  pdfSuffix: "（PDF）",
+};
+
 const SOURCE_LINK_ORDER: {
   kind: BillSourceLink["kind"];
-  label: string;
   field: keyof BillSourceLinkInput;
 }[] = [
-  { kind: "fullText", label: "議案全文（PDF）", field: "pdf_url" },
-  { kind: "overview", label: "提出案件概要（PDF）", field: "overview_pdf_url" },
-  { kind: "submissions", label: "提出議案一覧", field: "source_page_url" },
-  { kind: "decisions", label: "議決結果", field: "decision_source_url" },
+  { kind: "fullText", field: "pdf_url" },
+  { kind: "overview", field: "overview_pdf_url" },
+  { kind: "submissions", field: "source_page_url" },
+  { kind: "decisions", field: "decision_source_url" },
 ];
 
-const PDF_SUFFIX = "（PDF）";
-
 /** 同じURLを指す2つのラベルを1つにまとめる（例: 提出案件概要・議決結果（PDF）） */
-function mergeLabels(first: string, second: string): string {
-  const hasPdf = first.endsWith(PDF_SUFFIX) || second.endsWith(PDF_SUFFIX);
-  const strip = (label: string) => label.replace(PDF_SUFFIX, "");
-  return `${strip(first)}・${strip(second)}${hasPdf ? PDF_SUFFIX : ""}`;
+function mergeLabels(
+  first: string,
+  second: string,
+  { separator, pdfSuffix }: BillSourceLinkFormat
+): string {
+  const hasPdf = first.endsWith(pdfSuffix) || second.endsWith(pdfSuffix);
+  const strip = (label: string) => label.replace(pdfSuffix, "");
+  return `${strip(first)}${separator}${strip(second)}${hasPdf ? pdfSuffix : ""}`;
 }
 
 /**
@@ -49,16 +69,18 @@ function mergeLabels(first: string, second: string): string {
  * 同じリンクを2つ並べず、ラベルをまとめた1つにする。
  */
 export function buildBillSourceLinks(
-  bill: BillSourceLinkInput
+  bill: BillSourceLinkInput,
+  format: BillSourceLinkFormat = JA_BILL_SOURCE_LINK_FORMAT
 ): BillSourceLink[] {
   const links: BillSourceLink[] = [];
 
-  for (const { kind, label, field } of SOURCE_LINK_ORDER) {
+  for (const { kind, field } of SOURCE_LINK_ORDER) {
+    const label = format.labels[kind];
     const url = bill[field]?.trim();
     if (!url) continue;
     const existing = links.find((link) => link.url === url);
     if (existing) {
-      existing.label = mergeLabels(existing.label, label);
+      existing.label = mergeLabels(existing.label, label, format);
       continue;
     }
     links.push({ kind, label, url });

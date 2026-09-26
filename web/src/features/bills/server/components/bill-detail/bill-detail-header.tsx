@@ -46,7 +46,7 @@ export function BillDetailHeader({
         {bill.is_review_completed && (
           <>
             {" "}
-            <ReviewCompleteBadge showTooltip />
+            <ReviewCompleteBadge showTooltip locale={locale} />
           </>
         )}
       </h1>
