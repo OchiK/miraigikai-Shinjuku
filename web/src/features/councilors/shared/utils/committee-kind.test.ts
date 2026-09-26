@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { CouncilorCommittee } from "../types";
 import {
+  compareCommittees,
   getCommitteeKind,
   groupCommitteesByKind,
   isCommitteeRole,
@@ -60,5 +61,25 @@ describe("sortCommittees / groupCommitteesByKind", () => {
       committee("本庁舎対策等特別委員会", 9),
     ]);
     expect(groups.map((g) => g.label)).toEqual(["常任委員会", "特別委員会"]);
+  });
+});
+
+describe("compareCommittees", () => {
+  it("種別が同じなら委員会の表示順で比べる", () => {
+    expect(
+      compareCommittees(
+        committee("福祉健康委員会", 4),
+        committee("総務区民委員会", 1)
+      )
+    ).toBeGreaterThan(0);
+  });
+
+  it("種別が違えば表示順より種別を優先する", () => {
+    expect(
+      compareCommittees(
+        committee("防災等安全対策特別委員会", 1),
+        committee("福祉健康委員会", 4)
+      )
+    ).toBeGreaterThan(0);
   });
 });

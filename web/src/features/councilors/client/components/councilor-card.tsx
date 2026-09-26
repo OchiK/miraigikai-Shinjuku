@@ -5,21 +5,32 @@ import { Fragment } from "react";
 import { getUiMessages } from "@/features/i18n/shared/ui-messages";
 import { routes } from "@/lib/routes";
 import { QUESTION_SOURCES } from "../../shared/constants";
-import type { Councilor } from "../../shared/types";
+import type { CommitteeRole, Councilor } from "../../shared/types";
 import { hasOnlyEarlierQuestions } from "../../shared/utils/councilor-questions";
 
 type Props = {
   councilor: Councilor;
   locale?: PublicLocale;
+  /** 委員会別表示のときに、その委員会での役職を渡す */
+  committeeRole?: CommitteeRole;
 };
 
 /**
  * 議員カード。カード全体が詳細へのリンクで、中にボタンは置かない。
- * 一覧では会派ごとの枠に入るので、会派名はカードに出さず会派内の役職だけ出す。
+ * 会派別表示では会派ごとの枠に入るので、会派名は出さず会派内の役職と常任委員会を出す。
+ * 委員会別表示（committeeRole あり）では枠に複数会派の議員が混ざるので会派名を出し、
+ * 委員長・副委員長のときだけ役職バッジを出す。会派内役職と常任委員会の行は出さない。
  */
-export function CouncilorCard({ councilor, locale = "ja" }: Props) {
+export function CouncilorCard({
+  councilor,
+  locale = "ja",
+  committeeRole,
+}: Props) {
   const { councilors: messages } = getUiMessages(locale);
-  const standing = councilor.committees.filter((c) => c.kind === "standing");
+  const byCommittee = committeeRole !== undefined;
+  const standing = byCommittee
+    ? []
+    : councilor.committees.filter((c) => c.kind === "standing");
   const onlyEarlier = hasOnlyEarlierQuestions(
     councilor.latestQuestionDate,
     QUESTION_SOURCES.scopeStartDate
@@ -40,8 +51,22 @@ export function CouncilorCard({ councilor, locale = "ja" }: Props) {
         <p lang="ja" className="text-mirai-text-muted text-xs">
           {councilor.nameKana}
         </p>
+        {byCommittee && (
+          <p className="text-mirai-text-secondary text-xs">
+            {councilor.faction ? (
+              <span lang="ja">{councilor.faction.displayName}</span>
+            ) : (
+              messages.unaffiliated
+            )}
+          </p>
+        )}
         <div className="flex flex-wrap items-center gap-2 pt-1">
-          {councilor.factionRole && (
+          {byCommittee && committeeRole !== "委員" && (
+            <span className="rounded-full bg-mirai-committee-role px-2.5 py-0.5 font-bold text-mirai-committee-role-text text-xs">
+              {messages.committeeRoles[committeeRole]}
+            </span>
+          )}
+          {!byCommittee && councilor.factionRole && (
             <span
               lang="ja"
               className="rounded-full bg-mirai-featured px-2.5 py-0.5 font-bold text-mirai-featured-text text-xs"

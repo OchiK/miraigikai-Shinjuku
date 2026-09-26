@@ -170,6 +170,10 @@ export type UiMessages = {
     filterLegend: string;
     filterAll: (total: number) => string;
     showing: (count: number) => string;
+    viewMode: { legend: string; byFaction: string; byCommittee: string };
+    committeeFilterLegend: string;
+    /** 委員会別表示の件数。people は重複を除いた人数 */
+    showingByCommittee: (committees: number, people: number) => string;
     noResults: string;
     unaffiliated: string;
     memberCount: (count: number) => string;
@@ -450,6 +454,14 @@ export const UI_MESSAGES: Record<PublicLocale, UiMessages> = {
       filterLegend: "会派で絞り込む",
       filterAll: (total) => `すべて ${total}`,
       showing: (count) => `${count}人を表示しています`,
+      viewMode: {
+        legend: "表示の切り替え",
+        byFaction: "会派別",
+        byCommittee: "委員会別",
+      },
+      committeeFilterLegend: "委員会で絞り込む",
+      showingByCommittee: (committees, people) =>
+        `${committees}委員会・${people}人を表示しています`,
       noResults: "該当する議員がいません",
       unaffiliated: "会派なし",
       memberCount: (count) => `${count}人`,
@@ -727,6 +739,14 @@ export const UI_MESSAGES: Record<PublicLocale, UiMessages> = {
       filterLegend: "Filter by parliamentary group",
       filterAll: (total) => `All ${total}`,
       showing: (count) => `Showing ${plural(count, "councilor", "councilors")}`,
+      viewMode: {
+        legend: "View",
+        byFaction: "By parliamentary group",
+        byCommittee: "By committee",
+      },
+      committeeFilterLegend: "Filter by committee",
+      showingByCommittee: (committees, people) =>
+        `Showing ${plural(people, "councilor", "councilors")} in ${plural(committees, "committee", "committees")}`,
       noResults: "No councilors match your search.",
       unaffiliated: "No parliamentary group",
       memberCount: (count) => plural(count, "member", "members"),

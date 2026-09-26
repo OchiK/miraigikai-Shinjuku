@@ -98,3 +98,17 @@ export type CouncilorFactionGroup = {
   faction: CouncilorFaction | null;
   councilors: Councilor[];
 };
+
+/** 委員会別表示の見出しに使う委員会の情報（役職は委員ごとに持つ） */
+export type CouncilorCommitteeInfo = Omit<CouncilorCommittee, "role">;
+
+export type CouncilorCommitteeMember = {
+  councilor: Councilor;
+  /** この委員会での役職 */
+  role: CommitteeRole;
+};
+
+export type CouncilorCommitteeGroup = {
+  committee: CouncilorCommitteeInfo;
+  members: CouncilorCommitteeMember[];
+};
