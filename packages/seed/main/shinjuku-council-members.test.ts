@@ -71,8 +71,10 @@ describe("議員名簿 seed", () => {
     }
   });
 
-  it("XのURLは x.com のプロフィールURLで、同じアカウントを2人に付けない", () => {
+  it("XのURLは x.com のプロフィールURLで、同じアカウントを2人に付けない（28名登録、10名未保有）", () => {
     const xUrls = councilMembers.flatMap((m) => (m.xUrl ? [m.xUrl] : []));
+    expect(xUrls).toHaveLength(28);
+    expect(councilMembers.filter((m) => m.xUrl === null)).toHaveLength(10);
     for (const url of xUrls) {
       expect(url).toMatch(/^https:\/\/x\.com\/[A-Za-z0-9_]{1,15}$/);
     }

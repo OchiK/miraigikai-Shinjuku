@@ -49,7 +49,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: "会計",
     terms: 3,
     websiteUrl: "https://www.komei.or.jp/km/kimoto/",
-    xUrl: null,
+    xUrl: "https://x.com/kimoto_komei",
     committees: {
       文教子ども家庭委員会: "委員長",
       防災等安全対策特別委員会: "委員",
@@ -182,7 +182,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: "副幹事長",
     terms: 2,
     websiteUrl: null,
-    xUrl: null,
+    xUrl: "https://x.com/michitakawatana",
     committees: {
       環境建設委員会: "委員長",
       議会運営委員会: "委員",
@@ -209,7 +209,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: "幹事長・会計",
     terms: 3,
     websiteUrl: "http://sachiedaimon.com/",
-    xUrl: null,
+    xUrl: "https://x.com/SachieDaimon",
     committees: {
       福祉健康委員会: "委員",
       本庁舎対策等特別委員会: "委員",
@@ -422,7 +422,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: null,
     terms: 7,
     websiteUrl: null,
-    xUrl: null,
+    xUrl: "https://x.com/0YMchRHaoRE1Q5P",
     committees: {
       福祉健康委員会: "委員",
       議会運営委員会: "副委員長",
@@ -489,7 +489,7 @@ export const councilMembers: SeedCouncilMember[] = [
     factionRole: null,
     terms: 6,
     websiteUrl: null,
-    xUrl: null,
+    xUrl: "https://x.com/arimatoshiro",
     committees: {
       総務区民委員会: "副委員長",
       本庁舎対策等特別委員会: "委員",
