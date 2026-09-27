@@ -1,8 +1,23 @@
 import { describe, expect, it } from "vitest";
 import type { SeededBillRef } from "./bill-ref";
-import { createBillContents, billContentsWithBillSlug } from "./bill-contents-data";
-import { bills, createBillsTags, createFactionStances, createInterviewConfig, tags } from "./data";
+import {
+  billContentsWithBillSlug,
+  createBillContents,
+} from "./bill-contents-data";
+import {
+  billSessionSlugByBillSlug,
+  bills,
+  createBillsTags,
+  createFactionStances,
+  createInterviewConfig,
+  tags,
+} from "./data";
 import { buildItemKey, r8SecondSessionItems } from "./shinjuku-r8-2-inventory";
+import {
+  R8_3_SESSION,
+  buildR8_3ItemKey,
+  r8ThirdSessionItems,
+} from "./shinjuku-r8-3-inventory";
 
 /** DB投入後に返ってくる { id, name, slug } を再現する */
 const insertedBills: SeededBillRef[] = bills.map((b, i) => ({
@@ -23,9 +38,23 @@ const billBySlug = (slug: string) => {
 const BILL_SLUGS_WITH_CONTENT = r8SecondSessionItems.map(buildItemKey);
 
 describe("bills seed", () => {
-  it("公式インベントリ27件（区長提出23件＋議員提出4件）をそのまま投入する", () => {
-    expect(bills).toHaveLength(27);
-    expect(bills.map((b) => b.slug)).toEqual(r8SecondSessionItems.map(buildItemKey));
+  it("R8-2の27件とR8-3の22件を公式インベントリから投入する", () => {
+    expect(bills).toHaveLength(49);
+    expect(bills.map((b) => b.slug)).toEqual([
+      ...r8SecondSessionItems.map(buildItemKey),
+      ...r8ThirdSessionItems.map(buildR8_3ItemKey),
+    ]);
+  });
+
+  it("議案は slug で正しい会期に紐づく", () => {
+    for (const item of r8SecondSessionItems) {
+      expect(billSessionSlugByBillSlug[buildItemKey(item)]).toBe("r8-2");
+    }
+    for (const item of r8ThirdSessionItems) {
+      expect(billSessionSlugByBillSlug[buildR8_3ItemKey(item)]).toBe(
+        R8_3_SESSION.slug
+      );
+    }
   });
 
   it("件名が重複する承認案件も slug で一意に区別される", () => {
@@ -51,15 +80,17 @@ describe("公開状態と解説の整合", () => {
     expect(publishedWithoutContent).toEqual([]);
   });
 
-  it("全27件を published とし、coming_soon を残さない", () => {
+  it("R8-2の27件だけを published とし、R8-3の22件は coming_soon にする", () => {
     expect(
       bills
         .filter((b) => b.publish_status === "published")
         .map((b) => b.slug)
     ).toEqual(BILL_SLUGS_WITH_CONTENT);
-    expect(bills.filter((b) => b.publish_status === "coming_soon")).toEqual(
-      []
-    );
+    expect(
+      bills
+        .filter((b) => b.publish_status === "coming_soon")
+        .map((b) => b.slug)
+    ).toEqual(r8ThirdSessionItems.map(buildR8_3ItemKey));
   });
 
   it("published の全議案に easy / normal / hard の解説がそろう", () => {

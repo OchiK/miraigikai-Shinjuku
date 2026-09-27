@@ -1,5 +1,6 @@
 import {
   bills,
+  billSessionSlugByBillSlug,
   tags,
   councilSessions,
   factions,
@@ -33,7 +34,6 @@ import {
   councilMemberQuestions,
   createCouncilMemberQuestionInserts,
 } from "./shinjuku-council-questions";
-import { R8_2_SESSION } from "./shinjuku-r8-2-inventory";
 import {
   createShippingBillInterviewConfig,
   createShippingBillQuestions,
@@ -196,9 +196,27 @@ async function seedDatabase() {
 
     // Insert bills
     console.log("📄 Inserting bills...");
+    const sessionIdBySlug = new Map(
+      insertedCouncilSessions.map((session) => [session.slug, session.id])
+    );
+    const billsWithSession = bills.map((bill) => {
+      const billSlug = bill.slug;
+      const sessionSlug = billSlug
+        ? billSessionSlugByBillSlug[billSlug]
+        : undefined;
+      const councilSessionId = sessionSlug
+        ? sessionIdBySlug.get(sessionSlug)
+        : undefined;
+      if (!billSlug || !sessionSlug || !councilSessionId) {
+        throw new Error(
+          `Council session not found for bill slug: ${billSlug ?? "(missing)"}`
+        );
+      }
+      return { ...bill, council_session_id: councilSessionId };
+    });
     const { data: insertedBills, error: billsError } = await supabase
       .from("bills")
-      .insert(bills)
+      .insert(billsWithSession)
       // 関連付けは件名ではなく slug（安定識別子）で突合するため slug を取得する
       .select("id, name, slug");
 
@@ -212,34 +230,7 @@ async function seedDatabase() {
 
     console.log(`✅ Inserted ${insertedBills.length} bills`);
 
-    // Link all bills to the R8-2 council session.
-    // 配列の並び順ではなく slug で会期を特定する。
-    const currentSessionId = insertedCouncilSessions.find(
-      (s) => s.slug === R8_2_SESSION.slug
-    )?.id;
-    if (!currentSessionId) {
-      throw new Error(
-        `Council session not found for slug: ${R8_2_SESSION.slug}`
-      );
-    }
-
-    const { error: linkError } = await supabase
-      .from("bills")
-      .update({ council_session_id: currentSessionId })
-      .in(
-        "id",
-        insertedBills.map((b) => b.id)
-      );
-
-    if (linkError) {
-      throw new Error(
-        `Failed to link bills to council session: ${linkError.message}`
-      );
-    }
-
-    console.log(
-      `🔗 Linked ${insertedBills.length} bills to ${R8_2_SESSION.name}`
-    );
+    console.log(`🔗 Linked ${insertedBills.length} bills to council sessions`);
 
     // Insert bill_contents
     console.log("📚 Inserting bill contents...");

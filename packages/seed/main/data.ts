@@ -8,8 +8,12 @@ import {
   R8_2_SESSION,
   gianKey,
   shoninKey,
-  toBillInserts,
+  toBillInserts as toR8_2BillInserts,
 } from "./shinjuku-r8-2-inventory";
+import {
+  R8_3_SESSION,
+  toR8_3BillInserts,
+} from "./shinjuku-r8-3-inventory";
 
 type BillInsert = Database["public"]["Tables"]["bills"]["Insert"];
 type FactionStanceInsert =
@@ -34,7 +38,8 @@ type InterviewReportInsert =
 // 定例会データ
 // 会期は公式の提出議案ページ記載の「会期：…」をそのまま採用する。
 export const councilSessions: CouncilSessionInsert[] = [
-  R8_2_SESSION,
+  { ...R8_2_SESSION, is_active: false },
+  R8_3_SESSION,
   {
     name: "令和8年 第1回定例会",
     slug: "r8-1",
@@ -207,9 +212,18 @@ export const tags: TagInsert[] = [
 ];
 
 // 議案データ
-// 令和8年第2回定例会の全23件（承認第2号・第3号 + 第42〜62号議案）を
-// 公式インベントリから生成する。個別の手書きは行わない。
-export const bills: BillInsert[] = toBillInserts();
+// 令和8年第2回定例会27件と第3回定例会22件を、公式インベントリから生成する。
+// 個別の手書きは行わない。第3回定例会は議決前・解説未作成のため coming_soon。
+const r8_2Bills = toR8_2BillInserts();
+const r8_3Bills = toR8_3BillInserts();
+export const bills: BillInsert[] = [...r8_2Bills, ...r8_3Bills];
+
+/** 議案 slug から所属会期 slug を引く。件名や配列順には依存しない。 */
+export const billSessionSlugByBillSlug: Readonly<Record<string, string>> =
+  Object.fromEntries([
+    ...r8_2Bills.map((bill) => [bill.slug, R8_2_SESSION.slug]),
+    ...r8_3Bills.map((bill) => [bill.slug, R8_3_SESSION.slug]),
+  ].filter((entry): entry is [string, string] => Boolean(entry[0] && entry[1])));
 
 // 議案とタグの関連付け
 // タグは編集上の分類であり公式メタデータではないため、

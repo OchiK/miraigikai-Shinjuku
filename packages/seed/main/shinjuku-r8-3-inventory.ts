@@ -1,5 +1,10 @@
 import type { Database } from "@mirai-gikai/supabase";
-import type { ShinjukuDecision } from "./shinjuku-r8-2-inventory";
+import {
+  type ShinjukuDecision,
+  toBillStatus,
+} from "./shinjuku-r8-2-inventory";
+
+type BillInsert = Database["public"]["Tables"]["bills"]["Insert"];
 
 type CouncilSessionInsert =
   Database["public"]["Tables"]["council_sessions"]["Insert"];
@@ -15,11 +20,8 @@ type CouncilSessionInsert =
  * 議決結果は未掲載（会期中）のため、全件 decision: null とする。
  * 解説も未作成のため、全件非公開（coming_soon 相当）・未レビューとする。
  *
- * このインベントリは現時点では更新検知（monitor/targets.ts の KNOWN_SESSIONS）
- * でだけ使い、DB（ローカルシード・本番インポーター）には投入しない。
- * 本番インポーターは全議案を1つの会期に紐づける作りのため、投入には
- * import_production_inventory の変更が要る。あわせて、公開サイトの「現在の会期」を
- * r8-3 に切り替える時期も決める必要がある（BACKLOG P5-2 参照）。
+ * DB には議決前・解説未作成の案件として投入する。議決結果が公式に掲載されたら
+ * decision だけを更新し、既存の解説は本番インポーターで上書き・削除しない。
  */
 
 /** 提出議案一覧ページ（会期・件名・全文PDF・概要PDFの出典） */
@@ -75,9 +77,8 @@ export interface R8_3SessionItem {
 /**
  * 会期メタデータ（公式ページ記載: 「会期：9月16日～10月15日」）。
  *
- * is_active は false にしてある。DB へ投入する際に、r8-2 と入れ替えて
- * 公開サイトの「現在の会期」を切り替えるかどうかを決める
- * （findActiveCouncilSession は is_active = true が2件あると取得に失敗する）。
+ * 2026-09-16 に開会済みのため、公開サイトの現在の会期として扱う。
+ * ほかの会期は data.ts 側で is_active: false に正規化する。
  */
 export const R8_3_SESSION: CouncilSessionInsert = {
   name: "令和8年 第3回定例会",
@@ -85,7 +86,7 @@ export const R8_3_SESSION: CouncilSessionInsert = {
   council_url: R8_3_SUBMISSIONS_URL,
   start_date: "2026-09-16",
   end_date: "2026-10-15",
-  is_active: false,
+  is_active: true,
 };
 
 /**
@@ -323,6 +324,51 @@ export function buildR8_3ItemKey(item: {
   itemNumber: number;
 }): string {
   return `${R8_3_KEY_NAMESPACE}-${item.itemType}-${item.itemNumber}`;
+}
+
+/** 第N号議案の安定識別子 */
+export function r8_3GianKey(itemNumber: number): string {
+  return buildR8_3ItemKey({ itemType: "gian", itemNumber });
+}
+
+/** 認定第N号の安定識別子 */
+export function r8_3NinteiKey(itemNumber: number): string {
+  return buildR8_3ItemKey({ itemType: "nintei", itemNumber });
+}
+
+/** インベントリ1件を bills テーブルの Insert に変換する */
+export function toR8_3BillInsert(item: R8_3SessionItem): BillInsert {
+  const decision = item.decision;
+  const result =
+    decision === null
+      ? { status: "submitted" as const, statusNote: null }
+      : decision === "認定"
+        ? { status: "approved" as const, statusNote: "本会議で認定" }
+        : toBillStatus(decision);
+
+  return {
+    name: item.officialTitle,
+    bill_number: item.officialLabel,
+    slug: buildR8_3ItemKey(item),
+    status: result.status,
+    status_note: result.statusNote,
+    publish_status: item.hasPublishableContent ? "published" : "coming_soon",
+    published_at: null,
+    is_featured: false,
+    is_review_completed: item.reviewCompleted,
+    thumbnail_url: null,
+    pdf_url: item.fullTextPdfUrl,
+    overview_pdf_url: item.overviewPdfUrl,
+    source_page_url: R8_3_SUBMISSIONS_URL,
+    decision_source_url: null,
+  };
+}
+
+/** インベントリ全件を bills テーブルの Insert 配列に変換する */
+export function toR8_3BillInserts(
+  items: R8_3SessionItem[] = r8ThirdSessionItems
+): BillInsert[] {
+  return items.map(toR8_3BillInsert);
 }
 
 /** 提出議案一覧ページに載っている識別名（第63〜80号議案の18件 + 認定第1〜4号 = 22件） */
