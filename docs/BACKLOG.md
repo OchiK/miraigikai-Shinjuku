@@ -156,7 +156,8 @@ Progress（2026-09-26）:
 Progress（2026-09-27）:
 - ローカルシードと本番インポーターを複数会期対応にし、R8-3 の22件を `submitted`・`coming_soon`・未レビューとして正しい会期へ紐づける実装を追加した（PR #100 マージ済み）。R8-3 を現在の会期、R8-2 を過去の会期として同期する。
 - 議決結果だけを後日更新した場合も、既存の `bill_contents` を削除・上書きしないことをローカル Supabase の統合テストで確認した。
-- 残り: 本番DBへの適用（バックアップ → dry-run → apply の順で実施）。解説（やさしい／ふつう／くわしく）と claim ledger の整備は未着手（P5-3 半自動化と連携して実施予定）。
+- 本番DBへの適用を実施した（GitHub Actions `import_production.yml` run 36296467965 / 36296518540）。一次資料層のバックアップ artifact 取得、dry-run 差分確認、本番 apply、キャッシュ無効化（`bills`, `council-sessions`, `councilors`）、Vercel 再デプロイまで正常完了。
+- 残り: R8-3 議案の解説（やさしい／ふつう／くわしく）と claim ledger の整備（P5-3 半自動化と連携して実施予定）。
 
 ### P5-3 半自動化の残り（ROADMAP Phase 6）
 会期ページの解析・変化の検知・定期実行・下書きPRは P5-1 で実装済み。
