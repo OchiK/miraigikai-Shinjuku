@@ -77,8 +77,10 @@ export interface R8_3SessionItem {
 /**
  * 会期メタデータ（公式ページ記載: 「会期：9月16日～10月15日」）。
  *
- * 2026-09-16 に開会済みのため、公開サイトの現在の会期として扱う。
- * ほかの会期は data.ts 側で is_active: false に正規化する。
+ * R8-3 の案件は解説が未作成（全件 coming_soon）のため、公開サイトのアクティブな会期は
+ * 全27件の解説が揃っている R8-2 を維持し、R8-3 は is_active: false とする。
+ * （findActiveCouncilSession は is_active = true が2件あると取得に失敗する）。
+ * 解説が整備された段階で is_active: true への切り替えを行う。
  */
 export const R8_3_SESSION: CouncilSessionInsert = {
   name: "令和8年 第3回定例会",
@@ -86,7 +88,7 @@ export const R8_3_SESSION: CouncilSessionInsert = {
   council_url: R8_3_SUBMISSIONS_URL,
   start_date: "2026-09-16",
   end_date: "2026-10-15",
-  is_active: true,
+  is_active: false,
 };
 
 /**
