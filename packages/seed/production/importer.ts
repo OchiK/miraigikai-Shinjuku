@@ -4,6 +4,8 @@ import type { SeededBillRef } from "../main/bill-ref";
 import {
   committees,
   councilSessions,
+  billSessionSlugByBillSlug,
+  bills,
   createBillsTags,
   factions,
   tags,
@@ -24,7 +26,6 @@ import {
   r8_2BillVotes,
   toFactionStanceImportRows,
 } from "../main/shinjuku-faction-stances";
-import { R8_2_SESSION, toBillInserts } from "../main/shinjuku-r8-2-inventory";
 import type { AdminClient } from "../shared/helper";
 import {
   type DiffRow,
@@ -59,8 +60,10 @@ const SHINJUKU_COUNCIL_ROSTER_KEY = "shinjuku-city-council";
  */
 export interface ImportDataset {
   councilSessions: CouncilSessionInsert[];
-  /** 議案を紐づける会期の slug */
+  /** 会期指定が無い議案を紐づける既定の会期 slug（後方互換用） */
   billSessionSlug: string;
+  /** 議案 slug ごとの所属会期。複数会期を一度に同期するときに使う */
+  billSessionSlugByBillSlug?: Readonly<Record<string, string>>;
   tags: TagInsert[];
   factions: FactionInsert[];
   committees: CommitteeInsert[];
@@ -81,7 +84,8 @@ export interface ImportDataset {
 /** 本番に投入する一次資料層（リポジトリを唯一の正とみなす範囲） */
 export const productionDataset: ImportDataset = {
   councilSessions,
-  billSessionSlug: requireSlug(R8_2_SESSION),
+  billSessionSlug: "r8-2",
+  billSessionSlugByBillSlug,
   tags,
   factions,
   committees,
@@ -93,7 +97,7 @@ export const productionDataset: ImportDataset = {
     councilMembers
   ),
   factionStances: toFactionStanceImportRows(r8_2BillVotes, factions),
-  bills: toBillInserts(),
+  bills,
   createBillContents,
   createBillsTags,
 };
@@ -229,7 +233,7 @@ export async function importInventory(
   const councilMembersDiff = await syncCouncilMembers(context);
   const councilMemberCommitteesDiff = await syncCouncilMemberCommittees(context);
   const councilMemberQuestionsDiff = await syncCouncilMemberQuestions(context);
-  const bill = await syncBills(context, session.billSessionId);
+  const bill = await syncBills(context, session.sessionIdBySlug);
   const contents = await syncBillContents(context, bill);
   const billsTags = await syncBillsTags(context, bill);
   const factionStances = await syncFactionStances(context, bill);
@@ -413,7 +417,7 @@ async function syncCouncilMemberQuestions(
 
 async function syncCouncilSessions(
   context: ImportContext
-): Promise<{ diff: TableDiff; billSessionId: string | null }> {
+): Promise<{ diff: TableDiff; sessionIdBySlug: Map<string, string> }> {
   const { supabase, dataset } = context;
   const desired = dataset.councilSessions;
 
@@ -427,11 +431,12 @@ async function syncCouncilSessions(
     desired: desired.map((row) => toDiffRow(requireSlug(row), row)),
   });
 
-  // 議案を紐づける会期の id。dry-run で会期が未作成なら null のままになる。
-  const existingId =
-    current.find((row) => row.slug === dataset.billSessionSlug)?.id ?? null;
+  // dry-run で未作成の会期は Map に入らず、slug:<会期> を期待値に使う。
+  const sessionIdBySlug = new Map(
+    current.map((row) => [requireSlug(row), row.id])
+  );
 
-  return { diff, billSessionId: existingId };
+  return { diff, sessionIdBySlug };
 }
 
 // ---------------------------------------------------------------------------
@@ -479,30 +484,34 @@ interface BillSyncResult {
 
 async function syncBills(
   context: ImportContext,
-  billSessionId: string | null
+  sessionIdBySlug: Map<string, string>
 ): Promise<BillSyncResult> {
   const { supabase, dataset } = context;
 
-  const desired = dataset.bills.map((bill) => ({
-    ...bill,
-    council_session_id: billSessionId,
-  }));
-  const desiredSessionKey =
-    billSessionId ?? `slug:${dataset.billSessionSlug}`;
+  const desired = dataset.bills.map((bill) => {
+    const sessionSlug = billSessionSlug(dataset, bill);
+    return {
+      ...bill,
+      council_session_id:
+        sessionIdBySlug.get(sessionSlug) ?? `slug:${sessionSlug}`,
+    };
+  });
+  const managedSessionIds = [
+    ...new Set(
+      dataset.bills
+        .map((bill) => sessionIdBySlug.get(billSessionSlug(dataset, bill)))
+        .filter((id): id is string => Boolean(id))
+    ),
+  ];
   const desiredSlugs = desired.map(requireSlug);
-  const current = await fetchBills(supabase, desiredSlugs, billSessionId);
+  const current = await fetchBills(supabase, desiredSlugs, managedSessionIds);
 
   const diff = diffTable({
     table: "bills",
     label: "議案",
     fields: [...BILL_FIELDS, { field: "council_session_id" }],
     current: current.map((row) => toDiffRow(billKey(row), row)),
-    desired: desired.map((row) =>
-      toDiffRow(requireSlug(row), {
-        ...row,
-        council_session_id: desiredSessionKey,
-      })
-    ),
+    desired: desired.map((row) => toDiffRow(requireSlug(row), row)),
     // 会期に紐づくがインベントリに無い議案は、削除せず報告する。
     // bills を消すと interview_configs が CASCADE で落ち、
     // その先のセッションとレポートまで失われる。
@@ -671,16 +680,25 @@ async function applyInventoryTransaction(
     dataset.councilRosterUrl
   );
   const memberCommittees = councilMemberCommitteeRows(dataset.councilMembers);
+  const billsWithSessionSlugs = dataset.bills.map((bill) => ({
+    ...bill,
+    council_session_slug: billSessionSlug(dataset, bill),
+  }));
+  const billSessions = billsWithSessionSlugs.map((bill) => ({
+    bill_slug: requireSlug(bill),
+    council_session_slug: bill.council_session_slug,
+  }));
   const toJson = (value: unknown) =>
     JSON.parse(JSON.stringify(value)) as Args["p_bills"];
 
   const { error } = await supabase.rpc("import_production_inventory", {
     p_council_sessions: toJson(dataset.councilSessions),
     p_tags: toJson(dataset.tags),
-    p_bills: toJson(dataset.bills),
+    p_bills: toJson(billsWithSessionSlugs),
     p_bill_contents: toJson(contents),
     p_bills_tags: toJson(billsTags),
     p_bill_session_slug: dataset.billSessionSlug,
+    p_bill_sessions: toJson(billSessions),
     p_factions: toJson(dataset.factions),
     p_committees: toJson(dataset.committees),
     p_council_members: toJson(members),
@@ -812,7 +830,7 @@ const BILL_COLUMNS =
 async function fetchBills(
   supabase: AdminClient,
   slugs: string[],
-  sessionId: string | null
+  sessionIds: string[]
 ) {
   const byId = new Map<string, BillRow>();
 
@@ -829,11 +847,11 @@ async function fetchBills(
     }
   }
 
-  if (sessionId) {
+  if (sessionIds.length > 0) {
     const { data, error } = await supabase
       .from("bills")
       .select(BILL_COLUMNS)
-      .eq("council_session_id", sessionId);
+      .in("council_session_id", sessionIds);
     if (error) {
       throw new Error(`会期に紐づく bills の取得に失敗: ${error.message}`);
     }
@@ -908,6 +926,20 @@ function slugRefs(dataset: ImportDataset): SeededBillRef[] {
     name: bill.name,
     slug: requireSlug(bill),
   }));
+}
+
+/** 議案ごとの指定を優先し、未指定なら従来の単一会期指定へフォールバックする。 */
+function billSessionSlug(dataset: ImportDataset, bill: BillInsert): string {
+  const slug = requireSlug(bill);
+  const sessionSlug =
+    dataset.billSessionSlugByBillSlug?.[slug] ?? dataset.billSessionSlug;
+  if (!sessionSlug) {
+    throw new Error(`議案の会期 slug が未設定: ${slug}`);
+  }
+  if (!dataset.councilSessions.some((session) => session.slug === sessionSlug)) {
+    throw new Error(`議案が投入対象にない会期を参照している: ${slug}/${sessionSlug}`);
+  }
+  return sessionSlug;
 }
 
 /** 同じ理由で、id の代わりに label を入れたタグ参照 */

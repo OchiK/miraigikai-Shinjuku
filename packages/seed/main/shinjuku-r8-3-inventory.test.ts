@@ -6,6 +6,8 @@ import {
   R8_3_SUBMISSIONS_URL,
   buildR8_3ItemKey,
   r8ThirdSessionItems,
+  toR8_3BillInsert,
+  toR8_3BillInserts,
 } from "./shinjuku-r8-3-inventory";
 
 /** 公式PDFのURL形式。コンテンツIDは必ず9桁ゼロ埋め。 */
@@ -51,8 +53,8 @@ describe("令和8年第3回定例会インベントリ", () => {
     });
   });
 
-  it("DB投入と会期の切り替えを決めるまで、現在の会期にしない", () => {
-    expect(R8_3_SESSION.is_active).toBe(false);
+  it("開会済みの第3回定例会を現在の会期にする", () => {
+    expect(R8_3_SESSION.is_active).toBe(true);
   });
 
   it("提出議案一覧ページの22件と過不足なく一致する", () => {
@@ -114,5 +116,50 @@ describe("令和8年第3回定例会インベントリ", () => {
       expect(item.hasPublishableContent).toBe(false);
       expect(item.reviewCompleted).toBe(false);
     }
+  });
+
+  it("未議決の22件を submitted・coming_soon としてDB行へ変換する", () => {
+    const bills = toR8_3BillInserts();
+
+    expect(bills).toHaveLength(22);
+    expect(bills.map((bill) => bill.slug)).toEqual(
+      r8ThirdSessionItems.map(buildR8_3ItemKey)
+    );
+    for (const bill of bills) {
+      expect(bill).toMatchObject({
+        status: "submitted",
+        status_note: null,
+        publish_status: "coming_soon",
+        published_at: null,
+        is_featured: false,
+        is_review_completed: false,
+        source_page_url: R8_3_SUBMISSIONS_URL,
+        decision_source_url: null,
+      });
+    }
+  });
+
+  it("議決結果が出た後は公式用語を status と status_note に反映できる", () => {
+    const nintei = r8ThirdSessionItems.find(
+      (item) => item.itemType === "nintei"
+    );
+    if (!nintei) throw new Error("認定案件がインベントリに無い");
+    const approved = toR8_3BillInsert({
+      ...r8ThirdSessionItems[0],
+      decision: "原案可決",
+    });
+    const certified = toR8_3BillInsert({
+      ...nintei,
+      decision: "認定",
+    });
+
+    expect(approved).toMatchObject({
+      status: "approved",
+      status_note: "本会議で原案可決",
+    });
+    expect(certified).toMatchObject({
+      status: "approved",
+      status_note: "本会議で認定",
+    });
   });
 });

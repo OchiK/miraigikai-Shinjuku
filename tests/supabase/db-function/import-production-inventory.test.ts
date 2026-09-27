@@ -138,6 +138,162 @@ describe("import_production_inventory", () => {
     expect(member).toBeNull();
   });
 
+  it("複数会期の議案を正しい会期へ紐づけ、結果更新でも既存解説を残す", async () => {
+    const firstSessionSlug = `${runId}-multi-r8-2`;
+    const secondSessionSlug = `${runId}-multi-r8-3`;
+    const firstBillSlug = `${runId}-multi-bill-r8-2`;
+    const secondBillSlug = `${runId}-multi-bill-r8-3`;
+    const sessions = [
+      {
+        name: `複数会期テスト1 ${runId}`,
+        slug: firstSessionSlug,
+        council_url: null,
+        start_date: "2026-06-10",
+        end_date: "2026-06-19",
+        is_active: false,
+      },
+      {
+        name: `複数会期テスト2 ${runId}`,
+        slug: secondSessionSlug,
+        council_url: null,
+        start_date: "2026-09-16",
+        end_date: "2026-10-15",
+        is_active: false,
+      },
+    ];
+    const bill = (slug: string, number: string, status = "submitted") => ({
+      name: `複数会期テスト議案 ${number}`,
+      bill_number: `${runId}-${number}`,
+      slug,
+      status,
+      status_note: null,
+      publish_status: "coming_soon",
+      published_at: null,
+      is_featured: false,
+      is_review_completed: false,
+      thumbnail_url: null,
+      pdf_url: null,
+      overview_pdf_url: null,
+      source_page_url: null,
+      decision_source_url: null,
+    });
+    const baseArgs = {
+      p_council_sessions: sessions,
+      p_tags: [],
+      p_bills: [
+        bill(firstBillSlug, "第1号議案"),
+        bill(secondBillSlug, "第2号議案"),
+      ],
+      p_bill_contents: [
+        {
+          bill_slug: firstBillSlug,
+          difficulty_level: "normal",
+          title: "既存解説1",
+          summary: "既存解説1",
+          content: "既存解説1",
+        },
+        {
+          bill_slug: secondBillSlug,
+          difficulty_level: "normal",
+          title: "既存解説2",
+          summary: "既存解説2",
+          content: "既存解説2",
+        },
+      ],
+      p_bills_tags: [],
+      p_bill_session_slug: firstSessionSlug,
+      p_factions: [],
+      p_committees: [],
+      p_council_members: [],
+      p_council_member_committees: [],
+      p_council_roster_key: `${runId}-multi-roster`,
+      p_council_member_questions: [],
+      p_faction_stances: [],
+      p_bill_sessions: [
+        {
+          bill_slug: firstBillSlug,
+          council_session_slug: firstSessionSlug,
+        },
+        {
+          bill_slug: secondBillSlug,
+          council_session_slug: secondSessionSlug,
+        },
+      ],
+    };
+
+    try {
+      const first = await adminClient.rpc(
+        "import_production_inventory",
+        baseArgs
+      );
+      expect(first.error).toBeNull();
+
+      const { data: imported, error: importedError } = await adminClient
+        .from("bills")
+        .select("slug, status, council_sessions(slug)")
+        .in("slug", [firstBillSlug, secondBillSlug]);
+      if (importedError) throw new Error(importedError.message);
+      expect(imported).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            slug: firstBillSlug,
+            council_sessions: { slug: firstSessionSlug },
+          }),
+          expect.objectContaining({
+            slug: secondBillSlug,
+            council_sessions: { slug: secondSessionSlug },
+          }),
+        ])
+      );
+
+      const second = await adminClient.rpc("import_production_inventory", {
+        ...baseArgs,
+        p_bills: [
+          bill(firstBillSlug, "第1号議案"),
+          {
+            ...bill(secondBillSlug, "第2号議案", "approved"),
+            status_note: "本会議で原案可決",
+          },
+        ],
+        p_bill_contents: [],
+      });
+      expect(second.error).toBeNull();
+
+      const { data: updated, error: updatedError } = await adminClient
+        .from("bills")
+        .select("id, slug, status, status_note")
+        .eq("slug", secondBillSlug)
+        .single();
+      if (updatedError) throw new Error(updatedError.message);
+      expect(updated).toMatchObject({
+        status: "approved",
+        status_note: "本会議で原案可決",
+      });
+
+      const { data: preserved, error: preservedError } = await adminClient
+        .from("bill_contents")
+        .select("title, summary, content")
+        .eq("bill_id", updated.id)
+        .eq("difficulty_level", "normal")
+        .single();
+      if (preservedError) throw new Error(preservedError.message);
+      expect(preserved).toEqual({
+        title: "既存解説2",
+        summary: "既存解説2",
+        content: "既存解説2",
+      });
+    } finally {
+      await adminClient
+        .from("bills")
+        .delete()
+        .in("slug", [firstBillSlug, secondBillSlug]);
+      await adminClient
+        .from("council_sessions")
+        .delete()
+        .in("slug", [firstSessionSlug, secondSessionSlug]);
+    }
+  });
+
   describe("議員の質問要約（12引数版）", () => {
     const questionRunId = `${runId}-questions`;
     const qFaction = `${questionRunId}-faction`;
