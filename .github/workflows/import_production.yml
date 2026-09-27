@@ -67,22 +67,8 @@ jobs:
           echo "SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY" >> "$GITHUB_ENV"
           echo "SUPABASE_URL=https://${SUPABASE_PROJECT_REF}.supabase.co" >> "$GITHUB_ENV"
 
-      - name: Verify production migration history and bill schema
-        env:
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-        run: |
-          POOLER_URL=$(cat supabase/.temp/pooler-url)
-          export PGHOST=$(node -e 'process.stdout.write(new URL(process.argv[1]).hostname)' "$POOLER_URL")
-          export PGPORT=$(node -e 'process.stdout.write(new URL(process.argv[1]).port || "5432")' "$POOLER_URL")
-          export PGUSER=$(node -e 'process.stdout.write(decodeURIComponent(new URL(process.argv[1]).username))' "$POOLER_URL")
-          export PGDATABASE=postgres
-          export PGPASSWORD="$SUPABASE_DB_PASSWORD"
-
-          bash .github/scripts/verify-production-schema.sh
-
       # 反映するかどうかに関わらず、まず差分をログに残す
       - name: Dry run
-        if: ${{ github.ref_name != 's5-2-db-verification' }}
         run: pnpm --filter @mirai-gikai/seed import:production:dry-run
 
       - name: Check confirmation

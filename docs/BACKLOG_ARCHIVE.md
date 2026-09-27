@@ -16,6 +16,7 @@
   - [P1-1 2026 R2 session fixture](#p1-1-2026-r2-session-fixture)
   - [P1-2 Source provenance](#p1-2-source-provenance)
 - [S5 本番稼働検証](#s5-本番稼働検証)
+  - [S5-2 本番DBのmigration履歴・制約・出典列の確認 ✅](#s5-2-本番dbのmigration履歴制約出典列の確認-)
   - [S5-5 本番インポート後のキャッシュ即時無効化 ✅](#s5-5-本番インポート後のキャッシュ即時無効化-)
 - [P2 難易度・やさしい日本語](#p2-難易度やさしい日本語)
   - [P2-1 Restore easy difficulty](#p2-1-restore-easy-difficulty)
@@ -96,6 +97,20 @@ each derived content can trace back to source.
 ---
 
 ## S5 本番稼働検証
+
+### S5-2 本番DBのmigration履歴・制約・出典列の確認 ✅
+
+Acceptance:
+- 本番の migration 履歴が `supabase/migrations/` と一致する
+- `(council_session_id, bill_number)` の複合ユニーク、`bill_number_order`、出典URL列が本番にある
+- 確認に使ったクエリと結果を `docs/verification/` に残す
+
+Progress (2026-09-28):
+- 本番DBの `supabase_migrations.schema_migrations` 105件と、リポジトリのmigration 105件が一致した。
+- `bills_session_bill_number_unique`、`bills_unassigned_bill_number_unique`、`idx_bills_bill_number_order` の定義を `pg_indexes` で確認した。
+- `bill_number_order` が保存生成列であることと、4つの出典URL列が `text` として存在することを `information_schema.columns` で確認した。
+- 会期内の `(council_session_id, bill_number)` の重複は0件だった。
+- クエリと結果は [S5-2 本番DB確認記録](verification/20260928_本番DB_migration履歴制約出典列確認.md) に保存した。
 
 ### S5-5 本番インポート後のキャッシュ即時無効化 ✅
 `import_production.yml` は `WEB_PUBLIC_URL` と `REVALIDATE_SECRET` がないとキャッシュ無効化を飛ばす。
