@@ -1,9 +1,11 @@
+import type { Metadata } from "next";
 import { Container } from "@/components/layouts/container";
 import { About } from "@/components/top/about";
 
 import { Hero } from "@/components/top/hero";
 import { MultilingualGuideBanner } from "@/components/top/multilingual-guide-banner";
 import { TeamMirai } from "@/components/top/team-mirai";
+import { siteConfig } from "@/config/site.config";
 import { BillDisclaimer } from "@/features/bills/client/components/bill-detail/bill-disclaimer";
 import { BillsByTagSection } from "@/features/bills/server/components/bills-by-tag-section";
 import { FeaturedBillSection } from "@/features/bills/server/components/featured-bill-section";
@@ -11,6 +13,20 @@ import { PreviousSessionSection } from "@/features/bills/server/components/previ
 import { loadHomeData } from "@/features/bills/server/loaders/load-home-data";
 import { BillsInJapaneseNotice } from "@/features/i18n/client/components/bills-in-japanese-notice";
 import { getLocale } from "@/features/i18n/server/loaders/get-locale";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+
+  return locale === "en"
+    ? {
+        title: `${siteConfig.english.siteName} | ${siteConfig.english.cityName}`,
+        description: siteConfig.english.siteDescription,
+      }
+    : {
+        title: siteConfig.siteName,
+        description: siteConfig.siteDescription,
+      };
+}
 
 export default async function Home() {
   const { billsByTag, featuredBills, previousSessionData, activeSessionSlug } =

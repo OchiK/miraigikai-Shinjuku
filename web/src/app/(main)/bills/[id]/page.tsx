@@ -5,6 +5,7 @@ import { getBillById } from "@/features/bills/server/loaders/get-bill-by-id";
 import { BillDetailLayout } from "@/features/bills/server/components/bill-detail/bill-detail-layout";
 import { getLocale } from "@/features/i18n/server/loaders/get-locale";
 import { getLocalizedBill } from "@/features/i18n/server/loaders/get-localized-bill";
+import { siteConfig } from "@/config/site.config";
 import { env } from "@/lib/env";
 import { routes } from "@/lib/routes";
 
@@ -18,16 +19,27 @@ export async function generateMetadata({
   params,
 }: BillDetailPageProps): Promise<Metadata> {
   const { id } = await params;
-  const bill = await getBillById(id);
+  const [billWithContent, currentDifficulty, locale] = await Promise.all([
+    getBillById(id),
+    getDifficultyLevel(),
+    getLocale(),
+  ]);
 
-  if (!bill) {
+  if (!billWithContent) {
     return {
-      title: "議案が見つかりません",
+      title: locale === "en" ? "Bill not found" : "議案が見つかりません",
     };
   }
 
+  const { bill } =
+    locale === "en"
+      ? await getLocalizedBill(billWithContent, locale, currentDifficulty)
+      : { bill: billWithContent };
+
   // bill_contentのsummaryがあればそれを使用、なければデフォルト値を使用
-  const description = bill.bill_content?.summary || "議案の詳細情報";
+  const description =
+    bill.bill_content?.summary ||
+    (locale === "en" ? "Bill details" : "議案の詳細情報");
   const defaultOgpUrl = new URL("/ogp.jpg", env.webUrl).toString();
 
   // シェア用OGP画像（share_thumbnail_url > thumbnail_url > デフォルト）
@@ -36,7 +48,10 @@ export async function generateMetadata({
     bill.share_thumbnail_url || bill.thumbnail_url || defaultOgpUrl;
 
   return {
-    title: bill.name,
+    title:
+      locale === "en"
+        ? `${bill.name} | ${siteConfig.english.siteName}`
+        : bill.name,
     description: description,
     alternates: {
       canonical: routes.billDetail(bill.id),
@@ -50,7 +65,10 @@ export async function generateMetadata({
       images: [
         {
           url: shareImageUrl,
-          alt: `${bill.name} のOGPイメージ`,
+          alt:
+            locale === "en"
+              ? `Open Graph image for ${bill.name}`
+              : `${bill.name} のOGPイメージ`,
         },
       ],
     },

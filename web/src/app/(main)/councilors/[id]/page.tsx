@@ -14,16 +14,27 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  const councilor = await getCouncilorById(id);
+  const [councilor, locale] = await Promise.all([
+    getCouncilorById(id),
+    getLocale(),
+  ]);
 
   if (!councilor) {
-    return { title: "議員が見つかりません" };
+    return {
+      title: locale === "en" ? "Councilor not found" : "議員が見つかりません",
+    };
   }
 
   const faction = councilor.faction?.displayName;
   return {
-    title: `${councilor.name}${faction ? `（${faction}）` : ""} | ${siteConfig.siteName}`,
-    description: `${siteConfig.councilName}議員 ${councilor.name}の所属会派・所属委員会と、議会での質問の要約です。`,
+    title:
+      locale === "en"
+        ? `${councilor.name}${faction ? ` (${faction})` : ""} | ${siteConfig.english.siteName}`
+        : `${councilor.name}${faction ? `（${faction}）` : ""} | ${siteConfig.siteName}`,
+    description:
+      locale === "en"
+        ? `Summary of ${siteConfig.english.councilName} Councilor ${councilor.name}'s parliamentary group, committee assignments, and questions in the council.`
+        : `${siteConfig.councilName}議員 ${councilor.name}の所属会派・所属委員会と、議会での質問の要約です。`,
     alternates: {
       canonical: routes.councilorDetail(councilor.id),
     },

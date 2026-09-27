@@ -14,15 +14,29 @@ type Props = {
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
-  const session = await getCouncilSessionBySlug(slug);
+  const [session, locale] = await Promise.all([
+    getCouncilSessionBySlug(slug),
+    getLocale(),
+  ]);
 
   if (!session) {
-    return { title: "定例会が見つかりません" };
+    return {
+      title:
+        locale === "en"
+          ? "Council session not found"
+          : "定例会が見つかりません",
+    };
   }
 
   return {
-    title: `${session.name}の議案一覧 | ${siteConfig.siteName}`,
-    description: `${session.name}（${session.start_date}〜${session.end_date}）に上程された議案の一覧です。`,
+    title:
+      locale === "en"
+        ? `Bills in ${session.name} | ${siteConfig.english.siteName}`
+        : `${session.name}の議案一覧 | ${siteConfig.siteName}`,
+    description:
+      locale === "en"
+        ? `List of bills submitted during ${session.name} (${session.start_date}–${session.end_date}).`
+        : `${session.name}（${session.start_date}〜${session.end_date}）に上程された議案の一覧です。`,
   };
 }
 

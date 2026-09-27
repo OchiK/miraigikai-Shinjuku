@@ -6,6 +6,7 @@ interface LegalPageLayoutProps {
   title: string;
   description?: string;
   className?: string;
+  lang?: string;
   children: ReactNode;
 }
 
@@ -13,10 +14,11 @@ export function LegalPageLayout({
   title,
   description,
   className,
+  lang,
   children,
 }: LegalPageLayoutProps) {
   return (
-    <section className={cn("py-12", className)}>
+    <section lang={lang} className={cn("py-12", className)}>
       <Container className="space-y-10">
         <header className="space-y-3 border-b border-slate-200/70 pb-6">
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
