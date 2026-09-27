@@ -82,6 +82,7 @@ jobs:
 
       # 反映するかどうかに関わらず、まず差分をログに残す
       - name: Dry run
+        if: ${{ github.ref_name != 's5-2-db-verification' }}
         run: pnpm --filter @mirai-gikai/seed import:production:dry-run
 
       - name: Check confirmation
