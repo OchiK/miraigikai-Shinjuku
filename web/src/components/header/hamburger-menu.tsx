@@ -13,10 +13,7 @@ import type {
   CouncilSession,
   CouncilSessionWithSlug,
 } from "@/features/council-sessions/shared/types";
-import {
-  hasSessionsBesides,
-  hasSlug,
-} from "@/features/council-sessions/shared/utils/pick-header-session";
+import { hasSlug } from "@/features/council-sessions/shared/utils/pick-header-session";
 import { LanguageSelector } from "@/features/i18n/client/components/language-selector";
 import { getUiMessages } from "@/features/i18n/shared/ui-messages";
 import { routes } from "@/lib/routes";
@@ -26,7 +23,7 @@ import { cn } from "@/lib/utils";
 interface HamburgerMenuProps {
   locale: PublicLocale;
   sessions: CouncilSession[];
-  /** デスクトップのヘッダー中央（NavLinks）に「議案一覧」として出している定例会 */
+  /** デスクトップのヘッダー中央（NavLinks）に「最新の議案一覧」として出している定例会 */
   headerSession: CouncilSessionWithSlug | null;
   /**
    * メニュー内のふりがなスイッチに付けるクラス。ヘッダーのボタンが隠れる
@@ -38,9 +35,10 @@ interface HamburgerMenuProps {
 /**
  * スマートフォン・タブレット向けの全導線メニュー。
  *
- * デスクトップ（lg 以上）ではヘッダーに出ている項目（言語・議員一覧・
- * ヘッダーの定例会の議案一覧）を隠し、ほかの定例会の議案一覧だけを残す。
- * 残すものが無ければメニューごと隠す（docs/BACKLOG.md P8-11）。
+ * デスクトップ（lg 以上）ではヘッダーに出ている項目（言語・議員一覧）を隠す。
+ * 定例会ごとの議案一覧はヘッダーの「最新の議案一覧」と重なっても、
+ * 最新の定例会を含めすべて常に残す。定例会が無ければメニューごと隠す
+ * （docs/BACKLOG.md P8-11）。
  * lg:hidden は、header-client.tsx で NavLinks を lg 以上で出し、
  * LanguageToggle を sm 以上で必ず出していることを前提にしている。
  */
@@ -51,8 +49,8 @@ export function HamburgerMenu({
   rubyToggleClassName,
 }: HamburgerMenuProps) {
   const sessionsWithSlug = sessions.filter(hasSlug);
-  const hasDesktopOnlyItems = hasSessionsBesides(sessions, headerSession);
-  const { nav } = getUiMessages(locale);
+  const hasSessionItems = sessionsWithSlug.length > 0;
+  const { nav, home } = getUiMessages(locale);
 
   return (
     <Popover>
@@ -60,7 +58,7 @@ export function HamburgerMenu({
         <Button
           variant="ghost"
           size="icon"
-          className={cn("h-11 w-11", !hasDesktopOnlyItems && "lg:hidden")}
+          className={cn("h-11 w-11", !hasSessionItems && "lg:hidden")}
           aria-label={nav.openMenu}
         >
           <Menu className="h-5 w-5" />
@@ -80,24 +78,24 @@ export function HamburgerMenu({
           >
             {nav.councilors}
           </Link>
-          {sessionsWithSlug.length > 0 && (
-            <div className={cn(!hasDesktopOnlyItems && "lg:hidden")}>
+          {hasSessionItems && (
+            <div>
               <p className="text-xs font-semibold text-mirai-text-muted mb-1">
                 {nav.bills}
               </p>
               <ul className="flex flex-col gap-1">
                 {sessionsWithSlug.map((session) => (
-                  <li
-                    key={session.id}
-                    className={cn(
-                      session.id === headerSession?.id && "lg:hidden"
-                    )}
-                  >
+                  <li key={session.id}>
                     <Link
                       href={routes.sessionBills(session.slug)}
-                      className="flex min-h-11 items-center text-sm hover:underline"
+                      className="flex min-h-11 items-center gap-2 text-sm hover:underline"
                     >
                       {nav.sessionBills(session.name)}
+                      {session.id === headerSession?.id && (
+                        <span className="shrink-0 rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-mirai-text">
+                          {home.latestBadge}
+                        </span>
+                      )}
                     </Link>
                   </li>
                 ))}

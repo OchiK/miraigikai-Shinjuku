@@ -178,10 +178,9 @@ describe("HeaderClient", () => {
     it("ナビ・難易度・ホーム導線・メニューを英語で出し、サイト名は日本語のまま", async () => {
       renderHeader("/", [r82, r81], "en");
 
-      expect(screen.getByRole("link", { name: "Bills" })).toHaveAttribute(
-        "href",
-        "/sessions/r8-2/bills"
-      );
+      expect(
+        screen.getByRole("link", { name: "Latest Bills" })
+      ).toHaveAttribute("href", "/sessions/r8-2/bills");
       expect(
         screen.getAllByRole("link", { name: "Councilors" })[0]
       ).toBeInTheDocument();
@@ -212,13 +211,19 @@ describe("HeaderClient", () => {
   });
 
   describe("デスクトップでのメニューの重複解消（P8-11）", () => {
-    it("ヘッダーに無い項目が無ければ、デスクトップではメニューごと隠す", () => {
+    it("定例会が1つだけでも、デスクトップでメニューを残す", () => {
       renderHeader("/councilors", [r82]);
+
+      expect(menuTrigger()).not.toHaveClass("lg:hidden");
+    });
+
+    it("議案一覧を持つ定例会が無ければ、デスクトップではメニューごと隠す", () => {
+      renderHeader("/councilors", []);
 
       expect(menuTrigger()).toHaveClass("lg:hidden");
     });
 
-    it("ほかの定例会があれば、デスクトップでもその議案一覧だけを残す", async () => {
+    it("定例会があれば、最新の定例会も含めデスクトップでも議案一覧を残す", async () => {
       renderHeader("/councilors", [r82, r81]);
 
       expect(menuTrigger()).not.toHaveClass("lg:hidden");
@@ -226,13 +231,15 @@ describe("HeaderClient", () => {
       await userEvent.click(menuTrigger());
       const dialog = screen.getByRole("dialog");
       const headerSessionLink = within(dialog).getByRole("link", {
-        name: "令和8年第2回定例会の議案一覧",
+        name: /^令和8年第2回定例会の議案一覧/,
       });
       const otherSessionLink = within(dialog).getByRole("link", {
         name: "令和8年第1回定例会の議案一覧",
       });
-      expect(headerSessionLink.closest("li")).toHaveClass("lg:hidden");
+      expect(headerSessionLink.closest("li")).not.toHaveClass("lg:hidden");
       expect(otherSessionLink.closest("li")).not.toHaveClass("lg:hidden");
+      expect(within(headerSessionLink).getByText("最新")).toBeInTheDocument();
+      expect(within(otherSessionLink).queryByText("最新")).toBeNull();
       expect(
         within(dialog).getByRole("link", { name: "議員一覧" })
       ).toHaveClass("lg:hidden");

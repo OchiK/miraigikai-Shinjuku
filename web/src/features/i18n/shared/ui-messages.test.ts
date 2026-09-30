@@ -55,6 +55,7 @@ describe("UI_MESSAGES", () => {
 describe("getUiMessages", () => {
   it("英語を選ぶと英語の辞書を返す", () => {
     expect(getUiMessages("en").nav.bills).toBe("Bills");
+    expect(getUiMessages("en").nav.latestBills).toBe("Latest Bills");
     expect(getUiMessages("en").difficulty.labels).toEqual({
       easy: "Plain",
       normal: "Standard",
@@ -64,6 +65,7 @@ describe("getUiMessages", () => {
 
   it("日本語を選ぶと日本語の辞書を返す", () => {
     expect(getUiMessages("ja").nav.bills).toBe("議案一覧");
+    expect(getUiMessages("ja").nav.latestBills).toBe("最新の議案一覧");
     expect(getUiMessages("ja").difficulty.labels.easy).toBe("やさしい");
   });
 });

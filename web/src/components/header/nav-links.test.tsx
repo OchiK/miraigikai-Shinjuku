@@ -18,18 +18,17 @@ const session: CouncilSessionWithSlug = {
 };
 
 describe("NavLinks", () => {
-  it("議案一覧・議員一覧と会期バッジを出す", () => {
+  it("最新の議案一覧・議員一覧を出し、会期名のバッジは出さない", () => {
     render(<NavLinks pathname="/" session={session} />);
 
-    expect(screen.getByRole("link", { name: "議案一覧" })).toHaveAttribute(
-      "href",
-      "/sessions/r8-2/bills"
-    );
+    expect(
+      screen.getByRole("link", { name: "最新の議案一覧" })
+    ).toHaveAttribute("href", "/sessions/r8-2/bills");
+    expect(screen.queryByText("令和8年第2回定例会")).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "議員一覧" })).toHaveAttribute(
       "href",
       "/councilors"
     );
-    expect(screen.getByText("令和8年第2回定例会")).toBeInTheDocument();
   });
 
   it("今いるページのリンクに aria-current を付ける", () => {
@@ -39,25 +38,24 @@ describe("NavLinks", () => {
       "aria-current",
       "page"
     );
-    expect(screen.getByRole("link", { name: "議案一覧" })).not.toHaveAttribute(
-      "aria-current"
-    );
+    expect(
+      screen.getByRole("link", { name: "最新の議案一覧" })
+    ).not.toHaveAttribute("aria-current");
   });
 
-  it("定例会が無ければ議案一覧と会期バッジを出さない", () => {
+  it("定例会が無ければ最新の議案一覧を出さない", () => {
     render(<NavLinks pathname="/" session={null} />);
 
     expect(
-      screen.queryByRole("link", { name: "議案一覧" })
+      screen.queryByRole("link", { name: "最新の議案一覧" })
     ).not.toBeInTheDocument();
-    expect(screen.queryByText(/現在の会期/)).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "議員一覧" })).toBeInTheDocument();
   });
 
   it("英語表示では英語のラベルで出す", () => {
     render(<NavLinks pathname="/" session={session} locale="en" />);
 
-    expect(screen.getByRole("link", { name: "Bills" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Latest Bills" })).toHaveAttribute(
       "href",
       "/sessions/r8-2/bills"
     );

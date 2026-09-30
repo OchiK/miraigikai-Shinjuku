@@ -36,10 +36,11 @@ export type AroundJa = { before: string; after: string };
 export type UiMessages = {
   nav: {
     bills: string;
+    /** ヘッダーの主要導線。最新の定例会の議案一覧へ行くことを示す */
+    latestBills: string;
     councilors: string;
     primaryNavLabel: string;
     secondaryNavLabel: string;
-    currentSessionPrefix: string;
     home: string;
     returnToHome: string;
     openMenu: string;
@@ -58,6 +59,14 @@ export type UiMessages = {
     featuredSubtitle: string;
     moreTagBills: (tagLabel: string) => string;
     archiveSubtitle: string;
+    /** 現在の定例会の議案一覧ページ見出しの下に置く説明 */
+    currentSessionSubtitle: string;
+    /** 最新の定例会に付けるバッジ */
+    latestBadge: string;
+    inSession: string;
+    notInSession: string;
+    sessionFrom: (date: string) => string;
+    allBillsHeading: string;
     sessionBillsHeading: (year: number, sessionName: string) => string;
     billCount: (count: number) => string;
     sessionPeriod: (params: {
@@ -304,10 +313,10 @@ export const UI_MESSAGES: Record<PublicLocale, UiMessages> = {
   ja: {
     nav: {
       bills: "議案一覧",
+      latestBills: "最新の議案一覧",
       councilors: "議員一覧",
       primaryNavLabel: "主要ナビゲーション",
       secondaryNavLabel: "補助ナビゲーション",
-      currentSessionPrefix: "現在の会期：",
       home: "トップへ",
       returnToHome: "トップページへ戻る",
       openMenu: "メニューを開く",
@@ -328,6 +337,12 @@ export const UI_MESSAGES: Record<PublicLocale, UiMessages> = {
       featuredSubtitle: "議会に上程された注目議案",
       moreTagBills: (tagLabel) => `その他の${tagLabel}議案はこちら`,
       archiveSubtitle: "過去の定例会に上程された議案",
+      currentSessionSubtitle: "現在審議されている議案の一覧",
+      latestBadge: "最新",
+      inSession: "開会中",
+      notInSession: "閉会中",
+      sessionFrom: (date) => `${date}〜`,
+      allBillsHeading: "分野別の議案一覧",
       sessionBillsHeading: (year, sessionName) =>
         `${year}年 ${sessionName}の議案`,
       billCount: (count) => `${count}件`,
@@ -572,10 +587,10 @@ export const UI_MESSAGES: Record<PublicLocale, UiMessages> = {
   en: {
     nav: {
       bills: "Bills",
+      latestBills: "Latest Bills",
       councilors: "Councilors",
       primaryNavLabel: "Main navigation",
       secondaryNavLabel: "Secondary navigation",
-      currentSessionPrefix: "Current session: ",
       home: "Home",
       returnToHome: "Back to the home page",
       openMenu: "Open menu",
@@ -597,6 +612,12 @@ export const UI_MESSAGES: Record<PublicLocale, UiMessages> = {
       featuredSubtitle: "Key bills submitted to the council",
       moreTagBills: (tagLabel) => `More bills tagged “${tagLabel}”`,
       archiveSubtitle: "Bills from past council sessions",
+      currentSessionSubtitle: "Bills currently before the council",
+      latestBadge: "Latest",
+      inSession: "In session",
+      notInSession: "Not in session",
+      sessionFrom: (date) => `From ${date}`,
+      allBillsHeading: "Bills by Topic",
       sessionBillsHeading: (year, sessionName) =>
         `Bills from ${sessionName} (${year})`,
       billCount: (count) => (count === 1 ? "1 bill" : `${count} bills`),

@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 interface NavLinksProps {
   pathname: string;
-  /** 「議案一覧」のリンク先と会期バッジに使う定例会 */
+  /** 「最新の議案一覧」のリンク先に使う定例会 */
   session: CouncilSessionWithSlug | null;
   /** 表示言語。省略時は日本語 */
   locale?: PublicLocale;
@@ -18,9 +18,9 @@ const linkClassName =
   "flex min-h-11 items-center whitespace-nowrap rounded-full px-3 text-sm font-medium text-mirai-text transition-colors hover:bg-neutral-200/60 hover:text-mirai-accent-text focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/40 aria-[current=page]:bg-neutral-200";
 
 /**
- * デスクトップのヘッダー中央に並べる主要導線と会期バッジ（docs/BACKLOG.md P8-2）。
+ * デスクトップのヘッダー中央に並べる主要導線（docs/BACKLOG.md P8-2）。
  * スマートフォンではハンバーガーメニューに同じ導線がある。
- * 会期バッジは難易度セレクタ等と並んでも収まる xl 以上でだけ出す。
+ * 会期名はトップページと議案一覧ページの見出しで示すので、ここには出さない。
  */
 export function NavLinks({
   pathname,
@@ -31,7 +31,7 @@ export function NavLinks({
   const { nav } = getUiMessages(locale);
   const links = [
     ...(session
-      ? [{ label: nav.bills, href: routes.sessionBills(session.slug) }]
+      ? [{ label: nav.latestBills, href: routes.sessionBills(session.slug) }]
       : []),
     { label: nav.councilors, href: routes.councilors() },
   ];
@@ -54,12 +54,6 @@ export function NavLinks({
           ))}
         </ul>
       </nav>
-      {session && (
-        <p className="hidden whitespace-nowrap rounded-full bg-card px-3 py-1 text-xs font-medium text-mirai-text shadow-mirai-sm xl:block">
-          <span className="sr-only">{nav.currentSessionPrefix}</span>
-          <span lang="ja">{session.name}</span>
-        </p>
-      )}
     </div>
   );
 }
