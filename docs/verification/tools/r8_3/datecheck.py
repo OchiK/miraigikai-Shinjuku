@@ -1,7 +1,7 @@
-import json,re,unicodedata,datetime as D
+import json,re,unicodedata,datetime as D,sys
 from sources import SRC, srctext
 W='月火水木金土日'
-data=json.load(open('contents.json'))
+data=json.load(open(sys.argv[1] if len(sys.argv)>1 else 'contents.json'))
 # dates that are about this explainer itself, not claims from sources
 SELF={('2026','9','30'),('2026','9','16'),('2026','10','15')}
 bad=0
@@ -23,5 +23,8 @@ for c in data:
     for y,m,d in dates:
         if (y,m,d) in SELF: continue
         r=int(y)-2018
-        if f'令和{r}年{m}月{d}日' not in text: bad+=1; print('DATE?',c['bill_slug'],c['difficulty_level'],y,m,d)
+        if f'令和{r}年{m}月{d}日' not in text and f'同年{m}月{d}日' not in text:
+            bad+=1; print('DATE?',c['bill_slug'],c['difficulty_level'],y,m,d)
 print('issues:',bad)
+if bad:
+    sys.exit(1)

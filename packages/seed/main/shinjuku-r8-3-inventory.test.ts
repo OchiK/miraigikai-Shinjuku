@@ -53,8 +53,8 @@ describe("令和8年第3回定例会インベントリ", () => {
     });
   });
 
-  it("公開レビューが済むまで第3回定例会は現在の会期にしない（第2回を維持）", () => {
-    expect(R8_3_SESSION.is_active).toBe(false);
+  it("公開レビュー済みの第3回定例会を現在の会期にする", () => {
+    expect(R8_3_SESSION.is_active).toBe(true);
   });
 
   it("提出議案一覧ページの22件と過不足なく一致する", () => {
@@ -110,17 +110,15 @@ describe("令和8年第3回定例会インベントリ", () => {
     }
   });
 
-  it("議決結果が未掲載のあいだは全件未議決。解説は公開し、公開レビューは未了", () => {
-    // 解説は主張台帳で出典突合済みだが、独立したファクトチェック（公開レビュー）は
-    // まだ行っていない。reviewCompleted を true にするのは公開レビューの後。
+  it("議決結果が未掲載のあいだは全件未議決。解説は公開レビュー済み", () => {
     for (const item of r8ThirdSessionItems) {
       expect(item.decision).toBeNull();
       expect(item.hasPublishableContent).toBe(true);
-      expect(item.reviewCompleted).toBe(false);
+      expect(item.reviewCompleted).toBe(true);
     }
   });
 
-  it("未議決の22件を submitted・published（レビュー中）としてDB行へ変換する", () => {
+  it("未議決の22件を submitted・published（レビュー済み）としてDB行へ変換する", () => {
     const bills = toR8_3BillInserts();
 
     expect(bills).toHaveLength(22);
@@ -134,7 +132,7 @@ describe("令和8年第3回定例会インベントリ", () => {
         publish_status: "published",
         published_at: null,
         is_featured: false,
-        is_review_completed: false,
+        is_review_completed: true,
         source_page_url: R8_3_SUBMISSIONS_URL,
         decision_source_url: null,
       });

@@ -138,7 +138,7 @@ export const R8_2_SESSION: CouncilSessionInsert = {
   council_url: R8_2_SUBMISSIONS_URL,
   start_date: "2026-06-10",
   end_date: "2026-06-19",
-  is_active: true,
+  is_active: false,
 };
 
 /**

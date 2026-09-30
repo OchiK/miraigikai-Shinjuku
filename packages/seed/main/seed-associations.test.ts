@@ -97,14 +97,13 @@ describe("公開状態と解説の整合", () => {
     );
   });
 
-  it("R8-3の22件は公開するが公開レビュー未了（is_review_completed: false）", () => {
-    // 解説は主張台帳で出典突合済み。独立したファクトチェックの後に true にする。
+  it("R8-3の22件は公開レビュー済み（is_review_completed: true）", () => {
     const r8_3Slugs = new Set(r8ThirdSessionItems.map(buildR8_3ItemKey));
     const r8_3Bills = bills.filter((b) => r8_3Slugs.has(b.slug ?? ""));
 
     expect(r8_3Bills).toHaveLength(22);
     for (const bill of r8_3Bills) {
-      expect(bill.is_review_completed, bill.slug ?? "").toBe(false);
+      expect(bill.is_review_completed, bill.slug ?? "").toBe(true);
     }
   });
 

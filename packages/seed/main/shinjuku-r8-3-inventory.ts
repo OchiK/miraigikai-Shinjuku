@@ -20,9 +20,7 @@ type CouncilSessionInsert =
  * 議決結果は未掲載（会期中）のため、全件 decision: null とする。
  * 解説（やさしい／ふつう／くわしく）は P5-2 で全22件を作成し、主張台帳
  * （docs/verification/20260930_0910_claim-ledger-r8-3.csv）で一次資料と突合した。
- * 公開はするが、公開レビュー（独立したファクトチェック）は未了のため
- * reviewCompleted: false のままとし、画面に「レビュー中」を出す
- * （第2回定例会の議員提出議案と同じ扱い。P8-18 を参照）。
+ * 公開レビュー（独立したファクトチェック）は完了済み。
  *
  * 議決結果が公式に掲載されたら decision だけを更新し、
  * 既存の解説は本番インポーターで上書き・削除しない。
@@ -81,11 +79,8 @@ export interface R8_3SessionItem {
 /**
  * 会期メタデータ（公式ページ記載: 「会期：9月16日～10月15日」）。
  *
- * 公開サイトのアクティブな会期は、公開レビューまで済んだ R8-2 を維持し、
- * R8-3 は is_active: false とする
- * （findActiveCouncilSession は is_active = true が2件あると取得に失敗する）。
- * R8-3 の解説は作成・公開したが公開レビューが未了のため、切り替えは
- * 公開レビューの完了後に R8-2 の is_active: false と同時に行う。
+ * 公開レビューが完了したため R8-3 をアクティブな会期とし、R8-2 は同時に
+ * is_active: false へ切り替える。
  */
 export const R8_3_SESSION: CouncilSessionInsert = {
   name: "令和8年 第3回定例会",
@@ -93,7 +88,7 @@ export const R8_3_SESSION: CouncilSessionInsert = {
   council_url: R8_3_SUBMISSIONS_URL,
   start_date: "2026-09-16",
   end_date: "2026-10-15",
-  is_active: false,
+  is_active: true,
 };
 
 /**
@@ -106,12 +101,12 @@ const officialPdfUrl = (contentId: string) =>
 
 /**
  * 審議中の案件の共通値。
- * 議決結果はまだ無い。解説は作成・出典突合済みで公開するが、公開レビューは未了。
+ * 議決結果はまだ無い。解説は作成・出典突合・公開レビュー済みで公開する。
  */
 const PENDING = {
   decision: null,
   hasPublishableContent: true,
-  reviewCompleted: false,
+  reviewCompleted: true,
 } as const;
 
 export const r8ThirdSessionItems: R8_3SessionItem[] = [

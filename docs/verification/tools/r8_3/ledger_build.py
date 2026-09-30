@@ -126,3 +126,5 @@ if __name__ == "__main__":
         print("ERROR", e)
     from collections import Counter
     print(len(rows), "rows;", len(fields), "variants;", Counter(r["verdict"] for r in rows))
+    if errors:
+        sys.exit(1)
