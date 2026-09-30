@@ -145,7 +145,8 @@ function buildDataset(idPrefix: string): ImportDataset {
     createBillContents: (bills) =>
       createBillContents(toInventoryRefs(bills), r8_2Contents),
     // タグ表は R8-3 の議案も引くが、複製インベントリは R8-2 だけなので、
-    // R8-3 の slug には仮の参照を渡して解決だけ通し、結果からは除く
+    // R8-3 の slug には仮の参照を渡して解決だけ通し、結果からは除く。
+    // R8-3 を複製インベントリに加えたら、この回避策は不要になる
     createBillsTags: (bills, tagRefs) => {
       const inventoryRefs = toInventoryRefs(bills);
       const knownIds = new Set(inventoryRefs.map((bill) => bill.id));

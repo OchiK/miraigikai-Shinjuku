@@ -290,7 +290,8 @@ describe("createBillsTags", () => {
     const billsTags = createBillsTags([...insertedBills, unmapped], insertedTags);
 
     expect(billsTags.some((bt) => bt.bill_id === unmapped.id)).toBe(false);
-    expect(billsTags).toHaveLength(45);
+    // R8-2 の区長提出議案23件 + R8-3 の22件（議員提出議案4件は未分類）
+    expect(billsTags).toHaveLength(23 + 22);
   });
 });
 
