@@ -253,11 +253,33 @@ describe("createBillsTags", () => {
       "shinjuku-2026-r2-gian-60": "くらし・行財政",
       "shinjuku-2026-r2-gian-61": "まちづくり・環境",
       "shinjuku-2026-r2-gian-62": "文化・生涯学習",
+      "shinjuku-2026-r3-gian-63": "くらし・行財政",
+      "shinjuku-2026-r3-gian-64": "くらし・行財政",
+      "shinjuku-2026-r3-gian-65": "くらし・行財政",
+      "shinjuku-2026-r3-gian-66": "くらし・行財政",
+      "shinjuku-2026-r3-nintei-1": "くらし・行財政",
+      "shinjuku-2026-r3-nintei-2": "くらし・行財政",
+      "shinjuku-2026-r3-nintei-3": "くらし・行財政",
+      "shinjuku-2026-r3-nintei-4": "くらし・行財政",
+      "shinjuku-2026-r3-gian-67": "くらし・行財政",
+      "shinjuku-2026-r3-gian-68": "多文化共生・手続き",
+      "shinjuku-2026-r3-gian-69": "子育て・教育",
+      "shinjuku-2026-r3-gian-70": "子育て・教育",
+      "shinjuku-2026-r3-gian-71": "まちづくり・環境",
+      "shinjuku-2026-r3-gian-72": "子育て・教育",
+      "shinjuku-2026-r3-gian-73": "まちづくり・環境",
+      "shinjuku-2026-r3-gian-74": "まちづくり・環境",
+      "shinjuku-2026-r3-gian-75": "まちづくり・環境",
+      "shinjuku-2026-r3-gian-76": "まちづくり・環境",
+      "shinjuku-2026-r3-gian-77": "くらし・行財政",
+      "shinjuku-2026-r3-gian-78": "くらし・行財政",
+      "shinjuku-2026-r3-gian-79": "くらし・行財政",
+      "shinjuku-2026-r3-gian-80": "くらし・行財政",
     });
   });
 
   it("タグ未設定の議案には bills_tags を作らない", () => {
-    // 現在は23件すべてにタグを付けているため、インベントリだけを渡すと
+    // 現在は第2回・第3回定例会の全件にタグを付けているため、インベントリだけを渡すと
     // 未設定の経路を一度も通らず、このテストが空振りする。
     // タグ表に無い議案を明示的に混ぜて、その議案に関連付けが作られないことを見る。
     const unmapped: SeededBillRef = {
@@ -268,7 +290,8 @@ describe("createBillsTags", () => {
     const billsTags = createBillsTags([...insertedBills, unmapped], insertedTags);
 
     expect(billsTags.some((bt) => bt.bill_id === unmapped.id)).toBe(false);
-    expect(billsTags).toHaveLength(23);
+    // R8-2 の区長提出議案23件 + R8-3 の22件（議員提出議案4件は未分類）
+    expect(billsTags).toHaveLength(23 + 22);
   });
 });
 
