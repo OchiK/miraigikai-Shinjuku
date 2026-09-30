@@ -31,23 +31,41 @@ export function CouncilSessionBillList({
 
   return (
     <div lang={locale} className="flex flex-col gap-8">
-      {/* Archiveヘッダー */}
-      <div className="flex flex-col gap-1">
-        <h1>
-          <Image
-            src="/icons/archive-typography.svg"
-            alt="Archive"
-            width={156}
-            height={36}
-            priority
-          />
-        </h1>
-        <p className="text-sm font-bold text-mirai-accent-text">
-          <AroundJapanese around={sessionBills.archiveSubtitle}>
-            {session.name}
-          </AroundJapanese>
-        </p>
-      </div>
+      {session.is_active ? (
+        /* 現在の定例会のヘッダー（Archive は会期が終わってから） */
+        <div className="flex flex-col gap-1">
+          <h1 className="flex flex-wrap items-center gap-3 text-2xl font-bold leading-[1.48] text-mirai-text">
+            <span lang="ja">{session.name}</span>
+            <span
+              lang={locale}
+              className="shrink-0 rounded-full bg-primary px-3 py-0.5 text-sm font-bold text-mirai-text"
+            >
+              {home.latestBadge}
+            </span>
+          </h1>
+          <p className="text-sm font-bold text-mirai-accent-text">
+            {home.currentSessionSubtitle}
+          </p>
+        </div>
+      ) : (
+        /* Archiveヘッダー */
+        <div className="flex flex-col gap-1">
+          <h1>
+            <Image
+              src="/icons/archive-typography.svg"
+              alt="Archive"
+              width={156}
+              height={36}
+              priority
+            />
+          </h1>
+          <p className="text-sm font-bold text-mirai-accent-text">
+            <AroundJapanese around={sessionBills.archiveSubtitle}>
+              {session.name}
+            </AroundJapanese>
+          </p>
+        </div>
+      )}
 
       {/* セクションヘッダー */}
       <div className="flex flex-col gap-0.5">
