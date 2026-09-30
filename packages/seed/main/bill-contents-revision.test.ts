@@ -5,6 +5,11 @@ import { parse } from "csv-parse/sync";
 import { describe, expect, it } from "vitest";
 import { billContentsWithBillSlug } from "./bill-contents-data";
 import { buildItemKey, r8SecondSessionItems } from "./shinjuku-r8-2-inventory";
+import {
+  R8_3_SUBMISSIONS_URL,
+  buildR8_3ItemKey,
+  r8ThirdSessionItems,
+} from "./shinjuku-r8-3-inventory";
 
 /**
  * 解説の内容ハッシュを固定する。
@@ -58,10 +63,16 @@ const GIIN_CLAIM_LEDGER_PATH = ledgerPath(
   "../../../docs/verification/20260925_2000_claim-ledger-giin-r8-2.csv"
 );
 
+/** 令和8年第3回定例会の22件（第63〜80号議案、認定第1〜4号）の easy / normal / hard 版の突合記録。 */
+const R8_3_CLAIM_LEDGER_PATH = ledgerPath(
+  "../../../docs/verification/20260930_0910_claim-ledger-r8-3.csv"
+);
+
 const CLAIM_LEDGER_PATHS = [
   ...NORMAL_CLAIM_LEDGER_PATHS,
   EASY_CLAIM_LEDGER_PATH,
   GIIN_CLAIM_LEDGER_PATH,
+  R8_3_CLAIM_LEDGER_PATH,
 ];
 
 const ORIGINAL_CLAIM_LEDGER_PATH = ledgerPath(
@@ -128,7 +139,7 @@ describe("解説の内容ハッシュ", () => {
     expect(actual).toEqual(reviewedContentSha256);
   });
 
-  it("81変種（区長提出23件と議員提出4件の各3段）すべてがハッシュ固定されている", () => {
+  it("147変種（第2回の区長提出23件・議員提出4件と第3回の22件の各3段）すべてがハッシュ固定されている", () => {
     // 台帳に載っている変種だけを突き合わせると、
     // 「台帳に行を書かずに解説だけ足す」と全テストが通ってしまう。
     // 対象外の集合を明示的に固定し、新しい解説が黙って素通りしないようにする。
@@ -140,7 +151,7 @@ describe("解説の内容ハッシュ", () => {
       .sort();
 
     expect(unpinned).toEqual([]);
-    expect(Object.keys(pinned)).toHaveLength(81);
+    expect(Object.keys(pinned)).toHaveLength(147);
   });
 
   it("台帳に載っている変種はすべて実在する", () => {
@@ -431,6 +442,167 @@ describe("議員提出議案4件の主張台帳の構造", () => {
 
     for (const content of billContentsWithBillSlug) {
       if (!giinKeys.has(content.bill_slug)) continue;
+      const text = `${content.title}\n${content.summary}\n${content.content}`;
+      for (const url of text.match(/https?:\/\/[^\s|)]+/g) ?? []) {
+        if (!ledgerUrls.has(url)) missing.add(url);
+      }
+    }
+
+    expect([...missing].sort()).toEqual([]);
+  });
+});
+
+/** 台帳ツール（docs/verification/tools/r8_3/ledger_build.py）が needs_source 行に書く定型の注記。 */
+const NO_SOURCE_NOTE =
+  "（本件は解説本文が「一次資料に記載がない」と明示している箇所であり、事実主張ではない）";
+const STATUS_NOTE =
+  "（作成時点の審議状況の記述であり、一次資料の記載による主張ではない）";
+
+describe("令和8年第3回定例会22件の主張台帳の構造", () => {
+  // 議決前の案件なので、議決結果に関する主張は持たない。
+  // 出典から確かめられない点は needs_source として、解説本文の
+  // 「わからない こと」「出典に記載がない事項」と審議状況の記述にだけ置く。
+  const rows = readLedger(R8_3_CLAIM_LEDGER_PATH);
+  const r8_3Keys = new Set(r8ThirdSessionItems.map(buildR8_3ItemKey));
+
+  it("第3回定例会の22件すべてを指し、それ以外を指さない", () => {
+    expect([...new Set(rows.map((r) => r.item_key))].sort()).toEqual(
+      [...r8_3Keys].sort()
+    );
+  });
+
+  it("判定は supported か needs_source のいずれかである", () => {
+    // 未解決の contradicted / unsupported を公開する本文に残さないための番人。
+    const verdicts = [...new Set(rows.map((r) => r.verdict))].sort();
+    expect(verdicts).toEqual(["needs_source", "supported"]);
+  });
+
+  it("needs_source は「出典に記載がない事項」と審議状況の記述に限る", () => {
+    // needs_source を事実主張の逃げ道にしない。
+    // 一次資料に根拠がある主張は必ず supported として引用を持つ。
+    const misplaced = rows
+      .filter((r) => r.verdict === "needs_source")
+      .filter(
+        (r) =>
+          r.page_or_section !== "出典に記載がない事項" &&
+          r.page_or_section !== "審議状況"
+      )
+      .map((r) => r.claim_id);
+
+    expect(misplaced).toEqual([]);
+  });
+
+  it("needs_source は定型の注記だけを持ち、supported は定型の注記を持たない", () => {
+    // 見出し（page_or_section）の付け替えだけで事実主張を needs_source に
+    // 逃がせないよう、引用欄の中身でも区別する。
+    const notes = new Set([NO_SOURCE_NOTE, STATUS_NOTE]);
+    const bad = rows
+      .filter((r) =>
+        r.verdict === "needs_source"
+          ? !notes.has(r.evidence_excerpt)
+          : notes.has(r.evidence_excerpt)
+      )
+      .map((r) => r.claim_id);
+
+    expect(bad).toEqual([]);
+  });
+
+  it("審議状況の行は各変種にちょうど1行ある", () => {
+    const counts = new Map<string, number>();
+    for (const r of rows.filter((row) => row.page_or_section === "審議状況")) {
+      const key = `${r.item_key}:${r.difficulty}`;
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+
+    expect(counts.size).toBe(66);
+    expect([...counts.values()].every((n) => n === 1)).toBe(true);
+  });
+
+  it("claim_id が一意である", () => {
+    const ids = rows.map((r) => r.claim_id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("主張・出典・ハッシュ・位置・引用がいずれも空でない", () => {
+    const incomplete = rows
+      .filter(
+        (r) =>
+          !r.final_claim ||
+          !r.source_url ||
+          !/^[0-9a-f]{64}$/.test(r.source_sha256) ||
+          !r.page_or_section ||
+          !r.evidence_excerpt
+      )
+      .map((r) => r.claim_id);
+
+    expect(incomplete).toEqual([]);
+  });
+
+  it("出典は第3回定例会の一次資料に限られ、URL ごとの sha256 は1つ", () => {
+    // 案件をまたぐ引用（第64号議案が認定第1号の全文を引く等）は正当なので、
+    // 案件単位ではなく会期の出典集合で縛る。
+    const allowed = new Set<string>([
+      R8_3_SUBMISSIONS_URL,
+      ...r8ThirdSessionItems.flatMap((i) =>
+        i.overviewPdfUrl ? [i.fullTextPdfUrl, i.overviewPdfUrl] : [i.fullTextPdfUrl]
+      ),
+    ]);
+    const shaByUrl = new Map<string, Set<string>>();
+    for (const r of rows) {
+      const shas = shaByUrl.get(r.source_url) ?? new Set<string>();
+      shas.add(r.source_sha256);
+      shaByUrl.set(r.source_url, shas);
+    }
+
+    expect([...shaByUrl.keys()].filter((u) => !allowed.has(u))).toEqual([]);
+    expect(
+      [...shaByUrl.entries()].filter(([, shas]) => shas.size !== 1)
+    ).toEqual([]);
+  });
+
+  it("議決前の案件なので、本文と主張は議決結果を述べない", () => {
+    // 議決結果は bills.status で示し、解説本文には書かない方針。
+    const verdictWords = /原案可決|否決|可決され|認定され|承認され/;
+    const inText = billContentsWithBillSlug
+      .filter((c) => r8_3Keys.has(c.bill_slug))
+      .filter((c) =>
+        verdictWords.test(`${c.title}\n${c.summary}\n${c.content}`)
+      )
+      .map((c) => `${c.bill_slug}:${c.difficulty_level}`);
+    const inClaims = rows
+      .filter((r) => verdictWords.test(r.final_claim))
+      .map((r) => r.claim_id);
+
+    expect(inText).toEqual([]);
+    expect(inClaims).toEqual([]);
+  });
+
+  it("22件×3段の各変種が title / summary / content すべての行を持つ", () => {
+    const byVariant = new Map<string, Set<string>>();
+    for (const row of rows) {
+      const key = `${row.item_key}:${row.difficulty}`;
+      const fields = byVariant.get(key) ?? new Set<string>();
+      fields.add(row.content_field);
+      byVariant.set(key, fields);
+    }
+
+    const incomplete = [...byVariant.entries()]
+      .filter(([, fields]) =>
+        ["title", "summary", "content"].some((f) => !fields.has(f))
+      )
+      .map(([key]) => key)
+      .sort();
+
+    expect(incomplete).toEqual([]);
+    expect(byVariant.size).toBe(66);
+  });
+
+  it("本文に出てくる出典URLはすべて台帳に載っている", () => {
+    const ledgerUrls = new Set(rows.map((r) => r.source_url));
+    const missing = new Set<string>();
+
+    for (const content of billContentsWithBillSlug) {
+      if (!r8_3Keys.has(content.bill_slug)) continue;
       const text = `${content.title}\n${content.summary}\n${content.content}`;
       for (const url of text.match(/https?:\/\/[^\s|)]+/g) ?? []) {
         if (!ledgerUrls.has(url)) missing.add(url);

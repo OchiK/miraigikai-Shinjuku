@@ -1,0 +1,5 @@
+pdf/
+contents.json
+rebuilt.csv
+kessan-*.md
+__pycache__/

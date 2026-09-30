@@ -38,7 +38,7 @@ type InterviewReportInsert =
 // 定例会データ
 // 会期は公式の提出議案ページ記載の「会期：…」をそのまま採用する。
 export const councilSessions: CouncilSessionInsert[] = [
-  { ...R8_3_SESSION, is_active: false },
+  R8_3_SESSION,
   R8_2_SESSION,
   {
     name: "令和8年 第1回定例会",
