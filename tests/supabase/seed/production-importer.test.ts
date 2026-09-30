@@ -20,8 +20,8 @@ import {
   toFactionStanceImportRows,
 } from "../../../packages/seed/main/shinjuku-faction-stances";
 import {
-  R8_2_SESSION,
   buildItemKey,
+  R8_2_SESSION,
   r8SecondSessionItems,
   toBillInserts,
 } from "../../../packages/seed/main/shinjuku-r8-2-inventory";
