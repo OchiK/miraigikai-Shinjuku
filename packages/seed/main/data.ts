@@ -12,6 +12,8 @@ import {
 } from "./shinjuku-r8-2-inventory";
 import {
   R8_3_SESSION,
+  r8_3GianKey,
+  r8_3NinteiKey,
   toR8_3BillInserts,
 } from "./shinjuku-r8-3-inventory";
 
@@ -254,6 +256,29 @@ const billTagsBySlug: Record<string, string[]> = {
   [gianKey(60)]: ["くらし・行財政"],
   [gianKey(61)]: ["まちづくり・環境"],
   [gianKey(62)]: ["文化・生涯学習"],
+  // 令和8年第3回定例会の22件
+  [r8_3GianKey(63)]: ["くらし・行財政"],
+  [r8_3GianKey(64)]: ["くらし・行財政"],
+  [r8_3GianKey(65)]: ["くらし・行財政"],
+  [r8_3GianKey(66)]: ["くらし・行財政"],
+  [r8_3NinteiKey(1)]: ["くらし・行財政"],
+  [r8_3NinteiKey(2)]: ["くらし・行財政"],
+  [r8_3NinteiKey(3)]: ["くらし・行財政"],
+  [r8_3NinteiKey(4)]: ["くらし・行財政"],
+  [r8_3GianKey(67)]: ["くらし・行財政"],
+  [r8_3GianKey(68)]: ["多文化共生・手続き"],
+  [r8_3GianKey(69)]: ["子育て・教育"],
+  [r8_3GianKey(70)]: ["子育て・教育"],
+  [r8_3GianKey(71)]: ["まちづくり・環境"],
+  [r8_3GianKey(72)]: ["子育て・教育"],
+  [r8_3GianKey(73)]: ["まちづくり・環境"],
+  [r8_3GianKey(74)]: ["まちづくり・環境"],
+  [r8_3GianKey(75)]: ["まちづくり・環境"],
+  [r8_3GianKey(76)]: ["まちづくり・環境"],
+  [r8_3GianKey(77)]: ["くらし・行財政"],
+  [r8_3GianKey(78)]: ["くらし・行財政"],
+  [r8_3GianKey(79)]: ["くらし・行財政"],
+  [r8_3GianKey(80)]: ["くらし・行財政"],
 };
 
 export function createBillsTags(
