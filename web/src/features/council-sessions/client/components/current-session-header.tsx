@@ -28,7 +28,10 @@ export function CurrentSessionHeader({
         lang={locale}
         className="text-sm font-medium text-mirai-text-secondary"
       >
-        {home.sessionFrom(formatDateWithDots(session.start_date))}
+        {home.sessionDates(
+          formatDateWithDots(session.start_date),
+          session.end_date ? formatDateWithDots(session.end_date) : null
+        )}
       </p>
     </div>
   );

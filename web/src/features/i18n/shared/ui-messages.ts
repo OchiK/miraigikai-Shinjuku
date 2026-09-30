@@ -65,7 +65,8 @@ export type UiMessages = {
     latestBadge: string;
     inSession: string;
     notInSession: string;
-    sessionFrom: (date: string) => string;
+    /** 会期。終了日が未定なら開始日のみ */
+    sessionDates: (start: string, end: string | null) => string;
     allBillsHeading: string;
     sessionBillsHeading: (year: number, sessionName: string) => string;
     billCount: (count: number) => string;
@@ -341,7 +342,7 @@ export const UI_MESSAGES: Record<PublicLocale, UiMessages> = {
       latestBadge: "最新",
       inSession: "開会中",
       notInSession: "閉会中",
-      sessionFrom: (date) => `${date}〜`,
+      sessionDates: (start, end) => (end ? `${start}〜${end}` : `${start}〜`),
       allBillsHeading: "分野別の議案一覧",
       sessionBillsHeading: (year, sessionName) =>
         `${year}年 ${sessionName}の議案`,
@@ -616,7 +617,8 @@ export const UI_MESSAGES: Record<PublicLocale, UiMessages> = {
       latestBadge: "Latest",
       inSession: "In session",
       notInSession: "Not in session",
-      sessionFrom: (date) => `From ${date}`,
+      sessionDates: (start, end) =>
+        end ? `${start} – ${end}` : `From ${start}`,
       allBillsHeading: "Bills by Topic",
       sessionBillsHeading: (year, sessionName) =>
         `Bills from ${sessionName} (${year})`,

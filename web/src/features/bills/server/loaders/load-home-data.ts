@@ -1,6 +1,7 @@
 import { getBillsByFeaturedTags } from "@/features/bills/server/loaders/get-bills-by-featured-tags";
 import { getActiveCouncilSession } from "@/features/council-sessions/server/loaders/get-active-council-session";
 import { getCurrentCouncilSession } from "@/features/council-sessions/server/loaders/get-current-council-session";
+import { isActiveSessionInSession } from "@/features/council-sessions/shared/utils/is-active-session-in-session";
 import { getJapanTime } from "@/lib/utils/date";
 import { getFeaturedBills } from "./get-featured-bills";
 import { getPreviousSessionBills } from "./get-previous-session-bills";
@@ -31,7 +32,6 @@ export async function loadHomeData() {
     activeSession,
     activeSessionSlug: activeSession?.slug ?? null,
     // is_active は「トップに出す定例会」のフラグ。開会中かどうかは会期の日付で決める
-    isInSession:
-      activeSession != null && currentSession?.id === activeSession.id,
+    isInSession: isActiveSessionInSession(activeSession, currentSession),
   };
 }
