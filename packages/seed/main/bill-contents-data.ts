@@ -4648,8 +4648,14 @@ export const billContentsWithBillSlug: BillContentWithBillSlug[] = [
 ];
 
 // bill_slug を bill_id に変換する関数
-export function createBillContents(insertedBills: SeededBillRef[]) {
-  return billContentsWithBillSlug.map((content) => {
+//
+// 対象議案が投入されていなければ例外を投げる（黙って取り違えない）。
+// 一部の会期だけを投入するテストでは、その会期の解説だけを contents に渡す。
+export function createBillContents(
+  insertedBills: SeededBillRef[],
+  contents: BillContentWithBillSlug[] = billContentsWithBillSlug
+) {
+  return contents.map((content) => {
     const bill = requireBillBySlug(insertedBills, content.bill_slug);
 
     return {

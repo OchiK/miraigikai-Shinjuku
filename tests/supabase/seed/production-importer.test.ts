@@ -21,6 +21,7 @@ import {
 } from "../../../packages/seed/main/shinjuku-faction-stances";
 import {
   R8_2_SESSION,
+  buildItemKey,
   r8SecondSessionItems,
   toBillInserts,
 } from "../../../packages/seed/main/shinjuku-r8-2-inventory";
@@ -47,6 +48,15 @@ import { adminClient, cleanupTestUser, createTestUser } from "../utils";
  */
 
 const runId = `itest-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
+
+/**
+ * この複製インベントリは第2回定例会の議案だけを投入する。
+ * 解説も第2回定例会の分だけを結び付ける（第3回定例会の解説は対象議案が無い）。
+ */
+const r8_2Slugs = new Set(r8SecondSessionItems.map(buildItemKey));
+const r8_2Contents = billContentsWithBillSlug.filter((c) =>
+  r8_2Slugs.has(c.bill_slug)
+);
 const sessionSlug = `${runId}-${R8_2_SESSION.slug}`;
 
 /**
@@ -128,7 +138,8 @@ function buildDataset(idPrefix: string): ImportDataset {
       ...bill,
       slug: prefixed(bill.slug as string),
     })),
-    createBillContents: (bills) => createBillContents(toInventoryRefs(bills)),
+    createBillContents: (bills) =>
+      createBillContents(toInventoryRefs(bills), r8_2Contents),
     createBillsTags: (bills, tagRefs) =>
       createBillsTags(
         toInventoryRefs(bills),
@@ -280,7 +291,7 @@ describe("本番用インポーター", () => {
     expect(bills).toHaveLength(27);
 
     const contents = await fetchContents(bills.map((b) => b.id));
-    expect(contents).toHaveLength(billContentsWithBillSlug.length);
+    expect(contents).toHaveLength(r8_2Contents.length);
     expect(contents).toHaveLength(81);
   });
 

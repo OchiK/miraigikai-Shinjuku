@@ -1,5 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { createBillContents } from "../../../packages/seed/main/bill-contents-data";
+import {
+  billContentsWithBillSlug,
+  createBillContents,
+} from "../../../packages/seed/main/bill-contents-data";
 import {
   buildItemKey,
   r8SecondSessionItems,
@@ -178,8 +181,13 @@ describe("令和8年第2回定例会インベントリの取り込み", () => {
         slug: b.slug?.replace(`${runId}-`, "") ?? null,
       }));
 
-    const before = createBillContents(stripPrefix(first));
-    const after = createBillContents(stripPrefix(second));
+    // このテストは第2回定例会の議案だけを投入するので、その解説だけを結び付ける
+    const r8_2Slugs = new Set(r8SecondSessionItems.map(buildItemKey));
+    const r8_2Contents = billContentsWithBillSlug.filter((c) =>
+      r8_2Slugs.has(c.bill_slug)
+    );
+    const before = createBillContents(stripPrefix(first), r8_2Contents);
+    const after = createBillContents(stripPrefix(second), r8_2Contents);
 
     expect(after.map((c) => c.bill_id)).toEqual(before.map((c) => c.bill_id));
 
