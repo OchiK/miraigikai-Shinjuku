@@ -25,6 +25,10 @@ import {
   r8SecondSessionItems,
   toBillInserts,
 } from "../../../packages/seed/main/shinjuku-r8-2-inventory";
+import {
+  buildR8_3ItemKey,
+  r8ThirdSessionItems,
+} from "../../../packages/seed/main/shinjuku-r8-3-inventory";
 import type { ImportDataset } from "../../../packages/seed/production/importer";
 import { importInventory } from "../../../packages/seed/production/importer";
 import { adminClient, cleanupTestUser, createTestUser } from "../utils";
@@ -140,11 +144,23 @@ function buildDataset(idPrefix: string): ImportDataset {
     })),
     createBillContents: (bills) =>
       createBillContents(toInventoryRefs(bills), r8_2Contents),
-    createBillsTags: (bills, tagRefs) =>
-      createBillsTags(
-        toInventoryRefs(bills),
+    // タグ表は R8-3 の議案も引くが、複製インベントリは R8-2 だけなので、
+    // R8-3 の slug には仮の参照を渡して解決だけ通し、結果からは除く
+    createBillsTags: (bills, tagRefs) => {
+      const inventoryRefs = toInventoryRefs(bills);
+      const knownIds = new Set(inventoryRefs.map((bill) => bill.id));
+      const placeholders = r8ThirdSessionItems.map(
+        (item, index): SeededBillRef => ({
+          id: `placeholder-r8-3-${index}`,
+          name: item.officialTitle,
+          slug: buildR8_3ItemKey(item),
+        })
+      );
+      return createBillsTags(
+        [...inventoryRefs, ...placeholders],
         tagRefs.map((tag) => ({ ...tag, label: stripped(tag.label) }))
-      ),
+      ).filter((row) => knownIds.has(row.bill_id));
+    },
   };
 }
 

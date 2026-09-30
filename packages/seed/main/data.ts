@@ -232,6 +232,7 @@ export const billSessionSlugByBillSlug: Readonly<Record<string, string>> =
 // 分類を確認済みの議案にのみ付与する。未確認の議案は意図的に未分類のままにする。
 // ステップ4の完了により令和8年第2回定例会の23件すべてが一次資料との突合を終えたため、
 // 全件に分類を付与している。
+// 令和8年第3回定例会の22件も、解説を作成・公開して内容を確認済み（PR #103）のため分類を付与している。
 const billTagsBySlug: Record<string, string[]> = {
   [gianKey(53)]: ["まちづくり・環境"],
   [gianKey(42)]: ["くらし・行財政"],
