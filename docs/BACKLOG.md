@@ -16,7 +16,7 @@
 | **難易度・多言語** | P2-1, P2-2, P3-2, P3-3, P3-5（英語のみ翻訳・5言語案内ページ） |
 | **自動化・制約** | P5-0（会期スコープユニーク制約）, P5-1（更新検知・ドラフト生成）, P5-2（R8-3解説・台帳・本番公開） |
 | **議員機能** | P7-1（世田谷モデル議員ページ）, P7-3（公式Xアカウント表示・全38名調査） |
-| **UI/UX・改善** | P8-1, P8-2, P8-3, P8-4, P8-5, P8-6, P8-7, P8-8, P8-9, P8-10, P8-11, P8-12, P8-13, P8-14, P8-15, P8-16, P8-17, P8-18, P8-19, P8-20 |
+| **UI/UX・改善** | P8-1, P8-2, P8-3, P8-4, P8-5, P8-6, P8-7, P8-8, P8-9, P8-10, P8-11, P8-12, P8-13, P8-14, P8-15, P8-16, P8-17, P8-18, P8-19, P8-20, P8-21, P8-22 |
 
 ---
 
@@ -67,6 +67,17 @@ Progress (2026-09-25):
 トップ（日・英）、`/guide/*`（5言語）、`/faq`、`/terms`、`/privacy`、`/councilors`、`/sessions/r8-2/bills`、議案詳細で違反0件。
 ヘッダーのふりがな・言語切替の `aria-pressed` と44pxのタップ領域はコードで確認した。
 キーボード操作・フォーカス順序・スクリーンリーダー・リフローの手動検証（accessibility-inspect）と accessibility-diff の回帰検知は未実施で、残作業。
+
+### P2-4 ヘッダー操作ボタン（言語切替・難易度セレクタ）のカラーコントラスト最適化（Color Contrast Optimization for Language & Difficulty Buttons）
+ヘッダーに配置されている言語切替（`LanguageToggle`：「日本語 / English」）および難易度セレクタ（`DifficultySelector`：「やさしい / ふつう / くわしく」）について、セグメント背景（`bg-neutral-200`）に対するテキスト（選択時: `bg-primary text-mirai-text`、非選択時: `text-mirai-text-secondary`）のカラーコントラストが最適でない可能性がある。屋外や弱視の利用者にとっても判読しやすくなるよう、WCAG 2.2 AA 基準（文字 4.5:1、UIコンポーネント 3:1）に照らしてコントラストを検証・改善する。
+
+Acceptance:
+- `LanguageToggle` および `DifficultySelector` の選択時・非選択時・ホバー時・フォーカス時のテキストと背景のコントラスト比を計測・検証する
+- `bg-neutral-200` のピル地に対する `text-mirai-text-secondary`（非選択時）の視認性を高め、4.5:1 以上のコントラストを確保する
+- 選択時（`bg-primary`）と `text-mirai-text` の組み合わせの視認性を確認・最適化する
+- Organic デザインシステムの階調（`neutral-700`、`terracotta` 等）と整合性を保ちながら改善する
+- `accesslint` / Playwright による a11y 自動検査およびビジュアルチェックを実施する
+
 
 ---
 

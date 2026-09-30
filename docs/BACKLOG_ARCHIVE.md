@@ -553,3 +553,37 @@ Progress (2026-09-27, PR #95):
 - 議案詳細ページ（`BillDetailLayout`）で、関連する質問が存在する場合（`relatedQuestions.length > 0`）のみ `BillCouncilorsSection` を描画するように条件付き表示へ改修。
 - `BillCouncilorsSection` から汎用的な議員案内ブロック（「議案は区議会の本会議で採決されます...」と「議員一覧を見る」リンク）を削除し、関連質問カード一覧のみを表示する構成に整理。
 - 未使用となったアイコン・文言（`billCouncilors.body`, `billCouncilors.councilorsLink`）およびルートインポートを削除。
+
+### P8-21 令和8年第3回定例会22件のタグ付け（Tagging for R8-3 Bills）
+第3回定例会（R8-3）の22件の議案について、トップページの「分野別の議案一覧（タグ別）」へ正しく分類・表示されるよう、既存タグへの紐づけをシード台帳に定義し、テストおよび本番DBへ反映する。
+
+Acceptance:
+- R8-3 の全22件（第63〜80号議案、認定第1〜4号）に適切なタグを割り当てる（`packages/seed/main/data.ts` の `billTagsBySlug`）
+- `seed-associations.test.ts` でタグ紐づけの件数と対応を検証する
+- 本番DBに `import_production.yml` で `bills_tags` 関連付けを反映する
+
+Progress (2026-09-30, PR #105):
+- `packages/seed/main/data.ts` に全22件のタグマッピングを追加。
+- `seed-associations.test.ts` を更新し、45件（R8-2: 23件 + R8-3: 22件）の関連付けを自動検証。
+- PR #105 マージ後、本番DBへ `bills_tags` 関連付けを適用完了。
+
+### P8-22 定例会表示と議案ナビゲーションのUI改善（Session Display & Bill Navigation UI Enhancements）
+第3回定例会の公開に伴い、会期表示・ナビゲーション導線・セクション構造に関する以下の7点のUI改善を実施。
+
+Acceptance:
+1. ヘッダーの「議案一覧」導線を「最新の議案一覧（Latest Bills）」とし、現在アクティブな定例会への導線であることを明示する
+2. 議案一覧ページ（`/sessions/[slug]/bills`）で、現在審議中の会期では「Archive」表記を出さず、「最新」バッジと会期名で表示する（終了した会期のみ Archive 表記）
+3. ヘッダーの冗長な会期名ピルを削除する
+4. トップページの多言語案内バナー下に現在の会期名（令和8年 第3回定例会）と開始日・終了日を表示する
+5. 「開会中 / 閉会中」ピルを会期日付判定で復活させる
+6. 「注目の議案」セクションを全幅の沈んだ面（`bg-mirai-surface-sunken`）で囲み、「分野別の議案一覧（タグ別）」と視覚的に分離する
+7. ハンバーガーメニューで最新の定例会（第3回）がデスクトップで非表示になっていた問題を解消し、全会期を常に表示する
+
+Progress (2026-09-30, PR #106):
+- `nav.latestBills` を新設し、ヘッダーに「最新の議案一覧」を表示。
+- `CouncilSessionBillList` で `!session.is_active` 時のみ Archive バナーを表示し、アクティブ会期は「最新」バッジ付きヘッダーに変更。
+- ヘッダーから会期名ピルを削除し、トップページに `CurrentSessionHeader` / `CouncilSessionStatusBadge` を新設して配置。
+- 「注目の議案」を `bg-mirai-surface-sunken` 帯で包み、分野別セクションとのコントラストを確立。
+- `HamburgerMenu` の `lg:hidden` を削除し、全会期を全端末で表示。
+- Codex による独立検証（PASS）を経て PR #106 をマージ、本番 Vercel デプロイを完了・公開確認済み。
+
