@@ -18,10 +18,14 @@ type CouncilSessionInsert =
  * 推測・補完・要約は含まない。
  *
  * 議決結果は未掲載（会期中）のため、全件 decision: null とする。
- * 解説も未作成のため、全件非公開（coming_soon 相当）・未レビューとする。
+ * 解説（やさしい／ふつう／くわしく）は P5-2 で全22件を作成し、主張台帳
+ * （docs/verification/20260930_0910_claim-ledger-r8-3.csv）で一次資料と突合した。
+ * 公開はするが、公開レビュー（独立したファクトチェック）は未了のため
+ * reviewCompleted: false のままとし、画面に「レビュー中」を出す
+ * （第2回定例会の議員提出議案と同じ扱い。P8-18 を参照）。
  *
- * DB には議決前・解説未作成の案件として投入する。議決結果が公式に掲載されたら
- * decision だけを更新し、既存の解説は本番インポーターで上書き・削除しない。
+ * 議決結果が公式に掲載されたら decision だけを更新し、
+ * 既存の解説は本番インポーターで上書き・削除しない。
  */
 
 /** 提出議案一覧ページ（会期・件名・全文PDF・概要PDFの出典） */
@@ -70,17 +74,18 @@ export interface R8_3SessionItem {
   decision: R8_3Decision | null;
   /** 解説を公開表示してよいか。解説が未作成のあいだは false */
   hasPublishableContent: boolean;
-  /** 公開レビューが済んだか。解説が未作成のあいだは false */
+  /** 公開レビュー（独立したファクトチェック）が済んだか。済むまでは false */
   reviewCompleted: boolean;
 }
 
 /**
  * 会期メタデータ（公式ページ記載: 「会期：9月16日～10月15日」）。
  *
- * R8-3 の案件は解説が未作成（全件 coming_soon）のため、公開サイトのアクティブな会期は
- * 全27件の解説が揃っている R8-2 を維持し、R8-3 は is_active: false とする。
+ * 公開サイトのアクティブな会期は、公開レビューまで済んだ R8-2 を維持し、
+ * R8-3 は is_active: false とする
  * （findActiveCouncilSession は is_active = true が2件あると取得に失敗する）。
- * 解説が整備された段階で is_active: true への切り替えを行う。
+ * R8-3 の解説は作成・公開したが公開レビューが未了のため、切り替えは
+ * 公開レビューの完了後に R8-2 の is_active: false と同時に行う。
  */
 export const R8_3_SESSION: CouncilSessionInsert = {
   name: "令和8年 第3回定例会",
@@ -99,10 +104,13 @@ export const R8_3_SESSION: CouncilSessionInsert = {
 const officialPdfUrl = (contentId: string) =>
   `https://www.city.shinjuku.lg.jp/content/${contentId}.pdf`;
 
-/** 審議中の案件の共通値（議決結果・解説・レビューがまだ無い） */
+/**
+ * 審議中の案件の共通値。
+ * 議決結果はまだ無い。解説は作成・出典突合済みで公開するが、公開レビューは未了。
+ */
 const PENDING = {
   decision: null,
-  hasPublishableContent: false,
+  hasPublishableContent: true,
   reviewCompleted: false,
 } as const;
 
@@ -355,6 +363,9 @@ export function toR8_3BillInsert(item: R8_3SessionItem): BillInsert {
     status: result.status,
     status_note: result.statusNote,
     publish_status: item.hasPublishableContent ? "published" : "coming_soon",
+    // R8-2 は会期末日を掲載日時にしているが、会期中に公開する R8-3 の掲載日時の方針は
+    // 決めていない。公開一覧は会期で絞り込み、会期をまたぐサイトマップは updated_at を
+    // 使うため、null でも並びと表示には影響しない（詳細ページの publishedTime だけが出ない）。
     published_at: null,
     is_featured: false,
     is_review_completed: item.reviewCompleted,
