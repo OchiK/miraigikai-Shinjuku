@@ -21,6 +21,7 @@
 - [P2 難易度・やさしい日本語](#p2-難易度やさしい日本語)
   - [P2-1 Restore easy difficulty](#p2-1-restore-easy-difficulty)
   - [P2-2 Easy Japanese prompt](#p2-2-easy-japanese-prompt)
+  - [P2-4 ヘッダー操作ボタン（言語切替・難易度セレクタ）のカラーコントラスト最適化](#p2-4-ヘッダー操作ボタン言語切替難易度セレクタのカラーコントラスト最適化color-contrast-optimization-for-language--difficulty-buttons)
 - [P3 多言語基盤](#p3-多言語基盤)
   - [P3-2 Translation schema](#p3-2-translation-schema)
   - [P3-3 Seven locales（2026-09-24 見直し）](#p3-3-seven-locales2026-09-24-見直し)
@@ -140,6 +141,36 @@ Acceptance:
 - numbers/dates preserved
 - jargon explained
 - sentences simplified
+
+### P2-4 ヘッダー操作ボタン（言語切替・難易度セレクタ）のカラーコントラスト最適化（Color Contrast Optimization for Language & Difficulty Buttons）
+ヘッダーに配置されている言語切替（`LanguageToggle`：「日本語 / English」）および難易度セレクタ（`DifficultySelector`：「やさしい / ふつう / くわしく」）について、セグメント背景（`bg-neutral-200`）に対するテキスト（選択時: `bg-primary text-mirai-text`、非選択時: `text-mirai-text-secondary`）のカラーコントラストが最適でない可能性がある。屋外や弱視の利用者にとっても判読しやすくなるよう、WCAG 2.2 AA 基準（文字 4.5:1、UIコンポーネント 3:1）に照らしてコントラストを検証・改善する。
+
+Acceptance:
+- `LanguageToggle` および `DifficultySelector` の選択時・非選択時・ホバー時・フォーカス時のテキストと背景のコントラスト比を計測・検証する
+- `bg-neutral-200` のピル地に対する `text-mirai-text-secondary`（非選択時）の視認性を高め、4.5:1 以上のコントラストを確保する
+- 選択時（`bg-primary`）と `text-mirai-text` の組み合わせの視認性を確認・最適化する
+- Organic デザインシステムの階調（`neutral-700`、`terracotta` 等）と整合性を保ちながら改善する
+- `accesslint` / Playwright による a11y 自動検査およびビジュアルチェックを実施する
+
+Progress (2026-10-01):
+地を `neutral-100` に明るくし、選択中は `bg-primary text-mirai-text` のまま残した（Option 1）。
+3つのボタン（`LanguageToggle`、`DifficultySelector`、`RubyToggle` の pill）の配色は `web/src/lib/segment-control-styles.ts` にまとめた。
+ふりがなのピルは1項目のセグメントとして同じ地で包んだ。
+
+| 組み合わせ | 変更前 | 変更後 | 基準 |
+| :--- | ---: | ---: | ---: |
+| 選択中の文字 / 選択中の塗り（`primary`） | 4.60 | 4.60 | 4.5 |
+| 選択中のホバー文字 / ホバー時の塗り | 3.70（`primary-accent`） | 4.60（塗りを変えない） | 4.5 |
+| 選択中の塗り / 地 | 2.94（`neutral-200`） | 3.30（`neutral-100`） | 3.0 |
+| ふりがなピル（オン） / 背後の面 | 2.69（ヘッダー地） | 3.30（`neutral-100` の地） | 3.0 |
+| 非選択の文字 / 地 | 8.12 | 9.12 | 4.5 |
+| 非選択のホバー文字 / ホバー時の塗り | 5.49（ghost の `accent`） | 11.19（`neutral-300`） | 4.5 |
+| フォーカスリング / オフセット地 | 1.51（`ring-primary/40`） | 5.72（`ring-mirai-accent-text`） | 3.0 |
+| フォーカスリング / ヘッダー地 | — | 5.09 | 3.0 |
+| フォーカスリング / セグメントの地 | — | 6.22 | 3.0 |
+
+比は `globals.css` のトークンから WCAG 2.x の式で計算した。`segment-control-styles.test.ts` が実際の `globals.css` を読み、`var()` をたどって同じ比を検証する。トークンを変えて比が基準を割ると CI で落ちる。
+見つかった別件は P2-5（Button のホバー）、P2-6（Button のフォーカスリング）、P2-7（Organic 移行の取り残し）に積んだ。
 
 ---
 

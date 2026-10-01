@@ -4,6 +4,10 @@ import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { getUiMessages } from "@/features/i18n/shared/ui-messages";
+import {
+  SEGMENT_TRACK_CLASS,
+  segmentItemClass,
+} from "@/lib/segment-control-styles";
 import { cn } from "@/lib/utils";
 import { setDifficultyLevel } from "../../server/actions/set-difficulty-level";
 import {
@@ -83,7 +87,10 @@ export function DifficultySelector({
 
   return (
     <div
-      className="flex shrink-0 items-center gap-0.5 rounded-full bg-neutral-200 p-0.5 md:gap-1 md:p-1"
+      className={cn(
+        "flex shrink-0 items-center gap-0.5 md:gap-1",
+        SEGMENT_TRACK_CLASS
+      )}
       role="group"
       aria-label={difficulty.groupLabel}
     >
@@ -100,9 +107,7 @@ export function DifficultySelector({
             onClick={() => handleSelect(level)}
             className={cn(
               "h-11 px-1.5 text-xs md:px-3 md:text-sm",
-              isSelected
-                ? "bg-primary text-mirai-text hover:bg-primary-accent hover:text-mirai-text"
-                : "text-mirai-text-secondary"
+              segmentItemClass(isSelected)
             )}
           >
             {difficulty.labels[level]}
