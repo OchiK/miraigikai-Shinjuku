@@ -34,8 +34,13 @@ import {
 /** easy 段の1文の上限（デザインシステム定義 §3）。 */
 const EASY_MAX_SENTENCE_LENGTH = 40;
 
+/** 第3回定例会のうち解説を書いた22件。議員提出議案（第11・12号）は解説未作成のため除く */
+const r8_3ItemsWithContent = r8ThirdSessionItems.filter(
+  (item) => item.hasPublishableContent
+);
+
 /**
- * 令和8年第2回定例会の全27件と第3回定例会の全22件。
+ * 令和8年第2回定例会の全27件と、第3回定例会のうち解説を書いた22件。
  * 第2回は Phase 2 のパイロット3議案（第42・43・44号議案）に続き、
  * 承認第2・3号と第45〜62号議案の easy 版を整備し、
  * 議員提出議案4件（第7〜10号）の easy 版を加えて全件を満たした。
@@ -43,11 +48,11 @@ const EASY_MAX_SENTENCE_LENGTH = 40;
  */
 const ALL_BILL_SLUGS = [
   ...r8SecondSessionItems.map(buildItemKey),
-  ...r8ThirdSessionItems.map(buildR8_3ItemKey),
+  ...r8_3ItemsWithContent.map(buildR8_3ItemKey),
 ];
 
 /** 会期中に解説を書いた第3回定例会の22件。 */
-const R8_3_SLUGS = new Set(r8ThirdSessionItems.map(buildR8_3ItemKey));
+const R8_3_SLUGS = new Set(r8_3ItemsWithContent.map(buildR8_3ItemKey));
 
 const easyContents = billContentsWithBillSlug.filter(
   (content) => content.difficulty_level === "easy"

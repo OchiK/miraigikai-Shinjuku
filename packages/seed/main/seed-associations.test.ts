@@ -34,18 +34,23 @@ const billBySlug = (slug: string) => {
   return bill;
 };
 
+/** 第3回定例会のうち解説を作成済みの区長提出議案22件 */
+const r8_3ItemsWithContent = r8ThirdSessionItems.filter(
+  (item) => item.hasPublishableContent
+);
+
 /**
  * 解説（bill_contents）をそろえた議案。
  * 第2回定例会の区長提出議案23件・議員提出議案4件の27件と、第3回定例会の22件の全49件。
  */
 const BILL_SLUGS_WITH_CONTENT = [
   ...r8SecondSessionItems.map(buildItemKey),
-  ...r8ThirdSessionItems.map(buildR8_3ItemKey),
+  ...r8_3ItemsWithContent.map(buildR8_3ItemKey),
 ];
 
 describe("bills seed", () => {
-  it("R8-2の27件とR8-3の22件を公式インベントリから投入する", () => {
-    expect(bills).toHaveLength(49);
+  it("R8-2の27件とR8-3の24件を公式インベントリから投入する", () => {
+    expect(bills).toHaveLength(51);
     expect(bills.map((b) => b.slug)).toEqual([
       ...r8SecondSessionItems.map(buildItemKey),
       ...r8ThirdSessionItems.map(buildR8_3ItemKey),
@@ -86,19 +91,21 @@ describe("公開状態と解説の整合", () => {
     expect(publishedWithoutContent).toEqual([]);
   });
 
-  it("R8-2の27件とR8-3の22件を published にし、coming_soon は残さない", () => {
+  it("R8-2の27件とR8-3の22件を published にし、R8-3の議員提出2件だけを coming_soon にする", () => {
     expect(
       bills
         .filter((b) => b.publish_status === "published")
         .map((b) => b.slug)
     ).toEqual(BILL_SLUGS_WITH_CONTENT);
-    expect(bills.filter((b) => b.publish_status === "coming_soon")).toEqual(
-      []
-    );
+    expect(
+      bills
+        .filter((b) => b.publish_status === "coming_soon")
+        .map((b) => b.slug)
+    ).toEqual(["shinjuku-2026-r3-giin-11", "shinjuku-2026-r3-giin-12"]);
   });
 
-  it("R8-3の22件は公開レビュー済み（is_review_completed: true）", () => {
-    const r8_3Slugs = new Set(r8ThirdSessionItems.map(buildR8_3ItemKey));
+  it("R8-3の解説を持つ22件は公開レビュー済み（is_review_completed: true）", () => {
+    const r8_3Slugs = new Set(r8_3ItemsWithContent.map(buildR8_3ItemKey));
     const r8_3Bills = bills.filter((b) => r8_3Slugs.has(b.slug ?? ""));
 
     expect(r8_3Bills).toHaveLength(22);
@@ -290,7 +297,8 @@ describe("createBillsTags", () => {
     const billsTags = createBillsTags([...insertedBills, unmapped], insertedTags);
 
     expect(billsTags.some((bt) => bt.bill_id === unmapped.id)).toBe(false);
-    // R8-2 の区長提出議案23件 + R8-3 の22件（議員提出議案4件は未分類）
+    // R8-2 の区長提出議案23件 + R8-3 の区長提出議案22件
+    // （R8-2 の議員提出議案4件と R8-3 の議員提出議案2件は未分類）
     expect(billsTags).toHaveLength(23 + 22);
   });
 });

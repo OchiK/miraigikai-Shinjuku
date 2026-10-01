@@ -214,8 +214,9 @@ export const tags: TagInsert[] = [
 ];
 
 // 議案データ
-// 令和8年第2回定例会27件と第3回定例会22件を、公式インベントリから生成する。
-// 個別の手書きは行わない。第3回定例会は議決前・解説未作成のため coming_soon。
+// 令和8年第2回定例会27件と第3回定例会24件（区長提出22件・議員提出2件）を、
+// 公式インベントリから生成する。個別の手書きは行わない。
+// 第3回定例会の議員提出議案（第11・12号）は解説未作成のため coming_soon。
 const r8_2Bills = toR8_2BillInserts();
 const r8_3Bills = toR8_3BillInserts();
 export const bills: BillInsert[] = [...r8_2Bills, ...r8_3Bills];
@@ -257,7 +258,7 @@ const billTagsBySlug: Record<string, string[]> = {
   [gianKey(60)]: ["くらし・行財政"],
   [gianKey(61)]: ["まちづくり・環境"],
   [gianKey(62)]: ["文化・生涯学習"],
-  // 令和8年第3回定例会の22件
+  // 令和8年第3回定例会の区長提出議案22件（議員提出議案第11・12号は解説作成後に分類する）
   [r8_3GianKey(63)]: ["くらし・行財政"],
   [r8_3GianKey(64)]: ["くらし・行財政"],
   [r8_3GianKey(65)]: ["くらし・行財政"],
