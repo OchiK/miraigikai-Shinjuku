@@ -463,7 +463,11 @@ describe("令和8年第3回定例会22件の主張台帳の構造", () => {
   // 出典から確かめられない点は needs_source として、解説本文の
   // 「わからない こと」「出典に記載がない事項」と審議状況の記述にだけ置く。
   const rows = readLedger(R8_3_CLAIM_LEDGER_PATH);
-  const r8_3Keys = new Set(r8ThirdSessionItems.map(buildR8_3ItemKey));
+  // 台帳は区長提出議案22件のもの。議員提出議案（第11・12号）は解説未作成で台帳に無い
+  const r8_3MayorItems = r8ThirdSessionItems.filter(
+    (i) => i.itemType !== "giin"
+  );
+  const r8_3Keys = new Set(r8_3MayorItems.map(buildR8_3ItemKey));
 
   it("第3回定例会の22件すべてを指し、それ以外を指さない", () => {
     expect([...new Set(rows.map((r) => r.item_key))].sort()).toEqual(
@@ -543,8 +547,10 @@ describe("令和8年第3回定例会22件の主張台帳の構造", () => {
     // 案件単位ではなく会期の出典集合で縛る。
     const allowed = new Set<string>([
       R8_3_SUBMISSIONS_URL,
-      ...r8ThirdSessionItems.flatMap((i) =>
-        i.overviewPdfUrl ? [i.fullTextPdfUrl, i.overviewPdfUrl] : [i.fullTextPdfUrl]
+      ...r8_3MayorItems.flatMap((i) =>
+        [i.fullTextPdfUrl, i.overviewPdfUrl].filter(
+          (url): url is string => url !== null
+        )
       ),
     ]);
     const shaByUrl = new Map<string, Set<string>>();

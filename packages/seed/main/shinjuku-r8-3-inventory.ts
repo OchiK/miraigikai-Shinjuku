@@ -11,19 +11,23 @@ type CouncilSessionInsert =
 
 /**
  * 令和8年 第3回新宿区議会定例会（会期: 2026-09-16〜2026-10-15）の
- * 区長提出議案インベントリ。
+ * 区長提出議案と議員提出議案のインベントリ。
  *
  * 識別番号・件名・全文PDF URL・概要PDF URL は、提出議案一覧ページとリンク先PDFの
  * 実物（2026-09-26 取得、全25ファイルが HTTP 200・application/pdf）と突合して確認した。
  * 推測・補完・要約は含まない。
  *
  * 議決結果は未掲載（会期中）のため、全件 decision: null とする。
- * 解説（やさしい／ふつう／くわしく）は P5-2 で全22件を作成し、主張台帳
+ * 解説（やさしい／ふつう／くわしく）は P5-2 で区長提出議案の全22件を作成し、主張台帳
  * （docs/verification/20260930_0910_claim-ledger-r8-3.csv）で一次資料と突合した。
  * 公開レビュー（独立したファクトチェック）は完了済み。
  *
  * 議決結果が公式に掲載されたら decision だけを更新し、
  * 既存の解説は本番インポーターで上書き・削除しない。
+ *
+ * 議員提出議案（第11・12号）は区長提出議案の一覧ページに載らないため、議会公式の
+ * 会期ページ（2026-10-01 取得）から識別名・件名だけを転記した。会期ページに全文PDFは
+ * 無く、解説も未作成のため coming_soon で先行登録する（P5-4）。
  */
 
 /** 提出議案一覧ページ（会期・件名・全文PDF・概要PDFの出典） */
@@ -42,11 +46,19 @@ const OVERVIEW_BUDGET_5 =
 const OVERVIEW_JOREI = "https://www.city.shinjuku.lg.jp/content/000464786.pdf";
 
 /**
+ * 議会公式ページ（議会事務局）の会期ページ。議員提出議案の識別名・件名の出典。
+ * 区長提出議案の提出議案一覧ページには議員提出議案が載らないため、別に持つ。
+ */
+export const R8_3_COUNCIL_SESSION_URL =
+  "https://www.city.shinjuku.lg.jp/kusei/gikai01_00123620210909_00008.html";
+
+/**
  * 案件の種別。
  * - `gian`: 第N号議案（区長提出議案）
  * - `nintei`: 認定第N号（決算の認定）
+ * - `giin`: 議員提出議案第N号（議員が提出した条例案・意見書）
  */
-export type R8_3ItemType = "gian" | "nintei";
+export type R8_3ItemType = "gian" | "nintei" | "giin";
 
 /** 公式の議決結果の文言。決算は「認定」で、議案の「原案可決」と混同しないこと */
 export type R8_3Decision = ShinjukuDecision | "認定";
@@ -60,16 +72,22 @@ export interface R8_3SessionItem {
   officialLabel: string;
   /** 公式ページ表記の件名（原文どおり） */
   officialTitle: string;
-  /** 全文PDF URL（実ファイルを取得し、当該案件の全文であることを確認済み） */
-  fullTextPdfUrl: string;
+  /**
+   * 全文PDF URL（実ファイルを取得し、当該案件の全文であることを確認済み）。
+   * 議員提出議案は会期ページに全文PDFが無いため null。推測で他のPDFを入れないこと。
+   */
+  fullTextPdfUrl: string | null;
   /**
    * 当該案件を収録した概要PDF URL。
    * 決算認定（認定第1〜4号）は提出議案一覧ページに概要PDFが無い
    * （「決算書・実績報告は会計室のページ」への案内だけ）ため null。
+   * 議員提出議案も審議前は概要PDFが無いため null。
    */
   overviewPdfUrl: string | null;
   /** 公式議決結果。議決結果ページが未掲載のあいだは null */
   decision: R8_3Decision | null;
+  /** 識別名・件名の出典ページ。既定は区長提出議案の提出議案一覧ページ */
+  sourcePageUrl?: string;
   /** 解説を公開表示してよいか。解説が未作成のあいだは false */
   hasPublishableContent: boolean;
   /** 公開レビュー（独立したファクトチェック）が済んだか。済むまでは false */
@@ -318,6 +336,32 @@ export const r8ThirdSessionItems: R8_3SessionItem[] = [
     overviewPdfUrl: OVERVIEW_JOREI,
     ...PENDING,
   },
+  // 議員提出議案。識別名・件名は議会公式の会期ページ（2026-10-01 取得）の記載どおり。
+  // 解説は審議・閉会後に会議録と「議案の概要と審議結果」PDFから作成する（P5-4）。
+  {
+    itemType: "giin",
+    itemNumber: 11,
+    officialLabel: "議員提出議案第11号",
+    officialTitle: "新宿区シルバーパス購入費助成金交付条例",
+    fullTextPdfUrl: null,
+    overviewPdfUrl: null,
+    decision: null,
+    sourcePageUrl: R8_3_COUNCIL_SESSION_URL,
+    hasPublishableContent: false,
+    reviewCompleted: false,
+  },
+  {
+    itemType: "giin",
+    itemNumber: 12,
+    officialLabel: "議員提出議案第12号",
+    officialTitle: "新宿区安心居住支援家賃の助成に関する条例",
+    fullTextPdfUrl: null,
+    overviewPdfUrl: null,
+    decision: null,
+    sourcePageUrl: R8_3_COUNCIL_SESSION_URL,
+    hasPublishableContent: false,
+    reviewCompleted: false,
+  },
 ];
 
 /** 識別子の名前空間（自治体-西暦-会期）。r8-2 の `shinjuku-2026-r2` と揃える */
@@ -339,6 +383,11 @@ export function r8_3GianKey(itemNumber: number): string {
 /** 認定第N号の安定識別子 */
 export function r8_3NinteiKey(itemNumber: number): string {
   return buildR8_3ItemKey({ itemType: "nintei", itemNumber });
+}
+
+/** 議員提出議案第N号の安定識別子 */
+export function r8_3GiinKey(itemNumber: number): string {
+  return buildR8_3ItemKey({ itemType: "giin", itemNumber });
 }
 
 /** インベントリ1件を bills テーブルの Insert に変換する */
@@ -367,7 +416,7 @@ export function toR8_3BillInsert(item: R8_3SessionItem): BillInsert {
     thumbnail_url: null,
     pdf_url: item.fullTextPdfUrl,
     overview_pdf_url: item.overviewPdfUrl,
-    source_page_url: R8_3_SUBMISSIONS_URL,
+    source_page_url: item.sourcePageUrl ?? R8_3_SUBMISSIONS_URL,
     decision_source_url: null,
   };
 }
@@ -383,4 +432,16 @@ export function toR8_3BillInserts(
 export const R8_3_OFFICIAL_LABELS: string[] = [
   ...Array.from({ length: 18 }, (_, i) => `第${63 + i}号議案`),
   ...Array.from({ length: 4 }, (_, i) => `認定第${1 + i}号`),
+];
+
+/** 議会公式の会期ページに載っている議員提出議案の識別名（第11・12号の2件） */
+export const R8_3_COUNCILOR_BILL_LABELS: string[] = [
+  "議員提出議案第11号",
+  "議員提出議案第12号",
+];
+
+/** 会期の全案件の識別名（区長提出22件 + 議員提出2件 = 24件） */
+export const R8_3_ALL_LABELS: string[] = [
+  ...R8_3_OFFICIAL_LABELS,
+  ...R8_3_COUNCILOR_BILL_LABELS,
 ];

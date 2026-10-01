@@ -56,13 +56,16 @@ export const KNOWN_SESSIONS: KnownSession[] = [
     // 会期中で議決結果ページが未掲載。掲載されたら議決結果の一覧から自動で見つけ、
     // 議決結果の食い違いとしてレポートに出る。そのときにURLと各案件の decision を転記する
     decisionsUrl: null,
-    items: r8ThirdSessionItems.map((item) => ({
-      officialLabel: item.officialLabel,
-      officialTitle: item.officialTitle,
-      fullTextPdfUrl: item.fullTextPdfUrl,
-      decision: item.decision,
-      reviewCompleted: item.reviewCompleted,
-    })),
+    // 議員提出議案は区長提出議案のページに載らないため比較から外す
+    items: r8ThirdSessionItems
+      .filter((item) => item.itemType !== "giin")
+      .map((item) => ({
+        officialLabel: item.officialLabel,
+        officialTitle: item.officialTitle,
+        fullTextPdfUrl: item.fullTextPdfUrl,
+        decision: item.decision,
+        reviewCompleted: item.reviewCompleted,
+      })),
   },
   {
     // R8_2_SESSION.slug と同じ値（テストで一致を確かめている）
