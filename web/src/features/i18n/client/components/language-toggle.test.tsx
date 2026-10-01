@@ -3,6 +3,10 @@ import "@testing-library/jest-dom/vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  SEGMENT_SELECTED_CLASS,
+  SEGMENT_UNSELECTED_CLASS,
+} from "@/lib/segment-control-styles";
 import { setLocale } from "../../server/actions/set-locale";
 import { LanguageToggle } from "./language-toggle";
 
@@ -90,5 +94,24 @@ describe("LanguageToggle", () => {
     await user.click(screen.getByRole("button", { name: "日本語" }));
 
     expect(setLocale).not.toHaveBeenCalled();
+  });
+
+  it("配色は共有モジュールのクラスを使い、Button 既定のホバー・リング色を残さない", () => {
+    render(<LanguageToggle currentLocale="ja" />);
+
+    const group = screen.getByRole("group", { name: "言語 / Language" });
+    const ja = screen.getByRole("button", { name: "日本語" });
+    const en = screen.getByRole("button", { name: "English" });
+    const classesOf = (el: HTMLElement) => el.className.split(/\s+/);
+
+    expect(group).toHaveClass("bg-neutral-100");
+    expect(ja).toHaveClass(...SEGMENT_SELECTED_CLASS.split(" "));
+    expect(en).toHaveClass(...SEGMENT_UNSELECTED_CLASS.split(" "));
+    expect(en).not.toHaveClass("bg-primary");
+    for (const button of [ja, en]) {
+      expect(classesOf(button)).not.toContain("focus-visible:ring-primary/40");
+      expect(classesOf(button)).not.toContain("hover:bg-accent");
+      expect(classesOf(button)).not.toContain("hover:text-accent-foreground");
+    }
   });
 });

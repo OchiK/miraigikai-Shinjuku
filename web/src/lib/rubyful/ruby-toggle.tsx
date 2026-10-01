@@ -2,6 +2,10 @@
 
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import {
+  SEGMENT_TRACK_CLASS,
+  segmentItemClass,
+} from "@/lib/segment-control-styles";
 import { cn } from "@/lib/utils";
 import { useRubyToggle } from "./use-ruby-toggle";
 
@@ -19,23 +23,28 @@ export function RubyToggle({ className, variant = "switch" }: RubyToggleProps) {
   const { rubyEnabled, handleRubyToggle } = useRubyToggle();
 
   if (variant === "pill") {
+    // 1項目のセグメントとして地で包み、オンの塗りと地の 3:1 を他の2つと揃える。
+    // className（ヘッダーの hidden sm:inline-flex 等）は地ごと隠すため外側に付ける
     return (
-      <Button
-        type="button"
-        variant="ghost"
-        aria-pressed={rubyEnabled}
-        aria-label="ふりがな表示の切り替え"
-        onClick={() => handleRubyToggle(!rubyEnabled)}
-        className={cn(
-          "h-11 px-3 text-xs md:text-sm",
-          rubyEnabled
-            ? "bg-primary text-mirai-text shadow-mirai-sm hover:bg-primary-accent hover:text-mirai-text"
-            : "bg-neutral-200 text-mirai-text-secondary hover:bg-neutral-300 hover:text-mirai-text",
-          className
-        )}
+      <div
+        className={cn("inline-flex shrink-0", SEGMENT_TRACK_CLASS, className)}
       >
-        ふりがな
-      </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          aria-pressed={rubyEnabled}
+          aria-label="ふりがな表示の切り替え"
+          onClick={() => handleRubyToggle(!rubyEnabled)}
+          className={cn(
+            "h-11 px-3 text-xs md:text-sm",
+            segmentItemClass(rubyEnabled),
+            // オン中に押すとオフになるので、塗りは変えずに影でホバーを示す
+            rubyEnabled && "hover:shadow-mirai-md"
+          )}
+        >
+          ふりがな
+        </Button>
+      </div>
     );
   }
 

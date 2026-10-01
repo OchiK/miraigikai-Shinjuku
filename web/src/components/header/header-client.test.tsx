@@ -122,7 +122,8 @@ describe("HeaderClient", () => {
     it("難易度セレクタが並ぶページでは、狭い画面でヘッダーから隠しメニューに回す", async () => {
       renderHeader("/", [r82]);
 
-      expect(rubyPill()).toHaveClass("hidden", "sm:inline-flex");
+      // 地ごと隠すため、幅の切り替えはピルを包む地に付く
+      expect(rubyPill()?.parentElement).toHaveClass("hidden", "sm:inline-flex");
 
       await userEvent.click(menuTrigger());
       const menuSwitch = screen.getByRole("switch", {
@@ -134,7 +135,8 @@ describe("HeaderClient", () => {
     it("ほかのページでは 360px 未満でだけメニューに回す", async () => {
       renderHeader("/councilors", [r82]);
 
-      expect(rubyPill()).toHaveClass("hidden", "xs:inline-flex");
+      // 地ごと隠すため、幅の切り替えはピルを包む地に付く
+      expect(rubyPill()?.parentElement).toHaveClass("hidden", "xs:inline-flex");
 
       await userEvent.click(menuTrigger());
       const menuSwitch = screen.getByRole("switch", {

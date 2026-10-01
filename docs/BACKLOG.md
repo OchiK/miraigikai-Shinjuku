@@ -13,7 +13,7 @@
 | :--- | :--- |
 | **初期基盤・会期** | P0-1, P0-2, P0-3, P0-4, P1-1, P1-2 |
 | **本番稼働検証** | S5-2（本番DB確認）, S5-5（本番キャッシュ即時無効化） |
-| **難易度・多言語** | P2-1, P2-2, P3-2, P3-3, P3-5（英語のみ翻訳・5言語案内ページ） |
+| **難易度・多言語** | P2-1, P2-2, P2-4（ヘッダー操作ボタンのコントラスト）, P3-2, P3-3, P3-5（英語のみ翻訳・5言語案内ページ） |
 | **自動化・制約** | P5-0（会期スコープユニーク制約）, P5-1（更新検知・ドラフト生成）, P5-2（R8-3解説・台帳・本番公開） |
 | **議員機能** | P7-1（世田谷モデル議員ページ）, P7-3（公式Xアカウント表示・全38名調査） |
 | **UI/UX・改善** | P8-1, P8-2, P8-3, P8-4, P8-5, P8-6, P8-7, P8-8, P8-9, P8-10, P8-11, P8-12, P8-13, P8-14, P8-15, P8-16, P8-17, P8-18, P8-19, P8-20, P8-21, P8-22 |
@@ -68,16 +68,27 @@ Progress (2026-09-25):
 ヘッダーのふりがな・言語切替の `aria-pressed` と44pxのタップ領域はコードで確認した。
 キーボード操作・フォーカス順序・スクリーンリーダー・リフローの手動検証（accessibility-inspect）と accessibility-diff の回帰検知は未実施で、残作業。
 
-### P2-4 ヘッダー操作ボタン（言語切替・難易度セレクタ）のカラーコントラスト最適化（Color Contrast Optimization for Language & Difficulty Buttons）
-ヘッダーに配置されている言語切替（`LanguageToggle`：「日本語 / English」）および難易度セレクタ（`DifficultySelector`：「やさしい / ふつう / くわしく」）について、セグメント背景（`bg-neutral-200`）に対するテキスト（選択時: `bg-primary text-mirai-text`、非選択時: `text-mirai-text-secondary`）のカラーコントラストが最適でない可能性がある。屋外や弱視の利用者にとっても判読しやすくなるよう、WCAG 2.2 AA 基準（文字 4.5:1、UIコンポーネント 3:1）に照らしてコントラストを検証・改善する。
+### P2-5 Button 既定バリアントのホバー時コントラスト（Button Default Hover Contrast）
+P2-4 の計測で見つかった。`components/ui/button.tsx` の default バリアントはホバーで `hover:bg-primary-accent`（terracotta-600 #b2622d）になり、文字 `text-mirai-text` との比は 3.70:1 で 1.4.3 の 4.5:1 を満たさない。サイト全体の主ボタンに効く。
+`docs/20260917_1800_デザインシステム定義.md` の「ボタン」節にある 2026-09-18 改定の注記「hover 5.83:1」は誤り。
 
 Acceptance:
-- `LanguageToggle` および `DifficultySelector` の選択時・非選択時・ホバー時・フォーカス時のテキストと背景のコントラスト比を計測・検証する
-- `bg-neutral-200` のピル地に対する `text-mirai-text-secondary`（非選択時）の視認性を高め、4.5:1 以上のコントラストを確保する
-- 選択時（`bg-primary`）と `text-mirai-text` の組み合わせの視認性を確認・最適化する
-- Organic デザインシステムの階調（`neutral-700`、`terracotta` 等）と整合性を保ちながら改善する
-- `accesslint` / Playwright による a11y 自動検査およびビジュアルチェックを実施する
+- ホバー時の地と文字の組み合わせを 4.5:1 以上にする（地を明るくする、または文字色を変える）
+- デザインシステム定義の比の記載を実測値に直す
+- `lib/a11y/contrast.ts` を使い、globals.css を読む回帰テストを足す（`segment-control-styles.test.ts` と同じ形）
 
+### P2-6 Button 全体のフォーカスリング（Button Focus Ring Contrast）
+P2-4 の計測で見つかった。Button 基底の `focus-visible:ring-primary/40` は、オフセットのクリーム地（`--background`）に重ねると約 #e2ba98 になり、地との比は 1.51:1 で 1.4.11 の 3:1 を満たさない。
+P2-4 ではヘッダーの3つのセグメントだけ `focus-visible:ring-mirai-accent-text`（5.72:1）で上書きした。
+
+Acceptance:
+- Button 基底のリング色を 3:1 以上にする（候補: `ring-mirai-accent-text`）。ページ地・面（`mirai-surface`）・カードの各地で確かめる
+- 上書きが不要になったら `lib/segment-control-styles.ts` の `SEGMENT_FOCUS_CLASS` を外す
+
+### P2-7 Organic 移行の取り残し（P2-4 で発見）
+- `--color-mirai-level-active` / `--color-mirai-level-active-fg`（globals.css の「難易度・言語まわりの装飾」ブロック）はどこからも使われていない。値は accent / ground で、2026-09-18 に退けた 3.03:1 の組み合わせ。デザインシステム定義の「難易度セレクタ」節もまだこのトークンを名指ししている。トークンを消し、節を P2-4 の配色（`neutral-100` の地、`bg-primary text-mirai-text`）に書き直す
+- `web/src/components/layouts/desktop-menu/` はどこからも import されていない。中身ごと削除する
+- `DifficultyInfoCard`（`features/bills/server/components/bill-detail/difficulty-info-card.tsx`）が `bg-white` / `text-gray-800` のまま。議案本文の中に出るので、Organic のトークンに置き換える
 
 ---
 

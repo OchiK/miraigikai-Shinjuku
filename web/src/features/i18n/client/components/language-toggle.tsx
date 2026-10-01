@@ -6,6 +6,10 @@ import {
   type PublicLocale,
 } from "@mirai-gikai/shared/i18n/locales";
 import { Button } from "@/components/ui/button";
+import {
+  SEGMENT_TRACK_CLASS,
+  segmentItemClass,
+} from "@/lib/segment-control-styles";
 import { cn } from "@/lib/utils";
 import { LANGUAGE_SELECTOR_LABEL } from "../../shared/messages";
 import { useLocaleSwitch } from "../hooks/use-locale-switch";
@@ -30,7 +34,8 @@ export function LanguageToggle({
   return (
     <div
       className={cn(
-        "flex shrink-0 items-center gap-0.5 rounded-full bg-neutral-200 p-0.5 md:gap-1 md:p-1",
+        "flex shrink-0 items-center gap-0.5 md:gap-1",
+        SEGMENT_TRACK_CLASS,
         className
       )}
       role="group"
@@ -50,9 +55,7 @@ export function LanguageToggle({
             onClick={() => switchLocale(locale)}
             className={cn(
               "h-11 px-2 text-xs md:px-3 md:text-sm",
-              isSelected
-                ? "bg-primary text-mirai-text hover:bg-primary-accent hover:text-mirai-text"
-                : "text-mirai-text-secondary"
+              segmentItemClass(isSelected)
             )}
           >
             {LOCALE_NATIVE_NAMES[locale]}
