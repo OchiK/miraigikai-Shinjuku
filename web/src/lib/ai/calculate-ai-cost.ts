@@ -1,5 +1,5 @@
 import type { LanguageModelUsage } from "ai";
-import { AI_MODELS } from "./models";
+import { AI_MODELS, GEMINI_DIRECT_CHAT_MODEL_ID } from "./models";
 
 export type ModelPricing = {
   inputTokensPerMillionUsd: number;
@@ -71,6 +71,15 @@ export const modelPricing: Record<string, ModelPricing> = {
     outputTokensPerMillionUsd: 14,
   },
   // --- Google ---
+  [AI_MODELS.gemini3_8_flash]: {
+    inputTokensPerMillionUsd: 0.5,
+    outputTokensPerMillionUsd: 3,
+  },
+  // @ai-sdk/google 直結時の modelId は接頭辞なし
+  [GEMINI_DIRECT_CHAT_MODEL_ID]: {
+    inputTokensPerMillionUsd: 0.5,
+    outputTokensPerMillionUsd: 3,
+  },
   [AI_MODELS.gemini3_flash]: {
     inputTokensPerMillionUsd: 0.5,
     outputTokensPerMillionUsd: 3,

@@ -15,6 +15,7 @@
     "test:integration:coverage": "dotenv -e ../.env -- vitest run --config vitest.integration.config.mts --coverage"
   },
   "dependencies": {
+    "@ai-sdk/google": "^3.0.129",
     "@ai-sdk/openai": "^3.0.1",
     "@ai-sdk/react": "^3.0.3",
     "@mirai-gikai/shared": "workspace:*",
