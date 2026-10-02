@@ -18,6 +18,18 @@ type ResolvedChatModel = {
 };
 
 /**
+ * APIキーの前後の空白やクォーテーション（" または '）を除去する
+ */
+export function sanitizeApiKey(key?: string): string | undefined {
+  if (!key) return undefined;
+  const trimmed = key
+    .trim()
+    .replace(/^["']+|["']+$/g, "")
+    .trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
+/**
  * チャットで使うモデルを決める。
  * GEMINI_API_KEY があればGoogle AI Studio直結、なければGateway経由のgpt-4o-mini。
  */
@@ -36,8 +48,10 @@ export function resolveChatModel({
     };
   }
 
-  if (geminiApiKey) {
-    const google = createGoogleGenerativeAI({ apiKey: geminiApiKey });
+  const sanitizedKey = sanitizeApiKey(geminiApiKey);
+
+  if (sanitizedKey) {
+    const google = createGoogleGenerativeAI({ apiKey: sanitizedKey });
     return {
       model: google(GEMINI_DIRECT_CHAT_MODEL_ID),
       provider: "google",

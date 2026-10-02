@@ -147,6 +147,14 @@ export async function handleChatRequest({
     geminiApiKey: env.chat.geminiApiKey,
   });
 
+  const rawKey = env.chat.geminiApiKey?.trim();
+  const maskedKey = rawKey
+    ? `${rawKey.slice(0, 4)}...${rawKey.slice(-4)} (len: ${rawKey.length})`
+    : "none";
+  console.log(
+    `[Chat] Provider: ${provider}, Model: ${modelName}, Key: ${maskedKey}`
+  );
+
   // Determine if interview suggestion should be enabled
   const shouldSuggestInterview = await determineShouldSuggestInterview(
     context,
