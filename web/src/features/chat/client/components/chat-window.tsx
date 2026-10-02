@@ -276,7 +276,7 @@ export function ChatWindow({
               </PromptInputBody>
               <Button
                 aria-label="送信"
-                className="size-11 bg-primary text-primary-foreground hover:bg-primary-accent"
+                className="size-11 bg-primary text-mirai-text hover:bg-primary-accent"
                 disabled={!input || isResponding}
                 size="icon"
                 type="submit"

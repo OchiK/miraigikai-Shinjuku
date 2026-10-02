@@ -63,11 +63,12 @@ const selectedFill: Side = {
   classString: SEGMENT_SELECTED_CLASS,
   source: "SEGMENT_SELECTED_CLASS",
 };
-const focusRing = (classString: string, source: string): Side => ({
+// リング色は Button 基底が持つ（P2-6）。セグメント側で上書きしていないことは別テストで見る
+const focusRing = (): Side => ({
   token: "--color-mirai-accent-text",
   utility: "focus-visible:ring-mirai-accent-text",
-  classString,
-  source,
+  classString: BUTTON_BASE_CLASS,
+  source: "buttonVariants",
 });
 
 const PAIRS: Pair[] = [
@@ -140,7 +141,7 @@ const PAIRS: Pair[] = [
   ].flatMap(({ classString, source }): Pair[] => [
     {
       name: `フォーカスリング（${source}） / リングのオフセット`,
-      fg: focusRing(classString, source),
+      fg: focusRing(),
       bg: {
         token: "--color-background",
         utility: "focus-visible:ring-offset-background",
@@ -151,7 +152,7 @@ const PAIRS: Pair[] = [
     },
     {
       name: `フォーカスリング（${source}） / ヘッダーの地`,
-      fg: focusRing(classString, source),
+      fg: focusRing(),
       bg: {
         token: "--color-mirai-surface",
         utility: "bg-mirai-surface",
@@ -162,7 +163,7 @@ const PAIRS: Pair[] = [
     },
     {
       name: `フォーカスリング（${source}） / 地`,
-      fg: focusRing(classString, source),
+      fg: focusRing(),
       bg: track,
       min: NON_TEXT_MIN,
     },
@@ -190,6 +191,15 @@ describe("セグメント型ボタンの配色（WCAG 2.2 AA）", () => {
         ).toBe(true);
       }
     });
+  });
+});
+
+describe("フォーカスリングは Button 基底から継承する", () => {
+  it.each([
+    SEGMENT_SELECTED_CLASS,
+    SEGMENT_UNSELECTED_CLASS,
+  ])("セグメントのクラスにリング上書きがない: %s", (classString) => {
+    expect(classString).not.toMatch(/focus-visible:ring/);
   });
 });
 

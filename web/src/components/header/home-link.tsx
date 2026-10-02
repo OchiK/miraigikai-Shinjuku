@@ -33,7 +33,7 @@ export function HomeLink({
     <Link
       href={routes.home()}
       title={isHome ? undefined : nav.returnToHome}
-      className="-mx-2 flex min-h-11 min-w-0 items-center gap-2 rounded-full px-2 py-1 transition-colors hover:bg-neutral-200/60 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/40"
+      className="-mx-2 flex min-h-11 min-w-0 items-center gap-2 rounded-full px-2 py-1 transition-colors hover:bg-neutral-200/60 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-mirai-accent-text"
     >
       {!isHome && (
         <span className="flex h-9 shrink-0 items-center gap-1 rounded-full bg-neutral-200 px-2.5 text-xs font-semibold text-mirai-text">

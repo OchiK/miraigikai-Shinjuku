@@ -22,6 +22,9 @@
   - [P2-1 Restore easy difficulty](#p2-1-restore-easy-difficulty)
   - [P2-2 Easy Japanese prompt](#p2-2-easy-japanese-prompt)
   - [P2-4 ヘッダー操作ボタン（言語切替・難易度セレクタ）のカラーコントラスト最適化](#p2-4-ヘッダー操作ボタン言語切替難易度セレクタのカラーコントラスト最適化color-contrast-optimization-for-language--difficulty-buttons)
+  - [P2-5 Button 既定バリアントのホバー時コントラスト](#p2-5-button-既定バリアントのホバー時コントラストbutton-default-hover-contrast)
+  - [P2-6 Button 全体のフォーカスリング](#p2-6-button-全体のフォーカスリングbutton-focus-ring-contrast)
+  - [P2-7 Organic 移行の取り残し](#p2-7-organic-移行の取り残しp2-4-で発見)
 - [P3 多言語基盤](#p3-多言語基盤)
   - [P3-2 Translation schema](#p3-2-translation-schema)
   - [P3-3 Seven locales（2026-09-24 見直し）](#p3-3-seven-locales2026-09-24-見直し)
@@ -171,6 +174,39 @@ Progress (2026-10-01):
 
 比は `globals.css` のトークンから WCAG 2.x の式で計算した。`segment-control-styles.test.ts` が実際の `globals.css` を読み、`var()` をたどって同じ比を検証する。トークンを変えて比が基準を割ると CI で落ちる。
 見つかった別件は P2-5（Button のホバー）、P2-6（Button のフォーカスリング）、P2-7（Organic 移行の取り残し）に積んだ。
+
+### P2-5 Button 既定バリアントのホバー時コントラスト（Button Default Hover Contrast）
+`components/ui/button.tsx` の default バリアントはホバーで `hover:bg-primary-accent`（terracotta-600 #b2622d）になり、文字 `text-mirai-text` との比が 3.70:1 で 1.4.3 の 4.5:1 を満たさなかった。デザインシステム定義の「hover 5.83:1」も誤記だった。
+
+Progress (2026-10-02):
+`--primary-accent` を terracotta-400（#f6a06b）に変え、ホバー時の比を 8.03:1 にした。デザインシステム定義の注記を実測値（4.60 / 8.03）に直した。
+`primary-accent` をホバー地に使う他の箇所（議案一覧のフィルタ、議員のチップ）も同時に適合した。
+同じトークンを使っていた2か所は、変更で崩れるため合わせて直した。
+- チャット送信ボタン: `text-primary-foreground`（クリーム）のままだとホバー時に約1.7:1まで落ちるため `text-mirai-text` に変更
+- 定型返信ボタン: 枠線とホバー色が薄くなるため `mirai-accent-hover`（terracotta-600）に置き換え、見た目を維持
+
+`web/src/components/ui/button.test.tsx` が `globals.css` を読んで通常時・ホバー時の比を検証する。
+
+### P2-6 Button 全体のフォーカスリング（Button Focus Ring Contrast）
+Button 基底の `focus-visible:ring-primary/40` は、オフセットのクリーム地に対し 1.51:1 で 1.4.11 の 3:1 を満たさなかった。
+
+Progress (2026-10-02):
+Button 基底を `ring-mirai-accent-text` / `border-mirai-accent-text`（terracotta-700）に変えた。
+`SEGMENT_FOCUS_CLASS` の上書きを外し、`ring-primary/40` を直書きしていた `home-link`、`nav-links`、`language-selector`、`guide-language-links`、`switch` も揃えた。
+
+| 地 | 比 | 基準 |
+| :--- | ---: | ---: |
+| ページ地（`background`） | 5.72 | 3.0 |
+| カード（`card`） | 5.09 | 3.0 |
+| `neutral-100` | 6.22 | 3.0 |
+| `neutral-200` | 5.54 | 3.0 |
+| `neutral-300` | 4.59 | 3.0 |
+
+### P2-7 Organic 移行の取り残し（P2-4 で発見）
+Progress (2026-10-02):
+- 未使用の `--color-mirai-level-active` / `-fg` を `globals.css` から削除し、デザインシステム定義の「難易度セレクタ」節を P2-4 の配色に書き直した
+- どこからも import されていない `components/layouts/desktop-menu/` を削除した
+- `DifficultyInfoCard` の `bg-white` / `text-gray-800` を `bg-card shadow-mirai-sm` / `text-mirai-text` に置き換えた。固定高 `h-38` は文字拡大で溢れるため `min-h-38` にした
 
 ---
 

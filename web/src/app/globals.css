@@ -140,8 +140,6 @@
   --color-mirai-source-chip-text: var(--color-neutral-800);
 
   /* ══ 難易度・言語まわりの装飾 ═══════════════════════════════════════════ */
-  --color-mirai-level-active: var(--color-mirai-accent);
-  --color-mirai-level-active-fg: var(--color-mirai-ground);
   --color-mirai-tag: var(--color-neutral-200);
   --color-mirai-tag-text: var(--color-neutral-800);
   --color-mirai-featured: var(--color-terracotta-200);
@@ -198,7 +196,7 @@
   --popover-foreground: #201e1d;
 
   --primary: #c67139;
-  --primary-accent: #b2622d;
+  --primary-accent: #f6a06b; /* terracotta-400。mirai-text との比 8.03:1 */
   --primary-foreground: #f5ead8;
 
   --secondary: #eee7db;

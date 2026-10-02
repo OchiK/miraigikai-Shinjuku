@@ -15,7 +15,7 @@ interface NavLinksProps {
 }
 
 const linkClassName =
-  "flex min-h-11 items-center whitespace-nowrap rounded-full px-3 text-sm font-medium text-mirai-text transition-colors hover:bg-neutral-200/60 hover:text-mirai-accent-text focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/40 aria-[current=page]:bg-neutral-200";
+  "flex min-h-11 items-center whitespace-nowrap rounded-full px-3 text-sm font-medium text-mirai-text transition-colors hover:bg-neutral-200/60 hover:text-mirai-accent-text focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-mirai-accent-text aria-[current=page]:bg-neutral-200";
 
 /**
  * デスクトップのヘッダー中央に並べる主要導線（docs/BACKLOG.md P8-2）。

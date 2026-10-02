@@ -35,7 +35,7 @@ export function GuideLanguageLinks({
             hrefLang={locale}
             lang={locale}
             className={cn(
-              "inline-flex min-h-11 items-center rounded-full bg-background px-4 text-sm font-medium text-mirai-text shadow-mirai-sm transition-colors hover:bg-primary focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary/40",
+              "inline-flex min-h-11 items-center rounded-full bg-background px-4 text-sm font-medium text-mirai-text shadow-mirai-sm transition-colors hover:bg-primary focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-mirai-accent-text",
               linkClassName
             )}
           >
