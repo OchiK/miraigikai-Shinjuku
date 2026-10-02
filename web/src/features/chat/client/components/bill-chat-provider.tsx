@@ -49,6 +49,7 @@ export function BillChatProvider({
 }: BillChatProviderProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [openedWithText, setOpenedWithText] = useState(false);
+  const [chatLocale, setChatLocale] = useState(locale);
   const pathname = usePathname();
 
   const chatState = useChat();
@@ -73,15 +74,15 @@ export function BillChatProvider({
       setOpenedWithText(true);
       setIsOpen(true);
       sendMessage({
-        text: getUiMessages(locale).billDetail.chat.window.askAboutSelection(
-          selectedText
-        ),
+        text: getUiMessages(
+          chatLocale
+        ).billDetail.chat.window.askAboutSelection(selectedText),
         metadata: {
           billContext,
           hasInterviewConfig,
           difficultyLevel,
           sessionId,
-          locale,
+          locale: chatLocale,
         },
       });
     },
@@ -89,7 +90,7 @@ export function BillChatProvider({
       billContext,
       difficultyLevel,
       hasInterviewConfig,
-      locale,
+      chatLocale,
       sendMessage,
       sessionId,
       status,
@@ -109,7 +110,8 @@ export function BillChatProvider({
         disableAutoFocus={openedWithText}
         hasInterviewConfig={hasInterviewConfig}
         isOpen={isOpen}
-        locale={locale}
+        locale={chatLocale}
+        onLocaleChange={setChatLocale}
         onClose={() => {
           setIsOpen(false);
           setOpenedWithText(false);

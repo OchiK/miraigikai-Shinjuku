@@ -24,7 +24,9 @@ const CODE_NOUN =
 const CODE_VERB =
   /書いて|書け|書き直|作って|作成して|生成して|実装して|write|implement|generate|create/i;
 
-const RECIPE = /レシピ|recipe|[^\s。、]{1,12}の作り方/i;
+/** 料理だと分かる語がある場合だけ止める。「申請書の作り方」などの手続き質問は通す */
+const RECIPE =
+  /レシピ|recipe|(?:料理|調理|食材|食べ物|ご飯|おかず|カレー|パスタ|ケーキ|パン|スープ|肉じゃが|味噌汁|ラーメン|お菓子).{0,8}(?:の)?作り方|(?:美味しい|おいしい).{1,12}(?:の)?作り方/i;
 
 export function validateChatQuestion(text: string): ChatQuestionVerdict {
   // 文字（\p{L}）が1つも無い入力は質問として成立しない（空白・記号・数字だけ）

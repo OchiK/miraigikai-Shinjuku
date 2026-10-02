@@ -274,3 +274,54 @@ describe("P7-1 委員会別表示の件数", () => {
     );
   });
 });
+
+describe("P4-1 / P4-2 チャット文言", () => {
+  const ja = getUiMessages("ja").billDetail.chat;
+  const en = getUiMessages("en").billDetail.chat;
+
+  it("日英とも質問例を3件持ち、選択テキストの質問を各言語で組み立てる", () => {
+    expect(ja.window.sampleQuestions).toHaveLength(3);
+    expect(en.window.sampleQuestions).toHaveLength(3);
+    expect(ja.window.askAboutSelection("対象者")).toBe(
+      "「対象者」について教えてください。"
+    );
+    expect(en.window.askAboutSelection("eligibility")).toBe(
+      'Please tell me about "eligibility".'
+    );
+  });
+
+  it("英語チャットの固定文言と全エラー文言に日本語を含めない", () => {
+    const japanese = /[぀-ヿ一-鿿]/;
+    const fixedMessages = [
+      en.window.title,
+      en.window.notice,
+      en.window.initialHeading,
+      en.window.initialSub,
+      ...en.window.sampleQuestions,
+      en.window.thinking,
+      en.window.placeholder,
+      en.window.sendAriaLabel,
+      en.window.closeAriaLabel,
+      en.window.languageSelectorLabel,
+      en.window.hint,
+      en.window.disclaimer,
+      en.window.sourceLabel,
+      ...Object.values(en.errors),
+      en.interviewSuggestion.audience,
+      en.interviewSuggestion.heading("Bill No. 1"),
+      en.interviewSuggestion.duration,
+      en.interviewSuggestion.depth,
+      en.interviewSuggestion.policyUse,
+      en.interviewSuggestion.cta,
+    ];
+
+    for (const message of fixedMessages) {
+      expect(message).not.toMatch(japanese);
+    }
+  });
+
+  it("出典なし回答の差し替え文言を日英で持つ", () => {
+    expect(ja.errors.sourceUnavailable).toContain("確認できません");
+    expect(en.errors.sourceUnavailable).toContain("could not confirm");
+  });
+});

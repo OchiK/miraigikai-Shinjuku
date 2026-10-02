@@ -18,6 +18,16 @@ function assistantMessage(text: string): UIMessage {
   };
 }
 
+function declineMessage(text: string): UIMessage {
+  return {
+    ...assistantMessage(text),
+    parts: [
+      { type: "data-chat-response", data: { kind: "decline" } },
+      { type: "text", text },
+    ],
+  };
+}
+
 describe("SystemMessage", () => {
   it("本文と出典チップを分けて描画し、出典行は本文に残さない", () => {
     const { container } = render(
@@ -52,14 +62,42 @@ describe("SystemMessage", () => {
     expect(screen.getByLabelText("Source")).toBeTruthy();
   });
 
-  it("出典行が無い回答にはチップを出さない", () => {
+  it("完了した回答に出典が無ければ本文を表示せず、定型の辞退に差し替える", () => {
     const { container } = render(
       <SystemMessage
         isStreaming={false}
-        message={assistantMessage("提供された議案資料からは確認できません。")}
+        message={assistantMessage("根拠のない回答です。")}
       />
     );
+    expect(container.textContent).not.toContain("根拠のない回答です。");
+    expect(container.textContent).toContain(
+      "提供された議案資料からは確認できません"
+    );
     expect(container.querySelector("ul")).toBeNull();
+  });
+
+  it("ストリーミング中は、出典行が届く前の本文を表示する", () => {
+    render(
+      <SystemMessage
+        isStreaming
+        message={assistantMessage("生成途中の回答です。")}
+      />
+    );
+    expect(screen.getByText("生成途中の回答です。")).toBeTruthy();
+  });
+
+  it("サーバーが定型応答として示した辞退は、出典なしでも表示する", () => {
+    render(
+      <SystemMessage
+        isStreaming={false}
+        message={declineMessage(
+          "このチャットは、この議案についての質問にお答えします。"
+        )}
+      />
+    );
+    expect(
+      screen.getByText("このチャットは、この議案についての質問にお答えします。")
+    ).toBeTruthy();
   });
 
   it("URLの出典は別タブで開くリンクにする", () => {
@@ -81,5 +119,6 @@ describe("SystemMessage", () => {
     );
     const bubble = container.querySelector(".rounded-tl-sm");
     expect(bubble?.className).toContain("bg-card");
+    expect(screen.getByText("AI").className).toContain("bg-mirai-ai-bg");
   });
 });

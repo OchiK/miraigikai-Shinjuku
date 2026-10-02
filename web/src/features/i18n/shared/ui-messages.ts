@@ -281,6 +281,7 @@ export type UiMessages = {
         placeholder: string;
         sendAriaLabel: string;
         closeAriaLabel: string;
+        languageSelectorLabel: string;
         hint: string;
         /** 窓口確認の免責。AIを最終的な判断者にしない */
         disclaimer: string;
@@ -300,6 +301,16 @@ export type UiMessages = {
         general: string;
         /** 議案と関係のない質問への案内（有料モデルは呼ばない） */
         offTopic: string;
+        /** 出典のない生成回答を画面に出さないための差し替え文言 */
+        sourceUnavailable: string;
+      };
+      interviewSuggestion: {
+        audience: string;
+        heading: (billName: string) => string;
+        duration: string;
+        depth: string;
+        policyUse: string;
+        cta: string;
       };
     };
     participationLabel: string;
@@ -624,6 +635,7 @@ export const UI_MESSAGES: Record<PublicLocale, UiMessages> = {
           placeholder: "わからないことをAIに質問する",
           sendAriaLabel: "送信",
           closeAriaLabel: "モーダルを閉じる",
+          languageSelectorLabel: "チャットの表示言語",
           hint: "AIの回答は間違えることがあります。重要な情報はご確認ください。",
           disclaimer: `手続きや対象の判断は${siteConfig.cityName}の窓口にご確認ください。`,
           sourceLabel: "出典",
@@ -648,6 +660,17 @@ export const UI_MESSAGES: Record<PublicLocale, UiMessages> = {
             "エラーが発生しました。しばらく待ってから再度お試しください。",
           offTopic:
             "このチャットは、この議案についての質問にお答えします。議案の内容や、区民への影響、手続きなどについて質問してください。",
+          sourceUnavailable:
+            "提供された議案資料からは確認できません。詳しくは区の公式窓口にお問い合わせください。",
+        },
+        interviewSuggestion: {
+          audience: "議案の当事者の方へ",
+          heading: (billName) =>
+            `${billName}についてのご意見をお聞かせください`,
+          duration: "所要時間は最短約5分〜",
+          depth: "AIがあなたの意見を深掘り",
+          policyUse: "ご意見は政策議論に活用します",
+          cta: "AIインタビューを受ける",
         },
       },
       participationLabel: "この議案への参加と共有",
@@ -973,6 +996,7 @@ export const UI_MESSAGES: Record<PublicLocale, UiMessages> = {
           placeholder: "Ask the AI what you don't understand",
           sendAriaLabel: "Send",
           closeAriaLabel: "Close dialog",
+          languageSelectorLabel: "Chat language",
           hint: "AI answers can be wrong. Please double-check important information.",
           disclaimer: `For official procedures and eligibility, please check with the ${en.cityName} office.`,
           sourceLabel: "Source",
@@ -996,6 +1020,16 @@ export const UI_MESSAGES: Record<PublicLocale, UiMessages> = {
           general: "Something went wrong. Please try again in a little while.",
           offTopic:
             "This chat answers questions about this bill. Please ask about what the bill says, how it affects residents, or the procedures involved.",
+          sourceUnavailable:
+            "I could not confirm that from the provided bill materials. Please contact the city office for official information.",
+        },
+        interviewSuggestion: {
+          audience: "For people affected by this bill",
+          heading: (billName) => `Share your views on ${billName}`,
+          duration: "Takes about 5 minutes or more",
+          depth: "AI asks follow-up questions about your views",
+          policyUse: "Your input will inform policy discussions",
+          cta: "Start the AI interview",
         },
       },
       participationLabel: "Take part and share",

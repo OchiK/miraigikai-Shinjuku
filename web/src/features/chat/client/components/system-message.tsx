@@ -8,7 +8,10 @@ import {
   ReasoningTrigger,
 } from "@/components/ai-elements/reasoning";
 import { Response } from "@/components/ai-elements/response";
-import { SUGGEST_INTERVIEW_TOOL_TYPE } from "@/features/chat/shared/constants";
+import {
+  CHAT_RESPONSE_DATA_TYPE,
+  SUGGEST_INTERVIEW_TOOL_TYPE,
+} from "@/features/chat/shared/constants";
 import {
   extractSourceCitations,
   isHttpUrl,
@@ -65,7 +68,16 @@ export function SystemMessage({
   rehypePlugins,
   locale = "ja",
 }: SystemMessageProps) {
-  const sourceLabel = getUiMessages(locale).billDetail.chat.window.sourceLabel;
+  const chat = getUiMessages(locale).billDetail.chat;
+  const allowUnsourced = message.parts.some(
+    (part) =>
+      part.type === CHAT_RESPONSE_DATA_TYPE &&
+      "data" in part &&
+      typeof part.data === "object" &&
+      part.data !== null &&
+      "kind" in part.data &&
+      part.data.kind === "decline"
+  );
 
   return (
     <Message from="assistant" className="justify-start py-0">
@@ -73,15 +85,25 @@ export function SystemMessage({
         variant="flat"
         className="rounded-2xl rounded-tl-sm bg-card p-4 text-sm font-medium leading-[1.8] text-mirai-text shadow-mirai-sm"
       >
+        <span className="w-fit rounded-full bg-mirai-ai-bg px-2.5 py-0.5 text-xs font-bold leading-none text-mirai-ai-text">
+          AI
+        </span>
         {message.parts.map((part, i: number) => {
           if (part.type === "text") {
             const { body, sources } = extractSourceCitations(part.text);
+            const displayBody =
+              isStreaming || sources.length > 0 || allowUnsourced
+                ? body
+                : chat.errors.sourceUnavailable;
             return (
               <div key={`${message.id}-${i}`}>
                 <Response className="break-words" rehypePlugins={rehypePlugins}>
-                  {body}
+                  {displayBody}
                 </Response>
-                <SourceChips label={sourceLabel} sources={sources} />
+                <SourceChips
+                  label={chat.window.sourceLabel}
+                  sources={sources}
+                />
               </div>
             );
           }
@@ -103,6 +125,7 @@ export function SystemMessage({
                 key={`${message.id}-${i}`}
                 billId={billId}
                 billName={billName}
+                locale={locale}
               />
             );
           }

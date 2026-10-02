@@ -16,6 +16,7 @@ import type { DifficultyLevelEnum } from "@/features/bill-difficulty/shared/type
 import { parseDifficultyLevel } from "@/features/bill-difficulty/shared/utils/parse-difficulty-level";
 import type { BillWithContent } from "@/features/bills/shared/types";
 import {
+  CHAT_RESPONSE_DATA_TYPE,
   SUGGEST_INTERVIEW_TOOL_NAME,
   SUGGEST_INTERVIEW_TOOL_TYPE,
 } from "@/features/chat/shared/constants";
@@ -212,6 +213,10 @@ function buildDeclineResponse(text: string): Response {
   return createUIMessageStreamResponse({
     stream: createUIMessageStream({
       execute: ({ writer }) => {
+        writer.write({
+          type: CHAT_RESPONSE_DATA_TYPE,
+          data: { kind: "decline" },
+        });
         writer.write({ type: "text-start", id });
         writer.write({ type: "text-delta", id, delta: text });
         writer.write({ type: "text-end", id });

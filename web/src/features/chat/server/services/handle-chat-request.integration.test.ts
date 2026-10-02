@@ -446,9 +446,9 @@ describe("handleChatRequest 統合テスト", () => {
       });
 
       expect(response.status).toBe(200);
-      expect(await consumeResponseStream(response)).toContain(
-        "この議案についての質問にお答えします"
-      );
+      const body = await consumeResponseStream(response);
+      expect(body).toContain("この議案についての質問にお答えします");
+      expect(body).toContain("data-chat-response");
       expect(billLoaderCalls).toBe(0);
     });
 

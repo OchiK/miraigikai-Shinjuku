@@ -15,6 +15,8 @@ describe("validateChatQuestion", () => {
       "Who is eligible under this ordinance?",
       "テスト質問です",
       "わが家は対象になりますか？",
+      "申請書の作り方を教えて",
+      "意見書の作り方は？",
     ])("%s", (text) => {
       expect(passes(text)).toBe(true);
     });
@@ -49,6 +51,7 @@ describe("validateChatQuestion", () => {
       "JavaScriptの関数を書いて",
       "Write a Python script to scrape a website",
       "美味しいカレーの作り方を教えて",
+      "肉じゃがの作り方を教えて",
       "Give me a recipe for pasta",
     ])("%s は off_topic", (text) => {
       expect(validateChatQuestion(text)).toEqual({
