@@ -14,6 +14,7 @@
 | **初期基盤・会期** | P0-1, P0-2, P0-3, P0-4, P1-1, P1-2 |
 | **本番稼働検証** | S5-2（本番DB確認）, S5-5（本番キャッシュ即時無効化） |
 | **難易度・多言語** | P2-1, P2-2, P2-4（ヘッダー操作ボタンのコントラスト）, P2-5（Button ホバー）, P2-6（Button フォーカスリング）, P2-7（Organic 取り残し）, P3-2, P3-3, P3-5（英語のみ翻訳・5言語案内ページ） |
+| **AIチャット** | P4-1（出典表示・事前フィルタ・多言語追従）, P4-2（コスト上限・Gemini 3.8 Flash 直結） |
 | **自動化・制約** | P5-0（会期スコープユニーク制約）, P5-1（更新検知・ドラフト生成）, P5-2（R8-3解説・台帳・本番公開） |
 | **議員機能** | P7-1（世田谷モデル議員ページ）, P7-3（公式Xアカウント表示・全38名調査） |
 | **UI/UX・改善** | P8-1, P8-2, P8-3, P8-4, P8-5, P8-6, P8-7, P8-8, P8-9, P8-10, P8-11, P8-12, P8-13, P8-14, P8-15, P8-16, P8-17, P8-18, P8-19, P8-20, P8-21, P8-22 |
@@ -48,6 +49,7 @@ Acceptance:
 - 次の2点はコード上は対応済みなので、本番で確かめてから ROADMAP のチェックを付ける
   - 注目議案は `publish_status = "published"` だけを出す（`findFeaturedBillsWithContents`）。準備中案件の404リンクが出ないこと
   - チャットAPIは `siteConfig.features.aiChat` のサーバー側ゲート、未公開議案の拒否、上限確認失敗時の fail-closed を持つ（`handle-chat-request.ts`）
+  - 本番環境での AI チャット稼働を確認（2026-10-03）: Google Gemini 3.8 Flash 直結による高速ストリーミング応答、出典チップ表示、日英追従、事前フィルタ、クォーテーション自動サニタイズ（PR #110, #111, #112）が正常稼働することを確認済み
 
 ---
 
@@ -98,45 +100,6 @@ Progress (2026-09-23):
 - ルビのプレビューは保留。公開画面の議案本文は raw HTML を通さず（`<ruby>` は落ちる）、`【正式名称】［ふりがな］（＝言いかえ）` もそのまま文字として出る。
   利用者に見えるふりがなは外部スクリプト Rubyful V2 が付けるものだけなので、管理画面で独自にルビを描くと公開画面と食い違う。
   先に公開側の描画方針を決めること。
-
----
-
-## P4 AIチャット・ガードレール
-
-### P4-1 Chat guardrails
-Acceptance:
-- bill context only
-- off-topic blocked before paid call where possible
-- answer language follows user
-- source shown
-
-### P4-2 Cost ceiling
-Acceptance:
-- per-user daily cap
-- total daily cap
-- total monthly cap
-- clear UI when cap reached
-
-Progress (2026-09-25):
-コードで確認した現状（`web/src/features/chat/server/services/handle-chat-request.ts` ほか）。
-- 済み: 議案に紐づけ（クライアントの議案IDだけを信じ、本文はDBの公開データで置き換える。未公開は 403）
-- 済み: ユーザー日次・システム日次・システム月次の上限（`env.chat.*CostLimitUsd`）と、上限を確認できないときの fail-closed
-- 済み: 利用記録（`chat_usage_events` への記録）と、入力欄の「AIの回答は間違えることがあります」の注意書き
-- 済み（プロンプトのみ）: 関係のない話題を断るルール（`COMMON_RULES_GENERIC`）
-
-Progress (2026-10-02):
-コードは実装済み。ブラウザでの目視確認と DB 統合テストの実行が残っているため、完了（アーカイブ）にはしていない。
-- 済み: 出典表示。プロンプトに「出典を示せない内容は答えない・回答の最後の1行に `【出典】…` / `Source: …`」を追加（`SOURCE_AND_LANGUAGE_RULES`）。`extractSourceCitations` が出典行を本文から切り離し、`SystemMessage` が `bg-mirai-source-chip` のチップで描画する
-- 済み: 回答言語は質問者の言語に追従する指示をプロンプトに追加
-- 済み: 関係のない質問を有料API（議案のDB取得とモデル呼び出し）の前に止める。`validateChatQuestion` が空入力・記号だけ・コード生成・レシピを検出し、`handleChatRequest` が定型の案内をアシスタントの発言として返す。判定は狭く、迷うものはプロンプトの辞退ルールに任せる
-- 済み: チャットUIの文言（注意書き・質問例3件・入力欄・免責・考え中・閉じる/送信のラベル）と、429 を含むエラー文言を `ui-messages.ts` で日英に。`locale` はメッセージのメタデータで送り、最後のメッセージを優先する
-- 済み: 吹き出しの形（自分は右上、AIは左上の角を落とす）。AIの面が `bg-card` なので、ダイアログ本体は `bg-background` に変更
-- 済み: 完了した生成回答に出典行が無い場合は、本文を表示せず定型の辞退文に差し替える。事前フィルタの定型応答だけは構造化マーカーで出典不要と明示する
-- 済み: チャット上部に議案名と言語切り替えを表示し、会話履歴を保ったまま日英を切り替えられる。`InterviewSuggestionBanner` も日英化
-- 済み: AIの吹き出しに `bg-mirai-ai-bg` の `AI` ラベルを付け、§10指定の `bg-card` を保ちながら生成文だと視覚的に区別する
-- 済み: ローカル Supabase を使ったチャット統合テスト（15件）
-- 済み: デスクトップと375×812で日英表示、言語切り替え時の履歴保持、事前フィルタの定型応答とAIラベルを目視確認
-- 残り: 上限到達時の `PromptInputError` 表示の目視確認
 
 ---
 
@@ -193,7 +156,8 @@ Progress（2026-10-01）:
 - 先行対応（タイトル登録）を実装した。会期ページ（2026-10-01 取得）の記載どおりの識別名・件名で、`itemType: "giin"` の2件を `fullTextPdfUrl: null`・`overviewPdfUrl: null`・`decision: null`・`coming_soon`・`is_review_completed: false`・出典 `R8_3_COUNCIL_SESSION_URL` としてインベントリに追加した（slug: `shinjuku-2026-r3-giin-11` / `-12`）。
 - P5-1 監視（`packages/seed/monitor/targets.ts`）の R8-3 比較からは、R8-2 と同様に議員提出議案を外した（区長提出議案ページに載らないため）。
 - シードテストを24件（区長提出22件 + 議員提出2件）前提に更新した。解説・主張台帳・やさしい日本語の検証は解説のある22件のまま。
-- 未確認: Docker（ローカル Supabase）が起動していなかったため、`/sessions/r8-3/bills` の「これから掲載される議案」への表示はローカルで確認できていない。本番DBへの反映（`import_production.yml`）も未実施。
+- 2026-10-02: 先行対応（第11号・第12号のタイトル登録）を PR #107 でマージし、GitHub Actions（`import_production.yml` run 36839819837）により本番DBへ反映完了。本番の会期議案一覧（`/sessions/r8-3/bills`）の「これから掲載される議案」セクションに正常表示されていることを確認済み。
+- 残り: 閉会（10月15日）後の議決結果・討論・会議録の反映および3難易度の解説・主張台帳の作成（P5-4 本番解説作成）。
 
 ### P5-3 半自動化の残り（ROADMAP Phase 6）
 会期ページの解析・変化の検知・定期実行・下書きPRは P5-1 で実装済み。
