@@ -19,8 +19,8 @@ export const modelPricing: Record<string, ModelPricing> = {
     outputTokensPerMillionUsd: 10,
   },
   [AI_MODELS.gpt4o_mini]: {
-    inputTokensPerMillionUsd: 0.5,
-    outputTokensPerMillionUsd: 3,
+    inputTokensPerMillionUsd: 0.15,
+    outputTokensPerMillionUsd: 0.6,
   },
   [AI_MODELS.gpt4_1]: {
     inputTokensPerMillionUsd: 2,
