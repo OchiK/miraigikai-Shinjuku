@@ -19,8 +19,8 @@ export const modelPricing: Record<string, ModelPricing> = {
     outputTokensPerMillionUsd: 10,
   },
   [AI_MODELS.gpt4o_mini]: {
-    inputTokensPerMillionUsd: 0.15,
-    outputTokensPerMillionUsd: 0.6,
+    inputTokensPerMillionUsd: 0.5,
+    outputTokensPerMillionUsd: 3,
   },
   [AI_MODELS.gpt4_1]: {
     inputTokensPerMillionUsd: 2,
@@ -71,14 +71,14 @@ export const modelPricing: Record<string, ModelPricing> = {
     outputTokensPerMillionUsd: 14,
   },
   // --- Google ---
-  [AI_MODELS.gemini2_5_flash]: {
-    inputTokensPerMillionUsd: 0.15,
-    outputTokensPerMillionUsd: 0.6,
+  [AI_MODELS.gemini3_8_flash]: {
+    inputTokensPerMillionUsd: 0.5,
+    outputTokensPerMillionUsd: 3,
   },
   // @ai-sdk/google 直結時の modelId は接頭辞なし
   [GEMINI_DIRECT_CHAT_MODEL_ID]: {
-    inputTokensPerMillionUsd: 0.15,
-    outputTokensPerMillionUsd: 0.6,
+    inputTokensPerMillionUsd: 0.5,
+    outputTokensPerMillionUsd: 3,
   },
   [AI_MODELS.gemini3_flash]: {
     inputTokensPerMillionUsd: 0.5,

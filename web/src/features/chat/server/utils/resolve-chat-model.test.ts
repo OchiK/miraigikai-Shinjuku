@@ -5,11 +5,11 @@ import { calculateUsageCostUsd } from "@/lib/ai/calculate-ai-cost";
 import { resolveChatModel } from "./resolve-chat-model";
 
 describe("resolveChatModel", () => {
-  it("GEMINI_API_KEY があればGoogle直結のgemini-2.5-flashを返す", () => {
+  it("GEMINI_API_KEY があればGoogle直結のgemini-3.8-flashを返す", () => {
     const result = resolveChatModel({ geminiApiKey: "test-key" });
 
     expect(result.provider).toBe("google");
-    expect(result.modelId).toBe("gemini-2.5-flash");
+    expect(result.modelId).toBe("gemini-3.8-flash");
     expect(typeof result.model).not.toBe("string");
   });
 

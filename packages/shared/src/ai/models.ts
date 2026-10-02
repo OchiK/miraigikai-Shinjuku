@@ -18,7 +18,7 @@ export const AI_MODELS = {
   gpt5_1_thinking: "openai/gpt-5.1-thinking",
   gpt5_2: "openai/gpt-5.2",
   // --- Google ---
-  gemini2_5_flash: "google/gemini-2.5-flash",
+  gemini3_8_flash: "google/gemini-3.8-flash",
   gemini3_flash: "google/gemini-3-flash",
   gemini3_flash_preview: "google/gemini-3-flash-preview",
   gemini3_1_flash_lite_preview: "google/gemini-3.1-flash-lite-preview",
@@ -35,4 +35,4 @@ export type AiModel = (typeof AI_MODELS)[keyof typeof AI_MODELS];
 export const DEFAULT_INTERVIEW_CHAT_MODEL = AI_MODELS.gpt5_2;
 
 /** Google AI Studio（@ai-sdk/google）直結時のチャットモデルID（Gateway接頭辞なし） */
-export const GEMINI_DIRECT_CHAT_MODEL_ID = "gemini-2.5-flash";
+export const GEMINI_DIRECT_CHAT_MODEL_ID = "gemini-3.8-flash";
