@@ -265,7 +265,54 @@ export type UiMessages = {
     originalText: string;
     sourcesHeading: string;
     sourceLinks: BillSourceLinkFormat;
-    chat: { heading: string; body: string; button: string };
+    chat: {
+      heading: string;
+      body: string;
+      button: string;
+      window: {
+        title: string;
+        /** 会話の先頭に固定する注意書き（デザインシステム定義 §10-2） */
+        notice: string;
+        initialHeading: string;
+        initialSub: string;
+        /** 議案についてのものだけを3つまで */
+        sampleQuestions: [string, string, string];
+        thinking: string;
+        placeholder: string;
+        sendAriaLabel: string;
+        closeAriaLabel: string;
+        languageSelectorLabel: string;
+        hint: string;
+        /** 窓口確認の免責。AIを最終的な判断者にしない */
+        disclaimer: string;
+        /** 出典チップのスクリーンリーダー向けラベル */
+        sourceLabel: string;
+        /** 本文選択からチャットを開くとき最初に送る質問 */
+        askAboutSelection: (selectedText: string) => string;
+      };
+      errors: {
+        dailyLimit: string;
+        monthlyLimit: string;
+        billContextRequired: string;
+        billNotPublished: string;
+        billContentUnavailable: string;
+        costCheckFailed: string;
+        maintenance: string;
+        general: string;
+        /** 議案と関係のない質問への案内（有料モデルは呼ばない） */
+        offTopic: string;
+        /** 出典のない生成回答を画面に出さないための差し替え文言 */
+        sourceUnavailable: string;
+      };
+      interviewSuggestion: {
+        audience: string;
+        heading: (billName: string) => string;
+        duration: string;
+        depth: string;
+        policyUse: string;
+        cta: string;
+      };
+    };
     participationLabel: string;
     share: {
       share: string;
@@ -572,6 +619,59 @@ export const UI_MESSAGES: Record<PublicLocale, UiMessages> = {
         heading: "この議案について質問する",
         body: "この議案の資料をもとにAIが答えます。答えは間違うことがあります。",
         button: "質問する",
+        window: {
+          title: "この議案について質問する",
+          notice:
+            "この議案の資料をもとにAIが答えます。答えは間違うことがあります。",
+          initialHeading:
+            "この議案について、気になることをAIに質問してください。",
+          initialSub: "本文中のテキストを選択すると簡単にAIに質問できます",
+          sampleQuestions: [
+            "この議案のポイントは？",
+            "この議案は私にどんな影響がある？",
+            "わが家は対象になりますか？",
+          ],
+          thinking: "考え中...",
+          placeholder: "わからないことをAIに質問する",
+          sendAriaLabel: "送信",
+          closeAriaLabel: "モーダルを閉じる",
+          languageSelectorLabel: "チャットの表示言語",
+          hint: "AIの回答は間違えることがあります。重要な情報はご確認ください。",
+          disclaimer: `手続きや対象の判断は${siteConfig.cityName}の窓口にご確認ください。`,
+          sourceLabel: "出典",
+          askAboutSelection: (selectedText) =>
+            `「${selectedText}」について教えてください。`,
+        },
+        errors: {
+          dailyLimit:
+            "本日の利用上限に達しました。明日0時以降に再度お試しください。",
+          monthlyLimit:
+            "今月の利用上限に達しました。来月1日以降に再度お試しください。",
+          billContextRequired:
+            "議案が指定されていません。議案のページから質問してください。",
+          billNotPublished: "指定された議案は現在公開されていません。",
+          billContentUnavailable:
+            "議案情報を取得できませんでした。時間をおいて再度お試しください。",
+          costCheckFailed:
+            "サービスが一時的に利用できません。時間をおいて再度お試しください。",
+          maintenance:
+            "現在AIチャット機能はメンテナンス中です。しばらく経ってから再度お試しください。",
+          general:
+            "エラーが発生しました。しばらく待ってから再度お試しください。",
+          offTopic:
+            "このチャットは、この議案についての質問にお答えします。議案の内容や、区民への影響、手続きなどについて質問してください。",
+          sourceUnavailable:
+            "提供された議案資料からは確認できません。詳しくは区の公式窓口にお問い合わせください。",
+        },
+        interviewSuggestion: {
+          audience: "議案の当事者の方へ",
+          heading: (billName) =>
+            `${billName}についてのご意見をお聞かせください`,
+          duration: "所要時間は最短約5分〜",
+          depth: "AIがあなたの意見を深掘り",
+          policyUse: "ご意見は政策議論に活用します",
+          cta: "AIインタビューを受ける",
+        },
       },
       participationLabel: "この議案への参加と共有",
       share: {
@@ -881,6 +981,56 @@ export const UI_MESSAGES: Record<PublicLocale, UiMessages> = {
         heading: "Ask about this bill",
         body: "AI answers based on this bill's materials. Its answers can be wrong.",
         button: "Ask a question",
+        window: {
+          title: "Ask about this bill",
+          notice:
+            "AI answers based on this bill's materials. Its answers can be wrong.",
+          initialHeading: "Ask the AI anything you wonder about this bill.",
+          initialSub: "You can also select text on the page to ask about it.",
+          sampleQuestions: [
+            "What are the key points of this bill?",
+            "How does this bill affect me?",
+            "Does my household qualify?",
+          ],
+          thinking: "Thinking...",
+          placeholder: "Ask the AI what you don't understand",
+          sendAriaLabel: "Send",
+          closeAriaLabel: "Close dialog",
+          languageSelectorLabel: "Chat language",
+          hint: "AI answers can be wrong. Please double-check important information.",
+          disclaimer: `For official procedures and eligibility, please check with the ${en.cityName} office.`,
+          sourceLabel: "Source",
+          askAboutSelection: (selectedText) =>
+            `Please tell me about "${selectedText}".`,
+        },
+        errors: {
+          dailyLimit:
+            "You have reached today's usage limit. Please try again after midnight (Japan time).",
+          monthlyLimit:
+            "The monthly usage limit has been reached. Please try again from the 1st of next month.",
+          billContextRequired:
+            "No bill was specified. Please ask from a bill's page.",
+          billNotPublished: "This bill is not currently published.",
+          billContentUnavailable:
+            "We could not load the bill information. Please try again in a little while.",
+          costCheckFailed:
+            "The service is temporarily unavailable. Please try again in a little while.",
+          maintenance:
+            "The AI chat is under maintenance. Please try again in a little while.",
+          general: "Something went wrong. Please try again in a little while.",
+          offTopic:
+            "This chat answers questions about this bill. Please ask about what the bill says, how it affects residents, or the procedures involved.",
+          sourceUnavailable:
+            "I could not confirm that from the provided bill materials. Please contact the city office for official information.",
+        },
+        interviewSuggestion: {
+          audience: "For people affected by this bill",
+          heading: (billName) => `Share your views on ${billName}`,
+          duration: "Takes about 5 minutes or more",
+          depth: "AI asks follow-up questions about your views",
+          policyUse: "Your input will inform policy discussions",
+          cta: "Start the AI interview",
+        },
       },
       participationLabel: "Take part and share",
       share: {

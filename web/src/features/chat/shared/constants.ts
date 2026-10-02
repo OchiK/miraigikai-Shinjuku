@@ -8,3 +8,6 @@ export const SUGGEST_INTERVIEW_TOOL_NAME = "suggest_interview";
  */
 export const SUGGEST_INTERVIEW_TOOL_TYPE =
   `tool-${SUGGEST_INTERVIEW_TOOL_NAME}` as const;
+
+/** 有料モデルを使わない定型応答を識別するUIメッセージpart */
+export const CHAT_RESPONSE_DATA_TYPE = "data-chat-response" as const;

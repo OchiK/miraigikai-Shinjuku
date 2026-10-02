@@ -1,6 +1,7 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
+import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import {
@@ -11,6 +12,7 @@ import {
   useState,
 } from "react";
 import type { BillWithContent } from "@/features/bills/shared/types";
+import { getUiMessages } from "@/features/i18n/shared/ui-messages";
 import { ChatWindow } from "./chat-window";
 
 interface BillChatProviderProps {
@@ -18,6 +20,7 @@ interface BillChatProviderProps {
   billContext: BillWithContent;
   hasInterviewConfig?: boolean;
   difficultyLevel: string;
+  locale?: PublicLocale;
   children: ReactNode;
 }
 
@@ -41,10 +44,12 @@ export function BillChatProvider({
   billContext,
   hasInterviewConfig,
   difficultyLevel,
+  locale = "ja",
   children,
 }: BillChatProviderProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [openedWithText, setOpenedWithText] = useState(false);
+  const [chatLocale, setChatLocale] = useState(locale);
   const pathname = usePathname();
 
   const chatState = useChat();
@@ -69,12 +74,15 @@ export function BillChatProvider({
       setOpenedWithText(true);
       setIsOpen(true);
       sendMessage({
-        text: `「${selectedText}」について教えてください。`,
+        text: getUiMessages(
+          chatLocale
+        ).billDetail.chat.window.askAboutSelection(selectedText),
         metadata: {
           billContext,
           hasInterviewConfig,
           difficultyLevel,
           sessionId,
+          locale: chatLocale,
         },
       });
     },
@@ -82,6 +90,7 @@ export function BillChatProvider({
       billContext,
       difficultyLevel,
       hasInterviewConfig,
+      chatLocale,
       sendMessage,
       sessionId,
       status,
@@ -101,6 +110,8 @@ export function BillChatProvider({
         disableAutoFocus={openedWithText}
         hasInterviewConfig={hasInterviewConfig}
         isOpen={isOpen}
+        locale={chatLocale}
+        onLocaleChange={setChatLocale}
         onClose={() => {
           setIsOpen(false);
           setOpenedWithText(false);

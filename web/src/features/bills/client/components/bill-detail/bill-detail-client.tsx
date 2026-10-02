@@ -1,5 +1,6 @@
 "use client";
 
+import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
 import type { ReactNode } from "react";
 import { siteConfig } from "@/config/site.config";
 import type { DifficultyLevelEnum } from "@/features/bill-difficulty/shared/types";
@@ -14,6 +15,8 @@ interface BillDetailClientProps {
   bill: BillWithContent;
   currentDifficulty: DifficultyLevelEnum;
   hasInterviewConfig: boolean;
+  /** チャットの文言と、サーバーへ送る表示言語 */
+  locale?: PublicLocale;
   children: ReactNode;
 }
 
@@ -47,6 +50,7 @@ export function BillDetailClient({
   bill,
   currentDifficulty,
   hasInterviewConfig,
+  locale = "ja",
   children,
 }: BillDetailClientProps) {
   if (!siteConfig.features.aiChat) {
@@ -58,6 +62,7 @@ export function BillDetailClient({
       billContext={bill}
       difficultyLevel={currentDifficulty}
       hasInterviewConfig={hasInterviewConfig}
+      locale={locale}
     >
       <TextSelectionChatBridge>{children}</TextSelectionChatBridge>
     </BillChatProvider>
