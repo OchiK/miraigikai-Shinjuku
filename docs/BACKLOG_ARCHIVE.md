@@ -28,6 +28,9 @@
 - [P3 多言語基盤](#p3-多言語基盤)
   - [P3-2 Translation schema](#p3-2-translation-schema)
   - [P3-3 Seven locales（2026-09-24 見直し）](#p3-3-seven-locales2026-09-24-見直し)
+- [P4 AIチャット・ガードレール](#p4-aiチャットガードレール)
+  - [P4-1 Chat guardrails（出典表示・事前フィルタ・多言語追従）](#p4-1-chat-guardrails出典表示事前フィルタ多言語追従)
+  - [P4-2 Cost ceiling（コスト上限・Google Gemini 3.8 Flash 直結）](#p4-2-cost-ceilingコスト上限google-gemini-38-flash-直結)
 - [P5 自動化・制約](#p5-自動化制約)
   - [P5-0 bill_number のユニーク制約を会期スコープにする ✅](#p5-0-bill_number-のユニーク制約を会期スコープにする-)
   - [P5-1 Automation（新宿区議会更新検知とドラフト生成）](#p5-1-automation)
@@ -654,3 +657,36 @@ Progress (2026-09-30, PR #106):
 - `HamburgerMenu` の `lg:hidden` を削除し、全会期を全端末で表示。
 - Codex による独立検証（PASS）を経て PR #106 をマージ、本番 Vercel デプロイを完了・公開確認済み。
 
+
+
+---
+
+## P4 AIチャット・ガードレール
+
+### P4-1 Chat guardrails（出典表示・事前フィルタ・多言語追従）
+Acceptance:
+- 議案コンテキスト限定（bill context only）
+- 関係のない質問を有料API呼び出し前に遮断（off-topic blocked before paid call where possible）
+- 回答言語が質問者の言語に追従（answer language follows user）
+- 出典が明示されること（source shown）
+
+Progress (2026-10-02, PR #110):
+- 出典表示: プロンプトに「出典を示せない内容は答えない・回答の最後の1行に `【出典】…` / `Source: …`」を追加（`SOURCE_AND_LANGUAGE_RULES`）。`extractSourceCitations` が出典行を本文から切り離し、`SystemMessage` が `bg-mirai-source-chip` のチップとして描画。完了した回答に出典行がない場合は定型の辞退文に差し替え。
+- 多言語追従: 質問者の言語（日本語・英語）に追従するルールをプロンプトに追加。チャット上部に議案名と言語切り替えを表示し、会話履歴を保ったまま日英切替が可能。
+- 事前フィルタ: 空入力・記号のみ・コード生成・レシピ・雑談などを有料モデル呼び出し前に `validateChatQuestion` で検出し、定型の案内をアシスタント発言として即時返却。
+- UI/UX: チャットダイアログ背景を `bg-background` に統一、AI吹き出しに `bg-mirai-ai-bg` の `AI` バッジを付与して視覚的に区別。429を含む全エラー文言を日英化。
+
+### P4-2 Cost ceiling（コスト上限・Google Gemini 3.8 Flash 直結）
+Acceptance:
+- ユーザー日次上限（per-user daily cap）
+- システム日次上限（total daily cap）
+- システム月次上限（total monthly cap）
+- 上限到達時のわかりやすいUI通知（clear UI when cap reached）
+- Google Gemini 直接連携と正確なコスト計算・ガードレール完全連動
+
+Progress (2026-10-02〜2026-10-03, PR #111, #112):
+- Gemini 直接連携: Google AI Studio の `GEMINI_API_KEY` を用いて `@ai-sdk/google` 経由で `gemini-3.8-flash` に直結。未設定時は Gateway 経由 `openai/gpt-4o-mini` に安全にフォールバック。
+- コストガード同期: `gemini-3.8-flash` および `google/gemini-3.8-flash` に単価（入力 $0.50 / 出力 $3.00 per 1M tokens）を登録し、`calculateUsageCostUsd` によるユーザー日次・システム日次・月次上限チェックと連動。
+- 不適合ツールの除外: Google 直結時は OpenAI 専用ツール（`openai.tools.webSearch()`）を渡さず、ペイロードエラーを未然に防止。
+- 環境変数サニタイズ（PR #112）: Vercel 入力時に前後のクォーテーションや余計な空白・改行が混入しても自動で除去する `sanitizeApiKey` を実装。マスク付き診断ログ（`[Chat] Provider: ..., Model: ..., Key: ... (len: ...)`）を追加。
+- 本番稼働検証（2026-10-03）: Vercel 本番環境で Gemini 3.8 Flash による高速ストリーミング応答、出典チップ表示、日英切り替え、事前フィルタの正常稼働を確認完了。

@@ -195,18 +195,26 @@ zh-Hans / ko / ne / my / vi は議案を翻訳せず、ブラウザ翻訳とや�
 ## Phase 4: AI chat
 
 - [x] bill-context chat（議案IDだけを信じ、本文はDBの公開データで置き換える）
-- [ ] source citation（BACKLOG P4-1）
-- [ ] language mirroring（BACKLOG P4-1）
-- [ ] off-topic guard（プロンプトのルールのみ。有料APIの前で止める仕組みはない。BACKLOG P4-1）
+- [x] source citation（BACKLOG P4-1、PR #110 で実装・チップ表示）
+- [x] language mirroring（BACKLOG P4-1、PR #110 で日英追従・言語切替）
+- [x] off-topic guard（BACKLOG P4-1、PR #110 で事前フィルタ実装）
 - [x] per-user daily cost
 - [x] system daily cost
 - [x] system monthly cost
 - [x] AI disclaimer（入力欄の注意書き）
 - [x] usage logging（`chat_usage_events`）
-- [ ] 上限到達時の画面表示の確認（BACKLOG P4-2）
+- [x] 上限到達時の画面表示の確認（BACKLOG P4-2、日英エラーメッセージ整備）
+- [x] Google Gemini 3.8 Flash 直結（PR #111, #112、コストガード完全連動）
 
-2026-09-25: コードを見て現状を反映した。上限の確認に失敗したときは有料APIを呼ばない（fail-closed）。
-残りは出典表示・回答言語・話題外の事前ブロック・上限到達時の表示で、BACKLOG P4-1 / P4-2 にまとめた。
+Exit:
+議案の文脈だけを答え、出典を示し、質問者の言語で返し、上限到達時に画面で説明する。
+→ **達成**。出典表示（`bg-mirai-source-chip`）、事前フィルタ、言語追従、Gemini 3.8 Flash 直結、クォーテーション自動サニタイズ、コスト上限ガードレールを実装し、Vercel 本番環境での正常稼働を確認完了（2026-10-03）。
+
+2026-10-02〜2026-10-03:
+- PR #110: 出典表示（`extractSourceCitations` / `bg-mirai-source-chip`）、事前フィルタ（`validateChatQuestion`）、回答言語追従、チャットUI日英化、AIラベル表示を実装。
+- PR #111: Google AI Studio の `GEMINI_API_KEY` を用いた `gemini-3.8-flash` 直結、適正価格定義（$0.50 / $3.00 per 1M tokens）、コストガード連動を実装。
+- PR #112: 環境変数の自動サニタイズ（クォーテーション・空白除去）とマスク付き診断ログを追加。
+- 2026-10-03: Vercel 本番環境での正常稼働を確認し、Phase 4 Exit 条件を達成。
 
 Exit:
 設定上限を超えるAI費用が発生しない。
