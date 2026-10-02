@@ -42,6 +42,11 @@ describe("calculateUsageCostUsd", () => {
     expect(
       calculateUsageCostUsd(AI_MODELS.claude_sonnet_4_6, usage)
     ).toBeCloseTo(18);
+    // Gemini 2.5 Flash: $0.15 input + $0.60 output = $0.75（接頭辞あり・なし両方）
+    expect(calculateUsageCostUsd(AI_MODELS.gemini2_5_flash, usage)).toBeCloseTo(
+      0.75
+    );
+    expect(calculateUsageCostUsd("gemini-2.5-flash", usage)).toBeCloseTo(0.75);
     // Gemini 3.1 Pro Preview: $2.00 input + $12.00 output = $14.00
     expect(
       calculateUsageCostUsd(AI_MODELS.gemini3_1_pro_preview, usage)

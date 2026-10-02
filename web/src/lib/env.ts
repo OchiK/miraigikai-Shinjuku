@@ -70,6 +70,8 @@ export const env = {
     promptLabel: process.env.LANGFUSE_PROMPT_LABEL || "production",
   },
   chat: {
+    geminiApiKey:
+      process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY,
     dailyUserCostLimitUsd: chatDailyUserCostLimitUsd,
     dailyTotalCostLimitUsd: chatDailyTotalCostLimitUsd,
     monthlyTotalCostLimitUsd: chatMonthlyTotalCostLimitUsd,

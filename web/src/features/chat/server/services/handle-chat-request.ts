@@ -25,13 +25,16 @@ import { resolveChatLocale } from "@/features/chat/shared/utils/resolve-chat-loc
 import { validateChatQuestion } from "@/features/chat/shared/utils/validate-chat-question";
 import { getUiMessages } from "@/features/i18n/shared/ui-messages";
 import { findPublicInterviewConfigByBillId } from "@/features/interview-config/server/repositories/interview-config-repository";
-import { AI_MODELS } from "@/lib/ai/models";
 import { env } from "@/lib/env";
 import {
   type CompiledPrompt,
   createPromptProvider,
   type PromptProvider,
 } from "@/lib/prompt";
+import {
+  type ChatModelProvider,
+  resolveChatModel,
+} from "../utils/resolve-chat-model";
 import { loadPublishedBillForChat } from "../loaders/load-published-bill-for-chat";
 import { isWithinDailyCostLimit, recordChatUsage } from "./cost-tracker";
 import {
@@ -135,9 +138,14 @@ export async function handleChatRequest({
     promptProvider
   );
   // Model configuration
-  const model = deps?.model ?? AI_MODELS.gpt4o;
-  const modelName =
-    typeof model === "string" ? model : (model.modelId ?? "unknown");
+  const {
+    model,
+    provider,
+    modelId: modelName,
+  } = resolveChatModel({
+    customModel: deps?.model,
+    geminiApiKey: env.chat.geminiApiKey,
+  });
 
   // Determine if interview suggestion should be enabled
   const shouldSuggestInterview = await determineShouldSuggestInterview(
@@ -152,7 +160,7 @@ export async function handleChatRequest({
   );
 
   // Build tools configuration
-  const tools = buildTools(shouldSuggestInterview);
+  const tools = buildTools(shouldSuggestInterview, provider);
 
   // Generate streaming response
   try {
@@ -446,11 +454,17 @@ function buildSystemPromptWithInterviewInstructions(
 /**
  * チャットで使用するツール一覧を構築
  */
-function buildTools(shouldSuggestInterview: boolean) {
+function buildTools(
+  shouldSuggestInterview: boolean,
+  provider: ChatModelProvider
+) {
   // biome-ignore lint/suspicious/noExplicitAny: OpenAI web_search tool type incompatibility
-  const tools: Record<string, any> = {
-    web_search: openai.tools.webSearch(),
-  };
+  const tools: Record<string, any> = {};
+
+  // OpenAI専用ツールはGeminiに渡すとペイロードエラーになる
+  if (provider !== "google") {
+    tools.web_search = openai.tools.webSearch();
+  }
 
   if (shouldSuggestInterview) {
     tools[SUGGEST_INTERVIEW_TOOL_NAME] = tool({
