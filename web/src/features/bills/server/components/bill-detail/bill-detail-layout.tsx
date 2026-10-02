@@ -77,6 +77,7 @@ export async function BillDetailLayout({
         bill={bill}
         currentDifficulty={currentDifficulty}
         hasInterviewConfig={interviewConfig != null}
+        locale={locale}
       >
         <Container>
           {/* 1. 上部ナビゲーション */}

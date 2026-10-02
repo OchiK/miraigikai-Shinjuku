@@ -70,4 +70,30 @@ describe("chatErrorToResponse", () => {
     expect(res.status).toBe(500);
     expect(await res.text()).toContain("エラーが発生しました");
   });
+
+  describe("英語", () => {
+    it("日次上限は429で英語の文言を返す", async () => {
+      const res = chatErrorToResponse(
+        new ChatError(ChatErrorCode.DAILY_COST_LIMIT_REACHED),
+        "en"
+      );
+      expect(res.status).toBe(429);
+      expect(await res.text()).toContain("today's usage limit");
+    });
+
+    it("月次上限は429で英語の文言を返す", async () => {
+      const res = chatErrorToResponse(
+        new ChatError(ChatErrorCode.SYSTEM_MONTHLY_COST_LIMIT_REACHED),
+        "en"
+      );
+      expect(res.status).toBe(429);
+      expect(await res.text()).toContain("monthly usage limit");
+    });
+
+    it("ChatError 以外は500で英語の汎用文言を返す", async () => {
+      const res = chatErrorToResponse(new Error("boom"), "en");
+      expect(res.status).toBe(500);
+      expect(await res.text()).toContain("Something went wrong");
+    });
+  });
 });

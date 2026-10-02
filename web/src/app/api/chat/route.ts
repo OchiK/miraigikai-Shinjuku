@@ -5,6 +5,7 @@ import {
   handleChatRequest,
 } from "@/features/chat/server/services/handle-chat-request";
 import { chatErrorToResponse } from "@/features/chat/server/utils/chat-error-response";
+import { resolveChatLocale } from "@/features/chat/shared/utils/resolve-chat-locale";
 import { jsonResponse } from "@/lib/api/response";
 import { registerNodeTelemetry } from "@/lib/telemetry/register";
 
@@ -76,6 +77,6 @@ export async function POST(req: Request) {
     return await handleChatRequest({ messages, userId: user.id });
   } catch (error) {
     console.error("Chat request error:", error);
-    return chatErrorToResponse(error);
+    return chatErrorToResponse(error, resolveChatLocale(messages));
   }
 }

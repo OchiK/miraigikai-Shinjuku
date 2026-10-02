@@ -422,4 +422,61 @@ describe("handleChatRequest 統合テスト", () => {
       expect(mockModel.doStreamCalls).toHaveLength(0);
     });
   });
+
+  describe("議案と無関係な質問の事前フィルタ", () => {
+    function offTopicMessages(
+      text: string,
+      locale?: "ja" | "en"
+    ): UIMessage<ChatMessageMetadata>[] {
+      const [message] = createTestMessages({ locale });
+      return [{ ...message, parts: [{ type: "text", text }] }];
+    }
+
+    it("コード生成の依頼は、議案の取得もモデル呼び出しもせず定型の案内を返す", async () => {
+      let billLoaderCalls = 0;
+      const response = await handleChatRequest({
+        messages: offTopicMessages("Pythonでクイックソート書いて"),
+        userId: testUser.id,
+        deps: {
+          billLoader: async () => {
+            billLoaderCalls++;
+            return null;
+          },
+        },
+      });
+
+      expect(response.status).toBe(200);
+      expect(await consumeResponseStream(response)).toContain(
+        "この議案についての質問にお答えします"
+      );
+      expect(billLoaderCalls).toBe(0);
+    });
+
+    it("英語の画面では案内も英語になる", async () => {
+      const response = await handleChatRequest({
+        messages: offTopicMessages("Give me a recipe for pasta", "en"),
+        userId: testUser.id,
+        deps: { billLoader: async () => null },
+      });
+
+      expect(await consumeResponseStream(response)).toContain(
+        "This chat answers questions about this bill"
+      );
+    });
+
+    it("議案についての質問は通常どおりモデルまで進む", async () => {
+      const response = await handleChatRequest({
+        messages: offTopicMessages("プログラミング教育の予算は？"),
+        userId: testUser.id,
+        deps: {
+          model: createStreamMock(["回答です"]),
+          promptProvider: createMockPromptProvider(),
+        },
+      });
+
+      const body = await consumeResponseStream(response);
+      expect(body).toContain("回答です");
+      expect(body).not.toContain("この議案についての質問にお答えします");
+    });
+  });
 });

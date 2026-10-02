@@ -1,7 +1,10 @@
 import { openai } from "@ai-sdk/openai";
+import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
 import type { Database } from "@mirai-gikai/supabase";
 import {
   convertToModelMessages,
+  createUIMessageStream,
+  createUIMessageStreamResponse,
   type LanguageModel,
   streamText,
   tool,
@@ -17,6 +20,9 @@ import {
   SUGGEST_INTERVIEW_TOOL_TYPE,
 } from "@/features/chat/shared/constants";
 import { ChatError, ChatErrorCode } from "@/features/chat/shared/types/errors";
+import { resolveChatLocale } from "@/features/chat/shared/utils/resolve-chat-locale";
+import { validateChatQuestion } from "@/features/chat/shared/utils/validate-chat-question";
+import { getUiMessages } from "@/features/i18n/shared/ui-messages";
 import { findPublicInterviewConfigByBillId } from "@/features/interview-config/server/repositories/interview-config-repository";
 import { AI_MODELS } from "@/lib/ai/models";
 import { env } from "@/lib/env";
@@ -38,6 +44,8 @@ export type ChatMessageMetadata = {
   hasInterviewConfig?: boolean;
   difficultyLevel: DifficultyLevelEnum;
   sessionId: string;
+  /** 画面の表示言語。エラーと辞退の文言に使う（回答の言語は質問者の言語に追従） */
+  locale?: PublicLocale;
 };
 
 type ChatRequestParams = {
@@ -82,6 +90,14 @@ export async function handleChatRequest({
 
   // Extract context from messages
   const clientContext = extractChatContext(messages);
+
+  // 明らかに議案と無関係な質問は、DBも有料モデルも呼ばずにその場で断る
+  const verdict = validateChatQuestion(extractLastUserText(messages));
+  if (!verdict.ok) {
+    return buildDeclineResponse(
+      getUiMessages(resolveChatLocale(messages)).billDetail.chat.errors.offTopic
+    );
+  }
 
   // クライアントの billContext は議案IDだけを信用し、本文はDBの公開データで置き換える
   const billLoader = deps?.billLoader ?? loadPublishedBillForChat;
@@ -175,6 +191,33 @@ export async function handleChatRequest({
       error instanceof Error ? error.message : String(error)
     );
   }
+}
+
+/**
+ * 最後のユーザー発言のテキストを取り出す
+ */
+function extractLastUserText(messages: UIMessage<ChatMessageMetadata>[]) {
+  const last = messages.findLast((message) => message.role === "user");
+  return (last?.parts ?? [])
+    .map((part) => (part.type === "text" ? part.text : ""))
+    .join("");
+}
+
+/**
+ * 有料モデルを呼ばずに返す、定型の辞退メッセージ（アシスタントの発言として流す）。
+ * エラー扱いにすると入力欄の下に赤字の障害表示が出てしまうため、会話の1通として返す。
+ */
+function buildDeclineResponse(text: string): Response {
+  const id = "decline";
+  return createUIMessageStreamResponse({
+    stream: createUIMessageStream({
+      execute: ({ writer }) => {
+        writer.write({ type: "text-start", id });
+        writer.write({ type: "text-delta", id, delta: text });
+        writer.write({ type: "text-end", id });
+      },
+    }),
+  });
 }
 
 /**
