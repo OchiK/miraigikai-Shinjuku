@@ -40,7 +40,7 @@ export function LanguageSelector({ currentLocale }: LanguageSelectorProps) {
         value={selected}
         disabled={isChanging}
         onChange={(e) => switchLocale(parseLocale(e.target.value))}
-        className="h-11 w-full rounded-full bg-neutral-200 px-4 text-sm text-mirai-text outline-none focus-visible:ring-[3px] focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:opacity-60"
+        className="h-11 w-full rounded-full bg-neutral-200 px-4 text-sm text-mirai-text outline-none focus-visible:ring-[3px] focus-visible:ring-mirai-accent-text focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:opacity-60"
       >
         {PUBLIC_LOCALES.map((locale) => (
           <option key={locale} value={locale} lang={locale}>
