@@ -5,6 +5,10 @@ import {
   toFactionStanceImportRows,
 } from "./shinjuku-faction-stances";
 import {
+  R8_1_SESSION,
+  toR8_1BillInserts,
+} from "./shinjuku-r8-1-inventory";
+import {
   R8_2_SESSION,
   gianKey,
   shoninKey,
@@ -42,16 +46,7 @@ type InterviewReportInsert =
 export const councilSessions: CouncilSessionInsert[] = [
   R8_3_SESSION,
   R8_2_SESSION,
-  {
-    name: "令和8年 第1回定例会",
-    slug: "r8-1",
-    council_url:
-      "https://www.city.shinjuku.lg.jp/kusei/kuseijoho01_001109_01.html",
-    // 公式ページ記載: 「会期：2月17日～3月24日」
-    start_date: "2026-02-17",
-    end_date: "2026-03-24",
-    is_active: false,
-  },
+  R8_1_SESSION,
 ];
 
 // 会派データ
@@ -214,16 +209,23 @@ export const tags: TagInsert[] = [
 ];
 
 // 議案データ
-// 令和8年第2回定例会27件と第3回定例会24件（区長提出22件・議員提出2件）を、
-// 公式インベントリから生成する。個別の手書きは行わない。
+// 令和8年第1回定例会42件（区長提出・解説未作成の先行登録）、第2回定例会27件、
+// 第3回定例会24件（区長提出22件・議員提出2件）を、公式インベントリから生成する。
+// 個別の手書きは行わない。第1回定例会は全件 coming_soon（P5-5 Phase 1）。
 // 第3回定例会の議員提出議案（第11・12号）は解説未作成のため coming_soon。
+const r8_1Bills = toR8_1BillInserts();
 const r8_2Bills = toR8_2BillInserts();
 const r8_3Bills = toR8_3BillInserts();
-export const bills: BillInsert[] = [...r8_2Bills, ...r8_3Bills];
+export const bills: BillInsert[] = [
+  ...r8_1Bills,
+  ...r8_2Bills,
+  ...r8_3Bills,
+];
 
 /** 議案 slug から所属会期 slug を引く。件名や配列順には依存しない。 */
 export const billSessionSlugByBillSlug: Readonly<Record<string, string>> =
   Object.fromEntries([
+    ...r8_1Bills.map((bill) => [bill.slug, R8_1_SESSION.slug]),
     ...r8_2Bills.map((bill) => [bill.slug, R8_2_SESSION.slug]),
     ...r8_3Bills.map((bill) => [bill.slug, R8_3_SESSION.slug]),
   ].filter((entry): entry is [string, string] => Boolean(entry[0] && entry[1])));

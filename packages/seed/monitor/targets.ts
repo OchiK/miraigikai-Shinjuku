@@ -1,4 +1,9 @@
 import {
+  R8_1_DECISIONS_URL,
+  R8_1_SUBMISSIONS_URL,
+  r8FirstSessionItems,
+} from "../main/shinjuku-r8-1-inventory";
+import {
   R8_2_COUNCIL_RESOLUTIONS_URL,
   R8_2_COUNCIL_RESULTS_PDF,
   R8_2_DECISIONS_URL,
@@ -83,6 +88,19 @@ export const KNOWN_SESSIONS: KnownSession[] = [
         // toBillInsert の is_review_completed と同じ既定値（省略時は公開可否に従う）
         reviewCompleted: item.reviewCompleted ?? item.hasPublishableContent,
       })),
+  },
+  {
+    // R8_1_SESSION.slug と同じ値（テストで一致を確かめている）
+    sessionId: "r8-1",
+    submissionsUrl: R8_1_SUBMISSIONS_URL,
+    decisionsUrl: R8_1_DECISIONS_URL,
+    items: r8FirstSessionItems.map((item) => ({
+      officialLabel: item.officialLabel,
+      officialTitle: item.officialTitle,
+      fullTextPdfUrl: item.fullTextPdfUrl,
+      decision: item.decision,
+      reviewCompleted: item.reviewCompleted,
+    })),
   },
 ];
 
