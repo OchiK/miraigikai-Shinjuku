@@ -90,6 +90,11 @@ const R8_1_BUDGET_CLAIM_LEDGER_PATH = ledgerPath(
   "../../../docs/verification/20261003_2100_claim-ledger-r8-1-budgets.csv"
 );
 
+/** 令和8年第1回定例会の条例案 Group A 10件（第10〜19号議案）の easy / normal / hard 版の突合記録。 */
+const R8_1_ORDINANCES_A_CLAIM_LEDGER_PATH = ledgerPath(
+  "../../../docs/verification/20261004_0630_claim-ledger-r8-1-ordinances-group-a.csv"
+);
+
 const CLAIM_LEDGER_PATHS = [
   ...NORMAL_CLAIM_LEDGER_PATHS,
   EASY_CLAIM_LEDGER_PATH,
@@ -98,6 +103,7 @@ const CLAIM_LEDGER_PATHS = [
   R8_1_PILOT_CLAIM_LEDGER_PATH,
   R8_1_GIIN_CLAIM_LEDGER_PATH,
   R8_1_BUDGET_CLAIM_LEDGER_PATH,
+  R8_1_ORDINANCES_A_CLAIM_LEDGER_PATH,
 ];
 
 const ORIGINAL_CLAIM_LEDGER_PATH = ledgerPath(
@@ -164,7 +170,7 @@ describe("解説の内容ハッシュ", () => {
     expect(actual).toEqual(reviewedContentSha256);
   });
 
-  it("210変種（第1回のパイロット5件・議員提出議案5件・予算関連議案11件、第2回の区長提出23件・議員提出4件、第3回の22件の各3段）すべてがハッシュ固定されている", () => {
+  it("240変種（第1回のパイロット5件・議員提出議案5件・予算関連議案11件・条例案10件、第2回の区長提出23件・議員提出4件、第3回の22件の各3段）すべてがハッシュ固定されている", () => {
     // 台帳に載っている変種だけを突き合わせると、
     // 「台帳に行を書かずに解説だけ足す」と全テストが通ってしまう。
     // 対象外の集合を明示的に固定し、新しい解説が黙って素通りしないようにする。
@@ -176,7 +182,7 @@ describe("解説の内容ハッシュ", () => {
       .sort();
 
     expect(unpinned).toEqual([]);
-    expect(Object.keys(pinned)).toHaveLength(210);
+    expect(Object.keys(pinned)).toHaveLength(240);
   });
 
   it("台帳に載っている変種はすべて実在する", () => {
@@ -1392,6 +1398,377 @@ describe("令和8年第1回定例会 予算関連議案11件の主張台帳の�
 
     for (const content of billContentsWithBillSlug) {
       if (!budgetKeys.has(content.bill_slug)) continue;
+      const text = `${content.title}\n${content.summary}\n${content.content}`;
+      for (const url of text.match(/https?:\/\/[^\s|)]+/g) ?? []) {
+        if (!ledgerUrls.has(url)) missing.add(url);
+      }
+    }
+
+    expect([...missing].sort()).toEqual([]);
+  });
+});
+
+/** 条例案 Group A 10件の出典URLと、取得時点の sha256。会議録は発言ごとに別のURLで、sha256 は API が返す body の値。 */
+const R8_1_ORDINANCES_A_SOURCE_SHA256: Record<string, string> = {
+  "https://www.city.shinjuku.lg.jp/content/000448426.pdf":
+    "52d6787e3d2e916924b78ddaba30ad14fb7e149cdb2102946034b6b91744295b",
+  "https://www.city.shinjuku.lg.jp/content/000448427.pdf":
+    "d60b06e949dad89dde7369f28775966b1f3118fa96fcde89e63173d05e0a1229",
+  "https://www.city.shinjuku.lg.jp/content/000448428.pdf":
+    "1b7d98e542f1e28cdbfc69410274553ee945f393f21c7e5c0c3ece82c4e0c1be",
+  "https://www.city.shinjuku.lg.jp/content/000448429.pdf":
+    "ea7770fc2dd74ad2d990160007672b0cdf2ff7d1957209ce4e3575543f7418fe",
+  "https://www.city.shinjuku.lg.jp/content/000448430.pdf":
+    "d8c713d0a9df19109d7d58c4e01a35a8bf6531aa456b16bd969a5988fd349b05",
+  "https://www.city.shinjuku.lg.jp/content/000448431.pdf":
+    "bd762ef61228a64d4cdeca831a11f10316b03b4cf70a4ceb0e17b36f153ba989",
+  "https://www.city.shinjuku.lg.jp/content/000448432.pdf":
+    "0fac12a2deb1f09a18176e4628726c26f34088aea7d542838233c7cec8892b05",
+  "https://www.city.shinjuku.lg.jp/content/000448433.pdf":
+    "6046c4988056b12f1ad5f7bd1ad01c3a52c4a79518ccd5414d72e1ca03b8ccdf",
+  "https://www.city.shinjuku.lg.jp/content/000448434.pdf":
+    "fd7898eb8ef9cc9ecf7c59845dbb222410f7dce8bb5e325a3130a8cf48e69845",
+  "https://www.city.shinjuku.lg.jp/content/000448435.pdf":
+    "0201b3be9cc0f8b8d9abf6623fabdd2b20a22d470c28c1aa925ee3c4b0fdf4c8",
+  "https://www.city.shinjuku.lg.jp/content/000447774.pdf":
+    "1dc3eaffcafb1b1c9e139e823182dc80dc0755624813ca87d8b274d15f5b6624",
+  "https://www.city.shinjuku.lg.jp/content/000452334.pdf":
+    "22ba4f49b18c96bd1fa26241606257c05477f38e25ac46d6f8e4f416a2cedbf2",
+  // HTML は区が更新すると変わる。2026-10-04 に取得した時点の値。
+  [R8_1_DECISIONS_URL]:
+    "7c2b6f68db1b433b860b35d176b4dd9211e78582ec9de718fcfefe68b22d896a",
+};
+
+/** 全議案共通の標準テンプレート（AGENTS.md「議案解説・コンテンツ作成ルール」）の H2 見出し。 */
+const STANDARD_ORDINANCE_HEADINGS = {
+  easy: [
+    "この議案は 何ですか",
+    "何を 変えますか（何を 足しますか）",
+    "いつから 始まりますか",
+    "この議案は どうなりましたか",
+    "わからない こと",
+  ],
+  normal: [
+    "どういう仕組みの話か",
+    "何が変わるのか（主な変更点）",
+    "いつから始まるのか",
+    "この議案のゆくえ",
+    "分からないこと",
+  ],
+  hard: [
+    "1. 議案の基本情報",
+    "2. 改め文・条文の内容",
+    "3. 概要資料が示す改正の位置づけ",
+    "4. 施行期日と経過措置",
+    "5. 資料から読み取れない事項",
+    "6. 一次資料一覧",
+  ],
+} as const;
+
+function h2Headings(content: string): string[] {
+  return content
+    .split("\n")
+    .filter((line) => line.startsWith("## "))
+    .map((line) => line.slice(3).trim());
+}
+
+describe("令和8年第1回定例会 条例案 Group A 10件の主張台帳の構造", () => {
+  // 実装計画（implementation_plan.md）の「主な内容・改正対象」欄は一次資料と違う内容を多く含んでいたため、
+  // 台帳は一次資料の抽出テキストと機械照合して作っている。
+  const rows = readLedger(R8_1_ORDINANCES_A_CLAIM_LEDGER_PATH);
+  const numbers = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
+  const keys = new Set(
+    numbers.map((itemNumber) =>
+      buildR8_1ItemKey({ itemType: "gian", itemNumber })
+    )
+  );
+  const keyOf = (n: number) =>
+    buildR8_1ItemKey({ itemType: "gian", itemNumber: n });
+  const contentsOf = (n: number) =>
+    billContentsWithBillSlug.filter((c) => c.bill_slug === keyOf(n));
+  // 「議案の概要と審議結果」の採決結果行の賛否（列の並び: 自参ク 公明 共産 新宿会 民無ク 維新 現役 れいわ）。
+  const votePattern = (n: number) => (n === 17 ? "○○×○○○○○" : "○○○○○○○○");
+  const fullText: Record<number, string> = {
+    10: "000448426",
+    11: "000448427",
+    12: "000448428",
+    13: "000448429",
+    14: "000448430",
+    15: "000448431",
+    16: "000448432",
+    17: "000448433",
+    18: "000448434",
+    19: "000448435",
+  };
+
+  it("条例案10件だけを指し、インベントリで公開・レビュー済み・原案可決になっている", () => {
+    expect([...new Set(rows.map((r) => r.item_key))].sort()).toEqual(
+      [...keys].sort()
+    );
+
+    const items = r8FirstSessionItems.filter((item) =>
+      keys.has(buildR8_1ItemKey(item))
+    );
+    expect(items).toHaveLength(10);
+    for (const item of items) {
+      expect(item.hasPublishableContent, item.officialLabel).toBe(true);
+      expect(item.reviewCompleted, item.officialLabel).toBe(true);
+      expect(item.decision, item.officialLabel).toBe("原案可決");
+    }
+  });
+
+  it("判定はすべて supported である（出典に記載がない事項は事実主張として台帳に載せない）", () => {
+    expect([...new Set(rows.map((r) => r.verdict))]).toEqual(["supported"]);
+  });
+
+  it("各変種に supported の審議状況の行があり、30変種すべてが title / summary / content の行を持つ", () => {
+    const statusKeys = new Set<string>();
+    const byVariant = new Map<string, Set<string>>();
+    for (const r of rows) {
+      const key = `${r.item_key}:${r.difficulty}`;
+      const fields = byVariant.get(key) ?? new Set<string>();
+      fields.add(r.content_field);
+      byVariant.set(key, fields);
+      if (r.page_or_section.startsWith("審議状況")) statusKeys.add(key);
+    }
+
+    expect(statusKeys.size).toBe(30);
+    expect(byVariant.size).toBe(30);
+    const incomplete = [...byVariant.entries()]
+      .filter(([, fields]) =>
+        ["title", "summary", "content"].some((f) => !fields.has(f))
+      )
+      .map(([key]) => key)
+      .sort();
+    expect(incomplete).toEqual([]);
+  });
+
+  it("claim_id が一意で、主張・出典・ハッシュ・位置・引用がいずれも空でない", () => {
+    const ids = rows.map((r) => r.claim_id);
+    expect(new Set(ids).size).toBe(ids.length);
+
+    const incomplete = rows
+      .filter(
+        (r) =>
+          !r.final_claim ||
+          !r.source_url ||
+          !/^[0-9a-f]{64}$/.test(r.source_sha256) ||
+          !r.page_or_section ||
+          !r.evidence_excerpt
+      )
+      .map((r) => r.claim_id);
+
+    expect(incomplete).toEqual([]);
+  });
+
+  it("出典は条例案の一次資料・議決結果ページ・3月24日の会議録だけで、URL ごとの sha256 は1つ（資料は取得時の値と一致）", () => {
+    const shaByUrl = new Map<string, Set<string>>();
+    for (const r of rows) {
+      const shas = shaByUrl.get(r.source_url) ?? new Set<string>();
+      shas.add(r.source_sha256);
+      shaByUrl.set(r.source_url, shas);
+    }
+
+    for (const [url, shas] of shaByUrl) {
+      expect([...shas], url).toHaveLength(1);
+      if (MINUTE_VIEW_URL_3_24.test(url)) continue;
+      expect([...shas], url).toEqual([R8_1_ORDINANCES_A_SOURCE_SHA256[url]]);
+    }
+  });
+
+  it("各議案の改め文・附則は、その議案の全文PDFを根拠にしている", () => {
+    for (const n of numbers) {
+      const key = keyOf(n);
+      const fullRows = rows.filter(
+        (r) =>
+          r.item_key === key &&
+          r.source_url ===
+            `https://www.city.shinjuku.lg.jp/content/${fullText[n]}.pdf`
+      );
+      expect(fullRows.length, key).toBeGreaterThanOrEqual(10);
+      expect(
+        fullRows.some((r) => r.page_or_section === "附則（施行期日）"),
+        key
+      ).toBe(true);
+    }
+  });
+
+  it("会派別の賛否は概要PDFの採決結果行を根拠にし、列の並びの賛否と一致する", () => {
+    for (const n of numbers) {
+      const key = keyOf(n);
+      const voteRows = rows.filter(
+        (r) =>
+          r.item_key === key &&
+          r.page_or_section === "審議状況（議案の概要と審議結果の採決結果行）"
+      );
+
+      expect(voteRows.length, key).toBeGreaterThanOrEqual(3);
+      for (const r of voteRows) {
+        expect(r.source_url, r.claim_id).toBe(R8_1_COUNCIL_RESULTS_PDF);
+        expect(r.evidence_excerpt, r.claim_id).toContain(
+          `${votePattern(n)}可決`
+        );
+      }
+    }
+  });
+
+  it("採決方法は第17号議案だけが起立（少数意見の報告あり）、ほかの9件は異議なしで、会議録の発言を引く", () => {
+    for (const n of numbers) {
+      const key = keyOf(n);
+      const resultRows = rows.filter(
+        (r) =>
+          r.item_key === key &&
+          r.page_or_section === "審議状況（本会議 3月24日 議長）" &&
+          r.evidence_excerpt.includes("本案は")
+      );
+
+      expect(resultRows.length, key).toBeGreaterThanOrEqual(1);
+      for (const r of resultRows) {
+        expect(MINUTE_VIEW_URL_3_24.test(r.source_url), r.claim_id).toBe(true);
+        expect(
+          r.evidence_excerpt.startsWith(
+            n === 17 ? "起立多数と認めます" : "異議なしと認めます"
+          ),
+          r.claim_id
+        ).toBe(true);
+      }
+    }
+  });
+
+  it("議決の日付は10件とも3月24日（会議録の第4日第4号）で、本文もその日を本会議の日として書いている", () => {
+    for (const c of billContentsWithBillSlug.filter((c) =>
+      keys.has(c.bill_slug)
+    )) {
+      const label = `${c.bill_slug}:${c.difficulty_level}`;
+      const text = `${c.summary}\n${c.content}`;
+      expect(text, label).toContain("3月24日");
+      for (const m of text.matchAll(/(\d+月\d+日)の\s*本会議/g)) {
+        expect(m[1], label).toBe("3月24日");
+      }
+    }
+  });
+
+  it("30変種すべてが標準テンプレート（AGENTS.md）の見出し構成と順序のとおりで、わからないことの節が最後の説明節として置かれている", () => {
+    for (const n of numbers) {
+      const contents = contentsOf(n);
+      expect(contents.map((c) => c.difficulty_level).sort(), keyOf(n)).toEqual([
+        "easy",
+        "hard",
+        "normal",
+      ]);
+      for (const c of contents) {
+        const level = c.difficulty_level as "easy" | "normal" | "hard";
+        const headings = h2Headings(c.content);
+        const expected = STANDARD_ORDINANCE_HEADINGS[level];
+        // 議決の節（easy: どうなりましたか、normal: ゆくえ）は、わからないことの直前に置く。
+        expect(headings, `${c.bill_slug}:${level}`).toEqual([...expected]);
+      }
+    }
+  });
+
+  it("わからないこと・資料から読み取れない事項の節に、1件以上の項目がある", () => {
+    for (const n of numbers) {
+      for (const c of contentsOf(n)) {
+        const unknownHeading = {
+          easy: "## わからない こと",
+          normal: "## 分からないこと",
+          hard: "## 5. 資料から読み取れない事項",
+        }[c.difficulty_level as "easy" | "normal" | "hard"];
+        const start = c.content.indexOf(unknownHeading);
+        expect(start, `${c.bill_slug}:${c.difficulty_level}`).toBeGreaterThan(
+          -1
+        );
+        const after = c.content.slice(start + unknownHeading.length);
+        const section = after.split(/\n## /)[0];
+        expect(
+          [...section.matchAll(/^- /gm)].length,
+          `${c.bill_slug}:${c.difficulty_level}`
+        ).toBeGreaterThanOrEqual(2);
+      }
+    }
+  });
+
+  it("hard の一次資料一覧のsha256は、台帳に記録した取得時のsha256と一致する", () => {
+    for (const n of numbers) {
+      const hard = contentsOf(n).find((c) => c.difficulty_level === "hard");
+      expect(hard, keyOf(n)).toBeDefined();
+      const tableRows = [
+        ...(hard?.content ?? "").matchAll(
+          /^\| [^|]+ \| (https?:\/\/[^\s|]+) \| ([0-9a-f]{64}) \|$/gm
+        ),
+      ];
+      // 全文PDF・概要PDF・審議結果PDF・議決結果ページ・会議録の発言
+      expect(tableRows.length, keyOf(n)).toBeGreaterThanOrEqual(6);
+      for (const [, url, sha] of tableRows) {
+        const ledgerShas = new Set(
+          rows.filter((r) => r.source_url === url).map((r) => r.source_sha256)
+        );
+        expect([...ledgerShas], `${keyOf(n)} ${url}`).toEqual([sha]);
+      }
+    }
+  });
+
+  it("第17号議案だけが反対会派を挙げ、少数意見は「述べた」調で書かれ、評価語を持ち込んでいない", () => {
+    for (const n of numbers) {
+      for (const c of contentsOf(n)) {
+        const label = `${c.bill_slug}:${c.difficulty_level}`;
+        const text = `${c.summary}\n${c.content}`;
+        if (n === 17) {
+          expect(text, label).toContain("日本共産党新宿区議会議員団");
+          expect(text, label).not.toContain("ひどい");
+          expect(text, label).not.toContain("なりふり構わない");
+        } else {
+          expect(text, label).not.toContain("反対");
+        }
+      }
+    }
+    const hard17 = contentsOf(17).find((c) => c.difficulty_level === "hard");
+    // 「620数人」は発言者が「とのことです」と述べた数であり、区の資料の数ではない。
+    expect(hard17?.content).toContain("「620数人いるとのことです」と述べた");
+    for (const c of contentsOf(17).filter(
+      (c) => c.difficulty_level !== "hard"
+    )) {
+      expect(c.content, `${c.bill_slug}:${c.difficulty_level}`).not.toContain(
+        "620"
+      );
+    }
+  });
+
+  it("実装計画の誤った内容（押印・指定管理・減免・職員配置・DV支援措置）を本文に書いていない", () => {
+    for (const n of numbers) {
+      for (const c of contentsOf(n)) {
+        const text = `${c.title}\n${c.summary}\n${c.content}`;
+        for (const wrong of ["押印", "指定管理", "減免", "職員配置", "支援措置"]) {
+          expect(text, `${c.bill_slug}:${c.difficulty_level}`).not.toContain(
+            wrong
+          );
+        }
+      }
+    }
+  });
+
+  it("引用条項の整理だけの議案（第15・19号）は、引用先の法令名を本文が断定していない", () => {
+    const f15 = contentsOf(15).find((c) => c.difficulty_level === "hard");
+    const f19 = contentsOf(19).find((c) => c.difficulty_level === "hard");
+    expect(f15?.content).toContain("改め文には法令名が記載されていない");
+    expect(f19?.content).toContain("改め文には法令名が記載されていない");
+  });
+
+  it("施行日が規則委任・公布日の議案は、日付を断定していない（第15号は公布の日、第16号は規則で定める日）", () => {
+    for (const c of contentsOf(15)) {
+      expect(c.content, c.difficulty_level).not.toMatch(/令和8年\d+月\d+日から施行/);
+    }
+    for (const c of contentsOf(16)) {
+      expect(c.content, c.difficulty_level).toContain("規則");
+    }
+  });
+
+  it("本文に出てくる出典URLはすべて台帳に載っている", () => {
+    const ledgerUrls = new Set(rows.map((r) => r.source_url));
+    const missing = new Set<string>();
+
+    for (const content of billContentsWithBillSlug) {
+      if (!keys.has(content.bill_slug)) continue;
       const text = `${content.title}\n${content.summary}\n${content.content}`;
       for (const url of text.match(/https?:\/\/[^\s|)]+/g) ?? []) {
         if (!ledgerUrls.has(url)) missing.add(url);
