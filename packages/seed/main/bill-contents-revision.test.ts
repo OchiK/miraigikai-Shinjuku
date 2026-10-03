@@ -943,38 +943,20 @@ describe("令和8年第1回定例会 議員提出議案第1〜5号の主張台�
     }
   });
 
-  it("判定は supported か needs_source のいずれかで、needs_source は「出典に記載がない事項」の行だけ", () => {
-    expect([...new Set(rows.map((r) => r.verdict))].sort()).toEqual([
-      "needs_source",
-      "supported",
-    ]);
-
-    const bad = rows
-      .filter((r) =>
-        r.verdict === "needs_source"
-          ? r.page_or_section !== "出典に記載がない事項" ||
-            r.evidence_excerpt !== R8_1_NO_SOURCE_NOTE
-          : r.page_or_section === "出典に記載がない事項" ||
-            r.evidence_excerpt === R8_1_NO_SOURCE_NOTE
-      )
-      .map((r) => r.claim_id);
-
-    expect(bad).toEqual([]);
+  it("事実主張の判定はすべて supported である", () => {
+    expect([...new Set(rows.map((r) => r.verdict))]).toEqual(["supported"]);
   });
 
-  it("各変種に「出典に記載がない事項」の行と、supported の審議状況の行がある", () => {
-    const withUnknowns = new Set<string>();
+  it("各変種に supported の審議状況の行がある", () => {
     const statusCounts = new Map<string, number>();
     for (const r of rows) {
       const key = `${r.item_key}:${r.difficulty}`;
-      if (r.page_or_section === "出典に記載がない事項") withUnknowns.add(key);
       if (r.page_or_section.startsWith("審議状況")) {
         expect(r.verdict, r.claim_id).toBe("supported");
         statusCounts.set(key, (statusCounts.get(key) ?? 0) + 1);
       }
     }
 
-    expect(withUnknowns.size).toBe(15);
     expect(statusCounts.size).toBe(15);
   });
 
@@ -1093,6 +1075,17 @@ describe("令和8年第1回定例会 議員提出議案第1〜5号の主張台�
       const text = `${c.title}\n${c.summary}\n${c.content}`;
       expect(text, `${c.bill_slug}:${c.difficulty_level}`).not.toMatch(
         /賛成討論|反対討論|賛否の討論/
+      );
+    }
+  });
+
+  it("発言内容について区が確認していないとは断定しない", () => {
+    for (const c of billContentsWithBillSlug.filter((c) =>
+      giinKeys.has(c.bill_slug)
+    )) {
+      const text = `${c.title}\n${c.summary}\n${c.content}`;
+      expect(text, `${c.bill_slug}:${c.difficulty_level}`).not.toMatch(
+        /区が(?:\s*調べた\s*ことでは\s*ありません|確認した事実では(?:ありません|ない))/
       );
     }
   });

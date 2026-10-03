@@ -54,8 +54,8 @@ def bill(num, prefix, facts, sections):
 
 
 def unknown(*claims):
-    """出典に記載がない事項の行（fact なし）。claims は (easy, normal, hard)。"""
-    return [("content", None, e, n, h) for (e, n, h) in claims]
+    """出典に記載がない事項は開示文であり、事実主張の台帳には含めない。"""
+    return []
 
 
 COMMON_FACTS = {"session": SESSION, "legend": LEGEND, "voted_date": DATE_3_24}

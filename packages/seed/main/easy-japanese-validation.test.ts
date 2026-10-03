@@ -1374,7 +1374,7 @@ describe("やさしい日本語版が行政用語のアンカーを保ってい�
         {
           term: "否決",
           yomi: "ひけつ",
-          gloss: "反対が 多くて 決まらなかった こと",
+          gloss: "反対が 多くて 案が 通らなかった こと",
         },
       ].map((anchor) => ({ slug: r8_1GiinKey(itemNumber), ...anchor }))
     ),
