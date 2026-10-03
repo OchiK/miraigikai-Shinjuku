@@ -236,14 +236,25 @@ describe("toR8_1BillInserts", () => {
     );
   });
 
-  it("解説を作成した10件だけ published・レビュー済みにし、残る38件は coming_soon・レビュー未完了で登録する", () => {
-    // Phase 2 パイロット（第1・5・20・31号議案と議員提出議案第6号）と、
-    // 議員提出議案第1〜5号（否決された条例案）。インベントリの並び順。
+  it("解説を作成した21件だけ published・レビュー済みにし、残る27件は coming_soon・レビュー未完了で登録する", () => {
+    // Phase 2 パイロット（第1・5・20・31号議案と議員提出議案第6号）、
+    // 議員提出議案第1〜5号（否決された条例案）、予算関連議案11件。インベントリの並び順。
     const pilotSlugs = [
       r8_1GianKey(1),
+      r8_1GianKey(2),
+      r8_1GianKey(3),
+      r8_1GianKey(4),
       r8_1GianKey(5),
+      r8_1GianKey(6),
+      r8_1GianKey(7),
+      r8_1GianKey(8),
+      r8_1GianKey(9),
       r8_1GianKey(20),
       r8_1GianKey(31),
+      r8_1GianKey(37),
+      r8_1GianKey(38),
+      r8_1GianKey(39),
+      r8_1GianKey(40),
       r8_1GiinKey(1),
       r8_1GiinKey(2),
       r8_1GiinKey(3),
@@ -271,7 +282,7 @@ describe("toR8_1BillInserts", () => {
     }
     expect(
       inserts.filter((b) => b.publish_status === "coming_soon")
-    ).toHaveLength(38);
+    ).toHaveLength(27);
   });
 
   it("区長提出議案の出典URLは提出議案一覧・議決結果の公式ページを指す", () => {

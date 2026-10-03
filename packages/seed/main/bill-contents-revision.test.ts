@@ -85,6 +85,11 @@ const R8_1_GIIN_CLAIM_LEDGER_PATH = ledgerPath(
   "../../../docs/verification/20261003_1600_claim-ledger-r8-1-giin.csv"
 );
 
+/** 令和8年第1回定例会の予算関連議案11件（第2・3・4・6・7・8・9・37・38・39・40号議案）の easy / normal / hard 版の突合記録。 */
+const R8_1_BUDGET_CLAIM_LEDGER_PATH = ledgerPath(
+  "../../../docs/verification/20261003_2100_claim-ledger-r8-1-budgets.csv"
+);
+
 const CLAIM_LEDGER_PATHS = [
   ...NORMAL_CLAIM_LEDGER_PATHS,
   EASY_CLAIM_LEDGER_PATH,
@@ -92,6 +97,7 @@ const CLAIM_LEDGER_PATHS = [
   R8_3_CLAIM_LEDGER_PATH,
   R8_1_PILOT_CLAIM_LEDGER_PATH,
   R8_1_GIIN_CLAIM_LEDGER_PATH,
+  R8_1_BUDGET_CLAIM_LEDGER_PATH,
 ];
 
 const ORIGINAL_CLAIM_LEDGER_PATH = ledgerPath(
@@ -158,7 +164,7 @@ describe("解説の内容ハッシュ", () => {
     expect(actual).toEqual(reviewedContentSha256);
   });
 
-  it("177変種（第1回のパイロット5件と議員提出議案5件、第2回の区長提出23件・議員提出4件、第3回の22件の各3段）すべてがハッシュ固定されている", () => {
+  it("210変種（第1回のパイロット5件・議員提出議案5件・予算関連議案11件、第2回の区長提出23件・議員提出4件、第3回の22件の各3段）すべてがハッシュ固定されている", () => {
     // 台帳に載っている変種だけを突き合わせると、
     // 「台帳に行を書かずに解説だけ足す」と全テストが通ってしまう。
     // 対象外の集合を明示的に固定し、新しい解説が黙って素通りしないようにする。
@@ -170,7 +176,7 @@ describe("解説の内容ハッシュ", () => {
       .sort();
 
     expect(unpinned).toEqual([]);
-    expect(Object.keys(pinned)).toHaveLength(177);
+    expect(Object.keys(pinned)).toHaveLength(210);
   });
 
   it("台帳に載っている変種はすべて実在する", () => {
@@ -1096,6 +1102,296 @@ describe("令和8年第1回定例会 議員提出議案第1〜5号の主張台�
 
     for (const content of billContentsWithBillSlug) {
       if (!giinKeys.has(content.bill_slug)) continue;
+      const text = `${content.title}\n${content.summary}\n${content.content}`;
+      for (const url of text.match(/https?:\/\/[^\s|)]+/g) ?? []) {
+        if (!ledgerUrls.has(url)) missing.add(url);
+      }
+    }
+
+    expect([...missing].sort()).toEqual([]);
+  });
+});
+
+/** 予算関連議案11件の出典URLと、取得時点の sha256。会議録は発言ごとに別のURLで、sha256 は API が返す body の値。 */
+const R8_1_BUDGET_SOURCE_SHA256: Record<string, string> = {
+  "https://www.city.shinjuku.lg.jp/content/000448412.pdf":
+    "ed5f5fcc4ff84f64868da0d16a95bba5a9b0cdc60a7fd1122aa78d88bc6e873f",
+  "https://www.city.shinjuku.lg.jp/content/000448413.pdf":
+    "02a73417a063870b1a61c2cd6b0e5ffbe11cc318a301f68da79c32b5c749d616",
+  "https://www.city.shinjuku.lg.jp/content/000448488.pdf":
+    "47e837a8ce5c4fcd9d34bff3c2419b966b50822cad413c20cbaa0c4b24e24f89",
+  "https://www.city.shinjuku.lg.jp/content/000448416.pdf":
+    "0925b384cfe3b4e76dadfca0f0ecf49c6d7f17a75e2b119ebd8fbcaafdaaeec3",
+  "https://www.city.shinjuku.lg.jp/content/000448417.pdf":
+    "c5c9f0f096c373e7894e441508ed0d800d9af0962757f8bc2fce3306080ba5ce",
+  "https://www.city.shinjuku.lg.jp/content/000448418.pdf":
+    "f33d80167dc1baa073c68dac44d8d2395b5d52382d889eaf211f64daa70088be",
+  "https://www.city.shinjuku.lg.jp/content/000448419.pdf":
+    "167fb43e64a7e3af56a2a4e37a34a2d888c32c6bf39fc111c2bbf03b2780dc29",
+  "https://www.city.shinjuku.lg.jp/content/000451609.pdf":
+    "1c3d2b237f858f77d4e6b98d5dde46aa057b3b9dccae30e47a317d988d9eaccd",
+  "https://www.city.shinjuku.lg.jp/content/000451610.pdf":
+    "5d82fbdfc9d9d856b8b0f3c8f7fa29e853c84ed7b5b88bca3ea7e290bae6000f",
+  "https://www.city.shinjuku.lg.jp/content/000451611.pdf":
+    "24a345183e77ed48146fa02578def3867d966d982a15885f85db19c4e6e72c49",
+  "https://www.city.shinjuku.lg.jp/content/000451612.pdf":
+    "ed41abb21cafd251055ed13e249d3aab5c2e9d87f3fb4096acbd6772a2163b68",
+  "https://www.city.shinjuku.lg.jp/content/000447773.pdf":
+    "ae9c609468cf9087cd0ab31135321304662e24b0eb45121def2ff27bb4a89164",
+  "https://www.city.shinjuku.lg.jp/content/000450968.pdf":
+    "6f24c163553ee75dda2dfbfb35cf15aeb8a57fdc20e8eb8eebc9c916db34c497",
+  "https://www.city.shinjuku.lg.jp/content/000451608.pdf":
+    "05f4b686bcc5f7f240355042ac4bf08a3392abcb19dde2d9972fd5c626d63c22",
+  "https://www.city.shinjuku.lg.jp/content/000452334.pdf":
+    "22ba4f49b18c96bd1fa26241606257c05477f38e25ac46d6f8e4f416a2cedbf2",
+  // HTML は区が更新すると変わる。2026-10-03 に取得した時点の値。
+  [R8_1_DECISIONS_URL]:
+    "7c2b6f68db1b433b860b35d176b4dd9211e78582ec9de718fcfefe68b22d896a",
+  [R8_1_COUNCIL_SESSION_URL]:
+    "869549fe3ba94ac28c6e8fd003d4ad71484501a78203fc7a885109aae4ab487c",
+};
+
+describe("令和8年第1回定例会 予算関連議案11件の主張台帳の構造", () => {
+  // 実装計画（implementation_plan.md）は第2〜4号議案の予算規模、第7号・第38号・第40号議案の補正理由などを
+  // 一次資料と違う内容で書いていたため、台帳は一次資料の抽出テキストと機械照合して作っている。
+  const rows = readLedger(R8_1_BUDGET_CLAIM_LEDGER_PATH);
+  const budgetNumbers = [2, 3, 4, 6, 7, 8, 9, 37, 38, 39, 40];
+  const budgetKeys = new Set(
+    budgetNumbers.map((itemNumber) =>
+      buildR8_1ItemKey({ itemType: "gian", itemNumber })
+    )
+  );
+  // 「議案の概要と審議結果」の採決結果行の賛否（列の並び: 自参ク 公明 共産 新宿会 民無ク 維新 現役 れいわ）。
+  const votePattern: Record<number, string> = {
+    2: "○○×○○○○×",
+    3: "○○×○○○○×",
+    4: "○○×○○○○×",
+    6: "○○×○○○○○",
+    7: "○○○○○○○○",
+    8: "○○○○○○○○",
+    9: "○○×○○○○○",
+    37: "○○○○○○○○",
+    38: "○○×○○○○×",
+    39: "○○○○○○○○",
+    40: "○○○○○○○○",
+  };
+
+  it("予算関連議案11件だけを指し、インベントリで公開・レビュー済み・原案可決になっている", () => {
+    expect([...new Set(rows.map((r) => r.item_key))].sort()).toEqual(
+      [...budgetKeys].sort()
+    );
+
+    const items = r8FirstSessionItems.filter((item) =>
+      budgetKeys.has(buildR8_1ItemKey(item))
+    );
+    expect(items).toHaveLength(11);
+    for (const item of items) {
+      expect(item.hasPublishableContent, item.officialLabel).toBe(true);
+      expect(item.reviewCompleted, item.officialLabel).toBe(true);
+      expect(item.decision, item.officialLabel).toBe("原案可決");
+    }
+  });
+
+  it("判定はすべて supported である（出典に記載がない事項は事実主張として台帳に載せない）", () => {
+    expect([...new Set(rows.map((r) => r.verdict))]).toEqual(["supported"]);
+  });
+
+  it("各変種に supported の審議状況の行があり、33変種すべてが title / summary / content の行を持つ", () => {
+    const statusKeys = new Set<string>();
+    const byVariant = new Map<string, Set<string>>();
+    for (const r of rows) {
+      const key = `${r.item_key}:${r.difficulty}`;
+      const fields = byVariant.get(key) ?? new Set<string>();
+      fields.add(r.content_field);
+      byVariant.set(key, fields);
+      if (r.page_or_section.startsWith("審議状況")) statusKeys.add(key);
+    }
+
+    expect(statusKeys.size).toBe(33);
+    expect(byVariant.size).toBe(33);
+    const incomplete = [...byVariant.entries()]
+      .filter(([, fields]) =>
+        ["title", "summary", "content"].some((f) => !fields.has(f))
+      )
+      .map(([key]) => key)
+      .sort();
+    expect(incomplete).toEqual([]);
+  });
+
+  it("claim_id が一意で、主張・出典・ハッシュ・位置・引用がいずれも空でない", () => {
+    const ids = rows.map((r) => r.claim_id);
+    expect(new Set(ids).size).toBe(ids.length);
+
+    const incomplete = rows
+      .filter(
+        (r) =>
+          !r.final_claim ||
+          !r.source_url ||
+          !/^[0-9a-f]{64}$/.test(r.source_sha256) ||
+          !r.page_or_section ||
+          !r.evidence_excerpt
+      )
+      .map((r) => r.claim_id);
+
+    expect(incomplete).toEqual([]);
+  });
+
+  it("出典は予算関連議案の一次資料・議決結果ページ・会期ページ・3月24日の会議録だけで、URL ごとの sha256 は1つ（資料は取得時の値と一致）", () => {
+    const shaByUrl = new Map<string, Set<string>>();
+    for (const r of rows) {
+      const shas = shaByUrl.get(r.source_url) ?? new Set<string>();
+      shas.add(r.source_sha256);
+      shaByUrl.set(r.source_url, shas);
+    }
+
+    for (const [url, shas] of shaByUrl) {
+      expect([...shas], url).toHaveLength(1);
+      if (MINUTE_VIEW_URL_3_24.test(url)) continue;
+      expect([...shas], url).toEqual([R8_1_BUDGET_SOURCE_SHA256[url]]);
+    }
+  });
+
+  it("各議案の全文PDFを根拠に、予算額・補正額を第1条から引いている", () => {
+    const fullText: Record<number, string> = {
+      2: "000448412",
+      3: "000448413",
+      4: "000448488",
+      6: "000448416",
+      7: "000448417",
+      8: "000448418",
+      9: "000448419",
+      37: "000451609",
+      38: "000451610",
+      39: "000451611",
+      40: "000451612",
+    };
+
+    for (const n of budgetNumbers) {
+      const key = buildR8_1ItemKey({ itemType: "gian", itemNumber: n });
+      const article1 = rows.filter(
+        (r) => r.item_key === key && r.page_or_section === "第1条"
+      );
+      expect(article1.length, key).toBeGreaterThanOrEqual(3);
+      for (const r of article1) {
+        expect(r.source_url, r.claim_id).toBe(
+          `https://www.city.shinjuku.lg.jp/content/${fullText[n]}.pdf`
+        );
+      }
+    }
+  });
+
+  it("会派別の賛否は概要PDFの採決結果行を根拠にし、列の並びの賛否と一致する", () => {
+    for (const n of budgetNumbers) {
+      const key = buildR8_1ItemKey({ itemType: "gian", itemNumber: n });
+      const voteRows = rows.filter(
+        (r) =>
+          r.item_key === key &&
+          r.page_or_section === "審議状況（議案の概要と審議結果の採決結果行）"
+      );
+
+      expect(voteRows.length, key).toBeGreaterThanOrEqual(3);
+      for (const r of voteRows) {
+        expect(r.source_url, r.claim_id).toBe(R8_1_COUNCIL_RESULTS_PDF);
+        expect(r.evidence_excerpt, r.claim_id).toContain(
+          `${votePattern[n]}可決`
+        );
+      }
+    }
+  });
+
+  it("本文の反対会派の数は採決結果行の × の数と一致する（hard の表と easy の一覧）", () => {
+    for (const n of budgetNumbers) {
+      const key = buildR8_1ItemKey({ itemType: "gian", itemNumber: n });
+      const against = [...votePattern[n]].filter((c) => c === "×").length;
+      const hard = billContentsWithBillSlug.find(
+        (c) => c.bill_slug === key && c.difficulty_level === "hard"
+      );
+      const easy = billContentsWithBillSlug.find(
+        (c) => c.bill_slug === key && c.difficulty_level === "easy"
+      );
+
+      expect(
+        [...(hard?.content ?? "").matchAll(/\| 反対 \|/g)].length,
+        key
+      ).toBe(against);
+      expect(
+        [...(hard?.content ?? "").matchAll(/\| 賛成 \|/g)].length,
+        key
+      ).toBe(8 - against);
+      expect(
+        [...(easy?.content ?? "").matchAll(/^- 反対: /gm)].length,
+        key
+      ).toBe(against);
+      expect(
+        [...(easy?.content ?? "").matchAll(/^- 賛成: /gm)].length,
+        key
+      ).toBe(8 - against);
+    }
+  });
+
+  it("採決方法は反対会派がある議案が起立、全会派賛成の議案が異議なしで、会議録の発言を引く", () => {
+    for (const n of budgetNumbers) {
+      const key = buildR8_1ItemKey({ itemType: "gian", itemNumber: n });
+      const unanimous = !votePattern[n].includes("×");
+      const resultRows = rows.filter(
+        (r) =>
+          r.item_key === key &&
+          r.page_or_section === "審議状況（本会議 3月24日 議長）" &&
+          r.evidence_excerpt.includes("本案は")
+      );
+
+      expect(resultRows.length, key).toBeGreaterThanOrEqual(1);
+      for (const r of resultRows) {
+        expect(MINUTE_VIEW_URL_3_24.test(r.source_url), r.claim_id).toBe(true);
+        expect(
+          r.evidence_excerpt.startsWith(unanimous ? "異議なしと認めます" : "起立多数と認めます"),
+          r.claim_id
+        ).toBe(true);
+      }
+    }
+  });
+
+  it("議決の日付は11件とも3月24日（会議録の第4日第4号）で、本文もその日を本会議の日として書いている", () => {
+    for (const c of billContentsWithBillSlug.filter((c) =>
+      budgetKeys.has(c.bill_slug)
+    )) {
+      const label = `${c.bill_slug}:${c.difficulty_level}`;
+      const text = `${c.summary}\n${c.content}`;
+      expect(text, label).toContain("3月24日");
+      for (const m of text.matchAll(/(\d+月\d+日)の\s*本会議/g)) {
+        expect(m[1], label).toBe("3月24日");
+      }
+    }
+  });
+
+  it("実装計画の誤った金額（第2〜4号議案の予算規模）を本文に書かず、全文PDFの総額を書いている", () => {
+    const totals: Record<number, { right: string; wrong: string }> = {
+      2: { right: "38,291,549", wrong: "287億" },
+      3: { right: "27,858,976", wrong: "299億" },
+      4: { right: "9,955,404", wrong: "72億" },
+    };
+
+    for (const [n, { right, wrong }] of Object.entries(totals)) {
+      const key = buildR8_1ItemKey({ itemType: "gian", itemNumber: Number(n) });
+      const hard = billContentsWithBillSlug.find(
+        (c) => c.bill_slug === key && c.difficulty_level === "hard"
+      );
+
+      expect(hard?.content, key).toContain(right);
+      for (const c of billContentsWithBillSlug.filter(
+        (c) => c.bill_slug === key
+      )) {
+        expect(`${c.summary}\n${c.content}`, key).not.toContain(wrong);
+      }
+    }
+  });
+
+  it("本文に出てくる出典URLはすべて台帳に載っている", () => {
+    const ledgerUrls = new Set(rows.map((r) => r.source_url));
+    const missing = new Set<string>();
+
+    for (const content of billContentsWithBillSlug) {
+      if (!budgetKeys.has(content.bill_slug)) continue;
       const text = `${content.title}\n${content.summary}\n${content.content}`;
       for (const url of text.match(/https?:\/\/[^\s|)]+/g) ?? []) {
         if (!ledgerUrls.has(url)) missing.add(url);
