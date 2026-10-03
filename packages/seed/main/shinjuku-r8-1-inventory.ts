@@ -603,7 +603,7 @@ export const r8FirstSessionItems: R8_1SessionItem[] = [
       decision: "否決",
       sourcePageUrl: R8_1_COUNCIL_SESSION_URL,
       decisionSourceUrl: R8_1_COUNCIL_RESULTS_PDF,
-      ...PENDING,
+      ...PUBLISHED,
     })
   ),
   {
