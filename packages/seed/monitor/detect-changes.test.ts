@@ -18,6 +18,7 @@ import {
   parseIndexPage,
   parseSubmissionPage,
 } from "./parse-council-page";
+import { R8_1_SESSION } from "../main/shinjuku-r8-1-inventory";
 import { R8_2_SESSION } from "../main/shinjuku-r8-2-inventory";
 import { R8_3_SESSION } from "../main/shinjuku-r8-3-inventory";
 import { KNOWN_SESSIONS } from "./targets";
@@ -400,6 +401,27 @@ describe("KNOWN_SESSIONS と公式ページの実物（2026-09-25 取得）", ()
     expect(r83.sessionId).toBe(R8_3_SESSION.slug);
     expect(r83.items).toHaveLength(22);
     expect(compareKnownSession(r83, snapshot)).toEqual({
+      draftItems: [],
+      proposedChanges: [],
+    });
+  });
+
+  it("令和8年第1回定例会のインベントリは公式ページと食い違いがない", () => {
+    const r81 = knownSession("r8-1");
+    const snapshot: SessionSnapshot = {
+      sessionId: r81.sessionId,
+      sessionName: r81.sessionId,
+      submissionsUrl: r81.submissionsUrl,
+      decisionsUrl: r81.decisionsUrl,
+      submissions: parseSubmissionPage(
+        fixture("submissions-r8-1.html"),
+        r81.submissionsUrl
+      ),
+      decisions: parseDecisionPage(fixture("decisions-r8-1.html")),
+    };
+    expect(r81.sessionId).toBe(R8_1_SESSION.slug);
+    expect(r81.items).toHaveLength(42);
+    expect(compareKnownSession(r81, snapshot)).toEqual({
       draftItems: [],
       proposedChanges: [],
     });

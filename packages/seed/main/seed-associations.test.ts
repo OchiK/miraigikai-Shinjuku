@@ -12,6 +12,11 @@ import {
   createInterviewConfig,
   tags,
 } from "./data";
+import {
+  R8_1_SESSION,
+  buildR8_1ItemKey,
+  r8FirstSessionItems,
+} from "./shinjuku-r8-1-inventory";
 import { buildItemKey, r8SecondSessionItems } from "./shinjuku-r8-2-inventory";
 import {
   R8_3_SESSION,
@@ -49,15 +54,21 @@ const BILL_SLUGS_WITH_CONTENT = [
 ];
 
 describe("bills seed", () => {
-  it("R8-2の27件とR8-3の24件を公式インベントリから投入する", () => {
-    expect(bills).toHaveLength(51);
+  it("R8-1の42件・R8-2の27件・R8-3の24件を公式インベントリから投入する", () => {
+    expect(bills).toHaveLength(93);
     expect(bills.map((b) => b.slug)).toEqual([
+      ...r8FirstSessionItems.map(buildR8_1ItemKey),
       ...r8SecondSessionItems.map(buildItemKey),
       ...r8ThirdSessionItems.map(buildR8_3ItemKey),
     ]);
   });
 
   it("議案は slug で正しい会期に紐づく", () => {
+    for (const item of r8FirstSessionItems) {
+      expect(billSessionSlugByBillSlug[buildR8_1ItemKey(item)]).toBe(
+        R8_1_SESSION.slug
+      );
+    }
     for (const item of r8SecondSessionItems) {
       expect(billSessionSlugByBillSlug[buildItemKey(item)]).toBe("r8-2");
     }
@@ -70,9 +81,13 @@ describe("bills seed", () => {
 
   it("件名が重複する承認案件も slug で一意に区別される", () => {
     const shonin = bills.filter((b) => b.name === "専決処分の承認について");
-    expect(shonin).toHaveLength(2);
-    expect(shonin.map((b) => b.bill_number).sort()).toEqual(["承認第2号", "承認第3号"]);
-    expect(new Set(shonin.map((b) => b.slug)).size).toBe(2);
+    expect(shonin).toHaveLength(3);
+    expect(shonin.map((b) => b.bill_number).sort()).toEqual([
+      "承認第1号",
+      "承認第2号",
+      "承認第3号",
+    ]);
+    expect(new Set(shonin.map((b) => b.slug)).size).toBe(3);
   });
 });
 
@@ -91,7 +106,7 @@ describe("公開状態と解説の整合", () => {
     expect(publishedWithoutContent).toEqual([]);
   });
 
-  it("R8-2の27件とR8-3の22件を published にし、R8-3の議員提出2件だけを coming_soon にする", () => {
+  it("R8-2の27件とR8-3の22件を published にし、R8-1の42件とR8-3の議員提出2件だけを coming_soon にする", () => {
     expect(
       bills
         .filter((b) => b.publish_status === "published")
@@ -101,7 +116,11 @@ describe("公開状態と解説の整合", () => {
       bills
         .filter((b) => b.publish_status === "coming_soon")
         .map((b) => b.slug)
-    ).toEqual(["shinjuku-2026-r3-giin-11", "shinjuku-2026-r3-giin-12"]);
+    ).toEqual([
+      ...r8FirstSessionItems.map(buildR8_1ItemKey),
+      "shinjuku-2026-r3-giin-11",
+      "shinjuku-2026-r3-giin-12",
+    ]);
   });
 
   it("R8-3の解説を持つ22件は公開レビュー済み（is_review_completed: true）", () => {
