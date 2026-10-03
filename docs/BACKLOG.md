@@ -183,7 +183,12 @@ Progress（2026-10-03）:
 - `packages/seed/monitor/targets.ts` の `KNOWN_SESSIONS` に `r8-1` を追加（議員提出議案は区長一覧と比較しないよう除外）、監視パーサに公式表記「承認第1号_専決処分の承認について」の `_` 区切り対応を追加して誤検知を防止。
 - シード・インベントリ・監視照合のテスト（全1,368件）が全ワークスペースで通過することを確認。
 - 本番DB反映: GitHub Actions（`import_production.yml` run 37095112923）により本番DBへ非破壊反映（新規6件・既存93件変更なし）を完了。本番の `/sessions/r8-1/bills` にて48件すべての正常表示を確認済み。これにより Phase 1（空状態の解消）が完了。
-- 残り: Phase 2（主要議案の3難易度解説作成・主張台帳突合・公開レビュー）。
+- Phase 2 パイロット（主要5議案の3難易度解説作成・主張台帳突合・公開レビュー）を PR #119 で実装・マージした。
+  - 対象5議案: 第1号議案（令和8年度一般会計予算）、第5号議案（令和7年度一般会計補正予算第12号）、第20号議案（特定乳児等通園支援事業基準条例）、第31号議案（大規模マンション等市街地環境整備条例）、議員提出議案第6号（民泊制度見直し意見書）。
+  - 各議案についてやさしい／ふつう／くわしくの3難易度解説（計15変種）を `packages/seed/main/bill-contents-r8-1-data.ts` に作成し、一次資料（各全文PDF・概要PDF）の全事実主張を網羅する主張台帳（`docs/verification/20261003_1330_claim-ledger-r8-1-pilot.csv`、計482行）を整備。
+  - `easy-japanese-validation.test.ts`（1文40字以内、アンカー保持プロトコル）、`bill-contents-revision.test.ts`（本文sha256と台帳ハッシュの一致）、`seed-associations.test.ts` などの全テストを通過。
+  - 対象5議案の `publish_status: "published"` / `is_review_completed: true` への更新を反映し、GitHub Actions（`import_production.yml` run 37099619443）により本番DBへ非破壊反映完了。本番の議案詳細ページ（`/bills/[id]`）にて5件すべての正常表示・解説閲覧を確認済み。
+- 残り: Phase 2 残余議案（43件）の段階的解説作成。
 
 ### P5-3 半自動化の残り（ROADMAP Phase 6）
 会期ページの解析・変化の検知・定期実行・下書きPRは P5-1 で実装済み。
