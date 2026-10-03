@@ -54,8 +54,8 @@ const BILL_SLUGS_WITH_CONTENT = [
 ];
 
 describe("bills seed", () => {
-  it("R8-1の42件・R8-2の27件・R8-3の24件を公式インベントリから投入する", () => {
-    expect(bills).toHaveLength(93);
+  it("R8-1の48件・R8-2の27件・R8-3の24件を公式インベントリから投入する", () => {
+    expect(bills).toHaveLength(99);
     expect(bills.map((b) => b.slug)).toEqual([
       ...r8FirstSessionItems.map(buildR8_1ItemKey),
       ...r8SecondSessionItems.map(buildItemKey),
@@ -106,7 +106,7 @@ describe("公開状態と解説の整合", () => {
     expect(publishedWithoutContent).toEqual([]);
   });
 
-  it("R8-2の27件とR8-3の22件を published にし、R8-1の42件とR8-3の議員提出2件だけを coming_soon にする", () => {
+  it("R8-2の27件とR8-3の22件を published にし、R8-1の48件とR8-3の議員提出2件だけを coming_soon にする", () => {
     expect(
       bills
         .filter((b) => b.publish_status === "published")

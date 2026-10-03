@@ -94,13 +94,16 @@ export const KNOWN_SESSIONS: KnownSession[] = [
     sessionId: "r8-1",
     submissionsUrl: R8_1_SUBMISSIONS_URL,
     decisionsUrl: R8_1_DECISIONS_URL,
-    items: r8FirstSessionItems.map((item) => ({
-      officialLabel: item.officialLabel,
-      officialTitle: item.officialTitle,
-      fullTextPdfUrl: item.fullTextPdfUrl,
-      decision: item.decision,
-      reviewCompleted: item.reviewCompleted,
-    })),
+    // 議員提出議案は区長提出議案のページに載らないため比較から外す
+    items: r8FirstSessionItems
+      .filter((item) => item.itemType !== "giin")
+      .map((item) => ({
+        officialLabel: item.officialLabel,
+        officialTitle: item.officialTitle,
+        fullTextPdfUrl: item.fullTextPdfUrl,
+        decision: item.decision,
+        reviewCompleted: item.reviewCompleted,
+      })),
   },
 ];
 
