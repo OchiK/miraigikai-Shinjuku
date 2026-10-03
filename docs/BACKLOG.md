@@ -178,10 +178,12 @@ Progress（2026-10-03）:
 - Phase 1（区長提出議案42件のインベントリ作成・先行タイトル登録）を PR #115 で実装・マージした。
 - 新宿区公式の提出議案一覧ページ（`kuseijoho01_001109_01.html`）および議決結果ページ（`soumu01_002090_00015.html`）の実物と突合し、区長提出議案全42件（予算案13件、条例等28件、承認第1号1件）を `packages/seed/main/shinjuku-r8-1-inventory.ts` として新規追加した。
 - 議決結果は全件確定済み（原案可決41件、承認1件）であり、DB enum に適合する `status: "approved"` / `status_note: "本会議で原案可決"`（承認は「本会議で承認」）として登録。
-- 解説未作成のため `publish_status: "coming_soon"` / `is_review_completed: false` / `published_at: null` とし、`packages/seed/main/data.ts` の `bills`（51件→93件）および `billSessionSlugByBillSlug` に接続して `/sessions/r8-1/bills` の空状態を解消した。
-- `packages/seed/monitor/targets.ts` の `KNOWN_SESSIONS` に `r8-1` を追加し、監視パーサに公式表記「承認第1号_専決処分の承認について」の `_` 区切り対応を追加して誤検知を防止。
-- シード・インベントリ・監視照合のテスト（全1,367件）が通過することを確認済み。
-- 残り: GitHub Actions（`import_production.yml`）での本番DB反映、および Phase 2（主要議案の3難易度解説作成・主張台帳突合・公開レビュー）。
+- 続いて議員提出議案6件（条例案5件、意見書1件）の追加登録を PR #117 で実装・マージした。議会公式の会期ページ（`file08_05_0003820210204_00013.html`）、「議案の概要と審議結果」PDF（`000452334.pdf`）、「可決した意見書」ページ（`file08_05_0004020210118_00006.html`）と突合。第1〜5号は否決（`fullTextPdfUrl: null`, `decision: "否決"`）、第6号は可決（`fullTextPdfUrl: 000452351.pdf`, `decision: "原案可決"`）として登録した。
+- 解説未作成のため全48件を `publish_status: "coming_soon"` / `is_review_completed: false` / `published_at: null` とし、`packages/seed/main/data.ts` の `bills`（51件→99件）および `billSessionSlugByBillSlug` に接続。
+- `packages/seed/monitor/targets.ts` の `KNOWN_SESSIONS` に `r8-1` を追加（議員提出議案は区長一覧と比較しないよう除外）、監視パーサに公式表記「承認第1号_専決処分の承認について」の `_` 区切り対応を追加して誤検知を防止。
+- シード・インベントリ・監視照合のテスト（全1,368件）が全ワークスペースで通過することを確認。
+- 本番DB反映: GitHub Actions（`import_production.yml` run 37095112923）により本番DBへ非破壊反映（新規6件・既存93件変更なし）を完了。本番の `/sessions/r8-1/bills` にて48件すべての正常表示を確認済み。これにより Phase 1（空状態の解消）が完了。
+- 残り: Phase 2（主要議案の3難易度解説作成・主張台帳突合・公開レビュー）。
 
 ### P5-3 半自動化の残り（ROADMAP Phase 6）
 会期ページの解析・変化の検知・定期実行・下書きPRは P5-1 で実装済み。
