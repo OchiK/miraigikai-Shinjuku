@@ -4,6 +4,12 @@ import { fileURLToPath } from "node:url";
 import { parse } from "csv-parse/sync";
 import { describe, expect, it } from "vitest";
 import { billContentsWithBillSlug } from "./bill-contents-data";
+import {
+  R8_1_COUNCIL_SESSION_URL,
+  R8_1_DECISIONS_URL,
+  buildR8_1ItemKey,
+  r8FirstSessionItems,
+} from "./shinjuku-r8-1-inventory";
 import { buildItemKey, r8SecondSessionItems } from "./shinjuku-r8-2-inventory";
 import {
   R8_3_SUBMISSIONS_URL,
@@ -68,11 +74,17 @@ const R8_3_CLAIM_LEDGER_PATH = ledgerPath(
   "../../../docs/verification/20260930_0910_claim-ledger-r8-3.csv"
 );
 
+/** 令和8年第1回定例会のパイロット5件（第1・5・20・31号議案、議員提出議案第6号）の easy / normal / hard 版の突合記録。 */
+const R8_1_PILOT_CLAIM_LEDGER_PATH = ledgerPath(
+  "../../../docs/verification/20261003_1330_claim-ledger-r8-1-pilot.csv"
+);
+
 const CLAIM_LEDGER_PATHS = [
   ...NORMAL_CLAIM_LEDGER_PATHS,
   EASY_CLAIM_LEDGER_PATH,
   GIIN_CLAIM_LEDGER_PATH,
   R8_3_CLAIM_LEDGER_PATH,
+  R8_1_PILOT_CLAIM_LEDGER_PATH,
 ];
 
 const ORIGINAL_CLAIM_LEDGER_PATH = ledgerPath(
@@ -139,7 +151,7 @@ describe("解説の内容ハッシュ", () => {
     expect(actual).toEqual(reviewedContentSha256);
   });
 
-  it("147変種（第2回の区長提出23件・議員提出4件と第3回の22件の各3段）すべてがハッシュ固定されている", () => {
+  it("162変種（第1回のパイロット5件、第2回の区長提出23件・議員提出4件、第3回の22件の各3段）すべてがハッシュ固定されている", () => {
     // 台帳に載っている変種だけを突き合わせると、
     // 「台帳に行を書かずに解説だけ足す」と全テストが通ってしまう。
     // 対象外の集合を明示的に固定し、新しい解説が黙って素通りしないようにする。
@@ -151,7 +163,7 @@ describe("解説の内容ハッシュ", () => {
       .sort();
 
     expect(unpinned).toEqual([]);
-    expect(Object.keys(pinned)).toHaveLength(147);
+    expect(Object.keys(pinned)).toHaveLength(162);
   });
 
   it("台帳に載っている変種はすべて実在する", () => {
@@ -609,6 +621,224 @@ describe("令和8年第3回定例会22件の主張台帳の構造", () => {
 
     for (const content of billContentsWithBillSlug) {
       if (!r8_3Keys.has(content.bill_slug)) continue;
+      const text = `${content.title}\n${content.summary}\n${content.content}`;
+      for (const url of text.match(/https?:\/\/[^\s|)]+/g) ?? []) {
+        if (!ledgerUrls.has(url)) missing.add(url);
+      }
+    }
+
+    expect([...missing].sort()).toEqual([]);
+  });
+});
+
+/** 台帳ツール（docs/verification/tools/r8_1/ledger_build.py）が needs_source 行に書く定型の注記。 */
+const R8_1_NO_SOURCE_NOTE =
+  "（本件は解説本文が「一次資料に記載がない」と明示している箇所であり、事実主張ではない）";
+
+/** パイロット5件の出典URLと、取得時点の sha256（実装計画に記載の値）。 */
+const R8_1_PILOT_SOURCE_SHA256: Record<string, string> = {
+  "https://www.city.shinjuku.lg.jp/content/000448420.pdf":
+    "5a93c8ea6e8da97a4e2db6fb8d05e3bf5de17f67220d3ad35986b68a7b3baa27",
+  "https://www.city.shinjuku.lg.jp/content/000448415.pdf":
+    "709aef207f70d219b4ba0b8a33be8f41a0b83ff74120ac9caa0dcf839156c385",
+  "https://www.city.shinjuku.lg.jp/content/000447772.pdf":
+    "aaa515b53e3932878681e1cd7227929fce5fc0e0b629fff5d11789ef0393c597",
+  "https://www.city.shinjuku.lg.jp/content/000448436.pdf":
+    "26dae45a5333cc5c50c88c6411ee1016da151a63bcb086ad412980ff79b94fa4",
+  "https://www.city.shinjuku.lg.jp/content/000447774.pdf":
+    "1dc3eaffcafb1b1c9e139e823182dc80dc0755624813ca87d8b274d15f5b6624",
+  "https://www.city.shinjuku.lg.jp/content/000448447.pdf":
+    "80fb21345b307f476abc29b7de3200ef659d23b703a72d6b6c3e9482207aaef5",
+  "https://www.city.shinjuku.lg.jp/content/000452351.pdf":
+    "556f694a353ce984c50c5ee13aac5722257336857c904668ccda9ffc2178051f",
+  "https://www.city.shinjuku.lg.jp/content/000452334.pdf":
+    "22ba4f49b18c96bd1fa26241606257c05477f38e25ac46d6f8e4f416a2cedbf2",
+  // HTML は区が更新すると変わる。2026-10-03 に取得した時点の値。
+  // 本会議の会議録（MinuteView）は発言ごとに別の URL で、sha256 は API が返す body の値。
+  // 下の MINUTE_VIEW_URL で形式を、URL ごとの sha256 は1つであることを別に確かめる。
+  [R8_1_DECISIONS_URL]:
+    "7c2b6f68db1b433b860b35d176b4dd9211e78582ec9de718fcfefe68b22d896a",
+  [R8_1_COUNCIL_SESSION_URL]:
+    "869549fe3ba94ac28c6e8fd003d4ad71484501a78203fc7a885109aae4ab487c",
+};
+
+/** 本会議の会議録の発言（council_id 3163 = 令和8年第1回定例会）。キャプチャは schedule_id。 */
+const MINUTE_VIEW_URL =
+  /^https:\/\/ssp\.kaigiroku\.net\/tenant\/shinjuku\/MinuteView\.html\?council_id=3163&schedule_id=(2|5)&minute_id=\d+$/;
+
+describe("令和8年第1回定例会パイロット5件の主張台帳の構造", () => {
+  // 議決済みの案件。議決結果は議決結果ページと「議案の概要と審議結果」から supported で引く。
+  // 採決日は出典に書かれていないので、本文は「3月24日の本会議」と書かない。
+  const rows = readLedger(R8_1_PILOT_CLAIM_LEDGER_PATH);
+  const pilotItems = r8FirstSessionItems.filter(
+    (item) => item.hasPublishableContent
+  );
+  const pilotKeys = new Set(pilotItems.map(buildR8_1ItemKey));
+
+  it("解説を公開した5件すべてを指し、それ以外を指さない", () => {
+    expect(pilotKeys.size).toBe(5);
+    expect([...new Set(rows.map((r) => r.item_key))].sort()).toEqual(
+      [...pilotKeys].sort()
+    );
+  });
+
+  it("判定は supported か needs_source のいずれかである", () => {
+    expect([...new Set(rows.map((r) => r.verdict))].sort()).toEqual([
+      "needs_source",
+      "supported",
+    ]);
+  });
+
+  it("needs_source は「出典に記載がない事項」の行だけで、定型の注記を持つ", () => {
+    // needs_source を事実主張の逃げ道にしない。
+    // 一次資料に根拠がある主張は必ず supported として引用を持つ。
+    const bad = rows
+      .filter((r) =>
+        r.verdict === "needs_source"
+          ? r.page_or_section !== "出典に記載がない事項" ||
+            r.evidence_excerpt !== R8_1_NO_SOURCE_NOTE
+          : r.page_or_section === "出典に記載がない事項" ||
+            r.evidence_excerpt === R8_1_NO_SOURCE_NOTE
+      )
+      .map((r) => r.claim_id);
+
+    expect(bad).toEqual([]);
+  });
+
+  it("各変種に「出典に記載がない事項」の行が1行以上ある", () => {
+    const withUnknowns = new Set(
+      rows
+        .filter((r) => r.page_or_section === "出典に記載がない事項")
+        .map((r) => `${r.item_key}:${r.difficulty}`)
+    );
+
+    expect(withUnknowns.size).toBe(15);
+  });
+
+  it("審議状況の行は各変種に1行以上あり、すべて supported（議決結果は出典に載っている）", () => {
+    const counts = new Map<string, number>();
+    for (const r of rows.filter((row) =>
+      row.page_or_section.startsWith("審議状況")
+    )) {
+      expect(r.verdict, r.claim_id).toBe("supported");
+      const key = `${r.item_key}:${r.difficulty}`;
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+
+    expect(counts.size).toBe(15);
+    expect([...counts.values()].every((n) => n >= 1)).toBe(true);
+  });
+
+  it("claim_id が一意である", () => {
+    const ids = rows.map((r) => r.claim_id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("主張・出典・ハッシュ・位置・引用がいずれも空でない", () => {
+    const incomplete = rows
+      .filter(
+        (r) =>
+          !r.final_claim ||
+          !r.source_url ||
+          !/^[0-9a-f]{64}$/.test(r.source_sha256) ||
+          !r.page_or_section ||
+          !r.evidence_excerpt
+      )
+      .map((r) => r.claim_id);
+
+    expect(incomplete).toEqual([]);
+  });
+
+  it("出典はパイロット5件の一次資料と第1回定例会の本会議の会議録だけで、URL ごとの sha256 は1つ（資料は計画に記載の値と一致）", () => {
+    const shaByUrl = new Map<string, Set<string>>();
+    for (const r of rows) {
+      const shas = shaByUrl.get(r.source_url) ?? new Set<string>();
+      shas.add(r.source_sha256);
+      shaByUrl.set(r.source_url, shas);
+    }
+
+    for (const [url, shas] of shaByUrl) {
+      expect([...shas], url).toHaveLength(1);
+      if (MINUTE_VIEW_URL.test(url)) continue;
+      expect([...shas], url).toEqual([R8_1_PILOT_SOURCE_SHA256[url]]);
+    }
+  });
+
+  it("議決の日付は会議録で確かめた日と一致する（第5号議案は2月17日、ほかは3月24日）", () => {
+    // 会議録: 第1日第1号（2月17日）の schedule 2、第4日第4号（3月24日）の schedule 5。
+    const votedRows = rows.filter((r) =>
+      r.page_or_section.startsWith("審議状況（本会議")
+    );
+    const scheduleByItem = new Map<string, Set<string>>();
+    for (const r of votedRows) {
+      const schedule = r.source_url.match(MINUTE_VIEW_URL)?.[1];
+      expect(schedule, r.claim_id).toBeDefined();
+      const set = scheduleByItem.get(r.item_key) ?? new Set<string>();
+      set.add(schedule ?? "");
+      scheduleByItem.set(r.item_key, set);
+    }
+
+    expect(Object.fromEntries(scheduleByItem.entries())).toEqual({
+      "shinjuku-2026-r1-gian-1": new Set(["5"]),
+      "shinjuku-2026-r1-gian-5": new Set(["2"]),
+      "shinjuku-2026-r1-gian-20": new Set(["5"]),
+      "shinjuku-2026-r1-gian-31": new Set(["5"]),
+      "shinjuku-2026-r1-giin-6": new Set(["5"]),
+    });
+  });
+
+  it("5件×3段の各変種が title / summary / content すべての行を持つ", () => {
+    const byVariant = new Map<string, Set<string>>();
+    for (const row of rows) {
+      const key = `${row.item_key}:${row.difficulty}`;
+      const fields = byVariant.get(key) ?? new Set<string>();
+      fields.add(row.content_field);
+      byVariant.set(key, fields);
+    }
+
+    const incomplete = [...byVariant.entries()]
+      .filter(([, fields]) =>
+        ["title", "summary", "content"].some((f) => !fields.has(f))
+      )
+      .map(([key]) => key)
+      .sort();
+
+    expect(incomplete).toEqual([]);
+    expect(byVariant.size).toBe(15);
+  });
+
+  it("本文の採決日は会議録の日付と一致する（第5号議案だけ2月17日、ほかは3月24日）", () => {
+    // 実装計画は全件を3月24日とするが、第5号議案は2月17日の本会議で先に可決されている。
+    const expectedDate: Record<string, string> = {
+      "shinjuku-2026-r1-gian-1": "3月24日",
+      "shinjuku-2026-r1-gian-5": "2月17日",
+      "shinjuku-2026-r1-gian-20": "3月24日",
+      "shinjuku-2026-r1-gian-31": "3月24日",
+      "shinjuku-2026-r1-giin-6": "3月24日",
+    };
+
+    for (const c of billContentsWithBillSlug.filter((c) =>
+      pilotKeys.has(c.bill_slug)
+    )) {
+      const label = `${c.bill_slug}:${c.difficulty_level}`;
+      const dates = [
+        ...`${c.summary}\n${c.content}`.matchAll(/(\d+月\d+日)の\s*本会議/g),
+      ].map((m) => m[1]);
+
+      // 解説は議決の日付を本会議の日として必ず書く
+      expect(dates.length, label).toBeGreaterThan(0);
+      for (const date of dates) {
+        expect(date, label).toBe(expectedDate[c.bill_slug]);
+      }
+    }
+  });
+
+  it("本文に出てくる出典URLはすべて台帳に載っている", () => {
+    const ledgerUrls = new Set(rows.map((r) => r.source_url));
+    const missing = new Set<string>();
+
+    for (const content of billContentsWithBillSlug) {
+      if (!pilotKeys.has(content.bill_slug)) continue;
       const text = `${content.title}\n${content.summary}\n${content.content}`;
       for (const url of text.match(/https?:\/\/[^\s|)]+/g) ?? []) {
         if (!ledgerUrls.has(url)) missing.add(url);
