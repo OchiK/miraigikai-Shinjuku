@@ -857,12 +857,28 @@ describe("やさしい日本語版が行政用語のアンカーを保ってい�
    * 窓口の看板・申請書の見出しと照合できることが目的なので、
    * 「言いかえに置き換わっていないこと」まで見る必要がある。
    */
-  const anchoredTerms: {
+  type AnchoredTerm = {
     slug: string;
     term: string;
     yomi: string;
     gloss: string;
-  }[] = [
+  };
+
+  type Anchor = Omit<AnchoredTerm, "slug">;
+
+  function r8_1BudgetAnchors(
+    itemNumbers: number[],
+    anchors: Anchor[]
+  ): AnchoredTerm[] {
+    return itemNumbers.flatMap((itemNumber) =>
+      anchors.map((anchor) => ({
+        slug: r8_1GianKey(itemNumber),
+        ...anchor,
+      }))
+    );
+  }
+
+  const anchoredTerms: AnchoredTerm[] = [
     {
       slug: gianKey(42),
       term: "補正予算",
@@ -1368,6 +1384,186 @@ describe("やさしい日本語版が行政用語のアンカーを保ってい�
       yomi: "かりしっこうのせんげん",
       gloss: "判決が 決まる 前に 実行できる ように する こと",
     },
+    // 令和8年第1回定例会の予算関連議案11件（P5-5 Phase 2 予算編）。
+    // 必須アンカーを明示し、用語ごと【】自体が削除された場合も検出する。
+    ...r8_1BudgetAnchors([2, 3, 4], [
+      {
+        term: "特別会計",
+        yomi: "とくべつかいけい",
+        gloss: "仕事ごとに 分けた お金の 計画",
+      },
+      { term: "歳入", yomi: "さいにゅう", gloss: "区に 入る お金" },
+      { term: "歳出", yomi: "さいしゅつ", gloss: "区が 使う お金" },
+      {
+        term: "原案可決",
+        yomi: "げんあんかけつ",
+        gloss: "出した 通りの 内容で 決まること",
+      },
+      {
+        term: "起立",
+        yomi: "きりつ",
+        gloss: "立って 賛成を 示す こと",
+      },
+      {
+        term: "少数意見",
+        yomi: "しょうすういけん",
+        gloss: "委員会で 少数に なった 意見",
+      },
+    ]),
+    ...r8_1BudgetAnchors([6], [
+      {
+        term: "補正予算",
+        yomi: "ほせいよさん",
+        gloss: "あとから 変える お金の 計画",
+      },
+      {
+        term: "繰越明許費",
+        yomi: "くりこしめいきょひ",
+        gloss: "次の 年度に 回して 使う お金",
+      },
+      {
+        term: "債務負担行為",
+        yomi: "さいむふたんこうい",
+        gloss: "先の 年度に 払う 約束",
+      },
+      {
+        term: "原案可決",
+        yomi: "げんあんかけつ",
+        gloss: "出した 通りの 内容で 決まること",
+      },
+      {
+        term: "起立",
+        yomi: "きりつ",
+        gloss: "立って 賛成を 示す こと",
+      },
+      {
+        term: "少数意見",
+        yomi: "しょうすういけん",
+        gloss: "委員会で 少数に なった 意見",
+      },
+    ]),
+    ...r8_1BudgetAnchors([7], [
+      {
+        term: "補正予算",
+        yomi: "ほせいよさん",
+        gloss: "あとから 変える お金の 計画",
+      },
+      {
+        term: "収入歩合",
+        yomi: "しゅうにゅうぶあい",
+        gloss: "区が 見こむ 収入の 割合",
+      },
+      {
+        term: "原案可決",
+        yomi: "げんあんかけつ",
+        gloss: "出した 通りの 内容で 決まること",
+      },
+    ]),
+    ...r8_1BudgetAnchors([8, 39], [
+      {
+        term: "補正予算",
+        yomi: "ほせいよさん",
+        gloss: "あとから 変える お金の 計画",
+      },
+      {
+        term: "原案可決",
+        yomi: "げんあんかけつ",
+        gloss: "出した 通りの 内容で 決まること",
+      },
+    ]),
+    ...r8_1BudgetAnchors([9], [
+      {
+        term: "補正予算",
+        yomi: "ほせいよさん",
+        gloss: "あとから 変える お金の 計画",
+      },
+      {
+        term: "原案可決",
+        yomi: "げんあんかけつ",
+        gloss: "出した 通りの 内容で 決まること",
+      },
+      {
+        term: "起立",
+        yomi: "きりつ",
+        gloss: "立って 賛成を 示す こと",
+      },
+      {
+        term: "少数意見",
+        yomi: "しょうすういけん",
+        gloss: "委員会で 少数に なった 意見",
+      },
+    ]),
+    ...r8_1BudgetAnchors([37], [
+      {
+        term: "補正予算",
+        yomi: "ほせいよさん",
+        gloss: "あとから 変える お金の 計画",
+      },
+      {
+        term: "債務負担行為",
+        yomi: "さいむふたんこうい",
+        gloss: "先の 年度に 払う 約束",
+      },
+      {
+        term: "原案可決",
+        yomi: "げんあんかけつ",
+        gloss: "出した 通りの 内容で 決まること",
+      },
+    ]),
+    ...r8_1BudgetAnchors([38], [
+      {
+        term: "補正予算",
+        yomi: "ほせいよさん",
+        gloss: "あとから 変える お金の 計画",
+      },
+      {
+        term: "子ども・子育て支援金制度",
+        yomi: "こどもこそだてしえんきんせいど",
+        gloss: "新しく 始まる 制度",
+      },
+      {
+        term: "原案可決",
+        yomi: "げんあんかけつ",
+        gloss: "出した 通りの 内容で 決まること",
+      },
+      {
+        term: "起立",
+        yomi: "きりつ",
+        gloss: "立って 賛成を 示す こと",
+      },
+      {
+        term: "少数意見",
+        yomi: "しょうすういけん",
+        gloss: "委員会で 少数に なった 意見",
+      },
+    ]),
+    ...r8_1BudgetAnchors([40], [
+      {
+        term: "補正予算",
+        yomi: "ほせいよさん",
+        gloss: "あとから 変える お金の 計画",
+      },
+      {
+        term: "指定管理料",
+        yomi: "していかんりりょう",
+        gloss: "管理を まかせる 相手に 払う お金",
+      },
+      {
+        term: "繰越明許費",
+        yomi: "くりこしめいきょひ",
+        gloss: "次の 年度に 回して 使う お金",
+      },
+      {
+        term: "債務負担行為",
+        yomi: "さいむふたんこうい",
+        gloss: "先の 年度に 払う 約束",
+      },
+      {
+        term: "原案可決",
+        yomi: "げんあんかけつ",
+        gloss: "出した 通りの 内容で 決まること",
+      },
+    ]),
     // 令和8年第1回定例会のパイロット5件（P5-5 Phase 2）
     {
       slug: r8_1GianKey(1),
