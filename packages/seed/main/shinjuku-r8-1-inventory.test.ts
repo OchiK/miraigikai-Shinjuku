@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { findDuplicates } from "./shinjuku-r8-2-inventory";
 import {
+  R8_1_ALL_LABELS,
+  R8_1_COUNCIL_RESOLUTIONS_URL,
+  R8_1_COUNCIL_RESULTS_PDF,
+  R8_1_COUNCIL_SESSION_URL,
   R8_1_DECISIONS_URL,
   R8_1_OFFICIAL_LABELS,
   R8_1_SESSION,
@@ -8,6 +12,7 @@ import {
   buildR8_1ItemKey,
   r8FirstSessionItems,
   r8_1GianKey,
+  r8_1GiinKey,
   r8_1ShoninKey,
   toR8_1BillInsert,
   toR8_1BillInserts,
@@ -66,6 +71,10 @@ const PAGE_FULL_TEXT_PDFS: Record<string, string> = {
   第41号議案: "000451614",
 };
 
+/** 区長提出議案（提出議案一覧ページに載る42件）。議員提出議案は別に検証する */
+const mayorItems = r8FirstSessionItems.filter((i) => i.itemType !== "giin");
+const giinItems = r8FirstSessionItems.filter((i) => i.itemType === "giin");
+
 describe("令和8年第1回定例会インベントリ", () => {
   it("会期は公式ページ記載の「会期：2月17日～3月24日」", () => {
     expect(R8_1_SESSION.slug).toBe("r8-1");
@@ -76,53 +85,60 @@ describe("令和8年第1回定例会インベントリ", () => {
     expect(R8_1_SESSION.council_url).toBe(R8_1_SUBMISSIONS_URL);
   });
 
-  it("区長提出議案42件（議案41件 + 承認1件）を収録する", () => {
-    expect(r8FirstSessionItems).toHaveLength(42);
+  it("全48件（議案41件 + 承認1件 + 議員提出議案6件）を収録する", () => {
+    expect(r8FirstSessionItems).toHaveLength(48);
     expect(r8FirstSessionItems.filter((i) => i.itemType === "gian")).toHaveLength(41);
     expect(r8FirstSessionItems.filter((i) => i.itemType === "shonin")).toHaveLength(1);
+    expect(giinItems).toHaveLength(6);
+    expect(mayorItems).toHaveLength(42);
   });
 
   it("識別名は公式一覧と過不足なく一致し、重複しない", () => {
     const labels = r8FirstSessionItems.map((i) => i.officialLabel);
     expect(findDuplicates(labels)).toEqual([]);
-    expect([...labels].sort()).toEqual([...R8_1_OFFICIAL_LABELS].sort());
+    expect([...labels].sort()).toEqual([...R8_1_ALL_LABELS].sort());
+    expect(mayorItems.map((i) => i.officialLabel).sort()).toEqual(
+      [...R8_1_OFFICIAL_LABELS].sort()
+    );
     expect(Object.keys(PAGE_FULL_TEXT_PDFS).sort()).toEqual(
       [...R8_1_OFFICIAL_LABELS].sort()
     );
   });
 
   it("識別名は種別と番号から決まる", () => {
+    const expectedLabel = {
+      gian: (n: number) => `第${n}号議案`,
+      shonin: (n: number) => `承認第${n}号`,
+      giin: (n: number) => `議員提出議案第${n}号`,
+    };
     for (const item of r8FirstSessionItems) {
-      expect(item.officialLabel).toBe(
-        item.itemType === "gian"
-          ? `第${item.itemNumber}号議案`
-          : `承認第${item.itemNumber}号`
-      );
+      expect(item.officialLabel).toBe(expectedLabel[item.itemType](item.itemNumber));
     }
   });
 
-  it("slug は42件すべて異なる", () => {
+  it("slug は48件すべて異なる", () => {
     const keys = r8FirstSessionItems.map(buildR8_1ItemKey);
     expect(findDuplicates(keys)).toEqual([]);
-    expect(new Set(keys).size).toBe(42);
+    expect(new Set(keys).size).toBe(48);
     expect(r8_1GianKey(37)).toBe("shinjuku-2026-r1-gian-37");
     expect(r8_1ShoninKey(1)).toBe("shinjuku-2026-r1-shonin-1");
+    expect(r8_1GiinKey(6)).toBe("shinjuku-2026-r1-giin-6");
   });
 
   it("全文PDFは9桁ゼロ埋めの公式URLで、公式一覧のリンクと一致する", () => {
-    for (const item of r8FirstSessionItems) {
+    for (const item of mayorItems) {
       expect(item.fullTextPdfUrl, item.officialLabel).toMatch(OFFICIAL_PDF_URL);
       expect(item.fullTextPdfUrl, item.officialLabel).toBe(
         `https://www.city.shinjuku.lg.jp/content/${PAGE_FULL_TEXT_PDFS[item.officialLabel]}.pdf`
       );
     }
     expect(
-      findDuplicates(r8FirstSessionItems.map((i) => i.fullTextPdfUrl))
+      findDuplicates(mayorItems.map((i) => i.fullTextPdfUrl))
     ).toEqual([]);
   });
 
   it("概要PDFは当初予算の4件だけ null で、ほかは公式URL", () => {
-    const withoutOverview = r8FirstSessionItems
+    const withoutOverview = mayorItems
       .filter((i) => i.overviewPdfUrl === null)
       .map((i) => i.officialLabel);
     expect(withoutOverview).toEqual([
@@ -131,7 +147,7 @@ describe("令和8年第1回定例会インベントリ", () => {
       "第3号議案",
       "第4号議案",
     ]);
-    for (const item of r8FirstSessionItems) {
+    for (const item of mayorItems) {
       if (item.overviewPdfUrl !== null) {
         expect(item.overviewPdfUrl, item.officialLabel).toMatch(OFFICIAL_PDF_URL);
       }
@@ -158,13 +174,44 @@ describe("令和8年第1回定例会インベントリ", () => {
   });
 
   it("議決結果は第1〜41号議案が「原案可決」、承認第1号が「承認」", () => {
-    for (const item of r8FirstSessionItems) {
+    for (const item of mayorItems) {
       expect(item.decision, item.officialLabel).toBe(
         item.itemType === "shonin" ? "承認" : "原案可決"
       );
     }
-    expect(r8FirstSessionItems.filter((i) => i.decision === "原案可決")).toHaveLength(41);
-    expect(r8FirstSessionItems.filter((i) => i.decision === "承認")).toHaveLength(1);
+    expect(mayorItems.filter((i) => i.decision === "原案可決")).toHaveLength(41);
+    expect(mayorItems.filter((i) => i.decision === "承認")).toHaveLength(1);
+  });
+
+  it("議員提出議案は第1〜5号が否決（全文PDFなし）、第6号が原案可決（意見書PDFあり）", () => {
+    expect(giinItems.map((i) => i.itemNumber)).toEqual([1, 2, 3, 4, 5, 6]);
+    for (const item of giinItems.filter((i) => i.itemNumber <= 5)) {
+      expect(item.decision, item.officialLabel).toBe("否決");
+      expect(item.fullTextPdfUrl, item.officialLabel).toBeNull();
+      expect(item.sourcePageUrl, item.officialLabel).toBe(R8_1_COUNCIL_SESSION_URL);
+    }
+    const sixth = giinItems[5];
+    expect(sixth.decision).toBe("原案可決");
+    expect(sixth.fullTextPdfUrl).toBe(
+      "https://www.city.shinjuku.lg.jp/content/000452351.pdf"
+    );
+    expect(sixth.sourcePageUrl).toBe(R8_1_COUNCIL_RESOLUTIONS_URL);
+    for (const item of giinItems) {
+      expect(item.overviewPdfUrl, item.officialLabel).toBe(R8_1_COUNCIL_RESULTS_PDF);
+      expect(item.hasPublishableContent).toBe(false);
+      expect(item.reviewCompleted).toBe(false);
+    }
+  });
+
+  it("議員提出議案の件名は議会公式ページの記載どおり", () => {
+    expect(giinItems.map((i) => i.officialTitle)).toEqual([
+      "新宿区介護・福祉人材緊急確保・定着奨励金の支給に関する条例",
+      "新宿区保健事業の利用に係る使用料等を定める条例を廃止する条例",
+      "新宿区安心居住支援家賃の助成に関する条例",
+      "新宿区立学校における学用品の給付に関する条例",
+      "新宿区立学校における修学旅行費の無償化に関する条例",
+      "住民の居住環境保護と適正な民泊運営の実現に向けた制度見直しに関する意見書",
+    ]);
   });
 
   it("件名が重複するのは承認案件の仕様であり、第1回定例会の承認は1件だけ", () => {
@@ -179,8 +226,8 @@ describe("令和8年第1回定例会インベントリ", () => {
 describe("toR8_1BillInserts", () => {
   const inserts = toR8_1BillInserts();
 
-  it("インベントリと同じ順序・件数で42件を返す", () => {
-    expect(inserts).toHaveLength(42);
+  it("インベントリと同じ順序・件数で48件を返す", () => {
+    expect(inserts).toHaveLength(48);
     expect(inserts.map((b) => b.slug)).toEqual(
       r8FirstSessionItems.map(buildR8_1ItemKey)
     );
@@ -195,10 +242,29 @@ describe("toR8_1BillInserts", () => {
     }
   });
 
-  it("出典URLは提出議案一覧・議決結果の公式ページを指す", () => {
-    for (const bill of inserts) {
+  it("区長提出議案の出典URLは提出議案一覧・議決結果の公式ページを指す", () => {
+    const mayorInserts = inserts.filter(
+      (b) => !(b.slug ?? "").includes("-giin-")
+    );
+    expect(mayorInserts).toHaveLength(42);
+    for (const bill of mayorInserts) {
       expect(bill.source_page_url).toBe(R8_1_SUBMISSIONS_URL);
       expect(bill.decision_source_url).toBe(R8_1_DECISIONS_URL);
+    }
+  });
+
+  it("議員提出議案の出典URLは議会公式ページ・議案の概要と審議結果PDFを指す", () => {
+    for (let n = 1; n <= 6; n++) {
+      const bill = inserts.find((b) => b.slug === r8_1GiinKey(n));
+      expect(bill?.bill_number).toBe(`議員提出議案第${n}号`);
+      expect(bill?.source_page_url).toBe(
+        n === 6 ? R8_1_COUNCIL_RESOLUTIONS_URL : R8_1_COUNCIL_SESSION_URL
+      );
+      expect(bill?.decision_source_url).toBe(R8_1_COUNCIL_RESULTS_PDF);
+      expect(bill?.overview_pdf_url).toBe(R8_1_COUNCIL_RESULTS_PDF);
+      expect(bill?.pdf_url).toBe(
+        n === 6 ? "https://www.city.shinjuku.lg.jp/content/000452351.pdf" : null
+      );
     }
   });
 
@@ -211,6 +277,12 @@ describe("toR8_1BillInserts", () => {
     expect(shonin?.bill_number).toBe("承認第1号");
     expect(shonin?.status).toBe("approved");
     expect(shonin?.status_note).toBe("本会議で承認");
+
+    const rejected = inserts.find((b) => b.slug === r8_1GiinKey(1));
+    expect(rejected?.status).toBe("rejected");
+    expect(rejected?.status_note).toBe("本会議で否決");
+    const adopted = inserts.find((b) => b.slug === r8_1GiinKey(6));
+    expect(adopted?.status).toBe("approved");
   });
 
   it("件名・識別名・PDFをインベントリからそのまま写す", () => {

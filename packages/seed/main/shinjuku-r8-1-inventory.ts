@@ -22,7 +22,9 @@ type CouncilSessionInsert =
  * 解説を作成して公開するときは Phase 2 で hasPublishableContent / reviewCompleted を
  * 件ごとに true にする。
  *
- * 議員提出議案は議会公式ページ側にしか載らず、本インベントリの対象外（未収録）。
+ * 議員提出議案6件（条例案5件・意見書1件）は区長提出議案の一覧ページには載らず、
+ * 議会公式の会期ページ・「議案の概要と審議結果」PDF・「可決した意見書」ページを出典とする。
+ * 合計48件（区長提出42件 + 議員提出6件）。
  */
 
 /** 提出議案一覧ページ（会期・件名・全文PDF・概要PDFの出典） */
@@ -32,6 +34,18 @@ export const R8_1_SUBMISSIONS_URL =
 /** 議決結果ページ（議決結果の出典） */
 export const R8_1_DECISIONS_URL =
   "https://www.city.shinjuku.lg.jp/kusei/soumu01_002090_00015.html";
+
+/** 議会公式の会期ページ（議員提出議案の識別名・件名の出典） */
+export const R8_1_COUNCIL_SESSION_URL =
+  "https://www.city.shinjuku.lg.jp/kusei/file08_05_0003820210204_00013.html";
+
+/** 議会公式「議案の概要と審議結果」PDF（議員提出議案の概要・議決結果の出典） */
+export const R8_1_COUNCIL_RESULTS_PDF =
+  "https://www.city.shinjuku.lg.jp/content/000452334.pdf";
+
+/** 議会公式「可決した意見書」ページ（議員提出議案第6号の出典） */
+export const R8_1_COUNCIL_RESOLUTIONS_URL =
+  "https://www.city.shinjuku.lg.jp/kusei/file08_05_0004020210118_00006.html";
 
 /** 「予算案（概要）」令和7年度2月補正（一般会計 補正第12号） */
 const OVERVIEW_BUDGET_R7_12 =
@@ -64,11 +78,12 @@ const OVERVIEW_JOREI_ADDITIONAL =
  * 案件の種別。
  * - `gian`: 第N号議案
  * - `shonin`: 承認第N号（専決処分の承認）
+ * - `giin`: 議員提出議案第N号（議員が提出した条例案・意見書）
  *
  * 承認案件は件名が「専決処分の承認について」で他会期と重複するため、
  * 種別と番号を含む識別子でのみ一意に特定できる。
  */
-export type R8_1ItemType = "gian" | "shonin";
+export type R8_1ItemType = "gian" | "shonin" | "giin";
 
 export interface R8_1SessionItem {
   /** 案件種別 */
@@ -79,8 +94,11 @@ export interface R8_1SessionItem {
   officialLabel: string;
   /** 公式ページ表記の件名（原文どおり） */
   officialTitle: string;
-  /** 全文PDF URL（提出議案一覧ページのリンクと一致を確認済み） */
-  fullTextPdfUrl: string;
+  /**
+   * 全文PDF URL（提出議案一覧ページのリンクと一致を確認済み）。
+   * 否決された議員提出議案は全文PDFが公開されていないため null。
+   */
+  fullTextPdfUrl: string | null;
   /**
    * 当該案件を収録した概要PDF URL。
    * 当初予算（第1〜4号議案）は提出議案一覧ページに概要PDFが無い
@@ -89,6 +107,10 @@ export interface R8_1SessionItem {
   overviewPdfUrl: string | null;
   /** 公式議決結果（議決結果ページの表のとおり） */
   decision: ShinjukuDecision;
+  /** 出典ページURL。省略時は提出議案一覧ページ（区長提出議案） */
+  sourcePageUrl?: string;
+  /** 議決結果の出典URL。省略時は議決結果ページ（区長提出議案） */
+  decisionSourceUrl?: string | null;
   /** 解説を公開表示してよいか。解説が未作成のあいだは false */
   hasPublishableContent: boolean;
   /** 公開レビューが済んだか。解説が未作成のあいだは false */
@@ -544,6 +566,41 @@ export const r8FirstSessionItems: R8_1SessionItem[] = [
     decision: "原案可決",
     ...PENDING,
   },
+  // 議員提出議案。識別名・件名・議決結果は議会公式の会期ページと
+  // 「議案の概要と審議結果」PDF（採決結果行）の記載どおり。
+  ...[
+    ["新宿区介護・福祉人材緊急確保・定着奨励金の支給に関する条例", 1],
+    ["新宿区保健事業の利用に係る使用料等を定める条例を廃止する条例", 2],
+    ["新宿区安心居住支援家賃の助成に関する条例", 3],
+    ["新宿区立学校における学用品の給付に関する条例", 4],
+    ["新宿区立学校における修学旅行費の無償化に関する条例", 5],
+  ].map(
+    ([officialTitle, itemNumber]): R8_1SessionItem => ({
+      itemType: "giin",
+      itemNumber: itemNumber as number,
+      officialLabel: `議員提出議案第${itemNumber}号`,
+      officialTitle: officialTitle as string,
+      fullTextPdfUrl: null,
+      overviewPdfUrl: R8_1_COUNCIL_RESULTS_PDF,
+      decision: "否決",
+      sourcePageUrl: R8_1_COUNCIL_SESSION_URL,
+      decisionSourceUrl: R8_1_COUNCIL_RESULTS_PDF,
+      ...PENDING,
+    })
+  ),
+  {
+    itemType: "giin",
+    itemNumber: 6,
+    officialLabel: "議員提出議案第6号",
+    officialTitle:
+      "住民の居住環境保護と適正な民泊運営の実現に向けた制度見直しに関する意見書",
+    fullTextPdfUrl: officialPdfUrl("000452351"),
+    overviewPdfUrl: R8_1_COUNCIL_RESULTS_PDF,
+    decision: "原案可決",
+    sourcePageUrl: R8_1_COUNCIL_RESOLUTIONS_URL,
+    decisionSourceUrl: R8_1_COUNCIL_RESULTS_PDF,
+    ...PENDING,
+  },
 ];
 
 /** 識別子の名前空間（自治体-西暦-会期）。r8-2 の `shinjuku-2026-r2` と揃える */
@@ -567,6 +624,11 @@ export function r8_1ShoninKey(itemNumber: number): string {
   return buildR8_1ItemKey({ itemType: "shonin", itemNumber });
 }
 
+/** 議員提出議案第N号の安定識別子 */
+export function r8_1GiinKey(itemNumber: number): string {
+  return buildR8_1ItemKey({ itemType: "giin", itemNumber });
+}
+
 /** インベントリ1件を bills テーブルの Insert に変換する */
 export function toR8_1BillInsert(item: R8_1SessionItem): BillInsert {
   const { status, statusNote } = toBillStatus(item.decision);
@@ -584,8 +646,8 @@ export function toR8_1BillInsert(item: R8_1SessionItem): BillInsert {
     thumbnail_url: null,
     pdf_url: item.fullTextPdfUrl,
     overview_pdf_url: item.overviewPdfUrl,
-    source_page_url: R8_1_SUBMISSIONS_URL,
-    decision_source_url: R8_1_DECISIONS_URL,
+    source_page_url: item.sourcePageUrl ?? R8_1_SUBMISSIONS_URL,
+    decision_source_url: item.decisionSourceUrl ?? R8_1_DECISIONS_URL,
   };
 }
 
@@ -600,4 +662,16 @@ export function toR8_1BillInserts(
 export const R8_1_OFFICIAL_LABELS: string[] = [
   ...Array.from({ length: 41 }, (_, i) => `第${1 + i}号議案`),
   "承認第1号",
+];
+
+/** 議会公式ページに載っている議員提出議案の識別名（第1〜6号の6件） */
+export const R8_1_COUNCILOR_BILL_LABELS: string[] = Array.from(
+  { length: 6 },
+  (_, i) => `議員提出議案第${1 + i}号`
+);
+
+/** 区長提出議案42件 + 議員提出議案6件 = 48件の識別名 */
+export const R8_1_ALL_LABELS: string[] = [
+  ...R8_1_OFFICIAL_LABELS,
+  ...R8_1_COUNCILOR_BILL_LABELS,
 ];
