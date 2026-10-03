@@ -3,8 +3,26 @@ name: Code Check
 on:
   push:
     branches: [main]
+    # docs だけの変更では走らせない。ただし docs/verification/ の台帳CSVは
+    # packages/seed のテストが読むので対象に戻す。順序に意味がある（後勝ち）。
+    paths:
+      - "**"
+      - "!docs/**"
+      - "docs/verification/**"
+      - "!*.md"
   pull_request:
     branches: [main]
+    paths:
+      - "**"
+      - "!docs/**"
+      - "docs/verification/**"
+      - "!*.md"
+
+# 同じPRへの連続pushでは古い実行を取り消す。
+# main への push は sha ごとの別グループにして、待機中の実行が取り消されないようにする
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   lint-and-typecheck:

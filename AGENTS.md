@@ -181,13 +181,27 @@ Repository レイヤーの詳細は [docs/repository-layer.md](docs/repository-l
 - テストの書き方・構造化・コード例などの詳細は [docs/テストガイドライン.md](docs/20260219_1000_テストガイドライン.md) を参照。
 
 ## Commit & Pull Request Guidelines
-- **push前のローカル検証（必須）**: `git push` の前に、CIと同じ検証コマンドをローカルで実行して通過を確認すること。CIで落ちてから直すのではなく、手元で事前に検知する。
+- **push前のローカル検証（必須）**: `git push` の前に、変更ファイルの種別に応じた検証をローカルで実行して通過を確認すること。CIで落ちてから直すのではなく、手元で事前に検知する。複数のTierに該当する場合は該当するTierのコマンドをすべて実行する（Eに該当すればEだけで足りる）。下表のどれにも当たらない変更はEとして扱う。PR本文の「検証」欄に適用したTierを書く。
+
+  | Tier | 変更範囲 | 実行するもの |
+  |---|---|---|
+  | A | `docs/**`（`docs/verification/` を除く）、ルート直下の `*.md` のみ | なし（CIもスキップされる） |
+  | B | `docs/verification/**`（主張台帳CSV・確認記録・tools 等） | `pnpm --filter @mirai-gikai/seed test` |
+  | C | `packages/seed/**` のみ | `pnpm --filter @mirai-gikai/seed test` + `pnpm --filter @mirai-gikai/seed typecheck`。`packages/seed/main/**`・importer・DB投入処理を触った場合は `pnpm test:integration` も（`tests/supabase/seed/` が seed のデータを直接 import するため）。ローカルの Supabase が起動できない場合はその旨をPR本文に書き、CIの Integration Tests で確認する |
+  | D | `web/**` または `admin/**` | `pnpm lint` + 該当アプリの `test` / `typecheck` / `build`（例: `pnpm --filter web test`, `pnpm --filter web typecheck`, `pnpm --filter web build`）。DBアクセス経路（repository 等）を変えた場合は `pnpm --filter web test:integration` も |
+  | E | `packages/shared/**`, `packages/supabase/**`, `supabase/**`, `tests/**`, 依存・設定ファイル（`package.json`, `pnpm-lock.yaml`, `tsconfig*.json`, `biome.json`, `next.config.*`, `.github/**`）、その他上記に当たらないもの | 下記の全コマンド。migration を含む場合は `pnpm test:integration` も |
+
   ```bash
   pnpm lint        # Biome format + lint チェック
   pnpm typecheck   # TypeScript 型チェック
   pnpm build       # Next.js ビルドチェック
   pnpm test        # 全ワークスペースのテスト実行
   ```
+
+  - web・admin は `@mirai-gikai/seed` に依存しないため、Tier B・C で Next.js の build は不要。
+  - Biome の対象は `web/src`・`admin/src`・`tests` だけ（`biome.json` の `files.includes`）。`packages/seed` と `docs/verification/tools` は `pnpm lint` で検査されないので、Tier B・C では lint を検証として数えない。
+  - 作業中のループでは `pnpm --filter "...[origin/main]" test` で影響パッケージだけを回してよい。ただし `docs/verification/` の台帳CSVは `packages/seed` のテストが読むにもかかわらず、どのパッケージにも属さないためこの選択に乗らない。台帳を変えたら Tier B を手で回すこと。
+  - CI（Code Check / Integration Tests / Deploy）は Tier A の変更だけのとき起動しない（各ワークフローの `paths` 参照）。それ以外では従来どおりフルで走り、ローカルで省いた検証の最後の網になる。GitHub の `paths` 判定は変更ファイルの先頭300件しか見ないため、大量の docs と一緒にコードや migration をマージした場合は、CI と Deploy が起動したことを確認し、起動していなければ `workflow_dispatch` で Deploy を手動実行する。
 - **push / PR作成前のGitHub状態確認（必須）**: `git push` やPR作成を行う前に、必ず `gh pr list` や `gh pr view <番号>` でGitHub上のPR状態（open/merged/closed）を確認すること。マージ済みブランチへの追加pushや、既にクローズされたPRとの重複を防ぐ。
 - **PRのスコープを厳守**: PRには現在のタスクに関係する変更のみを含めること。レビューやセルフレビューで無関係な変更（別タスクの修正、ついでのリファクタ等）が混入していた場合は、コミット前に取り除く。
 - コミットメッセージは既存履歴同様、短い命令形主体（日本語可）とし、課題連携は `(#id)` を付与します。
@@ -197,7 +211,7 @@ Repository レイヤーの詳細は [docs/repository-layer.md](docs/repository-l
 - **PR作成後の状態確認（必須）**: PR作成後、以下の4点を確認すること：
   1. **Conflict確認**: `gh pr view <番号> --json mergeable,mergeStateStatus` でマージ可能か確認。conflictがあれば解消してpushする。
   2. **CI確認**: `gh pr checks <番号>` でCIの状態を確認。失敗があれば原因を調査し修正してpushする。CIが実行中の場合は完了まで待つ。
-  3. **CodeRabbitレビュー確認**: CodeRabbitのレビューが届くまで待ってからコメントを確認する。レビューは通常2〜3分で届く。`gh api repos/{owner}/{repo}/pulls/{number}/comments` でコメントを取得し、空なら少し待って再取得する。**Minor以上（Minor/Major/Critical）の指摘はすべて対応が必須。** 対応とは「修正してpush」または「スキップ理由を該当コメントに返信」のいずれか。Nitpickのみスキップ可。
+  3. **CodeRabbitレビュー確認**: CodeRabbit がこのリポジトリに導入されている場合のみ行う。`.coderabbit.yml` は upstream から引き継いだもので、導入の根拠にならない。PR作成から5分たっても coderabbitai のチェックやコメントが付かなければ未導入とみなし、待たずに次へ進む。CodeRabbitのレビューが届くまで待ってからコメントを確認する。レビューは通常2〜3分で届く。`gh api repos/{owner}/{repo}/pulls/{number}/comments` でコメントを取得し、空なら少し待って再取得する。**Minor以上（Minor/Major/Critical）の指摘はすべて対応が必須。** 対応とは「修正してpush」または「スキップ理由を該当コメントに返信」のいずれか。Nitpickのみスキップ可。
   4. **対応済みコメントのresolve（必須）**: 修正をpushした後、対応済みのレビューコメントをGraphQL APIでresolveする。まず `gh api graphql` でスレッド一覧を取得し、`resolveReviewThread` mutationで対応済みスレッドをresolveする。
      ```bash
      # スレッド一覧取得（isResolved=falseのものが未resolve）
