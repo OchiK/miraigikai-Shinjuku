@@ -18,8 +18,10 @@ type CouncilSessionInsert =
  * 提出議案42件の識別名・件名・PDF ID が一致、議決結果は原案可決41件・承認1件）。
  * 推測・補完・要約は含まない。
  *
- * 解説（bill_contents）は未作成のため全件 coming_soon・レビュー未完了で登録する。
- * 解説を作成して公開するときは Phase 2 で hasPublishableContent / reviewCompleted を
+ * 解説（bill_contents）は Phase 2 パイロットの5件（第1・5・20・31号議案、議員提出議案第6号）だけ
+ * 作成済みで、この5件は published・レビュー済み。残る43件は未作成のため
+ * coming_soon・レビュー未完了で登録する。
+ * 解説を作成して公開するときは hasPublishableContent / reviewCompleted を
  * 件ごとに true にする。
  *
  * 議員提出議案6件（条例案5件・意見書1件）は区長提出議案の一覧ページには載らず、
@@ -135,6 +137,22 @@ export const R8_1_SESSION: CouncilSessionInsert = {
 const officialPdfUrl = (contentId: string) =>
   `https://www.city.shinjuku.lg.jp/content/${contentId}.pdf`;
 
+/**
+ * bills.published_at に入れるサイト掲載日時（解説を公開した案件だけ）。
+ *
+ * 会期末日（2026-03-24）を用いる。R8-2 と同じ方針で、議決日ではなく掲載時点を表す。
+ * 議案ごとの採決日は会議録で確かめられるが（第5号議案は2月17日、ほかは3月24日）、
+ * 同一会期の公開議案で値をそろえ、一覧は議案番号順に並べる。
+ * null のままだと、公開一覧の published_at 降順で R8-2 より前に並んでしまう。
+ */
+export const R8_1_PUBLISHED_AT = "2026-03-24T00:00:00+09:00";
+
+/** 解説と公開レビューが済んだ案件に共通する公開状態（Phase 2 パイロット5件） */
+const PUBLISHED = {
+  hasPublishableContent: true,
+  reviewCompleted: true,
+} as const;
+
 /** 解説未作成の案件に共通する公開状態（Phase 1） */
 const PENDING = {
   hasPublishableContent: false,
@@ -154,7 +172,7 @@ export const r8FirstSessionItems: R8_1SessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000448420"),
     overviewPdfUrl: null,
     decision: "原案可決",
-    ...PENDING,
+    ...PUBLISHED,
   },
   {
     itemType: "gian",
@@ -194,7 +212,7 @@ export const r8FirstSessionItems: R8_1SessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000448415"),
     overviewPdfUrl: OVERVIEW_BUDGET_R7_12,
     decision: "原案可決",
-    ...PENDING,
+    ...PUBLISHED,
   },
   {
     itemType: "gian",
@@ -344,7 +362,7 @@ export const r8FirstSessionItems: R8_1SessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000448436"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    ...PENDING,
+    ...PUBLISHED,
   },
   {
     itemType: "gian",
@@ -454,7 +472,7 @@ export const r8FirstSessionItems: R8_1SessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000448447"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    ...PENDING,
+    ...PUBLISHED,
   },
   {
     itemType: "gian",
@@ -599,7 +617,7 @@ export const r8FirstSessionItems: R8_1SessionItem[] = [
     decision: "原案可決",
     sourcePageUrl: R8_1_COUNCIL_RESOLUTIONS_URL,
     decisionSourceUrl: R8_1_COUNCIL_RESULTS_PDF,
-    ...PENDING,
+    ...PUBLISHED,
   },
 ];
 
@@ -639,8 +657,8 @@ export function toR8_1BillInsert(item: R8_1SessionItem): BillInsert {
     status,
     status_note: statusNote,
     publish_status: item.hasPublishableContent ? "published" : "coming_soon",
-    // 議決日時ではなくサイト掲載日時。解説を公開する Phase 2 で決める。
-    published_at: null,
+    // 議決日時ではなくサイト掲載日時。解説を公開した案件だけ会期末日を入れる。
+    published_at: item.hasPublishableContent ? R8_1_PUBLISHED_AT : null,
     is_featured: false,
     is_review_completed: item.reviewCompleted,
     thumbnail_url: null,

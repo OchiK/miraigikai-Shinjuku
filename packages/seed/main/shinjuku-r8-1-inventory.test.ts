@@ -7,6 +7,7 @@ import {
   R8_1_COUNCIL_SESSION_URL,
   R8_1_DECISIONS_URL,
   R8_1_OFFICIAL_LABELS,
+  R8_1_PUBLISHED_AT,
   R8_1_SESSION,
   R8_1_SUBMISSIONS_URL,
   buildR8_1ItemKey,
@@ -198,8 +199,10 @@ describe("令和8年第1回定例会インベントリ", () => {
     expect(sixth.sourcePageUrl).toBe(R8_1_COUNCIL_RESOLUTIONS_URL);
     for (const item of giinItems) {
       expect(item.overviewPdfUrl, item.officialLabel).toBe(R8_1_COUNCIL_RESULTS_PDF);
-      expect(item.hasPublishableContent).toBe(false);
-      expect(item.reviewCompleted).toBe(false);
+      // 第6号（意見書）だけは Phase 2 パイロットで解説を公開している
+      const hasContent = item.itemNumber === 6;
+      expect(item.hasPublishableContent, item.officialLabel).toBe(hasContent);
+      expect(item.reviewCompleted, item.officialLabel).toBe(hasContent);
     }
   });
 
@@ -233,13 +236,36 @@ describe("toR8_1BillInserts", () => {
     );
   });
 
-  it("全件 coming_soon・レビュー未完了・掲載日時なしで登録する", () => {
+  it("解説を作成した5件だけ published・レビュー済みにし、残る43件は coming_soon・レビュー未完了で登録する", () => {
+    // Phase 2 パイロット: 第1・5・20・31号議案と議員提出議案第6号。
+    const pilotSlugs = [
+      r8_1GianKey(1),
+      r8_1GianKey(5),
+      r8_1GianKey(20),
+      r8_1GianKey(31),
+      r8_1GiinKey(6),
+    ];
+    expect(
+      inserts
+        .filter((b) => b.publish_status === "published")
+        .map((b) => b.slug)
+    ).toEqual(pilotSlugs);
+
     for (const bill of inserts) {
-      expect(bill.publish_status, bill.slug ?? "").toBe("coming_soon");
-      expect(bill.is_review_completed, bill.slug ?? "").toBe(false);
-      expect(bill.published_at, bill.slug ?? "").toBeNull();
+      const isPilot = pilotSlugs.includes(bill.slug ?? "");
+      expect(bill.publish_status, bill.slug ?? "").toBe(
+        isPilot ? "published" : "coming_soon"
+      );
+      expect(bill.is_review_completed, bill.slug ?? "").toBe(isPilot);
+      // 掲載日時は解説を公開した案件だけ。会期末日で、議決日ではない。
+      expect(bill.published_at, bill.slug ?? "").toBe(
+        isPilot ? R8_1_PUBLISHED_AT : null
+      );
       expect(bill.is_featured, bill.slug ?? "").toBe(false);
     }
+    expect(
+      inserts.filter((b) => b.publish_status === "coming_soon")
+    ).toHaveLength(43);
   });
 
   it("区長提出議案の出典URLは提出議案一覧・議決結果の公式ページを指す", () => {

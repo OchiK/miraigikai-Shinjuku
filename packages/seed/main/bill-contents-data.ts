@@ -1,5 +1,6 @@
 import { type SeededBillRef, requireBillBySlug } from "./bill-ref";
 import { giinBillContents } from "./bill-contents-giin-data";
+import { billContentsR8_1 } from "./bill-contents-r8-1-data";
 import { billContentsR8_3 } from "./bill-contents-r8-3-data";
 import { gianKey, shoninKey } from "./shinjuku-r8-2-inventory";
 
@@ -4645,6 +4646,8 @@ export const billContentsWithBillSlug: BillContentWithBillSlug[] = [
   ...giinBillContents,
   // 令和8年第3回定例会の区長提出案件22件の解説。出典と台帳は bill-contents-r8-3-data.ts を参照
   ...billContentsR8_3,
+  // 令和8年第1回定例会の先行整備5件（第1・5・20・31号議案、議員提出議案第6号）の解説。出典と台帳は bill-contents-r8-1-data.ts を参照
+  ...billContentsR8_1,
 ];
 
 // bill_slug を bill_id に変換する関数
