@@ -195,7 +195,7 @@ Progress（2026-10-03）:
   - 対象5議案の `publish_status: "published"` / `is_review_completed: true` への更新を反映し、GitHub Actions（`import_production.yml` run 37111865171）により本番DBへ非破壊反映完了。本番の議案詳細ページ（`/bills/[id]`）にて5件すべての正常表示・解説および本会議発言の閲覧を確認済み。
 - 続いて予算関連議案11件（第2・3・4・6・7・8・9・37・38・39・40号議案）の3難易度解説（33変種）を作成した（作業記録: `docs/20261003_2100_令和8年第1回定例会_予算議案11件_解説作成記録.md`）。
   - 全文PDF11件・補正予算概要PDF3件・「議案の概要と審議結果」・議決結果ページ・本会議会議録（2026年3月24日）と突合し、主張台帳 `docs/verification/20261003_2100_claim-ledger-r8-1-budgets.csv`（UTF-8 BOM付き、627行すべて supported）を整備。実装計画の予算規模（第2〜4号）・補正理由（第6〜9号・第37〜40号）・概要PDFのIDは一次資料と一致しなかったため、一次資料を採用した。
-  - 11件を `publish_status: "published"` / `is_review_completed: true` に更新（インベントリ）。本番DBへの反映（`import_production.yml`）は、マージ後に実行して結果を追記する。
+  - 11件を `publish_status: "published"` / `is_review_completed: true` に更新（インベントリ）。PR #123 でマージし、GitHub Actions（`import_production.yml` run 37121397154、事前の dry-run 37121325404 で議案更新11件・解説新規33件のみを確認）により本番DBへ非破壊反映した。本番の `/sessions/r8-1/bills` に公開議案21件のリンクが並び、第6・37・38号議案のページでやさしい版の題名・要約・議決表示を確認した。
 - 残り: Phase 2 残余議案（区長提出の27件、条例等）の段階的解説作成。
 
 ### P5-3 半自動化の残り（ROADMAP Phase 6）
