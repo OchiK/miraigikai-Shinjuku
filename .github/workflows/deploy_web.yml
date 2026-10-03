@@ -3,6 +3,13 @@ name: Migrate DB then Deploy Web
 on:
   push:
     branches: [main]
+    # docs だけのマージでは migration・本番デプロイを走らせない。
+    # 条件は Code Check / Integration Tests と揃える。順序に意味がある（後勝ち）。
+    paths:
+      - "**"
+      - "!docs/**"
+      - "docs/verification/**"
+      - "!*.md"
   workflow_dispatch:
 
 jobs:
