@@ -668,7 +668,7 @@ const MINUTE_VIEW_URL =
 
 describe("令和8年第1回定例会パイロット5件の主張台帳の構造", () => {
   // 議決済みの案件。議決結果は議決結果ページと「議案の概要と審議結果」から supported で引く。
-  // 採決日は出典に書かれていないので、本文は「3月24日の本会議」と書かない。
+  // 採決日は本会議の会議録、可決の表記は各行が引用する資料で個別に確かめる。
   const rows = readLedger(R8_1_PILOT_CLAIM_LEDGER_PATH);
   const pilotItems = r8FirstSessionItems.filter(
     (item) => item.hasPublishableContent
@@ -732,6 +732,47 @@ describe("令和8年第1回定例会パイロット5件の主張台帳の構造"
   it("claim_id が一意である", () => {
     const ids = rows.map((r) => r.claim_id);
     expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("複数条文・資料にまたがる要約は根拠ごとの原子的な行に分かれている", () => {
+    const claims = rows.map((row) => ({
+      item: row.item_key,
+      claim: row.final_claim,
+      section: row.page_or_section,
+    }));
+
+    expect(claims).toEqual(
+      expect.arrayContaining([
+        {
+          item: "shinjuku-2026-r1-gian-1",
+          claim: "要約: 第3表で債務負担行為（債務保証）を定める",
+          section: "第3表 債務負担行為（債務保証）",
+        },
+        {
+          item: "shinjuku-2026-r1-gian-31",
+          claim: "要約: 状況届・結果届（第6条）を定める",
+          section: "第6条",
+        },
+        {
+          item: "shinjuku-2026-r1-gian-31",
+          claim: "要約: 公表を定める",
+          section: "第12条",
+        },
+      ])
+    );
+
+    const compoundRegressions = rows
+      .filter(
+        (row) =>
+          row.content_field === "summary" &&
+          (row.final_claim.includes("第2表・第3表") ||
+            row.final_claim.includes("状況届・結果届（第6条）、完了届") ||
+            row.final_claim.includes("勧告・公表を定める") ||
+            row.final_claim.includes("7項目を国会と政府"))
+      )
+      .map((row) => row.claim_id);
+
+    expect(compoundRegressions).toEqual([]);
   });
 
   it("主張・出典・ハッシュ・位置・引用がいずれも空でない", () => {
