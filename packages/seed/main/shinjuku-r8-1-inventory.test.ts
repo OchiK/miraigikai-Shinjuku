@@ -199,8 +199,8 @@ describe("令和8年第1回定例会インベントリ", () => {
     expect(sixth.sourcePageUrl).toBe(R8_1_COUNCIL_RESOLUTIONS_URL);
     for (const item of giinItems) {
       expect(item.overviewPdfUrl, item.officialLabel).toBe(R8_1_COUNCIL_RESULTS_PDF);
-      // 第6号（意見書）だけは Phase 2 パイロットで解説を公開している
-      const hasContent = item.itemNumber === 6;
+      // 議員提出議案は、第1〜5号（否決された条例案）も第6号（意見書）も解説を公開している
+      const hasContent = true;
       expect(item.hasPublishableContent, item.officialLabel).toBe(hasContent);
       expect(item.reviewCompleted, item.officialLabel).toBe(hasContent);
     }
@@ -236,13 +236,19 @@ describe("toR8_1BillInserts", () => {
     );
   });
 
-  it("解説を作成した5件だけ published・レビュー済みにし、残る43件は coming_soon・レビュー未完了で登録する", () => {
-    // Phase 2 パイロット: 第1・5・20・31号議案と議員提出議案第6号。
+  it("解説を作成した10件だけ published・レビュー済みにし、残る38件は coming_soon・レビュー未完了で登録する", () => {
+    // Phase 2 パイロット（第1・5・20・31号議案と議員提出議案第6号）と、
+    // 議員提出議案第1〜5号（否決された条例案）。インベントリの並び順。
     const pilotSlugs = [
       r8_1GianKey(1),
       r8_1GianKey(5),
       r8_1GianKey(20),
       r8_1GianKey(31),
+      r8_1GiinKey(1),
+      r8_1GiinKey(2),
+      r8_1GiinKey(3),
+      r8_1GiinKey(4),
+      r8_1GiinKey(5),
       r8_1GiinKey(6),
     ];
     expect(
@@ -265,7 +271,7 @@ describe("toR8_1BillInserts", () => {
     }
     expect(
       inserts.filter((b) => b.publish_status === "coming_soon")
-    ).toHaveLength(43);
+    ).toHaveLength(38);
   });
 
   it("区長提出議案の出典URLは提出議案一覧・議決結果の公式ページを指す", () => {
