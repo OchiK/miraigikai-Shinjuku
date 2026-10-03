@@ -174,6 +174,15 @@ Acceptance:
   - 令和8年度当初予算（第1号議案）をはじめとする主要議案を中心に、やさしい／ふつう／くわしくの3難易度解説と主張台帳（claim ledger）を作成する
   - 一次資料突合および公開レビュー（Codex）を経て順次 `published` / `is_review_completed: true` に更新する
 
+Progress（2026-10-03）:
+- Phase 1（区長提出議案42件のインベントリ作成・先行タイトル登録）を PR #115 で実装・マージした。
+- 新宿区公式の提出議案一覧ページ（`kuseijoho01_001109_01.html`）および議決結果ページ（`soumu01_002090_00015.html`）の実物と突合し、区長提出議案全42件（予算案13件、条例等28件、承認第1号1件）を `packages/seed/main/shinjuku-r8-1-inventory.ts` として新規追加した。
+- 議決結果は全件確定済み（原案可決41件、承認1件）であり、DB enum に適合する `status: "approved"` / `status_note: "本会議で原案可決"`（承認は「本会議で承認」）として登録。
+- 解説未作成のため `publish_status: "coming_soon"` / `is_review_completed: false` / `published_at: null` とし、`packages/seed/main/data.ts` の `bills`（51件→93件）および `billSessionSlugByBillSlug` に接続して `/sessions/r8-1/bills` の空状態を解消した。
+- `packages/seed/monitor/targets.ts` の `KNOWN_SESSIONS` に `r8-1` を追加し、監視パーサに公式表記「承認第1号_専決処分の承認について」の `_` 区切り対応を追加して誤検知を防止。
+- シード・インベントリ・監視照合のテスト（全1,367件）が通過することを確認済み。
+- 残り: GitHub Actions（`import_production.yml`）での本番DB反映、および Phase 2（主要議案の3難易度解説作成・主張台帳突合・公開レビュー）。
+
 ### P5-3 半自動化の残り（ROADMAP Phase 6）
 会期ページの解析・変化の検知・定期実行・下書きPRは P5-1 で実装済み。
 
