@@ -188,7 +188,12 @@ Progress（2026-10-03）:
   - 各議案についてやさしい／ふつう／くわしくの3難易度解説（計15変種）を `packages/seed/main/bill-contents-r8-1-data.ts` に作成し、一次資料（各全文PDF・概要PDF）の全事実主張を網羅する主張台帳（`docs/verification/20261003_1330_claim-ledger-r8-1-pilot.csv`、計482行）を整備。
   - `easy-japanese-validation.test.ts`（1文40字以内、アンカー保持プロトコル）、`bill-contents-revision.test.ts`（本文sha256と台帳ハッシュの一致）、`seed-associations.test.ts` などの全テストを通過。
   - 対象5議案の `publish_status: "published"` / `is_review_completed: true` への更新を反映し、GitHub Actions（`import_production.yml` run 37099619443）により本番DBへ非破壊反映完了。本番の議案詳細ページ（`/bills/[id]`）にて5件すべての正常表示・解説閲覧を確認済み。
-- 残り: Phase 2 残余議案（43件）の段階的解説作成。
+- 続いて議員提出議案第1号〜第5号（否決された条例案5件）の3難易度解説作成・本会議少数意見報告（実際の発言・spoken parts）組み込み・主張台帳突合・公開レビューを PR #121 で実装・マージした。
+  - 対象5議案: 議員提出議案第1号（介護・福祉人材奨励金条例）、第2号（保健事業使用料等廃止条例）、第3号（安心居住支援家賃助成条例）、第4号（学用品給付条例）、第5号（修学旅行費無償化条例）。
+  - R8-2 の議員提出議案モデルを踏襲し、本会議（2026年3月24日、会議録ID: 3163 schedule: 5）での杉山直子議員（共産, minute 12, 100）、高月まな議員（共産, minute 106）、さわいめぐみ議員（れいわ, minute 108）、近藤なつ子議員（共産, minute 115）の少数意見報告（発言内容・要点）および委員会審査決定・起立採決（否決・会派別態度）を3難易度解説（15変種）に組み込んだ（`packages/seed/main/bill-contents-r8-1-giin-data.ts`、作業記録: `docs/20261003_1600_令和8年第1回定例会_議員提出議案5件_解説作成記録.md`）。
+  - 主張台帳 `docs/verification/20261003_1600_claim-ledger-r8-1-giin.csv`（UTF-8 BOM付き、417行すべて supported）を整備し、全15変種のハッシュ突合・機械検証を実施。
+  - 対象5議案の `publish_status: "published"` / `is_review_completed: true` への更新を反映し、GitHub Actions（`import_production.yml` run 37111865171）により本番DBへ非破壊反映完了。本番の議案詳細ページ（`/bills/[id]`）にて5件すべての正常表示・解説および本会議発言の閲覧を確認済み。
+- 残り: Phase 2 残余議案（区長提出の38件）の段階的解説作成。
 
 ### P5-3 半自動化の残り（ROADMAP Phase 6）
 会期ページの解析・変化の検知・定期実行・下書きPRは P5-1 で実装済み。
