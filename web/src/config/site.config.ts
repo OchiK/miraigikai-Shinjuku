@@ -4,6 +4,7 @@
  */
 export const siteConfig = {
   siteName: "みらい議会＠新宿区",
+  shortSiteName: "みらい議会",
   siteDescription:
     "新宿区議会でどのような議案が検討されているかを、公式資料をもとにわかりやすく伝える非公式サイトです",
   cityName: "新宿区",
@@ -14,6 +15,7 @@ export const siteConfig = {
    */
   english: {
     siteName: "Mirai Gikai @ Shinjuku",
+    shortSiteName: "Mirai Gikai",
     siteDescription:
       "an unofficial site that explains, based on official materials, which bills Shinjuku City Council is considering",
     cityName: "Shinjuku City",

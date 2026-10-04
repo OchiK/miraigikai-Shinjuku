@@ -368,7 +368,7 @@ export const UI_MESSAGES: Record<PublicLocale, UiMessages> = {
       home: "トップへ",
       returnToHome: "トップページへ戻る",
       openMenu: "メニューを開く",
-      sessionBills: (sessionName) => `${sessionName}の議案一覧`,
+      sessionBills: (sessionName) => sessionName,
     },
     difficulty: {
       groupLabel: "説明の詳しさを切り替え",
@@ -695,7 +695,7 @@ export const UI_MESSAGES: Record<PublicLocale, UiMessages> = {
       home: "Home",
       returnToHome: "Back to the home page",
       openMenu: "Open menu",
-      sessionBills: (sessionName) => `Bills: ${sessionName}`,
+      sessionBills: (sessionName) => sessionName,
     },
     difficulty: {
       groupLabel: "Choose how detailed the explanation is",
