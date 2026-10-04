@@ -15,6 +15,8 @@ import {
   compareStanceTable,
   type ExtractedStanceTable,
   FACTION_STANCE_SOURCES,
+  R8_1_VOTE_COLUMNS,
+  r8_1BillVotes,
   R8_2_VOTE_COLUMNS,
   r8_2BillVotes,
 } from "./shinjuku-faction-stances";
@@ -39,16 +41,21 @@ async function extractTableFromUrl(url: string): Promise<ExtractedStanceTable> {
   }
 }
 
-async function main() {
-  const source = FACTION_STANCE_SOURCES["r8-2"];
-  console.log(`出典: ${source.label}\n${source.url}\n`);
+async function verifySession(
+  sessionSlug: "r8-1" | "r8-2",
+  columns: readonly { heading: string }[],
+  votes: typeof r8_1BillVotes
+) {
+  const source = FACTION_STANCE_SOURCES[sessionSlug];
+  if (!source) throw new Error(`出典が見つかりません: ${sessionSlug}`);
+  console.log(`=== ${sessionSlug}: ${source.label} ===\n${source.url}\n`);
   const table = await extractTableFromUrl(source.url);
-  const problems = compareStanceTable(table, r8_2BillVotes);
+  const problems = compareStanceTable(table, votes, columns);
 
-  const headings = R8_2_VOTE_COLUMNS.map((c) => c.heading);
-  console.log(`照合: ${r8_2BillVotes.length}議案 × ${headings.length}会派`);
-  console.log("全会一致でない議案（PDFの2面で×の位置を目で確認すること）:");
-  for (const bill of r8_2BillVotes.filter((b) => b.marks.includes("×"))) {
+  const headings = columns.map((c) => c.heading);
+  console.log(`照合: ${votes.length}議案 × ${headings.length}会派`);
+  console.log("全会一致でない議案（PDFの×の位置を目で確認すること）:");
+  for (const bill of votes.filter((b) => b.marks.includes("×"))) {
     const names = [...bill.marks].flatMap((mark, i) =>
       mark === "×" ? [headings[i]] : []
     );
@@ -56,10 +63,21 @@ async function main() {
   }
 
   if (problems.length > 0) {
-    console.error(`\n不一致 ${problems.length}件:\n${problems.join("\n")}`);
+    console.error(`\n${sessionSlug} 不一致 ${problems.length}件:\n${problems.join("\n")}`);
+    return false;
+  }
+  console.log(`\n${sessionSlug} 不一致なし\n`);
+  return true;
+}
+
+async function main() {
+  const r8_1Ok = await verifySession("r8-1", R8_1_VOTE_COLUMNS, r8_1BillVotes);
+  const r8_2Ok = await verifySession("r8-2", R8_2_VOTE_COLUMNS, r8_2BillVotes);
+
+  if (!r8_1Ok || !r8_2Ok) {
     process.exit(1);
   }
-  console.log("\n不一致なし");
+  console.log("全会期の会派賛否照合が成功しました");
 }
 
 main().catch((error) => {

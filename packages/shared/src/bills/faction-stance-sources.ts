@@ -13,6 +13,10 @@ export type FactionStanceSource = {
 };
 
 export const FACTION_STANCE_SOURCES: Record<string, FactionStanceSource> = {
+  "r8-1": {
+    label: "新宿区議会「議案の概要と審議結果」（令和8年第1回定例会）",
+    url: "https://www.city.shinjuku.lg.jp/content/000452334.pdf",
+  },
   "r8-2": {
     label: "新宿区議会「議案の概要と審議結果」（令和8年第2回定例会）",
     url: "https://www.city.shinjuku.lg.jp/content/000459252.pdf",
