@@ -187,7 +187,7 @@ Repository レイヤーの詳細は [docs/repository-layer.md](docs/repository-l
 - **主張台帳（Claim Ledger）とハッシュ突合**:
   - すべての事実主張は一次資料（全文PDF、概要PDF、審議結果PDF、公式会議録）と1対1で突合し、UTF-8 BOM付きCSVとして保存する。全件 `status: supported` とし、`reviewed_content_sha256` の完全一致をテストで検証すること。
 - **やさしい日本語の制約**:
-  - 1文40文字以内、アンカー保持プロトコル（`【正式名称】［ふりがな］（＝言いかえ）`）、元号・西暦併記を厳守すること（`easy-japanese-validation.test.ts` で機械検証）。
+  - 1文40文字以内、アンカー保持プロトコル（`【正式名称】［ふりがな］（＝言いかえ）`）、元号・西暦併記を厳守すること（`easy-japanese-validation.test.ts` で機械検証）。文字数は `【正式名称】` を本文として数え、読みを助ける注記 `［ふりがな］（＝言いかえ）` とアンカー記号 `【】` は数えない。
 
 ## Testing Guidelines
 - Vitest の単体テストを `*.test.ts` として実装と同階層に配置し、AI コスト計算や Markdown 処理などデータ変換の変更時は必ず回帰テストを追加します。
