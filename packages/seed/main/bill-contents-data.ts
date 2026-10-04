@@ -3,6 +3,7 @@ import { giinBillContents } from "./bill-contents-giin-data";
 import { billContentsR8_1 } from "./bill-contents-r8-1-data";
 import { billContentsR8_1Budget } from "./bill-contents-r8-1-budget-data";
 import { billContentsR8_1OrdinancesA } from "./bill-contents-r8-1-ordinances-a-data";
+import { billContentsR8_1OrdinancesB } from "./bill-contents-r8-1-ordinances-b-data";
 import { billContentsR8_1Giin } from "./bill-contents-r8-1-giin-data";
 import { billContentsR8_3 } from "./bill-contents-r8-3-data";
 import { gianKey, shoninKey } from "./shinjuku-r8-2-inventory";
@@ -4657,6 +4658,8 @@ export const billContentsWithBillSlug: BillContentWithBillSlug[] = [
   ...billContentsR8_1Budget,
   // 令和8年第1回定例会の条例案 Group A 10件（第10〜19号議案）の解説。出典と台帳は bill-contents-r8-1-ordinances-a-data.ts を参照
   ...billContentsR8_1OrdinancesA,
+  // 令和8年第1回定例会の条例案 Group B 10件（第21〜30号議案）の解説。出典と台帳は bill-contents-r8-1-ordinances-b-data.ts を参照
+  ...billContentsR8_1OrdinancesB,
 ];
 
 // bill_slug を bill_id に変換する関数
