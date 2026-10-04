@@ -1688,6 +1688,24 @@ describe("令和8年第1回定例会 条例案 Group A 10件の主張台帳の�
     }
   });
 
+  it("第17号の資料限界は、曖昧な『本文』ではなく本則第11条第1項を未収録箇所として示す", () => {
+    for (const c of contentsOf(17)) {
+      const label = `${c.bill_slug}:${c.difficulty_level}`;
+      const unknownHeading = {
+        easy: "## わからない こと",
+        normal: "## 分からないこと",
+        hard: "## 5. 資料から読み取れない事項",
+      }[c.difficulty_level as "easy" | "normal" | "hard"];
+      const section = c.content
+        .slice(c.content.indexOf(unknownHeading) + unknownHeading.length)
+        .split(/\n## /)[0]
+        .replaceAll(" ", "");
+
+      expect(section, label).toMatch(/本則(?:の)?第11条第1項/);
+      expect(section, label).not.toContain("本文の第11条");
+    }
+  });
+
   it("hard の一次資料一覧のsha256は、台帳に記録した取得時のsha256と一致する", () => {
     for (const n of numbers) {
       const hard = contentsOf(n).find((c) => c.difficulty_level === "hard");
