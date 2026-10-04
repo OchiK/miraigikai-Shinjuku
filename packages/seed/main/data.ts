@@ -1,6 +1,9 @@
 import type { Database } from "@mirai-gikai/supabase";
 import { type SeededBillRef, requireBillBySlug } from "./bill-ref";
 import {
+  R8_1_VOTE_COLUMNS,
+  r8_1BillVotes,
+  R8_2_VOTE_COLUMNS,
   r8_2BillVotes,
   toFactionStanceImportRows,
 } from "./shinjuku-faction-stances";
@@ -315,7 +318,11 @@ export function createFactionStances(
   insertedBills: SeededBillRef[],
   insertedFactions: { id: string; name: string }[]
 ): FactionStanceInsert[] {
-  return toFactionStanceImportRows(r8_2BillVotes, factions).map((row) => {
+  const allVotes = [
+    ...toFactionStanceImportRows(r8_1BillVotes, factions, R8_1_VOTE_COLUMNS),
+    ...toFactionStanceImportRows(r8_2BillVotes, factions, R8_2_VOTE_COLUMNS),
+  ];
+  return allVotes.map((row) => {
     const faction = insertedFactions.find((f) => f.name === row.faction_name);
     if (!faction) {
       throw new Error(`Faction not found for name: ${row.faction_name}`);

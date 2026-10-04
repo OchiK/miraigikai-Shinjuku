@@ -21,6 +21,17 @@ def clean(cell):
     return (cell or "").replace("\n", "").strip()
 
 
+def normalize_mark(c):
+    if not c:
+        return c
+    # 「○1人反対」のような注記付き賛否は基本記号（○/×）を取り出す
+    if c.startswith("○") or c.startswith("〇"):
+        return "○"
+    if c.startswith("×"):
+        return "×"
+    return c
+
+
 def main(path):
     with pdfplumber.open(path) as pdf:
         for page in pdf.pages:
@@ -34,11 +45,14 @@ def main(path):
                         start = cells.index("自参ク")
                         headings = [c for c in cells[start:] if c][:-1]
                         continue
-                    filled = [c for c in cells if c]
+                    filled = [clean(c) for c in raw if clean(c)]
                     if not filled or filled[-1] not in RESULTS:
                         continue
-                    first_mark = next(i for i, c in enumerate(filled) if c in MARKS)
-                    marks = filled[first_mark:-1]
+                    normalized_filled = [normalize_mark(c) for c in filled]
+                    first_mark = next((i for i, c in enumerate(normalized_filled) if c in MARKS), None)
+                    if first_mark is None:
+                        continue
+                    marks = normalized_filled[first_mark:-1]
                     # 議案名は記号の直前の概要欄のさらに前。概要欄が結合で無い行は直前
                     title = filled[first_mark - 2] if first_mark >= 2 else filled[0]
                     if any(c not in MARKS for c in marks):

@@ -3,11 +3,21 @@ import { factions } from "./data";
 import {
   compareStanceTable,
   parseVoteMarks,
+  R8_1_VOTE_COLUMNS,
+  r8_1BillVotes,
   R8_2_VOTE_COLUMNS,
   r8_2BillVotes,
   resolveFactionAtVote,
   toFactionStanceImportRows,
 } from "./shinjuku-faction-stances";
+import {
+  buildR8_1ItemKey,
+  r8_1GianKey,
+  r8_1GiinKey,
+  r8_1ShoninKey,
+  r8FirstSessionItems,
+  toR8_1BillInserts,
+} from "./shinjuku-r8-1-inventory";
 import {
   buildItemKey,
   gianKey,
@@ -21,6 +31,80 @@ const rows = toFactionStanceImportRows(r8_2BillVotes, factions);
 const councilorSlugs = new Set(
   r8SecondSessionItems.filter((i) => i.itemType === "giin").map(buildItemKey)
 );
+
+
+const r8_1Rows = toFactionStanceImportRows(r8_1BillVotes, factions, R8_1_VOTE_COLUMNS);
+const r8_1CouncilorSlugs = new Set(
+  r8FirstSessionItems.filter((i) => i.itemType === "giin").map(buildR8_1ItemKey)
+);
+
+describe("令和8年第1回定例会の会派賛否", () => {
+  it("DB の議案48件すべてを1回ずつ持つ", () => {
+    const billSlugs = new Set(toR8_1BillInserts().map((bill) => bill.slug));
+    expect(r8_1BillVotes.map((bill) => bill.billKey)).toHaveLength(48);
+    for (const bill of r8_1BillVotes) {
+      expect(billSlugs.has(bill.billKey)).toBe(true);
+    }
+  });
+
+  it("48議案×8会派＝384行になる", () => {
+    expect(r8_1Rows).toHaveLength(384);
+  });
+
+  it("区長提出議案の反対は共産9件・れいわ6件", () => {
+    const against = r8_1Rows
+      .filter(
+        (row) =>
+          row.type === "against" &&
+          !r8_1CouncilorSlugs.has(row.bill_slug)
+      )
+      .map((row) => [row.bill_slug, row.faction_name]);
+
+    const kyosanAgainst = against.filter(([_, f]) => f === "kyosan").map(([slug]) => slug);
+    expect(kyosanAgainst).toEqual([
+      r8_1GianKey(1),
+      r8_1GianKey(2),
+      r8_1GianKey(38),
+      r8_1GianKey(3),
+      r8_1GianKey(4),
+      r8_1GianKey(6),
+      r8_1GianKey(9),
+      r8_1GianKey(17),
+      r8_1GianKey(41),
+    ]);
+
+    const inochiAgainst = against.filter(([_, f]) => f === "inochi").map(([slug]) => slug);
+    expect(inochiAgainst).toEqual([
+      r8_1GianKey(1),
+      r8_1GianKey(2),
+      r8_1GianKey(38),
+      r8_1GianKey(3),
+      r8_1GianKey(4),
+      r8_1GianKey(41),
+    ]);
+  });
+
+  it("否決された議員提出議案第1〜5号は、共産とれいわだけが賛成", () => {
+    for (let i = 1; i <= 5; i++) {
+      const key = r8_1GiinKey(i);
+      const forFactions = r8_1Rows
+        .filter((row) => row.bill_slug === key && row.type === "for")
+        .map((row) => row.faction_name);
+      expect(forFactions).toEqual(["kyosan", "inochi"]);
+    }
+  });
+
+  it("意見書（議員提出議案第6号）は全8会派が賛成", () => {
+    const key = r8_1GiinKey(6);
+    expect(
+      r8_1Rows.filter((row) => row.bill_slug === key).map((row) => row.type)
+    ).toEqual(Array(8).fill("for"));
+  });
+
+  it("採決後に結成されたアップデート新宿の行は作らない", () => {
+    expect(r8_1Rows.some((row) => row.faction_name === "update")).toBe(false);
+  });
+});
 
 describe("令和8年第2回定例会の会派賛否", () => {
   it("DB の議案27件すべてを、表の並び（区長提出→議員提出）で1回ずつ持つ", () => {

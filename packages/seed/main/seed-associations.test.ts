@@ -364,11 +364,24 @@ describe("createFactionStances", () => {
     const against = stances.filter((stance) => stance.type === "against");
     expect(against).toContainEqual(
       expect.objectContaining({
+        bill_id: billBySlug("shinjuku-2026-r1-gian-1").id,
+        faction_id: "kyosan-uuid",
+      })
+    );
+    expect(against).toContainEqual(
+      expect.objectContaining({
+        bill_id: billBySlug("shinjuku-2026-r1-gian-1").id,
+        faction_id: "inochi-uuid",
+      })
+    );
+    expect(against).toContainEqual(
+      expect.objectContaining({
         bill_id: billBySlug("shinjuku-2026-r2-gian-54").id,
         faction_id: "kyosan-uuid",
       })
     );
-    expect(stances).toHaveLength(216);
+    // R8-1: 48件×8会派=384件 + R8-2: 27件×8会派=216件
+    expect(stances).toHaveLength(384 + 216);
   });
 
   it("採決後に結成された会派には賛否を付けない", () => {

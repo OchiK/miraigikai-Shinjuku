@@ -1,4 +1,9 @@
 import type { Database } from "@mirai-gikai/supabase";
+import {
+  r8_1GianKey,
+  r8_1GiinKey,
+  r8_1ShoninKey,
+} from "./shinjuku-r8-1-inventory";
 import { giinKey, gianKey, shoninKey } from "./shinjuku-r8-2-inventory";
 
 export { FACTION_STANCE_SOURCES } from "@mirai-gikai/shared/bills/faction-stance-sources";
@@ -51,6 +56,262 @@ export type SeedBillVotes = {
 
 // 表の全27件。並びは表のとおり（区長提出議案23件のあとに議員提出議案4件で、
 // インベントリの並びと同じ）。
+
+// 新宿区議会 会派ごとの賛否（令和8年第1回定例会）
+//
+// 出典: 新宿区議会「議案の概要と審議結果（賛成…○、反対…×）」（令和8年第1回定例会）
+//   https://www.city.shinjuku.lg.jp/content/000452334.pdf
+//   （会期: 令和8年2月17日〜3月24日、全48件）
+//
+// 表の列は採決時点の8会派で、第2回定例会（R8_2_VOTE_COLUMNS）と完全に同一。
+// 第41号議案「新宿区国民健康保険条例の一部を改正する条例」の立憲民主党・無所属クラブ欄に
+// 「1人反対」の注記があるが、会派としての態度は賛成（○）。個別の投票は解説本文（わからないこと）に記載。
+export const R8_1_VOTE_COLUMNS = R8_2_VOTE_COLUMNS;
+
+// 表の全48件。並びは「議案の概要と審議結果」PDFの表のとおり。
+export const r8_1BillVotes: SeedBillVotes[] = [
+  {
+    billKey: r8_1ShoninKey(1),
+    titleInSource: "専決処分の承認について",
+    marks: "○○○○○○○○",
+  },
+  {
+    billKey: r8_1GianKey(1),
+    titleInSource: "令和8年度新宿区一般会計予算",
+    marks: "○○×○○○○×",
+  },
+  {
+    billKey: r8_1GianKey(37),
+    titleInSource: "令和8年度新宿区一般会計補正予算（第1号）",
+    marks: "○○○○○○○○",
+  },
+  {
+    billKey: r8_1GianKey(2),
+    titleInSource: "令和8年度新宿区国民健康保険特別会計予算",
+    marks: "○○×○○○○×",
+  },
+  {
+    billKey: r8_1GianKey(38),
+    titleInSource: "令和8年度新宿区国民健康保険特別会計補正予算（第1号）",
+    marks: "○○×○○○○×",
+  },
+  {
+    billKey: r8_1GianKey(3),
+    titleInSource: "令和8年度新宿区介護保険特別会計予算",
+    marks: "○○×○○○○×",
+  },
+  {
+    billKey: r8_1GianKey(39),
+    titleInSource: "令和8年度新宿区介護保険特別会計補正予算（第1号）",
+    marks: "○○○○○○○○",
+  },
+  {
+    billKey: r8_1GianKey(4),
+    titleInSource: "令和8年度新宿区後期高齢者医療特別会計予算",
+    marks: "○○×○○○○×",
+  },
+  {
+    billKey: r8_1GianKey(5),
+    titleInSource: "令和7年度新宿区一般会計補正予算（第12号）",
+    marks: "○○○○○○○○",
+  },
+  {
+    billKey: r8_1GianKey(6),
+    titleInSource: "令和7年度新宿区一般会計補正予算（第13号）",
+    marks: "○○×○○○○○",
+  },
+  {
+    billKey: r8_1GianKey(40),
+    titleInSource: "令和7年度新宿区一般会計補正予算（第14号）",
+    marks: "○○○○○○○○",
+  },
+  {
+    billKey: r8_1GianKey(7),
+    titleInSource: "令和7年度新宿区国民健康保険特別会計補正予算（第3号）",
+    marks: "○○○○○○○○",
+  },
+  {
+    billKey: r8_1GianKey(8),
+    titleInSource: "令和7年度新宿区介護保険特別会計補正予算（第3号）",
+    marks: "○○○○○○○○",
+  },
+  {
+    billKey: r8_1GianKey(9),
+    titleInSource: "令和7年度新宿区後期高齢者医療特別会計補正予算（第3号）",
+    marks: "○○×○○○○○",
+  },
+  {
+    billKey: r8_1GianKey(10),
+    titleInSource: "新宿区行政手続条例の一部を改正する条例",
+    marks: "○○○○○○○○",
+  },
+  {
+    billKey: r8_1GianKey(11),
+    titleInSource: "新宿区職員定数条例の一部を改正する条例",
+    marks: "○○○○○○○○",
+  },
+  {
+    billKey: r8_1GianKey(12),
+    titleInSource: "新宿区職員の特殊勤務手当に関する条例の一部を改正する条例",
+    marks: "○○○○○○○○",
+  },
+  {
+    billKey: r8_1GianKey(13),
+    titleInSource: "公益的法人等への新宿区職員の派遣等に関する条例の一部を改正する条例",
+    marks: "○○○○○○○○",
+  },
+  {
+    billKey: r8_1GianKey(14),
+    titleInSource: "新宿区職員の給与に関する条例の一部を改正する条例",
+    marks: "○○○○○○○○",
+  },
+  {
+    billKey: r8_1GianKey(15),
+    titleInSource: "新宿区住民基本台帳制度の適正な運用に関する条例の一部を改正する条例",
+    marks: "○○○○○○○○",
+  },
+  {
+    billKey: r8_1GianKey(16),
+    titleInSource: "新宿区立産業振興施設条例の一部を改正する条例",
+    marks: "○○○○○○○○",
+  },
+  {
+    billKey: r8_1GianKey(17),
+    titleInSource: "新宿区介護保険条例の一部を改正する条例",
+    marks: "○○×○○○○○",
+  },
+  {
+    billKey: r8_1GianKey(18),
+    titleInSource: "新宿区子ども・子育て支援法に基づく過料に関する条例の一部を改正する条例",
+    marks: "○○○○○○○○",
+  },
+  {
+    billKey: r8_1GianKey(19),
+    titleInSource: "新宿区特定教育・保育施設及び特定地域型保育事業の運営に関する基準を定める条例の一部を改正する条例",
+    marks: "○○○○○○○○",
+  },
+  {
+    billKey: r8_1GianKey(20),
+    titleInSource: "新宿区特定乳児等通園支援事業の運営に関する基準を定める条例",
+    marks: "○○○○○○○○",
+  },
+  {
+    billKey: r8_1GianKey(21),
+    titleInSource: "新宿区乳児等通園支援事業の実施に関する条例",
+    marks: "○○○○○○○○",
+  },
+  {
+    billKey: r8_1GianKey(22),
+    titleInSource: "新宿区後期高齢者医療に関する条例の一部を改正する条例",
+    marks: "○○○○○○○○",
+  },
+  {
+    billKey: r8_1GianKey(23),
+    titleInSource: "新宿区保健事業の利用に係る使用料等を定める条例の一部を改正する条例",
+    marks: "○○○○○○○○",
+  },
+  {
+    billKey: r8_1GianKey(24),
+    titleInSource: "新宿区保健衛生事務手数料条例の一部を改正する条例",
+    marks: "○○○○○○○○",
+  },
+  {
+    billKey: r8_1GianKey(25),
+    titleInSource: "新宿区自転車等の適正利用の推進及び自転車等駐輪場の整備に関する条例の一部を改正する条例",
+    marks: "○○○○○○○○",
+  },
+  {
+    billKey: r8_1GianKey(26),
+    titleInSource: "新宿区リサイクル及び一般廃棄物の処理に関する条例の一部を改正する条例",
+    marks: "○○○○○○○○",
+  },
+  {
+    billKey: r8_1GianKey(27),
+    titleInSource: "新宿区環境土木・都市計画事務手数料条例の一部を改正する条例",
+    marks: "○○○○○○○○",
+  },
+  {
+    billKey: r8_1GianKey(28),
+    titleInSource: "新宿区中高層階住環境保全地区の区域内における建築物の制限に関する条例",
+    marks: "○○○○○○○○",
+  },
+  {
+    billKey: r8_1GianKey(29),
+    titleInSource: "新宿区ワンルームマンション等の建築及び管理に関する条例の一部を改正する条例",
+    marks: "○○○○○○○○",
+  },
+  {
+    billKey: r8_1GianKey(30),
+    titleInSource: "新宿区中高層建築物の建築に係る紛争の予防と調整に関する条例の一部を改正する条例",
+    marks: "○○○○○○○○",
+  },
+  {
+    billKey: r8_1GianKey(31),
+    titleInSource: "新宿区大規模マンション及び開発事業に係る市街地環境の整備に関する条例",
+    marks: "○○○○○○○○",
+  },
+  {
+    billKey: r8_1GianKey(32),
+    titleInSource: "新宿区公共料金支払基金条例の一部を改正する条例",
+    marks: "○○○○○○○○",
+  },
+  {
+    billKey: r8_1GianKey(33),
+    titleInSource: "新宿区幼稚園教育職員の給与に関する条例の一部を改正する条例",
+    marks: "○○○○○○○○",
+  },
+  {
+    billKey: r8_1GianKey(34),
+    titleInSource: "新宿区立の小学校、中学校及び特別支援学校の非常勤の学校医、学校歯科医及び学校薬剤師の公務災害補償に関する条例の一部を改正する条例",
+    marks: "○○○○○○○○",
+  },
+  {
+    billKey: r8_1GianKey(35),
+    titleInSource: "新宿区選挙長等の報酬及び費用弁償等に関する条例の一部を改正する条例",
+    marks: "○○○○○○○○",
+  },
+  {
+    billKey: r8_1GianKey(41),
+    titleInSource: "新宿区国民健康保険条例の一部を改正する条例",
+    marks: "○○×○○○○×",
+  },
+  {
+    billKey: r8_1GianKey(36),
+    titleInSource: "東京都後期高齢者医療広域連合規約の一部を変更する規約について",
+    marks: "○○○○○○○○",
+  },
+  {
+    billKey: r8_1GiinKey(1),
+    titleInSource: "新宿区介護・福祉人材緊急確保・定着奨励金の支給に関する条例",
+    marks: "××○××××○",
+  },
+  {
+    billKey: r8_1GiinKey(2),
+    titleInSource: "新宿区保健事業の利用に係る使用料等を定める条例を廃止する条例",
+    marks: "××○××××○",
+  },
+  {
+    billKey: r8_1GiinKey(3),
+    titleInSource: "新宿区安心居住支援家賃の助成に関する条例",
+    marks: "××○××××○",
+  },
+  {
+    billKey: r8_1GiinKey(4),
+    titleInSource: "新宿区立学校における学用品の給付に関する条例",
+    marks: "××○××××○",
+  },
+  {
+    billKey: r8_1GiinKey(5),
+    titleInSource: "新宿区立学校における修学旅行費の無償化に関する条例",
+    marks: "××○××××○",
+  },
+  {
+    billKey: r8_1GiinKey(6),
+    titleInSource: "住民の居住環境保護と適正な民泊運営の実現に向けた制度見直しに関する意見書",
+    marks: "○○○○○○○○",
+  },
+];
+
 export const r8_2BillVotes: SeedBillVotes[] = [
   {
     billKey: shoninKey(2),

@@ -23,6 +23,9 @@ import {
 } from "../main/shinjuku-council-questions";
 import {
   type FactionStanceImportRow,
+  R8_1_VOTE_COLUMNS,
+  r8_1BillVotes,
+  R8_2_VOTE_COLUMNS,
   r8_2BillVotes,
   toFactionStanceImportRows,
 } from "../main/shinjuku-faction-stances";
@@ -96,7 +99,10 @@ export const productionDataset: ImportDataset = {
     councilMemberQuestions,
     councilMembers
   ),
-  factionStances: toFactionStanceImportRows(r8_2BillVotes, factions),
+  factionStances: [
+    ...toFactionStanceImportRows(r8_1BillVotes, factions, R8_1_VOTE_COLUMNS),
+    ...toFactionStanceImportRows(r8_2BillVotes, factions, R8_2_VOTE_COLUMNS),
+  ],
   bills,
   createBillContents,
   createBillsTags,
