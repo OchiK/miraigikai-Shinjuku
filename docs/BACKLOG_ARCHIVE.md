@@ -34,6 +34,7 @@
 - [P5 自動化・制約](#p5-自動化制約)
   - [P5-0 bill_number のユニーク制約を会期スコープにする ✅](#p5-0-bill_number-のユニーク制約を会期スコープにする-)
   - [P5-1 Automation（新宿区議会更新検知とドラフト生成）](#p5-1-automation)
+  - [P5-5 令和8年第1回定例会（R8-1）の議案データ整備と投入](#p5-5-令和8年第1回定例会r8-1の議案データ整備と投入r8-1-session-bills-ingestion--done)
 - [P7 議員関連機能](#p7-議員関連機能)
   - [P7-1 議員ページ（世田谷モデル） — Done](#p7-1-議員ページcouncil-person-page---世田谷モデル--done)
   - [P7-3 議員本人のX（旧Twitter）アカウント表示](#p7-3-議員本人のx旧twitterアカウント表示councilor-xtwitter-account-links)
@@ -55,6 +56,12 @@
   - [P8-16 定例会議案一覧での難易度切替トグルの表示](#p8-16-定例会アーカイブ議案一覧ページでの難易度日本語レベル切替トグルの表示difficulty-selector-in-bills-archive)
   - [P8-17 トップページ「本日の定例会」セクションの整理](#p8-17-トップページの本日の定例会セクションの目的必要性の再検討と整理re-evaluate-current-council-session-banner-on-top-page)
   - [P8-18 議員提出議案4件の公開レビュー・完了フラグ更新](#p8-18-議員提出議案4件第710号の公開レビューファクトチェックと完了フラグ更新publication-review--fact-check-for-councilor-bills-7-10)
+  - [P8-19 議決結果・会派賛否表示の簡素化](#p8-19-議決結果会派賛否表示の簡素化少数会派付き水平バーへの集約全会派リンク一覧の削除simplify-faction-vote-display-to-horizontal-bar-with-minority-factions)
+  - [P8-20 議案詳細「この議案と議員」セクションの表示条件見直し](#p8-20-議案詳細この議案と議員セクションの表示条件見直し特定議員の発言賛否等がある場合のみ表示condition-bills-and-councilors-section-on-specific-councilor-activity)
+  - [P8-21 令和8年第3回定例会22件のタグ付け](#p8-21-令和8年第3回定例会22件のタグ付けtagging-for-r8-3-bills)
+  - [P8-22 定例会表示と議案ナビゲーションのUI改善](#p8-22-定例会表示と議案ナビゲーションのui改善session-display--bill-navigation-ui-enhancements)
+  - [P8-23 ハンバーガーメニュー内の定例会名折り返し改善](#p8-23-ハンバーガーメニュー内の定例会名折り返し改善session-names-line-wrap-in-hamburger-menu)
+  - [P8-24 モバイル表示時のトップバナー・ヘッダーにおけるサイト名表示改善](#p8-24-モバイル表示時のトップバナーヘッダーにおけるサイト名表示改善site-name-visibility-on-mobile-top-banner)
 
 ---
 
@@ -282,6 +289,57 @@ Progress (2026-09-25):
 - 下書きPRは固定ブランチ `automation/shinjuku-council-update` に作る。下書きは (公式サイト, インベントリ) だけで決まるので、同じ状態では何度回してもPRは増えない。
 - リポジトリ設定「Allow GitHub Actions to create and approve pull requests」は有効化済み。初回実行で令和8年第3回定例会（第63〜80号議案・認定第1〜4号の22件）の下書きPR（#80）ができた。取り込みは P5-2。新しい会期のインベントリを作ったら `monitor/targets.ts` の `KNOWN_SESSIONS` に足すこと。
 - 設計: `docs/20260925_1740_P5-1_自動化_新宿区議会更新検知とドラフト生成_設計.md`（§9 に実装時の変更点）。
+
+---
+
+### P5-5 令和8年第1回定例会（R8-1）の議案データ整備と投入（R8-1 Session Bills Ingestion） — Done
+サイトのヘッダーや定例会一覧（`/sessions/r8-1/bills`）に「令和8年 第1回定例会」が会期として掲載されているが、現在紐づく議案データが登録されていないため、ページを開いても0件（空状態）となっている。
+新宿区議会公式の提出議案ページ（`https://www.city.shinjuku.lg.jp/kusei/kuseijoho01_001109_01.html`）および審議結果に基づき、第1回定例会の議案データを整備・投入する。
+
+Acceptance:
+- **Phase 1: インベントリ作成・先行タイトル登録（空状態の解消）**:
+  - 区長提出議案42件（第1〜9号・第37〜40号の当初・補正予算案13件、第10〜36号・第41号の条例等28件、承認第1号1件）の公式件名、識別名（slug）、全文PDF URL、概要PDF URL、議決結果（可決等）を整理し、`packages/seed/main/shinjuku-r8-1-inventory.ts` を作成する
+  - 議員提出議案（意見書等）の有無を公式記録から確認し、存在する場合は合わせて追加する
+  - `council_sessions`（`slug: "r8-1"`）に紐づく議案として登録し、`/sessions/r8-1/bills` で一覧表示されることを確認する
+  - シードテスト・関連付けテストを整備し、GitHub Actions（`import_production.yml`）で本番DBへ反映する
+- **Phase 2: 解説作成・公開レビュー（段階的展開）**:
+  - 令和8年度当初予算（第1号議案）をはじめとする主要議案を中心に、やさしい／ふつう／くわしくの3難易度解説と主張台帳（claim ledger）を作成する
+  - 一次資料突合および公開レビュー（Codex）を経て順次 `published` / `is_review_completed: true` に更新する
+  - 全48議案の会派別賛否データ（`faction_stances`）を登録し、本番DBに反映して賛否バーを表示する
+
+Progress（2026-10-03〜2026-10-04）:
+- Phase 1（区長提出議案42件のインベントリ作成・先行タイトル登録）を PR #115 で実装・マージした。
+- 新宿区公式の提出議案一覧ページ（`kuseijoho01_001109_01.html`）および議決結果ページ（`soumu01_002090_00015.html`）の実物と突合し、区長提出議案全42件（予算案13件、条例等28件、承認第1号1件）を `packages/seed/main/shinjuku-r8-1-inventory.ts` として新規追加した。
+- 議決結果は全件確定済み（原案可決41件、承認1件）であり、DB enum に適合する `status: "approved"` / `status_note: "本会議で原案可決"`（承認は「本会議で承認」）として登録。
+- 続いて議員提出議案6件（条例案5件、意見書1件）の追加登録を PR #117 で実装・マージした。議会公式の会期ページ（`file08_05_0003820210204_00013.html`）、「議案の概要と審議結果」PDF（`000452334.pdf`）、「可決した意見書」ページ（`file08_05_0004020210118_00006.html`）と突合。第1〜5号は否決（`fullTextPdfUrl: null`, `decision: "否決"`）、第6号は可決（`fullTextPdfUrl: 000452351.pdf`, `decision: "原案可決"`）として登録した。
+- 解説未作成のため全48件を `publish_status: "coming_soon"` / `is_review_completed: false` / `published_at: null` とし、`packages/seed/main/data.ts` の `bills`（51件→99件）および `billSessionSlugByBillSlug` に接続。
+- `packages/seed/monitor/targets.ts` の `KNOWN_SESSIONS` に `r8-1` を追加（議員提出議案は区長一覧と比較しないよう除外）、監視パーサに公式表記「承認第1号_専決処分の承認について」の `_` 区切り対応を追加して誤検知を防止。
+- シード・インベントリ・監視照合のテスト（全1,368件）が全ワークスペースで通過することを確認。
+- 本番DB反映: GitHub Actions（`import_production.yml` run 37095112923）により本番DBへ非破壊反映（新規6件・既存93件変更なし）を完了。本番の `/sessions/r8-1/bills` にて48件すべての正常表示を確認済み。これにより Phase 1（空状態の解消）が完了。
+- Phase 2 パイロット（主要5議案の3難易度解説作成・主張台帳突合・公開レビュー）を PR #119 で実装・マージした。
+  - 対象5議案: 第1号議案（令和8年度一般会計予算）、第5号議案（令和7年度一般会計補正予算第12号）、第20号議案（特定乳児等通園支援事業基準条例）、第31号議案（大規模マンション等市街地環境整備条例）、議員提出議案第6号（民泊制度見直し意見書）。
+  - 各議案についてやさしい／ふつう／くわしくの3難易度解説（計15変種）を `packages/seed/main/bill-contents-r8-1-data.ts` に作成し、一次資料（各全文PDF・概要PDF）の全事実主張を網羅する主張台帳（`docs/verification/20261003_1330_claim-ledger-r8-1-pilot.csv`、計482行）を整備。
+  - `easy-japanese-validation.test.ts`（1文40字以内、アンカー保持プロトコル）、`bill-contents-revision.test.ts`（本文sha256と台帳ハッシュの一致）、`seed-associations.test.ts` などの全テストを通過。
+  - 対象5議案の `publish_status: "published"` / `is_review_completed: true` への更新を反映し、GitHub Actions（`import_production.yml` run 37099619443）により本番DBへ非破壊反映完了。本番の議案詳細ページ（`/bills/[id]`）にて5件すべての正常表示・解説閲覧を確認済み。
+- 続いて議員提出議案第1号〜第5号（否決された条例案5件）の3難易度解説作成・本会議少数意見報告（実際の発言・spoken parts）組み込み・主張台帳突合・公開レビューを PR #121 で実装・マージした。
+  - 対象5議案: 議員提出議案第1号（介護・福祉人材奨励金条例）、第2号（保健事業使用料等廃止条例）、第3号（安心居住支援家賃助成条例）、第4号（学用品給付条例）、第5号（修学旅行費無償化条例）。
+  - R8-2 の議員提出議案モデルを踏襲し、本会議（2026年3月24日、会議録ID: 3163 schedule: 5）での杉山直子議員（共産, minute 12, 100）、高月まな議員（共産, minute 106）、さわいめぐみ議員（れいわ, minute 108）、近藤なつ子議員（共産, minute 115）の少数意見報告（発言内容・要点）および委員会審査決定・起立採決（否決・会派別態度）を3難易度解説（15変種）に組み込んだ（`packages/seed/main/bill-contents-r8-1-giin-data.ts`、作業記録: `docs/20261003_1600_令和8年第1回定例会_議員提出議案5件_解説作成記録.md`）。
+  - 主張台帳 `docs/verification/20261003_1600_claim-ledger-r8-1-giin.csv`（UTF-8 BOM付き、417行すべて supported）を整備し、全15変種のハッシュ突合・機械検証を実施。
+  - 対象5議案の `publish_status: "published"` / `is_review_completed: true` への更新を反映し、GitHub Actions（`import_production.yml` run 37111865171）により本番DBへ非破壊反映完了。本番の議案詳細ページ（`/bills/[id]`）にて5件すべての正常表示・解説および本会議発言の閲覧を確認済み。
+- 続いて予算関連議案11件（第2・3・4・6・7・8・9・37・38・39・40号議案）の3難易度解説（33変種）を作成した（作業記録: `docs/20261003_2100_令和8年第1回定例会_予算議案11件_解説作成記録.md`）。
+  - 全文PDF11件・補正予算概要PDF3件・「議案の概要と審議結果」・議決結果ページ・本会議会議録（2026年3月24日）と突合し、主張台帳 `docs/verification/20261003_2100_claim-ledger-r8-1-budgets.csv`（UTF-8 BOM付き、627行すべて supported）を整備。実装計画の予算規模（第2〜4号）・補正理由（第6〜9号・第37〜40号）・概要PDFのIDは一次資料と一致しなかったため、一次資料を採用した。
+  - 11件を `publish_status: "published"` / `is_review_completed: true` に更新（インベントリ）。PR #123 でマージし、GitHub Actions（`import_production.yml` run 37121397154、事前の dry-run 37121325404 で議案更新11件・解説新規33件のみを確認）により本番DBへ非破壊反映した。本番の `/sessions/r8-1/bills` に公開議案21件のリンクが並び、第6・37・38号議案のページでやさしい版の題名・要約・議決表示を確認した。
+- 続いて条例案 Group A 10件（第10〜19号議案）の3難易度解説（30変種）を作成し、PR #128 でマージ、本番DBへ反映した（作業記録: `docs/20261004_0630_令和8年第1回定例会_条例案GroupA10件_解説作成記録.md`）。
+  - 全文PDF10件・条例案等提出案件概要・「議案の概要と審議結果」・議決結果ページ・本会議会議録（2026年3月24日）と突合し、主張台帳 `docs/verification/20261004_0630_claim-ledger-r8-1-ordinances-group-a.csv`（UTF-8 BOM付き、821行すべて supported）を整備。実装計画の「主な内容」欄は一次資料と一致しない箇所が多く（第10・15・16・17・18・19号など）、一次資料を採用した。第17号議案は共産が反対（起立採決、少数意見の報告あり）。見出しは AGENTS.md の全会期共通標準で固定し、30変種すべてをテストで検証している。
+  - 本番反映は `import_production.yml`（dry-run で10議案の更新と30変種の追加だけを確認し、`dry_run: false, confirm: apply` で反映）。公開サイトの会期一覧と詳細ページで10件の公開を確認した。第17号議案の表記修正・回帰テスト追加も PR #130 で完了。
+- 続いて条例案 Group B 10件（第21〜30号議案）の3難易度解説（30変種）を作成し、PR #132 でマージ、本番DBへ反映した（作業記録: `docs/20261004_1115_令和8年第1回定例会_条例案GroupB10件_解説作成記録.md`）。
+  - 全文PDF10件・条例案等提出案件概要・「議案の概要と審議結果」・議決結果ページ・本会議会議録（2026年2月17日および3月24日）と突合し、主張台帳 `docs/verification/20261004_1115_claim-ledger-r8-1-ordinances-group-b.csv`（UTF-8 BOM付き、932行すべて supported）を整備。第21号議案は2月17日に追加日程第1で即日可決されていた事実を反映。見出しは AGENTS.md の全会期共通標準で固定。
+  - 10件を `publish_status: "published"` / `is_review_completed: true` に更新。GitHub Actions（`import_production.yml` run 37172544237）により本番DBへ非破壊反映し、公開サイト（`/sessions/r8-1/bills`）にて公開議案41件のリンクが正常表示されることを確認。
+- 続いて条例案 Group C 7件（第32〜36号・第41号議案、承認第1号）の3難易度解説（21変種）を作成し、PR #134 でマージ、本番DBへ反映した（作業記録: `docs/20261004_1300_令和8年第1回定例会_条例案GroupC7件_解説作成記録.md`）。
+  - 全文PDF7件・条例案等提出案件概要・1月補正予算概要・「議案の概要と審議結果」・議決結果ページ・本会議会議録（2026年2月25日および3月24日）と突合し、主張台帳 `docs/verification/20261004_1300_claim-ledger-r8-1-ordinances-group-c.csv`（UTF-8 BOM付き、930行すべて supported）を整備。第41号議案は起立多数（共産・れいわ反対、立憲・無所属クラブ欄に1人反対の注記）の事実を反映。見出しは AGENTS.md の全会期共通標準で固定。
+  - 7件を `publish_status: "published"` / `is_review_completed: true` に更新。GitHub Actions（`import_production.yml` run 37176336738）により本番DBへ非破壊反映し、公開サイト（`/sessions/r8-1/bills`）にて全48件のリンクが正常表示されることを確認。
+  - これにより、令和8年第1回定例会の全48件（区長提出42件、議員提出6件）すべての3難易度解説（計144変種）の作成・公開レビュー・本番公開（100%）が完了。Phase 2（解説作成・公開レビュー）が完了した。
+- 2026-10-04: 全48議案の会派別賛否データ（全48議案×8会派＝384行）を `packages/seed/main/faction-stances-r8-1-data.ts` として作成し、PR #136 でマージ。GitHub Actions（`import_production.yml` run 37179105128、事前の dry-run 37179052968）により本番DBへ非破壊反映完了。本番の各議案詳細ページ（`/bills/[id]`）にて会派別賛否バーおよび各会派の態度一覧が正常表示されることを確認。これにより P5-5 の全作業（インベントリ・全48件3難易度解説・主張台帳・会派別賛否データ・本番公開）が完了。
 
 ---
 
@@ -660,6 +718,31 @@ Progress (2026-09-30, PR #106):
 
 
 ---
+
+### P8-23 ハンバーガーメニュー内の定例会名折り返し改善（Session Names Line Wrap in Hamburger Menu）
+ハンバーガーメニュー内の定例会リンク（`HamburgerMenu`）において、「令和8年 第X回定例会の議案一覧」等のテキストがメニュー幅（`w-56`）に対して長いため、末尾の「覧」が次行に折り返されてしまっている（「最新」バッジ併記時はさらに横幅が圧迫される）。
+
+Acceptance:
+- リンク文言の簡潔化（例: `${sessionName}` 単体表記への見直し、または `nav.sessionBills` の文言整理）、もしくはメニュー幅（`w-64` 等への拡張）や CSS レイアウト調整（`whitespace-nowrap`, フォントサイズ・バッジ配置の最適化）により、意図しない1文字こぼれ（「覧」の不自然な改行）を解消する。
+- 英語表示（`en`）時および「最新」バッジ表示時も不自然な改行が発生せず美しく収まることを確認する。
+
+Progress (2026-10-04, PR #137):
+- メニュー幅を `w-56` (14rem) から `w-64` (16rem) に拡張。
+- 各会派リンクに `truncate` と `justify-between` を付与。
+- `ui-messages.ts` の `sessionBills` 文言を `〜の議案一覧` から `〜`（セッション名のみ）に簡潔化し、「覧」のみが次行へこぼれる改行崩れを解消。
+- 関連するヘッダークライアントテスト（`header-client.test.tsx`）を更新し通過確認。
+
+### P8-24 モバイル表示時のトップバナー・ヘッダーにおけるサイト名表示改善（Site Name Visibility on Mobile Top Banner）
+スマートフォン幅（`< sm`）において、トップバナー／ヘッダーの「みらい議会＠新宿区」が見えない状態になっている（下層ページで `compact` 時に `HomeLink` のサイト名が `sr-only` になる仕様や、トップページ Hero セクションでのサイト名訴求など）。
+
+Acceptance:
+- モバイル表示（スマートフォン画面幅）でも「みらい議会＠新宿区」（または適切な略称・ロゴ）がヘッダー／トップバナーで明確に視認・認識できるようにレイアウトを改善する。
+- 戻るアイコン（HomeLinkの家アイコン）や右側アクション（難易度セレクタ・ハンバーガーボタン・ルビ等）と干渉せず、タップ領域44pxとコントラスト比を維持する。
+
+Progress (2026-10-04, PR #137):
+- ヘッダーの `HomeLink` におけるサイト名フォントサイズを `text-xs xs:text-sm sm:text-xl` に段階スケーリングし、極小幅スマートフォンでもサイト名が欠落・非表示にならないよう調整。
+- トップページの `Hero` コンポーネント内に半透明のサイト名ピル（`みらい議会＠新宿区` / `Mirai Gikai @ Shinjuku`）を追加し、モバイル画面のファーストビューでのサイト認知を強化。
+- `Hero` の単体テスト（`hero.test.tsx`）を追加し、日本語・英語での表示を検証。
 
 ## P4 AIチャット・ガードレール
 
