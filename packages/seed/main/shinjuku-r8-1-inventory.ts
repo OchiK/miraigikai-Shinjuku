@@ -20,10 +20,10 @@ type CouncilSessionInsert =
  *
  * 解説（bill_contents）は Phase 2 パイロットの5件（第1・5・20・31号議案、議員提出議案第6号）、
  * 議員提出議案第1〜5号の5件、予算関連議案11件（第2・3・4・6・7・8・9・37・38・39・40号議案）、
- * 条例案 Group A の10件（第10〜19号議案）、条例案 Group B の10件（第21〜30号議案）の計41件が作成済みで、この41件は published・レビュー済み。
- * 残る7件は未作成のため coming_soon・レビュー未完了で登録する。
- * 解説を作成して公開するときは hasPublishableContent / reviewCompleted を
- * 件ごとに true にする。
+ * 条例案 Group A の10件（第10〜19号議案）、条例案 Group B の10件（第21〜30号議案）、
+ * 条例案 Group C の7件（第32〜36号議案・承認第1号・第41号議案）の計48件が作成済みで、全48件が published・レビュー済み。
+ * 今後、解説が未作成の案件を足すときは coming_soon・レビュー未完了（PENDING）で登録し、
+ * 解説を作成して公開するときに hasPublishableContent / reviewCompleted を件ごとに true にする。
  *
  * 議員提出議案6件（条例案5件・意見書1件）は区長提出議案の一覧ページには載らず、
  * 議会公式の会期ページ・「議案の概要と審議結果」PDF・「可決した意見書」ページを出典とする。
@@ -154,7 +154,7 @@ const PUBLISHED = {
   reviewCompleted: true,
 } as const;
 
-/** 解説未作成の案件に共通する公開状態（Phase 1） */
+/** 解説未作成の案件に共通する公開状態（Phase 1）。全48件の公開後は未使用だが、案件を足すときのために残す */
 const PENDING = {
   hasPublishableContent: false,
   reviewCompleted: false,
@@ -483,7 +483,7 @@ export const r8FirstSessionItems: R8_1SessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000448448"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    ...PENDING,
+    ...PUBLISHED,
   },
   {
     itemType: "gian",
@@ -493,7 +493,7 @@ export const r8FirstSessionItems: R8_1SessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000448421"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    ...PENDING,
+    ...PUBLISHED,
   },
   {
     itemType: "gian",
@@ -503,7 +503,7 @@ export const r8FirstSessionItems: R8_1SessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000448422"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    ...PENDING,
+    ...PUBLISHED,
   },
   {
     itemType: "gian",
@@ -513,7 +513,7 @@ export const r8FirstSessionItems: R8_1SessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000448423"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    ...PENDING,
+    ...PUBLISHED,
   },
   {
     itemType: "gian",
@@ -523,7 +523,7 @@ export const r8FirstSessionItems: R8_1SessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000448424"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    ...PENDING,
+    ...PUBLISHED,
   },
   {
     itemType: "shonin",
@@ -533,7 +533,7 @@ export const r8FirstSessionItems: R8_1SessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000448425"),
     overviewPdfUrl: OVERVIEW_SHONIN_1,
     decision: "承認",
-    ...PENDING,
+    ...PUBLISHED,
   },
   {
     itemType: "gian",
@@ -583,7 +583,7 @@ export const r8FirstSessionItems: R8_1SessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000451614"),
     overviewPdfUrl: OVERVIEW_JOREI_ADDITIONAL,
     decision: "原案可決",
-    ...PENDING,
+    ...PUBLISHED,
   },
   // 議員提出議案。識別名・件名・議決結果は議会公式の会期ページと
   // 「議案の概要と審議結果」PDF（採決結果行）の記載どおり。

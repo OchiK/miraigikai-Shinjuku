@@ -236,73 +236,33 @@ describe("toR8_1BillInserts", () => {
     );
   });
 
-  it("解説を作成した41件だけ published・レビュー済みにし、残る7件は coming_soon・レビュー未完了で登録する", () => {
-    // Phase 2 パイロット（第1・5・20・31号議案と議員提出議案第6号）、
-    // 議員提出議案第1〜5号（否決された条例案）、予算関連議案11件、条例案 Group A の10件（第10〜19号議案）、条例案 Group B の10件（第21〜30号議案）。インベントリの並び順。
-    const pilotSlugs = [
-      r8_1GianKey(1),
-      r8_1GianKey(2),
-      r8_1GianKey(3),
-      r8_1GianKey(4),
-      r8_1GianKey(5),
-      r8_1GianKey(6),
-      r8_1GianKey(7),
-      r8_1GianKey(8),
-      r8_1GianKey(9),
-      r8_1GianKey(10),
-      r8_1GianKey(11),
-      r8_1GianKey(12),
-      r8_1GianKey(13),
-      r8_1GianKey(14),
-      r8_1GianKey(15),
-      r8_1GianKey(16),
-      r8_1GianKey(17),
-      r8_1GianKey(18),
-      r8_1GianKey(19),
-      r8_1GianKey(20),
-      r8_1GianKey(21),
-      r8_1GianKey(22),
-      r8_1GianKey(23),
-      r8_1GianKey(24),
-      r8_1GianKey(25),
-      r8_1GianKey(26),
-      r8_1GianKey(27),
-      r8_1GianKey(28),
-      r8_1GianKey(29),
-      r8_1GianKey(30),
-      r8_1GianKey(31),
-      r8_1GianKey(37),
-      r8_1GianKey(38),
-      r8_1GianKey(39),
-      r8_1GianKey(40),
-      r8_1GiinKey(1),
-      r8_1GiinKey(2),
-      r8_1GiinKey(3),
-      r8_1GiinKey(4),
-      r8_1GiinKey(5),
-      r8_1GiinKey(6),
+  it("解説を作成した48件すべてを published・レビュー済みにし、coming_soon は残らない", () => {
+    // Phase 2 パイロット（第1・5・20・31号議案と議員提出議案第6号）、議員提出議案第1〜5号（否決された条例案）、
+    // 予算関連議案11件、条例案 Group A の10件（第10〜19号議案）、条例案 Group B の10件（第21〜30号議案）、
+    // 条例案 Group C の7件（第32〜36号議案・承認第1号・第41号議案）で、全48件。インベントリの並び順。
+    const publishedSlugs = [
+      ...Array.from({ length: 36 }, (_, i) => r8_1GianKey(1 + i)),
+      r8_1ShoninKey(1),
+      ...Array.from({ length: 5 }, (_, i) => r8_1GianKey(37 + i)),
+      ...Array.from({ length: 6 }, (_, i) => r8_1GiinKey(1 + i)),
     ];
+    expect(publishedSlugs).toHaveLength(48);
     expect(
       inserts
         .filter((b) => b.publish_status === "published")
         .map((b) => b.slug)
-    ).toEqual(pilotSlugs);
+    ).toEqual(publishedSlugs);
 
     for (const bill of inserts) {
-      const isPilot = pilotSlugs.includes(bill.slug ?? "");
-      expect(bill.publish_status, bill.slug ?? "").toBe(
-        isPilot ? "published" : "coming_soon"
-      );
-      expect(bill.is_review_completed, bill.slug ?? "").toBe(isPilot);
+      expect(bill.publish_status, bill.slug ?? "").toBe("published");
+      expect(bill.is_review_completed, bill.slug ?? "").toBe(true);
       // 掲載日時は解説を公開した案件だけ。会期末日で、議決日ではない。
-      expect(bill.published_at, bill.slug ?? "").toBe(
-        isPilot ? R8_1_PUBLISHED_AT : null
-      );
+      expect(bill.published_at, bill.slug ?? "").toBe(R8_1_PUBLISHED_AT);
       expect(bill.is_featured, bill.slug ?? "").toBe(false);
     }
     expect(
       inserts.filter((b) => b.publish_status === "coming_soon")
-    ).toHaveLength(7);
+    ).toHaveLength(0);
   });
 
   it("区長提出議案の出典URLは提出議案一覧・議決結果の公式ページを指す", () => {
