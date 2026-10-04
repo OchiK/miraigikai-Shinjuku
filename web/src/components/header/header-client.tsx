@@ -51,8 +51,8 @@ export function HeaderClient({
       lang={locale}
       className="px-3 fixed top-4 left-0 right-0 z-40 max-w-[1440px] mx-auto"
     >
-      <div className="rounded-2xl bg-mirai-surface shadow-mirai-md mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center gap-3 h-16">
+      <div className="rounded-2xl bg-mirai-surface shadow-mirai-md mx-auto px-2.5 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center gap-1.5 sm:gap-3 h-16">
           {/* Logo / Site Title */}
           <div className="flex items-center min-w-0">
             <HomeLink
@@ -72,7 +72,7 @@ export function HeaderClient({
 
           {/* Navigation */}
           <nav
-            className="flex shrink-0 items-center space-x-2"
+            className="flex shrink-0 items-center space-x-1 sm:space-x-2"
             aria-label={nav.secondaryNavLabel}
           >
             {showDifficultySelector && (
