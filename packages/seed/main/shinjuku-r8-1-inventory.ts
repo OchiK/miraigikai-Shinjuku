@@ -20,8 +20,8 @@ type CouncilSessionInsert =
  *
  * 解説（bill_contents）は Phase 2 パイロットの5件（第1・5・20・31号議案、議員提出議案第6号）、
  * 議員提出議案第1〜5号の5件、予算関連議案11件（第2・3・4・6・7・8・9・37・38・39・40号議案）、
- * 条例案 Group A の10件（第10〜19号議案）の計31件が作成済みで、この31件は published・レビュー済み。
- * 残る17件は未作成のため coming_soon・レビュー未完了で登録する。
+ * 条例案 Group A の10件（第10〜19号議案）、条例案 Group B の10件（第21〜30号議案）の計41件が作成済みで、この41件は published・レビュー済み。
+ * 残る7件は未作成のため coming_soon・レビュー未完了で登録する。
  * 解説を作成して公開するときは hasPublishableContent / reviewCompleted を
  * 件ごとに true にする。
  *
@@ -142,7 +142,7 @@ const officialPdfUrl = (contentId: string) =>
  * bills.published_at に入れるサイト掲載日時（解説を公開した案件だけ）。
  *
  * 会期末日（2026-03-24）を用いる。R8-2 と同じ方針で、議決日ではなく掲載時点を表す。
- * 議案ごとの採決日は会議録で確かめられるが（第5号議案は2月17日、ほかは3月24日）、
+ * 議案ごとの採決日は会議録で確かめられるが（第5号・第21号議案は2月17日、ほかは3月24日）、
  * 同一会期の公開議案で値をそろえ、一覧は議案番号順に並べる。
  * null のままだと、公開一覧の published_at 降順で R8-2 より前に並んでしまう。
  */
@@ -373,7 +373,7 @@ export const r8FirstSessionItems: R8_1SessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000448437"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    ...PENDING,
+    ...PUBLISHED,
   },
   {
     itemType: "gian",
@@ -383,7 +383,7 @@ export const r8FirstSessionItems: R8_1SessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000448438"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    ...PENDING,
+    ...PUBLISHED,
   },
   {
     itemType: "gian",
@@ -393,7 +393,7 @@ export const r8FirstSessionItems: R8_1SessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000448439"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    ...PENDING,
+    ...PUBLISHED,
   },
   {
     itemType: "gian",
@@ -403,7 +403,7 @@ export const r8FirstSessionItems: R8_1SessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000448440"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    ...PENDING,
+    ...PUBLISHED,
   },
   {
     itemType: "gian",
@@ -413,7 +413,7 @@ export const r8FirstSessionItems: R8_1SessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000448441"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    ...PENDING,
+    ...PUBLISHED,
   },
   {
     itemType: "gian",
@@ -423,7 +423,7 @@ export const r8FirstSessionItems: R8_1SessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000448442"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    ...PENDING,
+    ...PUBLISHED,
   },
   {
     itemType: "gian",
@@ -433,7 +433,7 @@ export const r8FirstSessionItems: R8_1SessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000448443"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    ...PENDING,
+    ...PUBLISHED,
   },
   {
     itemType: "gian",
@@ -443,7 +443,7 @@ export const r8FirstSessionItems: R8_1SessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000448444"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    ...PENDING,
+    ...PUBLISHED,
   },
   {
     itemType: "gian",
@@ -453,7 +453,7 @@ export const r8FirstSessionItems: R8_1SessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000448445"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    ...PENDING,
+    ...PUBLISHED,
   },
   {
     itemType: "gian",
@@ -463,7 +463,7 @@ export const r8FirstSessionItems: R8_1SessionItem[] = [
     fullTextPdfUrl: officialPdfUrl("000448446"),
     overviewPdfUrl: OVERVIEW_JOREI,
     decision: "原案可決",
-    ...PENDING,
+    ...PUBLISHED,
   },
   {
     itemType: "gian",
