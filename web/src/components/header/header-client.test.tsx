@@ -176,6 +176,32 @@ describe("HeaderClient", () => {
     });
   });
 
+  describe("モバイルヘッダー", () => {
+    it("サイト名の表示領域を確保し、操作ボタンの44pxタップ領域を保つ", () => {
+      const { container } = renderHeader("/", [r82]);
+
+      expect(screen.getByText(siteConfig.siteName)).toHaveClass(
+        "text-xs",
+        "tracking-tight"
+      );
+
+      const headerSurface = container.querySelector("header > div");
+      const headerRow = headerSurface?.firstElementChild;
+      expect(headerSurface).toHaveClass("px-2.5", "sm:px-6");
+      expect(headerSurface).not.toHaveClass("xs:px-3");
+      expect(headerRow).toHaveClass("gap-1.5", "sm:gap-3");
+      expect(headerRow).not.toHaveClass("xs:gap-2");
+
+      const difficulty = screen.getByRole("group", {
+        name: "説明の詳しさを切り替え",
+      });
+      for (const button of within(difficulty).getAllByRole("button")) {
+        expect(button).toHaveClass("h-11", "min-w-11");
+      }
+      expect(menuTrigger()).toHaveClass("h-11", "w-11");
+    });
+  });
+
   describe("英語表示（P8-12）", () => {
     it("ナビ・難易度・ホーム導線・メニューを英語で出し、サイト名は日本語のまま", async () => {
       renderHeader("/", [r82, r81], "en");

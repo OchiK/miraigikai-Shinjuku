@@ -106,7 +106,7 @@ export function DifficultySelector({
             aria-pressed={isSelected}
             onClick={() => handleSelect(level)}
             className={cn(
-              "h-11 px-1 xs:px-1.5 text-[11px] xs:text-xs md:px-3 md:text-sm",
+              "h-11 min-w-11 px-1 text-[11px] sm:px-1.5 sm:text-xs md:px-3 md:text-sm",
               segmentItemClass(isSelected)
             )}
           >
