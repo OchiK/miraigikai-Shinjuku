@@ -39,7 +39,7 @@ const billBySlug = (slug: string) => {
   return bill;
 };
 
-/** 第1回定例会のうち解説を作成済みの41件（Phase 2 パイロット5件、議員提出議案第1〜5号、予算関連議案11件、条例案 Group A・B の20件） */
+/** 第1回定例会のうち解説を作成済みの全48件（Phase 2 パイロット5件、議員提出議案第1〜5号、予算関連議案11件、条例案 Group A・B・C の27件） */
 const r8_1ItemsWithContent = r8FirstSessionItems.filter(
   (item) => item.hasPublishableContent
 );
@@ -51,8 +51,8 @@ const r8_3ItemsWithContent = r8ThirdSessionItems.filter(
 
 /**
  * 解説（bill_contents）をそろえた議案。
- * 第1回定例会の41件（パイロット5件、議員提出議案第1〜5号、予算関連議案11件、条例案 Group A・B の20件）、第2回定例会の区長提出議案23件・議員提出議案4件の27件、
- * 第3回定例会の22件の全90件。並びは bills（data.ts）の登録順に合わせる。
+ * 第1回定例会の全48件（パイロット5件、議員提出議案第1〜5号、予算関連議案11件、条例案 Group A・B・C の27件）、第2回定例会の区長提出議案23件・議員提出議案4件の27件、
+ * 第3回定例会の22件の全97件。並びは bills（data.ts）の登録順に合わせる。
  */
 const BILL_SLUGS_WITH_CONTENT = [
   ...r8_1ItemsWithContent.map(buildR8_1ItemKey),
@@ -132,11 +132,11 @@ describe("公開状態と解説の整合", () => {
     ]);
   });
 
-  it("R8-1の解説を持つ41件は公開レビュー済み（is_review_completed: true）", () => {
+  it("R8-1の解説を持つ全48件は公開レビュー済み（is_review_completed: true）", () => {
     const r8_1Slugs = new Set(r8_1ItemsWithContent.map(buildR8_1ItemKey));
     const r8_1Bills = bills.filter((b) => r8_1Slugs.has(b.slug ?? ""));
 
-    expect(r8_1Bills).toHaveLength(41);
+    expect(r8_1Bills).toHaveLength(48);
     for (const bill of r8_1Bills) {
       expect(bill.is_review_completed, bill.slug ?? "").toBe(true);
     }
