@@ -106,6 +106,21 @@ describe("やさしい日本語版の必須フィールド", () => {
 });
 
 describe("やさしい日本語版の1文の長さ", () => {
+  it("アンカーは正式名称を数え、ふりがな・言いかえ・記号だけを数えない", () => {
+    const sentence =
+      "【新宿区介護保険条例】［しんじゅくく かいごほけん じょうれい］（＝新宿区の介護保険の決まり）を 変えます。";
+
+    expect(sentence.replace(/。$/, "").length).toBeGreaterThan(
+      EASY_MAX_SENTENCE_LENGTH
+    );
+    expect(splitIntoSentences(sentence)).toEqual([
+      "新宿区介護保険条例を 変えます",
+    ]);
+    expect(splitIntoSentences(sentence)[0].length).toBeLessThanOrEqual(
+      EASY_MAX_SENTENCE_LENGTH
+    );
+  });
+
   it.each(easyContents)("$bill_slug の title は40字以内", (content) => {
     // summary / content と同じ数えかたにそろえる。
     // タイトルだけアンカーを字数に入れると、
