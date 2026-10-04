@@ -199,7 +199,7 @@ describe("HeaderClient", () => {
       await userEvent.click(screen.getByRole("button", { name: "Open menu" }));
       const dialog = screen.getByRole("dialog");
       expect(
-        within(dialog).getByRole("link", { name: "Bills: 令和8年第1回定例会" })
+        within(dialog).getByRole("link", { name: "令和8年第1回定例会" })
       ).toBeInTheDocument();
     });
 
@@ -233,10 +233,10 @@ describe("HeaderClient", () => {
       await userEvent.click(menuTrigger());
       const dialog = screen.getByRole("dialog");
       const headerSessionLink = within(dialog).getByRole("link", {
-        name: /^令和8年第2回定例会の議案一覧/,
+        name: /^令和8年第2回定例会/,
       });
       const otherSessionLink = within(dialog).getByRole("link", {
-        name: "令和8年第1回定例会の議案一覧",
+        name: "令和8年第1回定例会",
       });
       expect(headerSessionLink.closest("li")).not.toHaveClass("lg:hidden");
       expect(otherSessionLink.closest("li")).not.toHaveClass("lg:hidden");

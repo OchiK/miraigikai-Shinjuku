@@ -64,7 +64,7 @@ export function HamburgerMenu({
           <Menu className="h-5 w-5" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent lang={locale} className="w-56" align="end">
+      <PopoverContent lang={locale} className="w-64" align="end">
         <div className="flex flex-col gap-3">
           <div className="lg:hidden">
             <LanguageSelector currentLocale={locale} />
@@ -88,9 +88,11 @@ export function HamburgerMenu({
                   <li key={session.id}>
                     <Link
                       href={routes.sessionBills(session.slug)}
-                      className="flex min-h-11 items-center gap-2 text-sm hover:underline"
+                      className="flex min-h-11 items-center justify-between gap-2 text-sm hover:underline"
                     >
-                      {nav.sessionBills(session.name)}
+                      <span className="truncate">
+                        {nav.sessionBills(session.name)}
+                      </span>
                       {session.id === headerSession?.id && (
                         <span className="shrink-0 rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-mirai-text">
                           {home.latestBadge}

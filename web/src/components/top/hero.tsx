@@ -28,6 +28,13 @@ export function Hero({ locale = "ja" }: HeroProps) {
       />
       <div className="absolute bottom-[24vh] md:bottom-[28vh] left-0 right-0 py-4">
         <Container>
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-black/40 px-3.5 py-1 mb-3 text-xs sm:text-sm font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] backdrop-blur-sm">
+            <span>
+              {locale === "en"
+                ? siteConfig.english.siteName
+                : siteConfig.siteName}
+            </span>
+          </div>
           <h1
             lang={locale}
             className="font-bold text-xl md:text-3xl leading-relaxed text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"

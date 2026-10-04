@@ -47,7 +47,7 @@ export function HomeLink({
       <span
         lang="ja"
         className={cn(
-          "truncate text-base font-bold sm:text-xl",
+          "truncate text-xs font-bold xs:text-sm sm:text-xl",
           !isHome && compact && "sr-only sm:not-sr-only"
         )}
       >
