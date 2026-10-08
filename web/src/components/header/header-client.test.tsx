@@ -247,8 +247,37 @@ describe("HeaderClient", () => {
       expect(menuTrigger()).not.toHaveClass("lg:hidden");
     });
 
-    it("議案一覧を持つ定例会が無ければ、デスクトップではメニューごと隠す", () => {
-      renderHeader("/councilors", []);
+    it.each([
+      { sessions: [] },
+      { sessions: [{ ...r82, slug: null }] },
+    ])("議案一覧を持つ定例会が無くても、マップへのメニューを残す (%j)", async ({
+      sessions,
+    }) => {
+      renderHeader("/councilors", sessions);
+
+      expect(menuTrigger()).not.toHaveClass("lg:hidden");
+      await userEvent.click(menuTrigger());
+      expect(
+        within(screen.getByRole("dialog")).getByRole("link", {
+          name: getUiMessages("ja").nav.miraiMapAriaLabel,
+        })
+      ).toHaveAttribute("href", siteConfig.externalLinks.miraiGikaiMap);
+    });
+
+    it.each([
+      { sessions: [] },
+      { sessions: [{ ...r82, slug: null }] },
+    ])("議案一覧もマップも無ければ、デスクトップではメニューを隠す (%j)", ({
+      sessions,
+    }) => {
+      render(
+        <HamburgerMenu
+          locale="ja"
+          sessions={sessions}
+          headerSession={null}
+          miraiMapHref=""
+        />
+      );
 
       expect(menuTrigger()).toHaveClass("lg:hidden");
     });

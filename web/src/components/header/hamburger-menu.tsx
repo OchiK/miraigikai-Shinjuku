@@ -40,7 +40,7 @@ interface HamburgerMenuProps {
  *
  * デスクトップ（lg 以上）ではヘッダーに出ている項目（言語・議員一覧）を隠す。
  * 定例会ごとの議案一覧はヘッダーの「最新の議案一覧」と重なっても、
- * 最新の定例会を含めすべて常に残す。定例会が無ければメニューごと隠す
+ * 最新の定例会を含めすべて常に残す。定例会もマップへのリンクも無ければメニューごと隠す
  * （docs/BACKLOG.md P8-11）。
  * lg:hidden は、header-client.tsx で NavLinks を lg 以上で出し、
  * LanguageToggle を sm 以上で必ず出していることを前提にしている。
@@ -64,7 +64,10 @@ export function HamburgerMenu({
         <Button
           variant="ghost"
           size="icon"
-          className={cn("h-11 w-11", !hasSessionItems && "lg:hidden")}
+          className={cn(
+            "h-11 w-11",
+            !hasSessionItems && !miraiMapHref && "lg:hidden"
+          )}
           aria-label={nav.openMenu}
         >
           <Menu className="h-5 w-5" />
