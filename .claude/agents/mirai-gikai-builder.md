@@ -27,7 +27,7 @@ tools: Bash, Read, Grep, Glob, Edit, Write
 
 - node v25.6.1 / pnpm 10.33.0 / python3 3.14.3（pdfplumber, pypdf, requests あり。pandas, bs4, fitz, uv はない。新しい依存を前提にしない）
 - tsx は `packages/seed` 経由。pdftotext / pdftoppm, jq, rg, gh 2.101, agent-browser, Docker 29.1.2
-- `supabase` は `npx supabase`。`codex` は未導入
+- Supabase CLI 2.120.0（Homebrew。`npx supabase` もこれを使う）。`codex` は未導入
 - `gh` には `--repo OchiK/miraigikai-Shinjuku` を付ける。push 先は `origin` だけ（`kawasaki` は 403）
 - kaigiroku API は curl を使う（python urllib は SSL で失敗する）
 
