@@ -11,9 +11,9 @@
 # 1. worktreeを作成（必ずmainから分岐すること）
 git worktree add ../miraikaigi-shinjuku-worktree/<branch-name> -b <branch-name> main
 
-# 2. settings.local.jsonをコピー（権限設定のため必須）
+# 2. settings.local.jsonをコピー（存在する場合のみ。現在メインチェックアウトには無い）
 mkdir -p ../miraikaigi-shinjuku-worktree/<branch-name>/.claude
-cp .claude/settings.local.json ../miraikaigi-shinjuku-worktree/<branch-name>/.claude/
+[ -f .claude/settings.local.json ] && cp .claude/settings.local.json ../miraikaigi-shinjuku-worktree/<branch-name>/.claude/
 
 # 3. .envをコピー（環境変数の引き継ぎ）
 cp .env ../miraikaigi-shinjuku-worktree/<branch-name>/

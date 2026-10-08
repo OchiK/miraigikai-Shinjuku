@@ -9,17 +9,17 @@ git worktree内で独立したブランチを作成し、タスクを実行し�
 
 ## 作業手順
 1. 指定されたworktreeディレクトリで作業する
-2. `kawasaki/develop` から指定されたブランチ名で新ブランチを作成: `git checkout -b {branch} kawasaki/develop`
+2. `main` から指定されたブランチ名で新ブランチを作成: `git checkout -b {branch} main`
 3. タスクの内容を理解し、対象ファイルを読んで既存コードを把握する
 4. 実装・修正を行う
 5. 必要に応じて検証する:
    - テスト作成/修正時: `pnpm test` または `pnpm --filter {package} test` で全パスを確認
    - コード変更時: `pnpm typecheck` で型エラーがないことを確認
 6. `pnpm lint:fix` でフォーマットを整える
-7. コミットする（Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com> を含める）
+7. コミットする（セッションで指定された Co-Authored-By 行を含める）
 8. `git push -u origin {branch}` でプッシュする
-9. `gh pr create --base kawasaki/develop` でPRを作成する
-10. 複数タスクがある場合は、次のタスクへ進む（`git checkout -b {next-branch} kawasaki/develop`）
+9. `gh pr create --base main --repo OchiK/miraigikai-Shinjuku` でPRを作成する
+10. 複数タスクがある場合は、次のタスクへ進む（`git checkout -b {next-branch} main`）
 11. 全タスク完了後、リーダーにメッセージで結果を報告する（PR番号・URL・概要）
 
 ## PRルール
@@ -36,6 +36,6 @@ git worktree内で独立したブランチを作成し、タスクを実行し�
 
 ## 注意事項
 - worktreeパスは必ずリーダーから指定されたものを使う
-- `kawasaki/develop` ブランチを基点にブランチを作成する
+- `main` ブランチを基点にブランチを作成する（`kawasaki/develop` は使わない）
 - タスクの範囲外の変更はしない
 - 判断に迷う場合はリーダーにメッセージで確認する
