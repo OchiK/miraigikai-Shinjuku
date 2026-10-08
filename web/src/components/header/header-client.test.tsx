@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { siteConfig } from "@/config/site.config";
 import type { CouncilSession } from "@/features/council-sessions/shared/types";
+import { getUiMessages } from "@/features/i18n/shared/ui-messages";
+import { HamburgerMenu } from "./hamburger-menu";
 import { HeaderClient } from "./header-client";
 
 // usePathname は App Router のコンテキスト外（jsdom）では値を返さない
@@ -245,8 +247,37 @@ describe("HeaderClient", () => {
       expect(menuTrigger()).not.toHaveClass("lg:hidden");
     });
 
-    it("議案一覧を持つ定例会が無ければ、デスクトップではメニューごと隠す", () => {
-      renderHeader("/councilors", []);
+    it.each([
+      { sessions: [] },
+      { sessions: [{ ...r82, slug: null }] },
+    ])("議案一覧を持つ定例会が無くても、マップへのメニューを残す (%j)", async ({
+      sessions,
+    }) => {
+      renderHeader("/councilors", sessions);
+
+      expect(menuTrigger()).not.toHaveClass("lg:hidden");
+      await userEvent.click(menuTrigger());
+      expect(
+        within(screen.getByRole("dialog")).getByRole("link", {
+          name: getUiMessages("ja").nav.miraiMapAriaLabel,
+        })
+      ).toHaveAttribute("href", siteConfig.externalLinks.miraiGikaiMap);
+    });
+
+    it.each([
+      { sessions: [] },
+      { sessions: [{ ...r82, slug: null }] },
+    ])("議案一覧もマップも無ければ、デスクトップではメニューを隠す (%j)", ({
+      sessions,
+    }) => {
+      render(
+        <HamburgerMenu
+          locale="ja"
+          sessions={sessions}
+          headerSession={null}
+          miraiMapHref=""
+        />
+      );
 
       expect(menuTrigger()).toHaveClass("lg:hidden");
     });
@@ -274,6 +305,66 @@ describe("HeaderClient", () => {
       expect(
         within(dialog).getByRole("combobox").parentElement?.parentElement
       ).toHaveClass("lg:hidden");
+    });
+  });
+
+  describe("メニューの全国のみらい議会マップ", () => {
+    it.each([
+      "ja",
+      "en",
+    ] as const)("%s 表示で、メニューの外部リンクが設定先を新しいタブで安全に開く", async (locale) => {
+      const { nav } = getUiMessages(locale);
+      renderHeader("/councilors", [r82], locale);
+
+      await userEvent.click(screen.getByRole("button", { name: nav.openMenu }));
+      const link = within(screen.getByRole("dialog")).getByRole("link", {
+        name: nav.miraiMapAriaLabel,
+      });
+      expect(link).toHaveTextContent(nav.miraiMap);
+      expect(link).toHaveAttribute(
+        "href",
+        siteConfig.externalLinks.miraiGikaiMap
+      );
+      expect(link).toHaveAttribute("target", "_blank");
+      expect(link).toHaveAttribute("rel", "noopener noreferrer");
+      // デスクトップでも隠さず、44pxのタップ領域を保つ
+      expect(link).toHaveClass("min-h-11");
+      expect(link).not.toHaveClass("lg:hidden");
+    });
+
+    it("日本語は「全国のみらい議会マップ」、英語は「Mirai Gikai Map」と出す", () => {
+      expect(getUiMessages("ja").nav.miraiMap).toBe("全国のみらい議会マップ");
+      expect(getUiMessages("en").nav.miraiMap).toBe("Mirai Gikai Map");
+    });
+
+    it.each([
+      "ja",
+      "en",
+    ] as const)("%s 表示で読み上げ名が表示ラベルを含む", (locale) => {
+      const { nav } = getUiMessages(locale);
+
+      expect(nav.miraiMapAriaLabel).toContain(nav.miraiMap);
+    });
+
+    it("URL が空文字列なら、メニューにリンクを出さない", async () => {
+      render(
+        <HamburgerMenu
+          locale="ja"
+          sessions={[r82]}
+          headerSession={null}
+          miraiMapHref=""
+        />
+      );
+
+      await userEvent.click(menuTrigger());
+      const dialog = screen.getByRole("dialog");
+      expect(
+        within(dialog).getByRole("link", { name: "議員一覧" })
+      ).toBeInTheDocument();
+      // React は空の href を描画しないため、リンクの役割ではなく文言で確かめる
+      expect(
+        within(dialog).queryByText(getUiMessages("ja").nav.miraiMap)
+      ).not.toBeInTheDocument();
     });
   });
 });

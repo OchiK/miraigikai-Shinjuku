@@ -45,6 +45,10 @@ export type UiMessages = {
     returnToHome: string;
     openMenu: string;
     sessionBills: (sessionName: string) => string;
+    /** メニュー最下部の外部リンク「全国のみらい議会マップ」の表示ラベル */
+    miraiMap: string;
+    /** 新しいタブで開くことを伝える読み上げ名。表示ラベルを含める */
+    miraiMapAriaLabel: string;
   };
   difficulty: {
     groupLabel: string;
@@ -378,6 +382,8 @@ export const UI_MESSAGES: Record<PublicLocale, UiMessages> = {
       returnToHome: "トップページへ戻る",
       openMenu: "メニューを開く",
       sessionBills: (sessionName) => sessionName,
+      miraiMap: "全国のみらい議会マップ",
+      miraiMapAriaLabel: "全国のみらい議会マップ（新しいタブで開きます）",
     },
     difficulty: {
       groupLabel: "説明の詳しさを切り替え",
@@ -713,6 +719,8 @@ export const UI_MESSAGES: Record<PublicLocale, UiMessages> = {
       returnToHome: "Back to the home page",
       openMenu: "Open menu",
       sessionBills: (sessionName) => sessionName,
+      miraiMap: "Mirai Gikai Map",
+      miraiMapAriaLabel: "Nationwide Mirai Gikai Map (opens in a new tab)",
     },
     difficulty: {
       groupLabel: "Choose how detailed the explanation is",
