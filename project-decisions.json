@@ -1,18 +1,23 @@
 {
   "project_name": "みらい議会＠新宿区",
   "operation": "personal_hobby_unofficial",
-  "base_repo": "https://github.com/kozosophia-lgtm/mirai-gikai-kawasaki",
-  "base_branch": "kawasaki/develop",
+  "forked_from_repo": "https://github.com/kozosophia-lgtm/mirai-gikai-kawasaki",
+  "forked_from_branch": "kawasaki/develop",
+  "repo": "https://github.com/OchiK/miraigikai-Shinjuku",
+  "working_branch": "main",
   "upstream_repo": "https://github.com/team-mirai/mirai-gikai",
-  "target_locales": [
+  "translation_locales": [
     "ja",
-    "en",
+    "en"
+  ],
+  "guide_page_locales": [
     "zh-Hans",
     "ko",
     "ne",
     "my",
     "vi"
   ],
+  "locale_policy_doc": "docs/20260924_0450_多言語方針の見直し_英語のみ翻訳と多言語案内ページ.md",
   "japanese_difficulties": [
     "easy",
     "normal",

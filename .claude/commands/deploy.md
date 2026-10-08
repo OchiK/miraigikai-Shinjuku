@@ -2,6 +2,8 @@
 description: "developからmainへのデプロイPRを作成・マージする"
 ---
 
+> **このリポジトリでは使わない。** 川崎版から引き継いだコマンドで、`develop` ブランチは存在しない。PR は `main` に直接マージし、本番反映は Vercel の自動デプロイと `import_production.yml` で行う。
+
 ## タスク
 
 develop ブランチから main ブランチへのデプロイPRを作成し、確認後にマージします。

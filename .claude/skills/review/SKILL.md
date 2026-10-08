@@ -9,7 +9,7 @@ description: コードレビュー・テストガイドラインチェック・�
 
 ## 使い方
 
-引数なしで実行すると、develop ブランチとの差分をレビューする。
+引数なしで実行すると、main ブランチとの差分をレビューする。
 
 ```
 /review
@@ -24,7 +24,7 @@ description: コードレビュー・テストガイドラインチェック・�
 
 ```bash
 git branch --show-current
-git diff --stat develop...HEAD
+git diff --stat main...HEAD
 ```
 
 変更がない場合（かつ未コミット変更もない場合）はユーザーに通知して終了。
@@ -40,10 +40,10 @@ git diff --stat develop...HEAD
 
 ```bash
 # 引数なしの場合
-codex review --base develop
+codex review --base main
 
 # 引数ありの場合（例: "セキュリティ面を重点的にチェック"）
-codex review --base develop "{ユーザーの指示}"
+codex review --base main "{ユーザーの指示}"
 ```
 
 コマンドのタイムアウトは5分（300000ms）に設定する。
@@ -68,7 +68,7 @@ codex review --base develop "{ユーザーの指示}"
 
 ## 注意事項
 
-- `codex` CLI がインストール済みであること（`/opt/homebrew/bin/codex`）
-- レビュー対象はデフォルトで `develop` ブランチとの差分
+- `codex` CLI がインストール済みであること（`command -v codex` で確認）。未導入の場合（2026-10-08 時点で未導入）は 2a の代わりに `mirai-gikai-auditor` エージェントで差分を監査し、結果報告では Codex Review を「未実行（codex 未導入）」と明記する
+- レビュー対象はデフォルトで `main` ブランチとの差分（`develop` は存在しない）
 - `--base` オプションで比較対象を変更可能
 - エージェントファイルが存在しない場合は、該当チェックをスキップして残りを実行する

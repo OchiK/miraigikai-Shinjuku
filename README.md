@@ -16,7 +16,7 @@
 
 - [START_HERE.md](START_HERE.md): リポジトリのクローン手順と環境構築
 - [AGENT_BRIEF.md](AGENT_BRIEF.md): AI実装エージェント向けの設計原則・禁止事項・開発規範
-- [project-decisions.json](project-decisions.json): 主要な決定事項と設定（ターゲット言語、難易度、コスト上限など）
+- [project-decisions.json](project-decisions.json): 主要な決定事項と設定（翻訳言語・案内ページ言語、難易度、コスト上限など）
 - [docs/](docs): 詳細仕様書
   - `ROADMAP.md`: 実装ロードマップ（Phase 0 〜 Phase 7）
   - `ARCHITECTURE.md`: アーキテクチャとデータフロー
