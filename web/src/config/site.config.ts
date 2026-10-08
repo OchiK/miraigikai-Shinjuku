@@ -43,6 +43,8 @@ export const siteConfig = {
     terms: "",
     privacy: "",
     faq: "",
+    /** 全国のみらい議会マップ（非公式）。空文字列ならトップのバナーを出さない */
+    miraiGikaiMap: "https://mirai-gikai-map.vercel.app/",
   },
   /**
    * ページを管理する政党名（空文字列の場合は政党名を省略した汎用表現を使用）
