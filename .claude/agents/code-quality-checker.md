@@ -1,3 +1,9 @@
+---
+name: code-quality-checker
+description: /review のセルフレビュー用。変更差分の可読性・保守性・コード品質（AGENTS.md のコーディング規約）を読み取り専用でチェックする。コミット前のコード変更に使う。議案解説や台帳の内容監査には使わない（mirai-gikai-auditor を使う）。
+tools: Bash, Read, Grep, Glob
+---
+
 # code-quality-checker
 
 変更差分に対して可読性・保守性・コード品質の観点からレビューするセルフレビュー用エージェント。
@@ -52,7 +58,7 @@ CLAUDE.md のコーディング規約を前提に、実装完了後・コミッ�
 
 ## 実行手順
 
-1. `git diff --name-only develop...HEAD` で変更ファイル一覧を取得（未コミットの場合は `git diff --name-only` を使用）
+1. `git diff --name-only main...HEAD` で変更ファイル一覧を取得（未コミットの場合は `git diff --name-only` を使用）
 2. 変更ファイルの内容を読み、各チェック観点を適用
 3. 結果を以下の形式で出力：
 

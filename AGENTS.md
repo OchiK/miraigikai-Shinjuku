@@ -256,3 +256,33 @@ GitHub Issueを作成する際は、以下のルールに従うこと：
 - プラン内容を簡略化せず、そのままissueに記載する
 - コード例、SQL、型定義などの詳細な実装内容を含める
 - 検証方法を具体的に記載する
+
+## モデル別ルーティング（Claude Code）
+
+Claude Code のセッションでは、作業を次のように振り分ける。メインセッション（Opus）は、下表の作業について `.claude/agents/` の mirai-gikai-checker / mirai-gikai-builder / mirai-gikai-auditor をユーザーへの確認なしに起動してよい。
+
+| 担当 | 作業 |
+|---|---|
+| Opus（メインセッション） | 次の作業の計画、一次資料どうしの食い違いの裁定（会議録と審議結果PDF、起立／異議なし、列ずれ注記）、「わからないこと」に何を書くかの判断、`reviewCompleted`・アクティブ会期の切替判断、`import_production` dry-run 差分の承認判断、デザインシステム上の判断 |
+| mirai-gikai-builder（Sonnet） | 承認済み計画の実装。固定テンプレートでの解説執筆、`spec_*.py`・`@@fact`、seed の TS データ、fetch/rebuild スクリプト、承認済みUI修正、監査指摘の反映、BACKLOG/ARCHIVE・handoff 更新、PR本文 |
+| mirai-gikai-checker（Haiku） | コマンド・期待出力・合否基準が決まっている確認。`rebuild_*.sh` と `cmp`、Tier B/C テストの件数、`pdftotext` 抽出、禁止トークンの grep、台帳CSVのBOM/CRLF、変種数・台帳行数、`gh pr checks`、バックアップ、`knowledge/log.md` 追記 |
+| mirai-gikai-auditor（Opus、新規コンテキスト） | 完成した作業の最終監査（計画・一次資料・拘束規則との照合）。Codex レビューと「独立検証」の代替 |
+
+### 単純な振り分けが当てはまらないもの
+
+- **計画の事実は拘束しない。** 拘束するのは裁定だけ。builder は数値・日付・議案内容を一次資料で確認し、食い違えば止まって報告する。
+- **見た目は機械的でも判断を含むもの**（重複か、意図に合うか、台帳行が supported か、bbox による会派列の対応、`audit.py` の DATE-* 指摘）は、checker が証拠を集めて NEEDS JUDGMENT で返し、Opus が決める。
+- **公開を左右する検証は checker に任せない。** 監査で実際に誤りが見つかっている（#130）。checker の PASS は「テストが通った」以上の意味を持たない。
+- **本番と取り返しのつかないもの**（本番DB、`import_production.yml` の apply、`seed_production.yml`、`.env*`、git 管理外の `_handoff.md`・`implementation_plan.md`・`knowledge/`、コミットしていないPDFスクラッチ）では、checker は読み取りとバックアップだけを行う。
+- バックアップ先は `../miraikaigi-shinjuku-backups/<YYYYMMDD-HHMMSS>/`（リポジトリ外、上書きしない）。
+
+### 定例会コンテンツ更新の手順（例: R8-3 閉会後の議決反映）
+
+1. checker: 一次資料（審議結果PDF、会議録）を取得し `pdftotext`／`-bbox` で抽出。ファイルの存在とハッシュ記録で PASS。
+2. Opus: 議案ごとの結果・日付・会派賛否と資料間の食い違いを裁定し、変更する節・台帳行を計画にまとめる。
+3. builder: `main` から分岐した worktree で、バックアップを取ってから解説データ・`spec_*`・会派賛否データを編集する。
+4. checker: `rebuild_*.sh` と台帳の `cmp`、Tier B/C テスト、BOM 確認、`audit.py`（DATE-* は NEEDS JUDGMENT）。
+5. auditor（新規コンテキスト）: 計画・一次資料・テンプレート定義・本ファイルと照合。指摘は builder が反映し、4〜5 を繰り返す。
+6. builder: commit・push・PR作成。checker: `gh pr checks` とマージ可否の確認。
+7. Opus またはユーザー: `import_production.yml` の dry-run 差分を承認して apply。checker: 本番ページの読み取り GET で反映を確認。
+8. builder: BACKLOG/ARCHIVE、`knowledge/log.md`、`_handoff.md` を更新。
