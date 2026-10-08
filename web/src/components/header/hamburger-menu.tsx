@@ -1,7 +1,7 @@
 "use client";
 
 import type { PublicLocale } from "@mirai-gikai/shared/i18n/locales";
-import { Menu } from "lucide-react";
+import { ExternalLink, MapIcon, Menu } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,6 +9,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { siteConfig } from "@/config/site.config";
 import type {
   CouncilSession,
   CouncilSessionWithSlug,
@@ -30,6 +31,8 @@ interface HamburgerMenuProps {
    * 狭い画面でだけ見せる（例: "sm:hidden"）。undefined ならスイッチを出さない
    */
   rubyToggleClassName?: string;
+  /** 「全国のみらい議会マップ」の遷移先。既定は siteConfig の設定値で、空文字列なら出さない */
+  miraiMapHref?: string;
 }
 
 /**
@@ -41,12 +44,15 @@ interface HamburgerMenuProps {
  * （docs/BACKLOG.md P8-11）。
  * lg:hidden は、header-client.tsx で NavLinks を lg 以上で出し、
  * LanguageToggle を sm 以上で必ず出していることを前提にしている。
+ * 最下部には外部サイト「全国のみらい議会マップ」へのリンクを、
+ * 画面幅にかかわらず置く（新しいタブで開く）。
  */
 export function HamburgerMenu({
   locale,
   sessions,
   headerSession,
   rubyToggleClassName,
+  miraiMapHref = siteConfig.externalLinks.miraiGikaiMap,
 }: HamburgerMenuProps) {
   const sessionsWithSlug = sessions.filter(hasSlug);
   const hasSessionItems = sessionsWithSlug.length > 0;
@@ -102,6 +108,31 @@ export function HamburgerMenu({
                   </li>
                 ))}
               </ul>
+            </div>
+          )}
+          {miraiMapHref && (
+            <div className="mt-1 border-t border-mirai-border/40 pt-2">
+              <a
+                href={miraiMapHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={nav.miraiMapAriaLabel}
+                className="-mx-2 flex min-h-11 items-center justify-between gap-2 rounded-full px-2 text-sm text-mirai-text hover:underline focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-mirai-accent-text"
+              >
+                <span className="flex min-w-0 items-center gap-2">
+                  <MapIcon
+                    className="size-4 shrink-0 text-mirai-text-secondary"
+                    strokeWidth={2.75}
+                    aria-hidden="true"
+                  />
+                  <span className="truncate">{nav.miraiMap}</span>
+                </span>
+                <ExternalLink
+                  className="size-3.5 shrink-0 text-mirai-text-muted"
+                  strokeWidth={2.75}
+                  aria-hidden="true"
+                />
+              </a>
             </div>
           )}
         </div>
