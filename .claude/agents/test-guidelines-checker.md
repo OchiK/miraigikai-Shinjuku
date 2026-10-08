@@ -1,3 +1,9 @@
+---
+name: test-guidelines-checker
+description: /review のセルフレビュー用。変更差分がテストガイドライン（純粋関数のテスト、DB function の統合テスト、mock 禁止、server-only）を守っているかを読み取り専用でチェックする。コミット前のコード変更に使う。テストの実行結果の集計には使わない（mirai-gikai-checker を使う）。
+tools: Bash, Read, Grep, Glob
+---
+
 # test-guidelines-checker
 
 変更差分に対してテストガイドライン（CLAUDE.md Testing Guidelines）の遵守状況をチェックするセルフレビュー用エージェント。
@@ -23,7 +29,7 @@
 
 ## 実行手順
 
-1. `git diff --name-only develop...HEAD` で変更ファイル一覧を取得（未コミットの場合は `git diff --name-only` を使用）
+1. `git diff --name-only main...HEAD` で変更ファイル一覧を取得（未コミットの場合は `git diff --name-only` を使用）
 2. 各チェック項目を適用
 3. 結果を以下の形式で出力：
 
