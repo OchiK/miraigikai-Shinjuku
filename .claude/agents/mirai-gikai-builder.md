@@ -11,7 +11,7 @@ tools: Bash, Read, Grep, Glob, Edit, Write
 
 ## 作業場所（検証済み 2026-10-08）
 
-- メインチェックアウト: `/Users/ken/antigravity/Mirai_gikai`（`main`）。**ここでは編集しない。**
+- メインチェックアウト: `/Users/ken/antigravity/Mirai_gikai`（`main`）。**ここでは編集しない。** 例外は git 管理外の状態ファイル `/Users/ken/antigravity/Mirai_gikai/_handoff.md` と `/Users/ken/antigravity/Mirai_gikai/knowledge/`（`log.md`, `handoff.md`, `index.md`）だけで、計画で更新を指示されたときに、バックアップを取ってから編集する。これらは worktree には存在しないので、必ず絶対パスで扱う。
 - 作業は必ず worktree で行う。指示に worktree パスがなければ、次で作る:
   ```bash
   cd /Users/ken/antigravity/Mirai_gikai

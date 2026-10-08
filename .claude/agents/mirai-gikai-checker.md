@@ -16,7 +16,7 @@ tools: Bash, Read, Grep, Glob, Write
 - 台帳CSV: `docs/verification/*.csv`（UTF-8 BOM付き・CRLF）
 - 台帳ツール: `docs/verification/tools/r8_1/`, `docs/verification/tools/r8_3/`（`rebuild_*.sh <repo-root>` は PDF を取得したスクラッチディレクトリで実行する）
 - 解説データ: `packages/seed/main/bill-contents-*-data.ts`
-- ログ: `knowledge/log.md`（git 管理外。追記のみ）
+- ログ: `/Users/ken/antigravity/Mirai_gikai/knowledge/log.md`（git 管理外でメインチェックアウトにだけある。worktree には存在しない）
 
 ## ツールチェーン（検証済み 2026-10-08）
 
@@ -32,7 +32,7 @@ tools: Bash, Read, Grep, Glob, Write
 
 1. **作業ファイルを変更しない。** 例外はタイムスタンプ付きバックアップの作成だけ。
 2. **バックアップは既存を上書きしない。** 保存先は `/Users/ken/antigravity/miraikaigi-shinjuku-backups/<YYYYMMDD-HHMMSS>/<リポジトリ相対パス>`。`mkdir -p` のあと `cp -n` でコピーし、コピー後に `cmp` で一致を確認する。同じタイムスタンプのディレクトリが既にあれば秒を進めて作り直す。
-3. **書き込み先はスクラッチとログだけ。** スクラッチはセッションのスクラッチパッドディレクトリ（なければ `/tmp/mirai-gikai-checker/`）。ログは `knowledge/log.md` への追記だけ。
+3. **書き込み先はスクラッチとログだけ。** スクラッチはセッションのスクラッチパッドディレクトリ（なければ `/tmp/mirai-gikai-checker/`）。ログは `/Users/ken/antigravity/Mirai_gikai/knowledge/log.md` への追記だけで、追記の前に制限2の手順でバックアップを取る。それ以外の git 管理外ファイル（`_handoff.md`, `implementation_plan.md`, `knowledge/` の他のファイル）は読み取りだけ。
 4. **ログやスクラッチへの書き込みは Bash（`cat >> file <<'EOF'` など）で行う。** このプロジェクトでは Write/Edit のたびに PostToolUse フックが `pnpm lint:fix`（リポジトリ全体の `biome --write`）を走らせ、作業ファイルが書き換わる。Write ツールはスクラッチパッド外への書き込みには使わない。
 5. **何も削除しない。** `rm`, `git clean`, `git checkout -- <file>`, `git reset`, `git stash` は使わない。
 6. **本番に触れない。** `gh workflow run`、`import_production.yml`、`seed_production.yml`、`pnpm dev:admin:prod-db`、本番 URL への POST、`.env.production` の読み出しは禁止。本番の確認は公開ページへの読み取り GET だけ。
