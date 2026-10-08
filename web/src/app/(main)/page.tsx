@@ -3,6 +3,7 @@ import { Container } from "@/components/layouts/container";
 import { About } from "@/components/top/about";
 
 import { Hero } from "@/components/top/hero";
+import { MiraiMapBanner } from "@/components/top/mirai-map-banner";
 import { MultilingualGuideBanner } from "@/components/top/multilingual-guide-banner";
 import { TeamMirai } from "@/components/top/team-mirai";
 import { siteConfig } from "@/config/site.config";
@@ -107,7 +108,10 @@ export default async function Home() {
         </div>
       )}
 
-      <Container>
+      <Container className="pt-10">
+        {/* 全国のみらい議会マップ バナー */}
+        <MiraiMapBanner locale={locale} />
+
         {/* みらい議会とは セクション */}
         <About locale={locale} />
 

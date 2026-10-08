@@ -77,6 +77,15 @@ export type UiMessages = {
       sessionName: string;
     }) => string;
     readMore: string;
+    /** 全国のみらい議会マップへのバナー */
+    miraiMap: {
+      badge: string;
+      title: string;
+      description: string;
+      buttonLabel: string;
+      /** リンクのアクセシブルネーム。表示ラベルを含める（WCAG 2.5.3） */
+      ariaLabel: string;
+    };
   };
   about: {
     lead: string;
@@ -397,6 +406,14 @@ export const UI_MESSAGES: Record<PublicLocale, UiMessages> = {
       sessionPeriod: ({ year, startMonth, endMonth, sessionName }) =>
         `${year}.${startMonth}月〜${endMonth}月に実施された${sessionName}`,
       readMore: "もっと読む",
+      miraiMap: {
+        badge: "関連プロジェクト",
+        title: "全国のみらい議会マップ",
+        description:
+          "全国の自治体議会における「みらい議会」の開設状況や議会カバー率を可視化したポータルサイトです。",
+        buttonLabel: "マップを見る",
+        ariaLabel: "みらい議会マップを見る（新しいタブで開きます）",
+      },
     },
     about: {
       lead: `${siteConfig.siteName}とは`,
@@ -726,6 +743,14 @@ export const UI_MESSAGES: Record<PublicLocale, UiMessages> = {
       sessionPeriod: ({ year, startMonth, endMonth, sessionName }) =>
         `${sessionName}, ${enHeld(year, startMonth, endMonth)}`,
       readMore: "Read more",
+      miraiMap: {
+        badge: "Related Project",
+        title: "Nationwide Mirai Gikai Map",
+        description:
+          "A portal visualizing the adoption status and coverage of Mirai Gikai instances across local councils in Japan.",
+        buttonLabel: "View Map",
+        ariaLabel: "View Map: Nationwide Mirai Gikai Map (opens in a new tab)",
+      },
     },
     about: {
       lead: `What is ${en.siteName}?`,
