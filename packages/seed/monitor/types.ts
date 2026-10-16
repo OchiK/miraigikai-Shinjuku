@@ -60,6 +60,11 @@ export interface KnownItem {
   decision: string | null;
   /** 公開レビュー済みか（bills.is_review_completed） */
   reviewCompleted: boolean;
+  /**
+   * 議決結果ページにだけ載る案件（同意・諮問など）。提出議案ページに載らないため、
+   * 提出議案ページとの比較（欠落・件名・PDF）を行わず、議決結果の比較だけを行う。
+   */
+  decisionsOnly?: boolean;
 }
 
 /** インベントリに登録済みの会期 */

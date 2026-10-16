@@ -61,8 +61,8 @@ const BILL_SLUGS_WITH_CONTENT = [
 ];
 
 describe("bills seed", () => {
-  it("R8-1の48件・R8-2の27件・R8-3の24件を公式インベントリから投入する", () => {
-    expect(bills).toHaveLength(99);
+  it("R8-1の48件・R8-2の27件・R8-3の28件を公式インベントリから投入する", () => {
+    expect(bills).toHaveLength(103);
     expect(bills.map((b) => b.slug)).toEqual([
       ...r8FirstSessionItems.map(buildR8_1ItemKey),
       ...r8SecondSessionItems.map(buildItemKey),
@@ -113,7 +113,7 @@ describe("公開状態と解説の整合", () => {
     expect(publishedWithoutContent).toEqual([]);
   });
 
-  it("R8-1の21件・R8-2の27件・R8-3の22件を published にし、R8-1の残り27件とR8-3の議員提出2件だけを coming_soon にする", () => {
+  it("R8-1の21件・R8-2の27件・R8-3の22件を published にし、R8-1の残り27件とR8-3の同意・諮問4件と議員提出2件だけを coming_soon にする", () => {
     expect(
       bills
         .filter((b) => b.publish_status === "published")
@@ -127,6 +127,10 @@ describe("公開状態と解説の整合", () => {
       ...r8FirstSessionItems
         .filter((item) => !item.hasPublishableContent)
         .map(buildR8_1ItemKey),
+      "shinjuku-2026-r3-doui-1",
+      "shinjuku-2026-r3-shimon-1",
+      "shinjuku-2026-r3-shimon-2",
+      "shinjuku-2026-r3-shimon-3",
       "shinjuku-2026-r3-giin-11",
       "shinjuku-2026-r3-giin-12",
     ]);
@@ -336,7 +340,7 @@ describe("createBillsTags", () => {
 
     expect(billsTags.some((bt) => bt.bill_id === unmapped.id)).toBe(false);
     // R8-2 の区長提出議案23件 + R8-3 の区長提出議案22件
-    // （R8-2 の議員提出議案4件と R8-3 の議員提出議案2件は未分類）
+    // （R8-2 の議員提出議案4件と R8-3 の議員提出議案2件、同意・諮問4件は未分類）
     expect(billsTags).toHaveLength(23 + 22);
   });
 });

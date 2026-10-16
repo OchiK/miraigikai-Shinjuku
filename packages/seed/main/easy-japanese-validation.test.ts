@@ -65,9 +65,6 @@ const ALL_BILL_SLUGS = [
   ...r8_3ItemsWithContent.map(buildR8_3ItemKey),
 ];
 
-/** 会期中に解説を書いた第3回定例会の22件。 */
-const R8_3_SLUGS = new Set(r8_3ItemsWithContent.map(buildR8_3ItemKey));
-
 const easyContents = billContentsWithBillSlug.filter(
   (content) => content.difficulty_level === "easy"
 );
@@ -1072,19 +1069,12 @@ describe("やさしい日本語版が日付を西暦で示している", () => {
   it.each(easyContents)("$bill_slug の会期が西暦と曜日で書かれている", (content) => {
     // 会期の日付そのものは議案ごとに違う。
     // 別の定例会の easy 版を足したときに落ちないよう、形式を見る。
-    // 会期中に書いた第3回定例会の解説だけは「まででした」ではなく「までです」と書き、
-    // 会期の日付まで固定する。閉会後に書き換えるときはここも直すこと。
+    // 第3回定例会も閉会（2026-10-15）後に書き換えたため、ほかの会期と同じ「まででした」。
     const session = content.content.match(/^会期は .+$/m)?.[0];
 
-    if (R8_3_SLUGS.has(content.bill_slug)) {
-      expect(session).toBe(
-        "会期は 2026年9月16日（水）から 10月15日（木）までです。"
-      );
-    } else {
-      expect(session).toMatch(
-        /^会期は 20\d{2}年\d{1,2}月\d{1,2}日（[日月火水木金土]）から .*\d{1,2}月\d{1,2}日（[日月火水木金土]）まででした。$/
-      );
-    }
+    expect(session).toMatch(
+      /^会期は 20\d{2}年\d{1,2}月\d{1,2}日（[日月火水木金土]）から .*\d{1,2}月\d{1,2}日（[日月火水木金土]）まででした。$/
+    );
   });
 });
 

@@ -20,7 +20,10 @@ import {
 } from "./parse-council-page";
 import { R8_1_SESSION } from "../main/shinjuku-r8-1-inventory";
 import { R8_2_SESSION } from "../main/shinjuku-r8-2-inventory";
-import { R8_3_SESSION } from "../main/shinjuku-r8-3-inventory";
+import {
+  R8_3_DECISIONS_URL,
+  R8_3_SESSION,
+} from "../main/shinjuku-r8-3-inventory";
 import { KNOWN_SESSIONS } from "./targets";
 import type {
   DetectionResult,
@@ -287,6 +290,73 @@ describe("compareKnownSession（レビュー済みコンテンツを上書きし
     ).toThrow(/議決結果ページ/);
   });
 
+  describe("議決結果ページにだけ載る案件（decisionsOnly）", () => {
+    const withConsent: KnownSession = {
+      ...known,
+      items: [
+        ...known.items,
+        {
+          officialLabel: "同意第1号",
+          officialTitle: "教育委員会委員任命の同意について",
+          fullTextPdfUrl: null,
+          decision: "同意",
+          reviewCompleted: false,
+          decisionsOnly: true,
+        },
+      ],
+    };
+    const snapshotWithConsent = (): SessionSnapshot => {
+      const snapshot = matchingSnapshot();
+      // 提出議案ページには載らず、議決結果ページにだけ載る
+      snapshot.decisions.push({
+        officialLabel: "同意第1号",
+        officialTitle: "教育委員会委員任命の同意について",
+        decision: "同意",
+      });
+      return snapshot;
+    };
+
+    it("提出議案ページに無くても、欠落にも下書きにもしない", () => {
+      expect(compareKnownSession(withConsent, snapshotWithConsent())).toEqual({
+        draftItems: [],
+        proposedChanges: [],
+      });
+    });
+
+    it("未登録なら、議決結果ページにだけ載る案件は下書きになる", () => {
+      expect(
+        compareKnownSession(known, snapshotWithConsent()).draftItems.map(
+          (d) => d.officialLabel
+        )
+      ).toEqual(["同意第1号"]);
+    });
+
+    it("議決結果が食い違えば報告するが、件名・PDFは比べない", () => {
+      const snapshot = snapshotWithConsent();
+      snapshot.decisions[2] = {
+        officialLabel: "同意第1号",
+        officialTitle: "件名が違っても比べない",
+        decision: "不同意",
+      };
+
+      expect(
+        compareKnownSession(withConsent, snapshot).proposedChanges.map((c) => [
+          c.officialLabel,
+          c.field,
+          c.current,
+          c.official,
+        ])
+      ).toEqual([["同意第1号", "decision", "同意", "不同意"]]);
+    });
+
+    it("議決結果ページからも消えた場合は、議決結果が無いだけで欠落にはしない", () => {
+      expect(compareKnownSession(withConsent, matchingSnapshot())).toEqual({
+        draftItems: [],
+        proposedChanges: [],
+      });
+    });
+  });
+
   describe("議決結果が未掲載のまま登録した会期", () => {
     const pending: KnownSession = {
       ...known,
@@ -396,10 +466,16 @@ describe("KNOWN_SESSIONS と公式ページの実物（2026-09-25 取得）", ()
         fixture("submissions-r8-3.html"),
         r83.submissionsUrl
       ),
-      decisions: [],
+      // 2026-10-16 取得（閉会後・最終更新日 2026-10-15）。同意・諮問も載っている
+      decisions: parseDecisionPage(fixture("decisions-r8-3.html")),
     };
     expect(r83.sessionId).toBe(R8_3_SESSION.slug);
-    expect(r83.items).toHaveLength(22);
+    expect(r83.decisionsUrl).toBe(R8_3_DECISIONS_URL);
+    // 区長提出議案22件 + 議決結果ページにだけ載る同意・諮問4件
+    expect(r83.items).toHaveLength(26);
+    expect(snapshot.decisions).toHaveLength(26);
+    expect(r83.items.filter((item) => item.decisionsOnly)).toHaveLength(4);
+    // 同意・諮問は提出議案ページに載らないが、欠落にも下書きにもならない
     expect(compareKnownSession(r83, snapshot)).toEqual({
       draftItems: [],
       proposedChanges: [],
@@ -445,13 +521,15 @@ describe("KNOWN_SESSIONS と公式ページの実物（2026-09-25 取得）", ()
     }
   });
 
-  it("令和8年第3回定例会の議決結果ページは、一覧の実物にまだ無い", () => {
+  it("令和8年第3回定例会は登録済みの議決結果ページを使う（一覧の実物には依存しない）", () => {
     const decisionsIndex = parseIndexPage(
       fixture("index-decisions.html"),
       "https://www.city.shinjuku.lg.jp/kusei/index_giketsu01.html"
     );
     const pages = resolveKnownSessionPages(KNOWN_SESSIONS, decisionsIndex);
-    expect(pages.find((p) => p.sessionId === "r8-3")?.decisionsUrl).toBeNull();
+    expect(pages.find((p) => p.sessionId === "r8-3")?.decisionsUrl).toBe(
+      R8_3_DECISIONS_URL
+    );
     expect(pages.find((p) => p.sessionId === "r8-2")?.decisionsUrl).toBe(
       knownSession("r8-2").decisionsUrl
     );

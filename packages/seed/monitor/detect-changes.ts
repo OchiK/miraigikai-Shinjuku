@@ -208,17 +208,22 @@ export function compareKnownSession(
         reviewCompleted: item.reviewCompleted,
       });
 
-    const submission = submissions.get(item.officialLabel);
-    if (!submission) {
-      change("missingOnOfficialPage", item.officialTitle, null);
-    } else {
-      if (
-        normalize(submission.officialTitle) !== normalize(item.officialTitle)
-      ) {
-        change("officialTitle", item.officialTitle, submission.officialTitle);
-      }
-      if (submission.pdfUrl !== item.fullTextPdfUrl) {
-        change("fullTextPdfUrl", item.fullTextPdfUrl, submission.pdfUrl);
+    // 議決結果ページにだけ載る案件は、提出議案ページとの比較をしない
+    const submission = item.decisionsOnly
+      ? undefined
+      : submissions.get(item.officialLabel);
+    if (!item.decisionsOnly) {
+      if (!submission) {
+        change("missingOnOfficialPage", item.officialTitle, null);
+      } else {
+        if (
+          normalize(submission.officialTitle) !== normalize(item.officialTitle)
+        ) {
+          change("officialTitle", item.officialTitle, submission.officialTitle);
+        }
+        if (submission.pdfUrl !== item.fullTextPdfUrl) {
+          change("fullTextPdfUrl", item.fullTextPdfUrl, submission.pdfUrl);
+        }
       }
     }
 

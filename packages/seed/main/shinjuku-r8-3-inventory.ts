@@ -17,13 +17,17 @@ type CouncilSessionInsert =
  * 実物（2026-09-26 取得、全25ファイルが HTTP 200・application/pdf）と突合して確認した。
  * 推測・補完・要約は含まない。
  *
- * 議決結果は未掲載（会期中）のため、全件 decision: null とする。
+ * 議決結果は、閉会（2026-10-15）後に公開された公式の議決結果ページ
+ * （R8_3_DECISIONS_URL、最終更新日 2026-10-15、2026-10-16 取得）の表記どおりに転記した。
+ * 区長提出議案22件（第63〜80号議案の18件は原案可決、認定第1〜4号は認定）に加え、
+ * 提出議案一覧ページに載らず議決結果ページにだけ載る同意第1号（同意）・諮問第1〜3号（決定）の
+ * 4件も登録している（解説は作成しないため coming_soon・reviewCompleted: false）。
+ * 議員提出議案2件は議決結果ページに載らないため decision: null のまま。
+ * 議決日は同ページに記載がない。
  * 解説（やさしい／ふつう／くわしく）は P5-2 で区長提出議案の全22件を作成し、主張台帳
  * （docs/verification/20260930_0910_claim-ledger-r8-3.csv）で一次資料と突合した。
- * 公開レビュー（独立したファクトチェック）は完了済み。
- *
- * 議決結果が公式に掲載されたら decision だけを更新し、
- * 既存の解説は本番インポーターで上書き・削除しない。
+ * 公開レビュー（独立したファクトチェック）は完了済み。審議状況の節は議決結果ページで
+ * 書き直し、台帳を突合し直した。
  *
  * 議員提出議案（第11・12号）は区長提出議案の一覧ページに載らないため、議会公式の
  * 会期ページ（2026-10-01 取得）から識別名・件名だけを転記した。会期ページに全文PDFは
@@ -33,6 +37,13 @@ type CouncilSessionInsert =
 /** 提出議案一覧ページ（会期・件名・全文PDF・概要PDFの出典） */
 export const R8_3_SUBMISSIONS_URL =
   "https://www.city.shinjuku.lg.jp/kusei/kuseijoho01_001109_03.html";
+
+/**
+ * 議決結果ページ（区長提出議案の議決結果の出典）。最終更新日 2026-10-15。
+ * 同意・諮問は提出議案一覧ページに載らず、このページにだけ載る。
+ */
+export const R8_3_DECISIONS_URL =
+  "https://www.city.shinjuku.lg.jp/kusei/soumu01_002090_00018.html";
 
 /** 「予算案（概要）」一般会計（補正第4号） */
 const OVERVIEW_BUDGET_4 =
@@ -57,11 +68,16 @@ export const R8_3_COUNCIL_SESSION_URL =
  * - `gian`: 第N号議案（区長提出議案）
  * - `nintei`: 認定第N号（決算の認定）
  * - `giin`: 議員提出議案第N号（議員が提出した条例案・意見書）
+ * - `doui`: 同意第N号（人事案件の同意。議決結果ページにだけ載る）
+ * - `shimon`: 諮問第N号（意見の聴取。議決結果ページにだけ載る）
  */
-export type R8_3ItemType = "gian" | "nintei" | "giin";
+export type R8_3ItemType = "gian" | "nintei" | "giin" | "doui" | "shimon";
 
-/** 公式の議決結果の文言。決算は「認定」で、議案の「原案可決」と混同しないこと */
-export type R8_3Decision = ShinjukuDecision | "認定";
+/**
+ * 公式の議決結果の文言。決算は「認定」、同意は「同意」、諮問は「決定」で、
+ * 議案の「原案可決」と混同しないこと
+ */
+export type R8_3Decision = ShinjukuDecision | "認定" | "同意" | "決定";
 
 export interface R8_3SessionItem {
   /** 案件種別 */
@@ -84,7 +100,7 @@ export interface R8_3SessionItem {
    * 議員提出議案も審議前は概要PDFが無いため null。
    */
   overviewPdfUrl: string | null;
-  /** 公式議決結果。議決結果ページが未掲載のあいだは null */
+  /** 公式議決結果。議決結果ページに載らない案件（議員提出議案）は null */
   decision: R8_3Decision | null;
   /** 識別名・件名の出典ページ。既定は区長提出議案の提出議案一覧ページ */
   sourcePageUrl?: string;
@@ -118,11 +134,10 @@ const officialPdfUrl = (contentId: string) =>
   `https://www.city.shinjuku.lg.jp/content/${contentId}.pdf`;
 
 /**
- * 審議中の案件の共通値。
- * 議決結果はまだ無い。解説は作成・出典突合・公開レビュー済みで公開する。
+ * 解説を作成・出典突合・公開レビューまで済ませた案件の共通値。
+ * 議決結果（decision）は案件ごとに公式の議決結果ページから転記する。
  */
-const PENDING = {
-  decision: null,
+const REVIEWED_CONTENT = {
   hasPublishableContent: true,
   reviewCompleted: true,
 } as const;
@@ -135,7 +150,8 @@ export const r8ThirdSessionItems: R8_3SessionItem[] = [
     officialTitle: "令和8年度新宿区一般会計補正予算（第4号）",
     fullTextPdfUrl: officialPdfUrl("000466336"),
     overviewPdfUrl: OVERVIEW_BUDGET_4,
-    ...PENDING,
+    decision: "原案可決",
+    ...REVIEWED_CONTENT,
   },
   {
     itemType: "gian",
@@ -144,7 +160,8 @@ export const r8ThirdSessionItems: R8_3SessionItem[] = [
     officialTitle: "令和8年度新宿区一般会計補正予算（第5号）",
     fullTextPdfUrl: officialPdfUrl("000466337"),
     overviewPdfUrl: OVERVIEW_BUDGET_5,
-    ...PENDING,
+    decision: "原案可決",
+    ...REVIEWED_CONTENT,
   },
   {
     itemType: "gian",
@@ -153,7 +170,8 @@ export const r8ThirdSessionItems: R8_3SessionItem[] = [
     officialTitle: "令和8年度新宿区介護保険特別会計補正予算（第2号）",
     fullTextPdfUrl: officialPdfUrl("000466338"),
     overviewPdfUrl: OVERVIEW_BUDGET_5,
-    ...PENDING,
+    decision: "原案可決",
+    ...REVIEWED_CONTENT,
   },
   {
     itemType: "gian",
@@ -162,7 +180,8 @@ export const r8ThirdSessionItems: R8_3SessionItem[] = [
     officialTitle: "令和8年度新宿区後期高齢者医療特別会計補正予算（第1号）",
     fullTextPdfUrl: officialPdfUrl("000466339"),
     overviewPdfUrl: OVERVIEW_BUDGET_5,
-    ...PENDING,
+    decision: "原案可決",
+    ...REVIEWED_CONTENT,
   },
   {
     itemType: "nintei",
@@ -171,7 +190,8 @@ export const r8ThirdSessionItems: R8_3SessionItem[] = [
     officialTitle: "令和7年度新宿区一般会計歳入歳出決算",
     fullTextPdfUrl: officialPdfUrl("000466361"),
     overviewPdfUrl: null,
-    ...PENDING,
+    decision: "認定",
+    ...REVIEWED_CONTENT,
   },
   {
     itemType: "nintei",
@@ -180,7 +200,8 @@ export const r8ThirdSessionItems: R8_3SessionItem[] = [
     officialTitle: "令和7年度新宿区国民健康保険特別会計歳入歳出決算",
     fullTextPdfUrl: officialPdfUrl("000466362"),
     overviewPdfUrl: null,
-    ...PENDING,
+    decision: "認定",
+    ...REVIEWED_CONTENT,
   },
   {
     itemType: "nintei",
@@ -189,7 +210,8 @@ export const r8ThirdSessionItems: R8_3SessionItem[] = [
     officialTitle: "令和7年度新宿区介護保険特別会計歳入歳出決算",
     fullTextPdfUrl: officialPdfUrl("000466363"),
     overviewPdfUrl: null,
-    ...PENDING,
+    decision: "認定",
+    ...REVIEWED_CONTENT,
   },
   {
     itemType: "nintei",
@@ -198,7 +220,8 @@ export const r8ThirdSessionItems: R8_3SessionItem[] = [
     officialTitle: "令和7年度新宿区後期高齢者医療特別会計歳入歳出決算",
     fullTextPdfUrl: officialPdfUrl("000466364"),
     overviewPdfUrl: null,
-    ...PENDING,
+    decision: "認定",
+    ...REVIEWED_CONTENT,
   },
   {
     itemType: "gian",
@@ -207,7 +230,8 @@ export const r8ThirdSessionItems: R8_3SessionItem[] = [
     officialTitle: "新宿区公益保護のための通報に関する条例の一部を改正する条例",
     fullTextPdfUrl: officialPdfUrl("000466368"),
     overviewPdfUrl: OVERVIEW_JOREI,
-    ...PENDING,
+    decision: "原案可決",
+    ...REVIEWED_CONTENT,
   },
   {
     itemType: "gian",
@@ -216,7 +240,8 @@ export const r8ThirdSessionItems: R8_3SessionItem[] = [
     officialTitle: "新宿区立しんじゅく多文化共生プラザ条例の一部を改正する条例",
     fullTextPdfUrl: officialPdfUrl("000466369"),
     overviewPdfUrl: OVERVIEW_JOREI,
-    ...PENDING,
+    decision: "原案可決",
+    ...REVIEWED_CONTENT,
   },
   {
     itemType: "gian",
@@ -226,7 +251,8 @@ export const r8ThirdSessionItems: R8_3SessionItem[] = [
       "新宿区乳児等通園支援事業の実施に関する条例の一部を改正する条例",
     fullTextPdfUrl: officialPdfUrl("000466370"),
     overviewPdfUrl: OVERVIEW_JOREI,
-    ...PENDING,
+    decision: "原案可決",
+    ...REVIEWED_CONTENT,
   },
   {
     itemType: "gian",
@@ -236,7 +262,8 @@ export const r8ThirdSessionItems: R8_3SessionItem[] = [
       "新宿区家庭的保育事業等の設備及び運営に関する基準を定める条例及び新宿区乳児等通園支援事業の設備及び運営に関する基準を定める条例の一部を改正する条例",
     fullTextPdfUrl: officialPdfUrl("000466371"),
     overviewPdfUrl: OVERVIEW_JOREI,
-    ...PENDING,
+    decision: "原案可決",
+    ...REVIEWED_CONTENT,
   },
   {
     itemType: "gian",
@@ -245,7 +272,8 @@ export const r8ThirdSessionItems: R8_3SessionItem[] = [
     officialTitle: "新宿区景観まちづくり条例の一部を改正する条例",
     fullTextPdfUrl: officialPdfUrl("000466374"),
     overviewPdfUrl: OVERVIEW_JOREI,
-    ...PENDING,
+    decision: "原案可決",
+    ...REVIEWED_CONTENT,
   },
   {
     itemType: "gian",
@@ -255,7 +283,8 @@ export const r8ThirdSessionItems: R8_3SessionItem[] = [
       "新宿区立の小学校、中学校及び特別支援学校の非常勤の学校医、学校歯科医及び学校薬剤師の公務災害補償に関する条例の一部を改正する条例",
     fullTextPdfUrl: officialPdfUrl("000466375"),
     overviewPdfUrl: OVERVIEW_JOREI,
-    ...PENDING,
+    decision: "原案可決",
+    ...REVIEWED_CONTENT,
   },
   {
     itemType: "gian",
@@ -265,7 +294,8 @@ export const r8ThirdSessionItems: R8_3SessionItem[] = [
       "ＥＳＣＯ事業による新宿区立防災センター外11施設照明ＬＥＤ化工事等委託契約",
     fullTextPdfUrl: officialPdfUrl("000466376"),
     overviewPdfUrl: OVERVIEW_JOREI,
-    ...PENDING,
+    decision: "原案可決",
+    ...REVIEWED_CONTENT,
   },
   {
     itemType: "gian",
@@ -275,7 +305,8 @@ export const r8ThirdSessionItems: R8_3SessionItem[] = [
       "ＥＳＣＯ事業による新宿区四谷特別出張所外6施設照明ＬＥＤ化工事等委託契約",
     fullTextPdfUrl: officialPdfUrl("000466377"),
     overviewPdfUrl: OVERVIEW_JOREI,
-    ...PENDING,
+    decision: "原案可決",
+    ...REVIEWED_CONTENT,
   },
   {
     itemType: "gian",
@@ -285,7 +316,8 @@ export const r8ThirdSessionItems: R8_3SessionItem[] = [
       "ＥＳＣＯ事業による新宿区大久保特別出張所外10施設照明ＬＥＤ化工事等委託契約",
     fullTextPdfUrl: officialPdfUrl("000466378"),
     overviewPdfUrl: OVERVIEW_JOREI,
-    ...PENDING,
+    decision: "原案可決",
+    ...REVIEWED_CONTENT,
   },
   {
     itemType: "gian",
@@ -297,7 +329,8 @@ export const r8ThirdSessionItems: R8_3SessionItem[] = [
     officialTitle: "道路改良工事（江戸川橋通り第2)期）請負契約",
     fullTextPdfUrl: officialPdfUrl("000466379"),
     overviewPdfUrl: OVERVIEW_JOREI,
-    ...PENDING,
+    decision: "原案可決",
+    ...REVIEWED_CONTENT,
   },
   {
     itemType: "gian",
@@ -307,7 +340,8 @@ export const r8ThirdSessionItems: R8_3SessionItem[] = [
       "イントラネットシステム及び情報システム統合基盤に係るマイクロソフト社ソフトウェアライセンスの買入れについて",
     fullTextPdfUrl: officialPdfUrl("000466380"),
     overviewPdfUrl: OVERVIEW_JOREI,
-    ...PENDING,
+    decision: "原案可決",
+    ...REVIEWED_CONTENT,
   },
   {
     itemType: "gian",
@@ -316,7 +350,8 @@ export const r8ThirdSessionItems: R8_3SessionItem[] = [
     officialTitle: "権利の放棄について",
     fullTextPdfUrl: officialPdfUrl("000466381"),
     overviewPdfUrl: OVERVIEW_JOREI,
-    ...PENDING,
+    decision: "原案可決",
+    ...REVIEWED_CONTENT,
   },
   {
     itemType: "gian",
@@ -325,7 +360,8 @@ export const r8ThirdSessionItems: R8_3SessionItem[] = [
     officialTitle: "損害賠償の額の決定について",
     fullTextPdfUrl: officialPdfUrl("000466382"),
     overviewPdfUrl: OVERVIEW_JOREI,
-    ...PENDING,
+    decision: "原案可決",
+    ...REVIEWED_CONTENT,
   },
   {
     itemType: "gian",
@@ -334,7 +370,59 @@ export const r8ThirdSessionItems: R8_3SessionItem[] = [
     officialTitle: "訴えの提起について",
     fullTextPdfUrl: officialPdfUrl("000466383"),
     overviewPdfUrl: OVERVIEW_JOREI,
-    ...PENDING,
+    decision: "原案可決",
+    ...REVIEWED_CONTENT,
+  },
+  // 同意・諮問。提出議案一覧ページに載らず、議決結果ページ（R8_3_DECISIONS_URL）にだけ
+  // 載る。識別名・件名・議決結果は同ページの表記どおり。全文PDF・概要PDFは確認できて
+  // いないため null（推測で入れない）。解説は作成しないので coming_soon。
+  {
+    itemType: "doui",
+    itemNumber: 1,
+    officialLabel: "同意第1号",
+    officialTitle: "新宿区教育委員会委員任命の同意について",
+    fullTextPdfUrl: null,
+    overviewPdfUrl: null,
+    decision: "同意",
+    sourcePageUrl: R8_3_DECISIONS_URL,
+    hasPublishableContent: false,
+    reviewCompleted: false,
+  },
+  {
+    itemType: "shimon",
+    itemNumber: 1,
+    officialLabel: "諮問第1号",
+    officialTitle: "人権擁護委員候補者の推薦に関する意見の聴取について",
+    fullTextPdfUrl: null,
+    overviewPdfUrl: null,
+    decision: "決定",
+    sourcePageUrl: R8_3_DECISIONS_URL,
+    hasPublishableContent: false,
+    reviewCompleted: false,
+  },
+  {
+    itemType: "shimon",
+    itemNumber: 2,
+    officialLabel: "諮問第2号",
+    officialTitle: "人権擁護委員候補者の推薦に関する意見の聴取について",
+    fullTextPdfUrl: null,
+    overviewPdfUrl: null,
+    decision: "決定",
+    sourcePageUrl: R8_3_DECISIONS_URL,
+    hasPublishableContent: false,
+    reviewCompleted: false,
+  },
+  {
+    itemType: "shimon",
+    itemNumber: 3,
+    officialLabel: "諮問第3号",
+    officialTitle: "人権擁護委員候補者の推薦に関する意見の聴取について",
+    fullTextPdfUrl: null,
+    overviewPdfUrl: null,
+    decision: "決定",
+    sourcePageUrl: R8_3_DECISIONS_URL,
+    hasPublishableContent: false,
+    reviewCompleted: false,
   },
   // 議員提出議案。識別名・件名は議会公式の会期ページ（2026-10-01 取得）の記載どおり。
   // 解説は審議・閉会後に会議録と「議案の概要と審議結果」PDFから作成する（P5-4）。
@@ -385,20 +473,52 @@ export function r8_3NinteiKey(itemNumber: number): string {
   return buildR8_3ItemKey({ itemType: "nintei", itemNumber });
 }
 
+/** 同意第N号の安定識別子 */
+export function r8_3DouiKey(itemNumber: number): string {
+  return buildR8_3ItemKey({ itemType: "doui", itemNumber });
+}
+
+/** 諮問第N号の安定識別子 */
+export function r8_3ShimonKey(itemNumber: number): string {
+  return buildR8_3ItemKey({ itemType: "shimon", itemNumber });
+}
+
 /** 議員提出議案第N号の安定識別子 */
 export function r8_3GiinKey(itemNumber: number): string {
   return buildR8_3ItemKey({ itemType: "giin", itemNumber });
 }
 
+/**
+ * 公式の議決結果を bills.status / status_note に変換する。
+ *
+ * 諮問の「決定」は bill_status_enum に対応する値が無く、公式ページも「決定」としか
+ * 書いていない。暫定で `reported` + 「本会議で決定」とするが、web の議決用語辞書
+ * （packages/shared の decision-label.ts）に「決定」が無いため、ラベルは
+ * 「専決処分報告」にフォールバックする。本番へ反映する前に、status の扱い
+ * （enum の追加、辞書への「決定」の追加、または別の値）をユーザーが裁定すること。
+ * 諮問は coming_soon で、一覧カードはステータスのラベルを出さない。
+ */
+export function toR8_3BillResult(decision: R8_3Decision | null): {
+  status: NonNullable<BillInsert["status"]>;
+  statusNote: string | null;
+} {
+  switch (decision) {
+    case null:
+      return { status: "submitted", statusNote: null };
+    case "認定":
+      return { status: "approved", statusNote: "本会議で認定" };
+    case "同意":
+      return { status: "approved", statusNote: "本会議で同意" };
+    case "決定":
+      return { status: "reported", statusNote: "本会議で決定" };
+    default:
+      return toBillStatus(decision);
+  }
+}
+
 /** インベントリ1件を bills テーブルの Insert に変換する */
 export function toR8_3BillInsert(item: R8_3SessionItem): BillInsert {
-  const decision = item.decision;
-  const result =
-    decision === null
-      ? { status: "submitted" as const, statusNote: null }
-      : decision === "認定"
-        ? { status: "approved" as const, statusNote: "本会議で認定" }
-        : toBillStatus(decision);
+  const result = toR8_3BillResult(item.decision);
 
   return {
     name: item.officialTitle,
@@ -417,7 +537,7 @@ export function toR8_3BillInsert(item: R8_3SessionItem): BillInsert {
     pdf_url: item.fullTextPdfUrl,
     overview_pdf_url: item.overviewPdfUrl,
     source_page_url: item.sourcePageUrl ?? R8_3_SUBMISSIONS_URL,
-    decision_source_url: null,
+    decision_source_url: item.decision === null ? null : R8_3_DECISIONS_URL,
   };
 }
 
@@ -434,14 +554,24 @@ export const R8_3_OFFICIAL_LABELS: string[] = [
   ...Array.from({ length: 4 }, (_, i) => `認定第${1 + i}号`),
 ];
 
+/**
+ * 議決結果ページにだけ載る識別名（同意第1号・諮問第1〜3号の4件）。
+ * 提出議案一覧ページとの比較（更新検知）からは外す。
+ */
+export const R8_3_DECISIONS_ONLY_LABELS: string[] = [
+  "同意第1号",
+  ...Array.from({ length: 3 }, (_, i) => `諮問第${1 + i}号`),
+];
+
 /** 議会公式の会期ページに載っている議員提出議案の識別名（第11・12号の2件） */
 export const R8_3_COUNCILOR_BILL_LABELS: string[] = [
   "議員提出議案第11号",
   "議員提出議案第12号",
 ];
 
-/** 会期の全案件の識別名（区長提出22件 + 議員提出2件 = 24件） */
+/** 会期の全案件の識別名（区長提出22件 + 同意・諮問4件 + 議員提出2件 = 28件） */
 export const R8_3_ALL_LABELS: string[] = [
   ...R8_3_OFFICIAL_LABELS,
+  ...R8_3_DECISIONS_ONLY_LABELS,
   ...R8_3_COUNCILOR_BILL_LABELS,
 ];

@@ -13,6 +13,7 @@ import {
 } from "./shinjuku-r8-1-inventory";
 import { buildItemKey, r8SecondSessionItems } from "./shinjuku-r8-2-inventory";
 import {
+  R8_3_DECISIONS_URL,
   R8_3_SUBMISSIONS_URL,
   buildR8_3ItemKey,
   r8ThirdSessionItems,
@@ -498,17 +499,16 @@ describe("議員提出議案4件の主張台帳の構造", () => {
 /** 台帳ツール（docs/verification/tools/r8_3/ledger_build.py）が needs_source 行に書く定型の注記。 */
 const NO_SOURCE_NOTE =
   "（本件は解説本文が「一次資料に記載がない」と明示している箇所であり、事実主張ではない）";
-const STATUS_NOTE =
-  "（作成時点の審議状況の記述であり、一次資料の記載による主張ではない）";
 
 describe("令和8年第3回定例会22件の主張台帳の構造", () => {
-  // 議決前の案件なので、議決結果に関する主張は持たない。
-  // 出典から確かめられない点は needs_source として、解説本文の
-  // 「わからない こと」「出典に記載がない事項」と審議状況の記述にだけ置く。
+  // 審議状況は議決結果ページ（R8_3_DECISIONS_URL）を出典とする supported の行で持つ。
+  // 出典から確かめられない点（議決日・会派ごとの賛否を含む）は needs_source として、
+  // 解説本文の「わからない こと」「出典に記載がない事項」と審議状況の注記にだけ置く。
   const rows = readLedger(R8_3_CLAIM_LEDGER_PATH);
-  // 台帳は区長提出議案22件のもの。議員提出議案（第11・12号）は解説未作成で台帳に無い
+  // 台帳は区長提出議案22件のもの。議員提出議案（第11・12号）と、議決結果ページにだけ
+  // 載る同意・諮問は解説未作成で台帳に無い
   const r8_3MayorItems = r8ThirdSessionItems.filter(
-    (i) => i.itemType !== "giin"
+    (i) => i.itemType === "gian" || i.itemType === "nintei"
   );
   const r8_3Keys = new Set(r8_3MayorItems.map(buildR8_3ItemKey));
 
@@ -524,16 +524,12 @@ describe("令和8年第3回定例会22件の主張台帳の構造", () => {
     expect(verdicts).toEqual(["needs_source", "supported"]);
   });
 
-  it("needs_source は「出典に記載がない事項」と審議状況の記述に限る", () => {
+  it("needs_source は「出典に記載がない事項」に限る", () => {
     // needs_source を事実主張の逃げ道にしない。
     // 一次資料に根拠がある主張は必ず supported として引用を持つ。
     const misplaced = rows
       .filter((r) => r.verdict === "needs_source")
-      .filter(
-        (r) =>
-          r.page_or_section !== "出典に記載がない事項" &&
-          r.page_or_section !== "審議状況"
-      )
+      .filter((r) => r.page_or_section !== "出典に記載がない事項")
       .map((r) => r.claim_id);
 
     expect(misplaced).toEqual([]);
@@ -542,23 +538,58 @@ describe("令和8年第3回定例会22件の主張台帳の構造", () => {
   it("needs_source は定型の注記だけを持ち、supported は定型の注記を持たない", () => {
     // 見出し（page_or_section）の付け替えだけで事実主張を needs_source に
     // 逃がせないよう、引用欄の中身でも区別する。
-    const notes = new Set([NO_SOURCE_NOTE, STATUS_NOTE]);
     const bad = rows
       .filter((r) =>
         r.verdict === "needs_source"
-          ? !notes.has(r.evidence_excerpt)
-          : notes.has(r.evidence_excerpt)
+          ? r.evidence_excerpt !== NO_SOURCE_NOTE
+          : r.evidence_excerpt === NO_SOURCE_NOTE
       )
       .map((r) => r.claim_id);
 
     expect(bad).toEqual([]);
   });
 
-  it("審議状況の行は各変種にちょうど1行ある", () => {
+  it("審議状況の行は各変種にちょうど1行あり、議決結果ページを出典とする supported である", () => {
+    const decisionRows = rows.filter((r) => r.page_or_section === "審議状況");
     const counts = new Map<string, number>();
-    for (const r of rows.filter((row) => row.page_or_section === "審議状況")) {
+    for (const r of decisionRows) {
       const key = `${r.item_key}:${r.difficulty}`;
       counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+
+    expect(counts.size).toBe(66);
+    expect([...counts.values()].every((n) => n === 1)).toBe(true);
+    for (const r of decisionRows) {
+      expect(r.verdict, r.claim_id).toBe("supported");
+      expect(r.source_url, r.claim_id).toBe(R8_3_DECISIONS_URL);
+      expect(r.evidence_excerpt, r.claim_id).not.toBe("");
+    }
+  });
+
+  it("審議状況の行の引用は、インベントリの識別名と議決結果に一致する", () => {
+    // 引用は議決結果ページの表1行（識別名 件名 議決結果）。インベントリの decision を
+    // 変えずに台帳だけ書き換えた、またはその逆、をここで検出する。
+    const byKey = new Map(r8_3MayorItems.map((i) => [buildR8_3ItemKey(i), i]));
+    for (const r of rows.filter((row) => row.page_or_section === "審議状況")) {
+      const item = byKey.get(r.item_key);
+      if (!item) throw new Error(`インベントリに無い案件: ${r.item_key}`);
+      expect(r.evidence_excerpt.startsWith(`${item.officialLabel} `)).toBe(
+        true
+      );
+      expect(r.evidence_excerpt.endsWith(` ${item.decision}`)).toBe(true);
+      expect(r.final_claim).toContain(`「${item.decision}」`);
+    }
+  });
+
+  it("最終更新日の行が各変種にちょうど1行あり、議決結果ページの最終更新日を引く", () => {
+    const updated = rows.filter((r) => r.page_or_section === "最終更新日");
+    const counts = new Map<string, number>();
+    for (const r of updated) {
+      const key = `${r.item_key}:${r.difficulty}`;
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+      expect(r.source_url).toBe(R8_3_DECISIONS_URL);
+      expect(r.verdict).toBe("supported");
+      expect(r.evidence_excerpt).toBe("最終更新日：2026年10月15日");
     }
 
     expect(counts.size).toBe(66);
@@ -590,6 +621,7 @@ describe("令和8年第3回定例会22件の主張台帳の構造", () => {
     // 案件単位ではなく会期の出典集合で縛る。
     const allowed = new Set<string>([
       R8_3_SUBMISSIONS_URL,
+      R8_3_DECISIONS_URL,
       ...r8_3MayorItems.flatMap((i) =>
         [i.fullTextPdfUrl, i.overviewPdfUrl].filter(
           (url): url is string => url !== null
@@ -609,21 +641,32 @@ describe("令和8年第3回定例会22件の主張台帳の構造", () => {
     ).toEqual([]);
   });
 
-  it("議決前の案件なので、本文と主張は議決結果を述べない", () => {
-    // 議決結果は bills.status で示し、解説本文には書かない方針。
-    const verdictWords = /原案可決|否決|可決され|認定され|承認され/;
-    const inText = billContentsWithBillSlug
-      .filter((c) => r8_3Keys.has(c.bill_slug))
-      .filter((c) =>
-        verdictWords.test(`${c.title}\n${c.summary}\n${c.content}`)
-      )
-      .map((c) => `${c.bill_slug}:${c.difficulty_level}`);
-    const inClaims = rows
-      .filter((r) => verdictWords.test(r.final_claim))
-      .map((r) => r.claim_id);
+  it("議決済みの案件なので、審議状況は議決結果を述べ、議決前の記述を残さない", () => {
+    // 議決結果は bills.status にも反映するが、解説本文の審議状況の節にも書く。
+    // 議決日は議決結果ページに無いため、主張に議決日を書かない。
+    const decided = /原案可決|認定されました|認定された/;
+    const stale =
+      /まだ 決まって いません|審議中です|議決結果は公表されて|認めるか どうかは まだ|2026年9月30日（水）の 時点で|話し合います|議決された場合/;
+    const texts = billContentsWithBillSlug.filter((c) =>
+      r8_3Keys.has(c.bill_slug)
+    );
+    const text = (c: (typeof texts)[number]) =>
+      `${c.title}\n${c.summary}\n${c.content}`;
 
-    expect(inText).toEqual([]);
-    expect(inClaims).toEqual([]);
+    expect(texts).toHaveLength(66);
+    expect(
+      texts.filter((c) => !decided.test(text(c))).map((c) => c.bill_slug)
+    ).toEqual([]);
+    expect(
+      texts
+        .filter((c) => stale.test(text(c)))
+        .map((c) => `${c.bill_slug}:${c.difficulty_level}`)
+    ).toEqual([]);
+    expect(
+      rows
+        .filter((r) => /議決日は|に可決/.test(r.final_claim))
+        .map((r) => r.claim_id)
+    ).toEqual([]);
   });
 
   it("22件×3段の各変種が title / summary / content すべての行を持つ", () => {
