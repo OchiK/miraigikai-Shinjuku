@@ -1,0 +1,235 @@
+{
+  "notice": "自動検知ジョブ（pnpm monitor:shinjuku）が生成した下書き。どのインポーターも読まない。一次資料と突合してからインベントリへ転記すること。reviewCompleted / hasPublishableContent は常に false。",
+  "items": [
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "同意第1号",
+      "officialTitle": "新宿区教育委員会委員任命の同意について",
+      "fullTextPdfUrl": null,
+      "decision": "同意",
+      "sourcePageUrl": null,
+      "decisionSourceUrl": "https://www.city.shinjuku.lg.jp/kusei/soumu01_002090_00018.html",
+      "reviewCompleted": false,
+      "hasPublishableContent": false
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "諮問第1号",
+      "officialTitle": "人権擁護委員候補者の推薦に関する意見の聴取について",
+      "fullTextPdfUrl": null,
+      "decision": "決定",
+      "sourcePageUrl": null,
+      "decisionSourceUrl": "https://www.city.shinjuku.lg.jp/kusei/soumu01_002090_00018.html",
+      "reviewCompleted": false,
+      "hasPublishableContent": false
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "諮問第2号",
+      "officialTitle": "人権擁護委員候補者の推薦に関する意見の聴取について",
+      "fullTextPdfUrl": null,
+      "decision": "決定",
+      "sourcePageUrl": null,
+      "decisionSourceUrl": "https://www.city.shinjuku.lg.jp/kusei/soumu01_002090_00018.html",
+      "reviewCompleted": false,
+      "hasPublishableContent": false
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "諮問第3号",
+      "officialTitle": "人権擁護委員候補者の推薦に関する意見の聴取について",
+      "fullTextPdfUrl": null,
+      "decision": "決定",
+      "sourcePageUrl": null,
+      "decisionSourceUrl": "https://www.city.shinjuku.lg.jp/kusei/soumu01_002090_00018.html",
+      "reviewCompleted": false,
+      "hasPublishableContent": false
+    }
+  ],
+  "proposedChanges": [
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "第63号議案",
+      "field": "decision",
+      "current": null,
+      "official": "原案可決",
+      "reviewCompleted": true
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "第64号議案",
+      "field": "decision",
+      "current": null,
+      "official": "原案可決",
+      "reviewCompleted": true
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "第65号議案",
+      "field": "decision",
+      "current": null,
+      "official": "原案可決",
+      "reviewCompleted": true
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "第66号議案",
+      "field": "decision",
+      "current": null,
+      "official": "原案可決",
+      "reviewCompleted": true
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "認定第1号",
+      "field": "decision",
+      "current": null,
+      "official": "認定",
+      "reviewCompleted": true
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "認定第2号",
+      "field": "decision",
+      "current": null,
+      "official": "認定",
+      "reviewCompleted": true
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "認定第3号",
+      "field": "decision",
+      "current": null,
+      "official": "認定",
+      "reviewCompleted": true
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "認定第4号",
+      "field": "decision",
+      "current": null,
+      "official": "認定",
+      "reviewCompleted": true
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "第67号議案",
+      "field": "decision",
+      "current": null,
+      "official": "原案可決",
+      "reviewCompleted": true
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "第68号議案",
+      "field": "decision",
+      "current": null,
+      "official": "原案可決",
+      "reviewCompleted": true
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "第69号議案",
+      "field": "decision",
+      "current": null,
+      "official": "原案可決",
+      "reviewCompleted": true
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "第70号議案",
+      "field": "decision",
+      "current": null,
+      "official": "原案可決",
+      "reviewCompleted": true
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "第71号議案",
+      "field": "decision",
+      "current": null,
+      "official": "原案可決",
+      "reviewCompleted": true
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "第72号議案",
+      "field": "decision",
+      "current": null,
+      "official": "原案可決",
+      "reviewCompleted": true
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "第73号議案",
+      "field": "decision",
+      "current": null,
+      "official": "原案可決",
+      "reviewCompleted": true
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "第74号議案",
+      "field": "decision",
+      "current": null,
+      "official": "原案可決",
+      "reviewCompleted": true
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "第75号議案",
+      "field": "decision",
+      "current": null,
+      "official": "原案可決",
+      "reviewCompleted": true
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "第76号議案",
+      "field": "decision",
+      "current": null,
+      "official": "原案可決",
+      "reviewCompleted": true
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "第77号議案",
+      "field": "decision",
+      "current": null,
+      "official": "原案可決",
+      "reviewCompleted": true
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "第78号議案",
+      "field": "decision",
+      "current": null,
+      "official": "原案可決",
+      "reviewCompleted": true
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "第79号議案",
+      "field": "decision",
+      "current": null,
+      "official": "原案可決",
+      "reviewCompleted": true
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "第80号議案",
+      "field": "decision",
+      "current": null,
+      "official": "原案可決",
+      "reviewCompleted": true
+    },
+    {
+      "sessionId": "r8-3",
+      "officialLabel": "（会期全体）",
+      "field": "decisionsUrl",
+      "current": null,
+      "official": "https://www.city.shinjuku.lg.jp/kusei/soumu01_002090_00018.html",
+      "reviewCompleted": false
+    }
+  ]
+}
