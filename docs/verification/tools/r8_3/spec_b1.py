@@ -1,7 +1,7 @@
 """バッチ1（補正予算4件・決算認定4件）の主張台帳の仕様。
 
 facts: 一次資料の位置と引用（ledger_build.py が抽出テキストと機械照合する）
-claims: (難易度, フィールド, 主張, 根拠となる fact / None=出典に記載がない / "DECISION"・"decdate"=議決結果ページ)
+claims: (難易度, フィールド, 主張, 根拠となる fact / None=全文PDFに記載がない / "DEC_ABSENCE"=議決結果ページに記載がない / "DECISION"・"decdate"=議決結果ページ)
 """
 
 SESSION = ("SUB", "提出議案一覧ページ", "令和8年第3回定例会（会期：9月16日～10月15日）提出案件概要を掲載しました")
@@ -18,7 +18,7 @@ def pending(level):
         (level, "content", "令和8年第3回定例会（会期 9月16日〜10月15日）に提出された", "session"),
         (level, "content", "令和8年第3回定例会に提出され、「{result}」と議決された（議決結果ページ）", "DECISION"),
         (level, "content", "議決結果ページの最終更新日は2026年10月15日", "decdate"),
-        (level, "content", "議決日と会派ごとの賛否は議決結果ページに載っていない", None),
+        (level, "content", "議決日と会派ごとの賛否は議決結果ページに載っていない", "DEC_ABSENCE"),
     ]
 
 

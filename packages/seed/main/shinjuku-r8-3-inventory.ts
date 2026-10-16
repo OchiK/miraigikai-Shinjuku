@@ -492,11 +492,9 @@ export function r8_3GiinKey(itemNumber: number): string {
  * 公式の議決結果を bills.status / status_note に変換する。
  *
  * 諮問の「決定」は bill_status_enum に対応する値が無く、公式ページも「決定」としか
- * 書いていない。暫定で `reported` + 「本会議で決定」とするが、web の議決用語辞書
- * （packages/shared の decision-label.ts）に「決定」が無いため、ラベルは
- * 「専決処分報告」にフォールバックする。本番へ反映する前に、status の扱い
- * （enum の追加、辞書への「決定」の追加、または別の値）をユーザーが裁定すること。
- * 諮問は coming_soon で、一覧カードはステータスのラベルを出さない。
+ * 書いていない。裁定に従い粗い完了状態は `reported` とし、公式用語は
+ * 「本会議で決定」に保持する。共有ラベルはこの組を「決定」と表示する。
+ * 「可決」など、一次資料にない意味は補わない。
  */
 export function toR8_3BillResult(decision: R8_3Decision | null): {
   status: NonNullable<BillInsert["status"]>;

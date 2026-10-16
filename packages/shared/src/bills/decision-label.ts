@@ -63,7 +63,7 @@ interface OfficialDecisionTerm {
   label: string;
   variant: BillStatusVariant;
   /** 進捗表示の最終ステップに出す組。用語ごとに1か所で決める */
-  stepPair: DecisionStepLabel;
+  stepPair?: DecisionStepLabel;
 }
 
 /**
@@ -142,6 +142,13 @@ export function resolveOfficialDecisionTerm({
   const note = statusNote?.trim();
   if (!note) {
     return null;
+  }
+
+  // 諮問の公式結果「決定」は、確定済みの組だけを認識する。
+  // 自由記述の予定・否定や、別の status の「決定」を拾わない。
+  // 一次資料に対になる否定語はないため、進捗の選択肢は定義しない。
+  if (status === "reported" && note === "本会議で決定") {
+    return { term: "決定", label: "決定", variant: "default" };
   }
 
   return MATCHED_TERMS.find((d) => note.includes(d.term)) ?? null;

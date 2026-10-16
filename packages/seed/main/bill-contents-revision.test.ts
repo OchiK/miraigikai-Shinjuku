@@ -581,6 +581,27 @@ describe("令和8年第3回定例会22件の主張台帳の構造", () => {
     }
   });
 
+  it("議決結果ページの不記載の開示は各変種1行で、そのページのURLとHTMLハッシュを指す", () => {
+    const absent = rows.filter(
+      (r) =>
+        r.final_claim === "議決日と会派ごとの賛否は議決結果ページに載っていない"
+    );
+    expect(absent).toHaveLength(66);
+    expect(
+      new Set(absent.map((r) => `${r.item_key}:${r.difficulty}`)).size
+    ).toBe(66);
+    for (const r of absent) {
+      expect(r.content_field, r.claim_id).toBe("content");
+      expect(r.source_url, r.claim_id).toBe(R8_3_DECISIONS_URL);
+      expect(r.source_sha256, r.claim_id).toBe(
+        "ce0da96ac3ee25a9225c50dfac5b93b58f12d63594af3db0a956bb4182905389"
+      );
+      expect(r.page_or_section, r.claim_id).toBe("出典に記載がない事項");
+      expect(r.verdict, r.claim_id).toBe("needs_source");
+      expect(r.evidence_excerpt, r.claim_id).toBe(NO_SOURCE_NOTE);
+    }
+  });
+
   it("最終更新日の行が各変種にちょうど1行あり、議決結果ページの最終更新日を引く", () => {
     const updated = rows.filter((r) => r.page_or_section === "最終更新日");
     const counts = new Map<string, number>();

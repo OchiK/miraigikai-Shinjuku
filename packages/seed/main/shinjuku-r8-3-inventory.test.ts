@@ -1,3 +1,7 @@
+import {
+  getBillCardStatusLabel,
+  getBillStatusLabel,
+} from "@mirai-gikai/shared/bills/decision-label";
 import { describe, expect, it } from "vitest";
 import { findDuplicates } from "./shinjuku-r8-2-inventory";
 import {
@@ -307,11 +311,24 @@ describe("令和8年第3回定例会インベントリ", () => {
       status: "approved",
       statusNote: "本会議で同意",
     });
-    // 諮問の「決定」は enum に対応する値が無い。暫定値（要裁定）を固定している
+    // 粗い完了状態は reported、公式用語は status_note から共有ラベルへ渡す。
     expect(toR8_3BillResult("決定")).toEqual({
       status: "reported",
       statusNote: "本会議で決定",
     });
+  });
+
+  it("諮問3件の投入データから管理画面・公開カードのラベルは「決定」になる", () => {
+    const items = r8ThirdSessionItems.filter(
+      (item) => item.itemType === "shimon"
+    );
+    expect(items).toHaveLength(3);
+    for (const item of items) {
+      const bill = toR8_3BillInsert(item);
+      const input = { status: bill.status, statusNote: bill.status_note };
+      expect(getBillStatusLabel(input), item.officialLabel).toBe("決定");
+      expect(getBillCardStatusLabel(input), item.officialLabel).toBe("決定");
+    }
   });
 
   it("議決結果を差し替えても変換できる", () => {

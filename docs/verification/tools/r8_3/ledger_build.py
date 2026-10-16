@@ -106,8 +106,10 @@ def build(spec_modules, contents_path, out_path):
                 ck = f"{lv}{fd}"
                 counters[ck] = counters.get(ck, 0) + 1
                 cid = f"{prefix}-{ck}-{counters[ck]:02d}"
-                if fact is None:
-                    src = main_src
+                if fact is None or fact == "DEC_ABSENCE":
+                    # 不記載を確認した資料自体を指す。引用のない開示は従来どおり
+                    # needs_source とし、根拠付きの肯定的事実主張に見せない。
+                    src = "DEC" if fact == "DEC_ABSENCE" else main_src
                     section = "出典に記載がない事項"
                     excerpt = NO_SOURCE_NOTE
                     verdict = "needs_source"
