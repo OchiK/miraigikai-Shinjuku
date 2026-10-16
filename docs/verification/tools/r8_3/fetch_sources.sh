@@ -1,7 +1,9 @@
 #!/bin/sh
-# R8-3 の一次資料（PDF 25件と提出議案一覧ページ）を取得し、テキストを抽出する。
+# R8-3 の一次資料（PDF 25件、提出議案一覧ページ、議決結果ページ）を取得し、テキストを抽出する。
 # 出力先: カレントディレクトリの pdf/。sha256 は pdf/sha256.txt に書く。
 # 台帳の source_sha256 と一致しない場合は、区が資料を差し替えた可能性がある。
+# HTML（提出議案一覧・議決結果）の sha256 は pdf/html-sha256.txt に書く。ledger_build.py に
+# 取得時点の値を記録してあるので、食い違えば区がページを更新している（内容を読み直すこと）。
 set -eu
 mkdir -p pdf
 cd pdf
@@ -14,9 +16,12 @@ for id in 000466336 000466337 000466338 000466339 000466361 000466362 000466363 
 done
 shasum -a 256 ./*.pdf | sed 's# \./# #' > sha256.txt
 curl -sf -o submissions.html "https://www.city.shinjuku.lg.jp/kusei/kuseijoho01_001109_03.html"
+curl -sf -o decisions.html "https://www.city.shinjuku.lg.jp/kusei/soumu01_002090_00018.html"
+shasum -a 256 submissions.html decisions.html > html-sha256.txt
 python3 - <<'PY'
 import html, re
-t = open("submissions.html", encoding="utf-8").read()
-t = re.sub(r"<script.*?</script>|<style.*?</style>", "", t, flags=re.S)
-open("submissions.txt", "w").write(html.unescape(re.sub(r"<[^>]+>", "\n", t)))
+for name in ("submissions", "decisions"):
+    t = open(f"{name}.html", encoding="utf-8").read()
+    t = re.sub(r"<script.*?</script>|<style.*?</style>", "", t, flags=re.S)
+    open(f"{name}.txt", "w").write(html.unescape(re.sub(r"<[^>]+>", "\n", t)))
 PY

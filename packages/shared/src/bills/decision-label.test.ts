@@ -104,6 +104,49 @@ describe("resolveOfficialDecisionTerm", () => {
 });
 
 describe("getBillStatusLabel", () => {
+  it("諮問の確定結果を詳細・カードで「決定」と表示する", () => {
+    const input = { status: "reported", statusNote: " 本会議で決定 " };
+    expect(resolveOfficialDecisionTerm(input)?.term).toBe("決定");
+    expect(getBillStatusLabel(input)).toBe("決定");
+    expect(getBillCardStatusLabel(input)).toBe("決定");
+    expect(getBillStatusVariant(input)).toBe("default");
+    // 結果のみの用語に架空の否定語を追加せず、既存の進捗用フォールバックを維持する。
+    expect(getDecisionStepLabel(input)).toEqual({
+      positive: "可決",
+      negative: "否決",
+    });
+  });
+
+  it.each([
+    null,
+    "",
+    "   ",
+    "専決処分報告",
+    "決定",
+    "本会議で決定予定",
+    "本会議で決定しなかった",
+    "本会議で未決定",
+    "決定について報告",
+  ])("reported の他の注記から「決定」を推測しない: %s", (statusNote) => {
+    const input = { status: "reported", statusNote };
+    expect(resolveOfficialDecisionTerm(input)).toBeNull();
+    expect(getBillStatusLabel(input)).toBe("専決処分報告");
+    expect(getBillCardStatusLabel(input)).toBe("専決処分報告");
+  });
+
+  it.each([
+    "preparing",
+    "submitted",
+    "in_committee",
+    "plenary_session",
+    "approved",
+    "rejected",
+  ])("reported 以外では「本会議で決定」を特別扱いしない: %s", (status) => {
+    expect(
+      resolveOfficialDecisionTerm({ status, statusNote: "本会議で決定" })
+    ).toBeNull();
+  });
+
   it("不承認を「承認」と表示しない", () => {
     expect(
       getBillStatusLabel({ status: "rejected", statusNote: "本会議で不承認" })

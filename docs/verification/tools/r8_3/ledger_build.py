@@ -4,12 +4,20 @@
   （NFKC 正規化・空白除去のうえ、「…」で区切った各断片が本文に含まれること）。
 - reviewed_content_sha256 は解説本文（title\\nsummary\\ncontent）から計算する。
 - 出力は BOM 付き UTF-8・CRLF（既存台帳と同じ）。
+- 審議状況の行（fact "DECISION"）と最終更新日の行（fact "decdate"）は、議決結果ページ
+  （DEC）の表から案件ごとに組み立てる。引用は表の1行（識別名・件名・議決結果）を
+  連結した1つの断片で、抽出テキストに連続して含まれることを機械照合する。
+  議決結果が案件種別の想定（議案は原案可決、決算は認定）と違えば止まる。
+
+使い方（fetch_sources.sh を実行したディレクトリで）:
+  python3 ledger_build.py <contents.json> <出力.csv> spec_b1 spec_b2
 """
 import csv, hashlib, importlib, io, json, re, sys, unicodedata
 
 BASE = "https://www.city.shinjuku.lg.jp/content/"
 SOURCES = {
     "SUB": ("https://www.city.shinjuku.lg.jp/kusei/kuseijoho01_001109_03.html", "submissions"),
+    "DEC": ("https://www.city.shinjuku.lg.jp/kusei/soumu01_002090_00018.html", "decisions"),
     "O4": (BASE + "000464781.pdf", "000464781"),
     "O5": (BASE + "000464782.pdf", "000464782"),
     "OJ": (BASE + "000464786.pdf", "000464786"),
@@ -29,6 +37,15 @@ for line in open("pdf/sha256.txt"):
     h, f = line.split()
     SHA[f.replace(".pdf", "")] = h
 SHA["submissions"] = "31b8240a9210c5965a74134fca286bef83cc7b5e9eb4bae326847e0a170a89d0"
+# 議決結果ページ（最終更新日 2026-10-15）の HTML を 2026-10-16 に取得した時点の値。
+# 区が更新すれば変わる。pdf/html-sha256.txt（fetch_sources.sh が書く）と違えば下で報告する。
+SHA["decisions"] = "ce0da96ac3ee25a9225c50dfac5b93b58f12d63594af3db0a956bb4182905389"
+HTML_SHA_ERRORS = []
+for line in open("pdf/html-sha256.txt"):
+    h, f = line.split()
+    name = f.replace(".html", "")
+    if SHA.get(name) != h:
+        HTML_SHA_ERRORS.append(f"{f} の sha256 が記録値と違う: 取得 {h} / 記録 {SHA.get(name)}")
 
 
 def norm(t):
@@ -37,11 +54,33 @@ def norm(t):
 
 TEXT = {}
 for key, (_, f) in SOURCES.items():
-    files = ["pdf/submissions.txt"] if f == "submissions" else [f"pdf/{f}.txt", f"pdf/{f}.layout.txt"]
+    files = [f"pdf/{f}.txt"] if f in ("submissions", "decisions") else [f"pdf/{f}.txt", f"pdf/{f}.layout.txt"]
     TEXT[key] = [norm(open(p).read()) for p in files]
 
 NO_SOURCE_NOTE = "（本件は解説本文が「一次資料に記載がない」と明示している箇所であり、事実主張ではない）"
-STATUS_NOTE = "（作成時点の審議状況の記述であり、一次資料の記載による主張ではない）"
+
+# 議決結果ページの表（識別名・件名・議決結果）。抽出テキストの行を順に読む。
+LABEL_RE = re.compile(r"^(第\d+号議案|認定第\d+号|同意第\d+号|諮問第\d+号)$")
+
+
+def parse_decisions():
+    lines = [x.strip() for x in open("pdf/decisions.txt").read().split("\n") if x.strip()]
+    out = {}
+    for i, line in enumerate(lines):
+        if LABEL_RE.match(line):
+            out[line] = (lines[i + 1], lines[i + 2])
+    return out
+
+
+DECISIONS = parse_decisions()
+DEC_UPDATED = "最終更新日：2026年10月15日"
+
+
+def slug_label(slug):
+    m = re.search(r"-(gian|nintei)-(\d+)$", slug)
+    if not m:
+        raise ValueError(slug)
+    return f"第{m.group(2)}号議案" if m.group(1) == "gian" else f"認定第{m.group(2)}号"
 
 
 def excerpt_ok(src, excerpt):
@@ -55,7 +94,7 @@ def build(spec_modules, contents_path, out_path):
     for c in contents:
         h = hashlib.sha256(f"{c['title']}\n{c['summary']}\n{c['content']}".encode()).hexdigest()
         hashes[(c["bill_slug"], c["difficulty_level"])] = h
-    rows, errors = [], []
+    rows, errors = [], list(HTML_SHA_ERRORS)
     for mod in spec_modules:
         m = importlib.import_module(mod)
         for bill in m.BILLS:
@@ -67,11 +106,27 @@ def build(spec_modules, contents_path, out_path):
                 ck = f"{lv}{fd}"
                 counters[ck] = counters.get(ck, 0) + 1
                 cid = f"{prefix}-{ck}-{counters[ck]:02d}"
-                if fact is None or fact == "STATUS":
-                    src = main_src
-                    section = "出典に記載がない事項" if fact is None else "審議状況"
-                    excerpt = NO_SOURCE_NOTE if fact is None else STATUS_NOTE
+                if fact is None or fact == "DEC_ABSENCE":
+                    # 不記載を確認した資料自体を指す。引用のない開示は従来どおり
+                    # needs_source とし、根拠付きの肯定的事実主張に見せない。
+                    src = "DEC" if fact == "DEC_ABSENCE" else main_src
+                    section = "出典に記載がない事項"
+                    excerpt = NO_SOURCE_NOTE
                     verdict = "needs_source"
+                elif fact in ("DECISION", "decdate"):
+                    src, verdict = "DEC", "supported"
+                    if fact == "decdate":
+                        section, excerpt = "最終更新日", DEC_UPDATED
+                    else:
+                        label = slug_label(slug)
+                        title, result = DECISIONS[label]
+                        want = "認定" if label.startswith("認定") else "原案可決"
+                        if result != want:
+                            errors.append(f"{cid}: {label} の議決結果が想定（{want}）と違う: {result}")
+                        section, excerpt = "審議状況", f"{label} {title} {result}"
+                        claim = claim.replace("{result}", result)
+                    if not excerpt_ok(src, excerpt):
+                        errors.append(f"{cid} [{fact}] excerpt not found in {src}: {excerpt}")
                 else:
                     if fact not in facts:
                         errors.append(f"{cid}: unknown fact {fact}"); continue

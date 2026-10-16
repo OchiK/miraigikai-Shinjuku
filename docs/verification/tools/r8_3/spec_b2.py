@@ -471,7 +471,7 @@ for b in ESCO:
         ("normal", "content", "支出科目等", "shishutsu"),
         ("normal", "content", "関連議案（第73〜75号）", "hokano"),
         *pending("normal"),
-        ("normal", "content", "議決後は議決日の翌日に本契約", "tsukihi"),
+        ("normal", "content", "提出案件概要は本契約を議決日の翌日とする", "tsukihi"),
         ("normal", "content", "施設一覧、削減見込み、効果保証、年度額、入札状況は書かれていない", None),
 
         ("hard", "title", "見出し: 議案名", "mokuteki"),
@@ -562,7 +562,7 @@ std(76, "R76", "P76", F, [
     ("normal", "content", "工期", "koki"),
     ("normal", "content", "支出科目等", "shishutsu"),
     *pending("normal"),
-    ("normal", "content", "議決後は議決日の翌日に本契約", "tsukihi"),
+    ("normal", "content", "提出案件概要は本契約を議決日の翌日とする", "tsukihi"),
     ("normal", "content", "交通規制、年度額、受託事業費の委託元、入札状況は書かれていない", None),
 ], [
     ("hard", "title", "見出し: 議案名", "mokuteki"),
@@ -644,7 +644,7 @@ std(77, "R77", "P77", F, [
     ("normal", "content", "契約の方法・納入場所・契約月日・納期", "keiyaku"),
     ("normal", "content", "相手方", "aite"),
     *pending("normal"),
-    ("normal", "content", "議決後は議決日の翌日に本契約", "keiyaku"),
+    ("normal", "content", "提出案件概要は本契約を議決日の翌日とする", "keiyaku"),
     ("normal", "content", "利用期間、単価、指名の理由と業者は書かれていない", None),
 ], [
     ("hard", "title", "見出し: 議案名", "mokuteki"),

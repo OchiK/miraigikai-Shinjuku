@@ -1,9 +1,15 @@
+import {
+  getBillCardStatusLabel,
+  getBillStatusLabel,
+} from "@mirai-gikai/shared/bills/decision-label";
 import { describe, expect, it } from "vitest";
 import { findDuplicates } from "./shinjuku-r8-2-inventory";
 import {
   R8_3_ALL_LABELS,
   R8_3_COUNCIL_SESSION_URL,
   R8_3_COUNCILOR_BILL_LABELS,
+  R8_3_DECISIONS_ONLY_LABELS,
+  R8_3_DECISIONS_URL,
   R8_3_OFFICIAL_LABELS,
   R8_3_SESSION,
   R8_3_SUBMISSIONS_URL,
@@ -11,11 +17,17 @@ import {
   r8ThirdSessionItems,
   toR8_3BillInsert,
   toR8_3BillInserts,
+  toR8_3BillResult,
 } from "./shinjuku-r8-3-inventory";
 
 /** 区長提出議案（提出議案一覧ページに載る22件） */
 const mayorItems = r8ThirdSessionItems.filter(
-  (item) => item.itemType !== "giin"
+  (item) => item.itemType === "gian" || item.itemType === "nintei"
+);
+
+/** 議決結果ページにだけ載る同意・諮問（4件） */
+const decisionsOnlyItems = r8ThirdSessionItems.filter(
+  (item) => item.itemType === "doui" || item.itemType === "shimon"
 );
 
 /** 議員提出議案（議会公式の会期ページに載る2件） */
@@ -70,9 +82,9 @@ describe("令和8年第3回定例会インベントリ", () => {
     expect(R8_3_SESSION.is_active).toBe(true);
   });
 
-  it("区長提出22件と議員提出2件の24件で過不足が無い", () => {
+  it("区長提出22件・同意と諮問4件・議員提出2件の28件で過不足が無い", () => {
     const labels = r8ThirdSessionItems.map((i) => i.officialLabel);
-    expect(labels).toHaveLength(24);
+    expect(labels).toHaveLength(28);
     expect([...labels].sort()).toEqual([...R8_3_ALL_LABELS].sort());
   });
 
@@ -80,6 +92,23 @@ describe("令和8年第3回定例会インベントリ", () => {
     const labels = mayorItems.map((i) => i.officialLabel);
     expect(labels).toHaveLength(22);
     expect([...labels].sort()).toEqual([...R8_3_OFFICIAL_LABELS].sort());
+  });
+
+  it("同意第1号・諮問第1〜3号は議決結果ページの表記どおりに登録する", () => {
+    expect(decisionsOnlyItems.map((i) => i.officialLabel)).toEqual(
+      R8_3_DECISIONS_ONLY_LABELS
+    );
+    expect(
+      decisionsOnlyItems.map((i) => [i.officialTitle, i.decision])
+    ).toEqual([
+      ["新宿区教育委員会委員任命の同意について", "同意"],
+      ["人権擁護委員候補者の推薦に関する意見の聴取について", "決定"],
+      ["人権擁護委員候補者の推薦に関する意見の聴取について", "決定"],
+      ["人権擁護委員候補者の推薦に関する意見の聴取について", "決定"],
+    ]);
+    for (const item of decisionsOnlyItems) {
+      expect(item.sourcePageUrl).toBe(R8_3_DECISIONS_URL);
+    }
   });
 
   it("議員提出議案は会期ページ記載の第11・12号の2件で、件名は原文どおり", () => {
@@ -107,6 +136,8 @@ describe("令和8年第3回定例会インベントリ", () => {
         gian: `第${item.itemNumber}号議案`,
         nintei: `認定第${item.itemNumber}号`,
         giin: `議員提出議案第${item.itemNumber}号`,
+        doui: `同意第${item.itemNumber}号`,
+        shimon: `諮問第${item.itemNumber}号`,
       }[item.itemType];
       expect(item.officialLabel).toBe(expected);
     }
@@ -122,6 +153,12 @@ describe("令和8年第3回定例会インベントリ", () => {
     expect(buildR8_3ItemKey({ itemType: "giin", itemNumber: 11 })).toBe(
       "shinjuku-2026-r3-giin-11"
     );
+    expect(buildR8_3ItemKey({ itemType: "doui", itemNumber: 1 })).toBe(
+      "shinjuku-2026-r3-doui-1"
+    );
+    expect(buildR8_3ItemKey({ itemType: "shimon", itemNumber: 3 })).toBe(
+      "shinjuku-2026-r3-shimon-3"
+    );
   });
 
   it("全文PDFは取得して確認したファイルを指す", () => {
@@ -133,15 +170,15 @@ describe("令和8年第3回定例会インベントリ", () => {
     }
   });
 
-  it("議員提出議案は会期ページに全文PDFが無いため null", () => {
-    for (const item of councilorItems) {
+  it("議員提出議案と同意・諮問は全文PDFを確認できていないため null", () => {
+    for (const item of [...councilorItems, ...decisionsOnlyItems]) {
       expect(item.fullTextPdfUrl).toBeNull();
     }
   });
 
-  it("概要PDFは決算認定と議員提出議案だけが無く、ほかは公式PDFを指す", () => {
+  it("概要PDFは決算認定・議員提出議案・同意・諮問だけが無く、ほかは公式PDFを指す", () => {
     for (const item of r8ThirdSessionItems) {
-      if (item.itemType === "nintei" || item.itemType === "giin") {
+      if (item.itemType !== "gian") {
         expect(item.overviewPdfUrl).toBeNull();
       } else {
         expect(item.overviewPdfUrl).toMatch(OFFICIAL_PDF_URL);
@@ -149,8 +186,20 @@ describe("令和8年第3回定例会インベントリ", () => {
     }
   });
 
-  it("議決結果が未掲載のあいだは全件未議決", () => {
-    for (const item of r8ThirdSessionItems) {
+  it("区長提出議案は議決結果ページの表記どおり（議案は原案可決、決算は認定）", () => {
+    for (const item of mayorItems) {
+      expect(item.decision).toBe(
+        item.itemType === "nintei" ? "認定" : "原案可決"
+      );
+    }
+    expect(mayorItems.filter((i) => i.decision === "原案可決")).toHaveLength(
+      18
+    );
+    expect(mayorItems.filter((i) => i.decision === "認定")).toHaveLength(4);
+  });
+
+  it("議員提出議案は議決結果ページに載らないため未議決のまま", () => {
+    for (const item of councilorItems) {
       expect(item.decision).toBeNull();
     }
   });
@@ -162,32 +211,63 @@ describe("令和8年第3回定例会インベントリ", () => {
     }
   });
 
-  it("議員提出議案は解説未作成・レビュー未了", () => {
-    for (const item of councilorItems) {
+  it("議員提出議案と同意・諮問は解説未作成・レビュー未了", () => {
+    for (const item of [...councilorItems, ...decisionsOnlyItems]) {
       expect(item.hasPublishableContent).toBe(false);
       expect(item.reviewCompleted).toBe(false);
     }
   });
 
-  it("全24件を変換し、未議決の区長提出22件は submitted・published（レビュー済み）にする", () => {
+  it("全28件を変換し、区長提出22件は approved・published（レビュー済み）にする", () => {
     const bills = toR8_3BillInserts();
 
-    expect(bills).toHaveLength(24);
+    expect(bills).toHaveLength(28);
     expect(bills.map((bill) => bill.slug)).toEqual(
       r8ThirdSessionItems.map(buildR8_3ItemKey)
     );
     const mayorBills = toR8_3BillInserts(mayorItems);
     expect(mayorBills).toHaveLength(22);
-    for (const bill of mayorBills) {
+    for (const [index, bill] of mayorBills.entries()) {
       expect(bill).toMatchObject({
-        status: "submitted",
-        status_note: null,
+        status: "approved",
+        status_note:
+          mayorItems[index].itemType === "nintei"
+            ? "本会議で認定"
+            : "本会議で原案可決",
         publish_status: "published",
         published_at: null,
         is_featured: false,
         is_review_completed: true,
         source_page_url: R8_3_SUBMISSIONS_URL,
-        decision_source_url: null,
+        decision_source_url: R8_3_DECISIONS_URL,
+      });
+    }
+  });
+
+  it("同意・諮問の4件を coming_soon（レビュー未了）・議決結果ページ出典としてDB行へ変換する", () => {
+    const bills = toR8_3BillInserts(decisionsOnlyItems);
+
+    expect(bills.map((bill) => bill.slug)).toEqual([
+      "shinjuku-2026-r3-doui-1",
+      "shinjuku-2026-r3-shimon-1",
+      "shinjuku-2026-r3-shimon-2",
+      "shinjuku-2026-r3-shimon-3",
+    ]);
+    expect(bills.map((bill) => bill.status_note)).toEqual([
+      "本会議で同意",
+      "本会議で決定",
+      "本会議で決定",
+      "本会議で決定",
+    ]);
+    for (const bill of bills) {
+      expect(bill).toMatchObject({
+        publish_status: "coming_soon",
+        is_featured: false,
+        is_review_completed: false,
+        pdf_url: null,
+        overview_pdf_url: null,
+        source_page_url: R8_3_DECISIONS_URL,
+        decision_source_url: R8_3_DECISIONS_URL,
       });
     }
   });
@@ -214,27 +294,53 @@ describe("令和8年第3回定例会インベントリ", () => {
     }
   });
 
-  it("議決結果が出た後は公式用語を status と status_note に反映できる", () => {
-    const nintei = r8ThirdSessionItems.find(
-      (item) => item.itemType === "nintei"
-    );
-    if (!nintei) throw new Error("認定案件がインベントリに無い");
-    const approved = toR8_3BillInsert({
-      ...r8ThirdSessionItems[0],
-      decision: "原案可決",
+  it("公式の議決結果を status と status_note に変換する", () => {
+    expect(toR8_3BillResult(null)).toEqual({
+      status: "submitted",
+      statusNote: null,
     });
-    const certified = toR8_3BillInsert({
-      ...nintei,
-      decision: "認定",
+    expect(toR8_3BillResult("原案可決")).toEqual({
+      status: "approved",
+      statusNote: "本会議で原案可決",
+    });
+    expect(toR8_3BillResult("認定")).toEqual({
+      status: "approved",
+      statusNote: "本会議で認定",
+    });
+    expect(toR8_3BillResult("同意")).toEqual({
+      status: "approved",
+      statusNote: "本会議で同意",
+    });
+    // 粗い完了状態は reported、公式用語は status_note から共有ラベルへ渡す。
+    expect(toR8_3BillResult("決定")).toEqual({
+      status: "reported",
+      statusNote: "本会議で決定",
+    });
+  });
+
+  it("諮問3件の投入データから管理画面・公開カードのラベルは「決定」になる", () => {
+    const items = r8ThirdSessionItems.filter(
+      (item) => item.itemType === "shimon"
+    );
+    expect(items).toHaveLength(3);
+    for (const item of items) {
+      const bill = toR8_3BillInsert(item);
+      const input = { status: bill.status, statusNote: bill.status_note };
+      expect(getBillStatusLabel(input), item.officialLabel).toBe("決定");
+      expect(getBillCardStatusLabel(input), item.officialLabel).toBe("決定");
+    }
+  });
+
+  it("議決結果を差し替えても変換できる", () => {
+    const rejected = toR8_3BillInsert({
+      ...r8ThirdSessionItems[0],
+      decision: "否決",
     });
 
-    expect(approved).toMatchObject({
-      status: "approved",
-      status_note: "本会議で原案可決",
-    });
-    expect(certified).toMatchObject({
-      status: "approved",
-      status_note: "本会議で認定",
+    expect(rejected).toMatchObject({
+      status: "rejected",
+      status_note: "本会議で否決",
+      decision_source_url: R8_3_DECISIONS_URL,
     });
   });
 });

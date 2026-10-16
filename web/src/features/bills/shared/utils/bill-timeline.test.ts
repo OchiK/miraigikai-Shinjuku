@@ -53,6 +53,19 @@ describe("buildBillTimeline", () => {
     expect(decision?.dateLabel).toBe("日付未登録");
   });
 
+  it("諮問の決定は完了した最終ステップに「決定」と表示する", () => {
+    const timeline = buildBillTimeline({
+      status: "reported",
+      statusNote: "本会議で決定",
+    });
+    expect(timeline.at(-1)).toMatchObject({
+      state: "current",
+      label: "決定",
+      detail: "本会議で決定",
+      dateLabel: "日付未登録",
+    });
+  });
+
   it("否決の議案を可決と表示しない", () => {
     const timeline = buildBillTimeline({
       status: "rejected",

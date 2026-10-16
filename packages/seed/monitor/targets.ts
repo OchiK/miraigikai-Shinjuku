@@ -11,6 +11,7 @@ import {
   r8SecondSessionItems,
 } from "../main/shinjuku-r8-2-inventory";
 import {
+  R8_3_DECISIONS_URL,
   R8_3_SUBMISSIONS_URL,
   r8ThirdSessionItems,
 } from "../main/shinjuku-r8-3-inventory";
@@ -58,10 +59,10 @@ export const KNOWN_SESSIONS: KnownSession[] = [
     // R8_3_SESSION.slug と同じ値（テストで一致を確かめている）
     sessionId: "r8-3",
     submissionsUrl: R8_3_SUBMISSIONS_URL,
-    // 会期中で議決結果ページが未掲載。掲載されたら議決結果の一覧から自動で見つけ、
-    // 議決結果の食い違いとしてレポートに出る。そのときにURLと各案件の decision を転記する
-    decisionsUrl: null,
-    // 議員提出議案は区長提出議案のページに載らないため比較から外す
+    decisionsUrl: R8_3_DECISIONS_URL,
+    // 議員提出議案は区長提出議案のページに載らないため比較から外す。
+    // 同意・諮問は議決結果ページにだけ載る（提出議案ページには載らない）ため、
+    // 議決結果だけを比べる（decisionsOnly）。外すと毎回ドラフトに出続ける
     items: r8ThirdSessionItems
       .filter((item) => item.itemType !== "giin")
       .map((item) => ({
@@ -70,6 +71,9 @@ export const KNOWN_SESSIONS: KnownSession[] = [
         fullTextPdfUrl: item.fullTextPdfUrl,
         decision: item.decision,
         reviewCompleted: item.reviewCompleted,
+        ...(item.itemType === "doui" || item.itemType === "shimon"
+          ? { decisionsOnly: true }
+          : {}),
       })),
   },
   {
