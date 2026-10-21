@@ -22,6 +22,7 @@ import {
   buildR8_3ItemKey,
   r8ThirdSessionItems,
   r8_3GianKey,
+  r8_3GiinKey,
   r8_3NinteiKey,
 } from "./shinjuku-r8-3-inventory";
 
@@ -46,18 +47,18 @@ const r8_1ItemsWithContent = r8FirstSessionItems.filter(
   (item) => item.hasPublishableContent
 );
 
-/** 第3回定例会のうち解説を書いた22件。議員提出議案（第11・12号）は解説未作成のため除く */
+/** 第3回定例会のうち解説を書いた26件（区長提出議案22件と議員提出議案第11〜14号） */
 const r8_3ItemsWithContent = r8ThirdSessionItems.filter(
   (item) => item.hasPublishableContent
 );
 
 /**
  * 令和8年第1回定例会のパイロット5件（第1・5・20・31号議案、議員提出議案第6号）と、
- * 令和8年第2回定例会の全27件と、第3回定例会のうち解説を書いた22件。
+ * 令和8年第2回定例会の全27件と、第3回定例会のうち解説を書いた26件。
  * 第2回は Phase 2 のパイロット3議案（第42・43・44号議案）に続き、
  * 承認第2・3号と第45〜62号議案の easy 版を整備し、
  * 議員提出議案4件（第7〜10号）の easy 版を加えて全件を満たした。
- * 第3回は第63〜80号議案と認定第1〜4号の22件を P5-2 で整備した。
+ * 第3回は第63〜80号議案と認定第1〜4号の22件を P5-2 で、議員提出議案第11〜14号を P5-4 で整備した。
  */
 const ALL_BILL_SLUGS = [
   ...r8_1ItemsWithContent.map(buildR8_1ItemKey),
@@ -70,7 +71,7 @@ const easyContents = billContentsWithBillSlug.filter(
 );
 
 describe("やさしい日本語版の整備状況", () => {
-  it("全97件に easy 版がある", () => {
+  it("全101件に easy 版がある", () => {
     const slugs = easyContents.map((content) => content.bill_slug);
 
     expect(slugs.sort()).toEqual([...ALL_BILL_SLUGS].sort());
@@ -970,6 +971,40 @@ describe("やさしい日本語版が一次資料の数値を保っている", (
       "106万1,093円",
       "2025年（令和7年）6月28日（土）",
       "首都高速道路",
+    ],
+    // 令和8年第3回定例会の議員提出議案第11〜14号（P5-4）。議決日は資料に無いので書かない。
+    [r8_3GiinKey(11)]: [
+      "新宿区シルバーパス購入費助成金交付条例",
+      "2026年9月16日（水）から 10月15日（木）",
+      "否決",
+      "賛成: 日本共産党新宿区議会議員団",
+      "賛成: いのちの党 新宿",
+      "反対: アップデート新宿",
+    ],
+    [r8_3GiinKey(12)]: [
+      "新宿区安心居住支援家賃の助成に関する条例",
+      "低所得世帯",
+      "2026年9月16日（水）から 10月15日（木）",
+      "否決",
+      "賛成: 日本共産党新宿区議会議員団",
+      "賛成: いのちの党 新宿",
+      "反対: アップデート新宿",
+    ],
+    [r8_3GiinKey(13)]: [
+      "第99条",
+      "防災庁設置法",
+      "2026年（令和8年）7月28日",
+      "2026年（令和8年）10月15日（木）",
+      "可決",
+    ],
+    [r8_3GiinKey(14)]: [
+      "第99条",
+      "東京都知事",
+      "2027年度（令和9年度）",
+      "65%",
+      "2割",
+      "2026年（令和8年）10月15日（木）",
+      "可決",
     ],
     [r8_3GianKey(80)]: [
       "285万9,100円",
@@ -2414,6 +2449,187 @@ describe("やさしい日本語版が行政用語のアンカーを保ってい�
       yomi: "げんあんかけつ",
       gloss: "出した 通りの 内容で 決まること",
     },
+    // 令和8年第3回定例会の議員提出議案第11〜14号（P5-4）。【】ごと消されても検出できるよう明示する。
+    {
+      slug: r8_3GiinKey(11),
+      term: "議員提出議案",
+      yomi: "ぎいんていしゅつぎあん",
+      gloss: "区長では なく 議員が 出した 議案",
+    },
+    {
+      slug: r8_3GiinKey(11),
+      term: "条例",
+      yomi: "じょうれい",
+      gloss: "区の 決まり",
+    },
+    {
+      slug: r8_3GiinKey(11),
+      term: "新宿区シルバーパス購入費助成金交付条例",
+      yomi: "しんじゅくく しるばーぱす こうにゅうひ じょせいきん こうふ じょうれい",
+      gloss: "シルバーパスを 買う お金を 助ける 決まり",
+    },
+    {
+      slug: r8_3GiinKey(11),
+      term: "助成",
+      yomi: "じょせい",
+      gloss: "お金を 出して 助ける こと",
+    },
+    {
+      slug: r8_3GiinKey(11),
+      term: "認知機能",
+      yomi: "にんちきのう",
+      gloss: "覚えたり 考えたり する 頭の 働き",
+    },
+    {
+      slug: r8_3GiinKey(11),
+      term: "否決",
+      yomi: "ひけつ",
+      gloss: "案を 認めなかった こと",
+    },
+    {
+      slug: r8_3GiinKey(12),
+      term: "議員提出議案",
+      yomi: "ぎいんていしゅつぎあん",
+      gloss: "区長では なく 議員が 出した 議案",
+    },
+    {
+      slug: r8_3GiinKey(12),
+      term: "条例",
+      yomi: "じょうれい",
+      gloss: "区の 決まり",
+    },
+    {
+      slug: r8_3GiinKey(12),
+      term: "新宿区安心居住支援家賃の助成に関する条例",
+      yomi: "しんじゅくく あんしんきょじゅう しえん やちんの じょせいに かんする じょうれい",
+      gloss: "家賃の 一部を 助ける 決まり",
+    },
+    {
+      slug: r8_3GiinKey(12),
+      term: "民間賃貸住宅",
+      yomi: "みんかん ちんたい じゅうたく",
+      gloss: "民間の 貸し家",
+    },
+    {
+      slug: r8_3GiinKey(12),
+      term: "低所得世帯",
+      yomi: "ていしょとく せたい",
+      gloss: "所得の 低い 世帯",
+    },
+    {
+      slug: r8_3GiinKey(12),
+      term: "助成",
+      yomi: "じょせい",
+      gloss: "お金を 出して 助ける こと",
+    },
+    {
+      slug: r8_3GiinKey(12),
+      term: "否決",
+      yomi: "ひけつ",
+      gloss: "案を 認めなかった こと",
+    },
+    {
+      slug: r8_3GiinKey(13),
+      term: "意見書",
+      yomi: "いけんしょ",
+      gloss: "区議会が 国などに 出す 意見の 文書",
+    },
+    {
+      slug: r8_3GiinKey(13),
+      term: "議員提出議案",
+      yomi: "ぎいんていしゅつぎあん",
+      gloss: "区長では なく 議員が 出した 議案",
+    },
+    {
+      slug: r8_3GiinKey(13),
+      term: "地方自治法",
+      yomi: "ちほうじちほう",
+      gloss: "区や 市の しくみの 法律",
+    },
+    {
+      slug: r8_3GiinKey(13),
+      term: "防災庁設置法",
+      yomi: "ぼうさいちょう せっちほう",
+      gloss: "新しい 国の 組織を つくる 法律",
+    },
+    {
+      slug: r8_3GiinKey(13),
+      term: "防災庁",
+      yomi: "ぼうさいちょう",
+      gloss: "国の 新しい 組織",
+    },
+    {
+      slug: r8_3GiinKey(13),
+      term: "二次災害",
+      yomi: "にじさいがい",
+      gloss: "地震の あとの 土砂災害など",
+    },
+    {
+      slug: r8_3GiinKey(13),
+      term: "可決",
+      yomi: "かけつ",
+      gloss: "案を 認める こと",
+    },
+    {
+      slug: r8_3GiinKey(14),
+      term: "意見書",
+      yomi: "いけんしょ",
+      gloss: "区議会が 国などに 出す 意見の 文書",
+    },
+    {
+      slug: r8_3GiinKey(14),
+      term: "議員提出議案",
+      yomi: "ぎいんていしゅつぎあん",
+      gloss: "区長では なく 議員が 出した 議案",
+    },
+    {
+      slug: r8_3GiinKey(14),
+      term: "東京都知事",
+      yomi: "とうきょうと ちじ",
+      gloss: "東京都の 代表",
+    },
+    {
+      slug: r8_3GiinKey(14),
+      term: "地方自治法",
+      yomi: "ちほうじちほう",
+      gloss: "区や 市の しくみの 法律",
+    },
+    {
+      slug: r8_3GiinKey(14),
+      term: "固定資産税",
+      yomi: "こていしさんぜい",
+      gloss: "土地や 建物などに かかる 税",
+    },
+    {
+      slug: r8_3GiinKey(14),
+      term: "都市計画税",
+      yomi: "としけいかくぜい",
+      gloss: "まちづくりの ための 税",
+    },
+    {
+      slug: r8_3GiinKey(14),
+      term: "小規模住宅用地",
+      yomi: "しょうきぼ じゅうたくようち",
+      gloss: "住宅1戸に つき 200平方メートルまでの 住宅用地",
+    },
+    {
+      slug: r8_3GiinKey(14),
+      term: "小規模非住宅用地",
+      yomi: "しょうきぼ ひじゅうたくようち",
+      gloss: "住宅 以外の 宅地で 面積などの 条件に 合う もの",
+    },
+    {
+      slug: r8_3GiinKey(14),
+      term: "負担水準",
+      yomi: "ふたんすいじゅん",
+      gloss: "今年の 土地の 評価額で 前年の 税の 計算の もとになる 額を 割った 割合",
+    },
+    {
+      slug: r8_3GiinKey(14),
+      term: "可決",
+      yomi: "かけつ",
+      gloss: "案を 認める こと",
+    },
   ];
 
   function countOccurrences(haystack: string, needle: string): number {
@@ -2485,7 +2701,12 @@ describe("やさしい日本語版が行政用語のアンカーを保ってい�
       expect(countOccurrences(body, anchor)).toBe(1);
       // 正式名称の初出が、アンカーの中の1文字目（【の次）であることを見る。
       // 言いかえだけを先に出して正式名称を後回しにすると落ちる。
-      expect(body.indexOf(term)).toBe(body.indexOf(anchor) + 1);
+      const firstUseBody = [11, 12, 13, 14].map(r8_3GiinKey).includes(slug)
+        ? maskLongerTerms(body, term, bracketedTerms(body))
+            .replace(/^#{1,6}\s.*$/gm, (heading) => "\u0000".repeat(heading.length))
+            .replace(/［[^］]+］（＝[^）]+）/g, (gloss) => "\u0000".repeat(gloss.length))
+        : body;
+      expect(firstUseBody.indexOf(term)).toBe(body.indexOf(anchor) + 1);
     }
   );
 
@@ -2591,4 +2812,56 @@ describe("やさしい日本語版が行政用語のアンカーを保ってい�
       expect(countOccurrences(content, `（＝${gloss}）`)).toBe(1);
     }
   );
+  // Scoped to the four new variants; older content is not silently rewritten.
+  const r8_3GiinAnchors = anchoredTerms.filter(({ slug }) =>
+    [11, 12, 13, 14].map(r8_3GiinKey).includes(slug)
+  );
+
+  function unbracketedR8_3Terms(content: string, terms: string[]): string[] {
+    const body = content
+      .replace(/^#{1,6}\s.*$/gm, "")
+      .replace(/［[^］]+］（＝[^）]+）/g, "");
+    // A longer proper name is one token; its internal shorter terms are not uses.
+    const tokens = new RegExp(
+      `【[^】]+】|${[...terms]
+        .sort((a, b) => b.length - a.length)
+        .map(escapeForRegExp)
+        .join("|")}`,
+      "g"
+    );
+    return [...body.matchAll(tokens)]
+      .map((match) => match[0])
+      .filter((token) => !token.startsWith("【"));
+  }
+
+  it("R8-3議員提出4件の初出アンカー30件を固定している", () => {
+    expect(r8_3GiinAnchors).toHaveLength(30);
+    expect([11, 12, 13, 14].map((n) =>
+      r8_3GiinAnchors.filter((a) => a.slug === r8_3GiinKey(n)).length
+    )).toEqual([6, 7, 7, 10]);
+  });
+
+  it.each([11, 12, 13, 14])("第%s号は2回目以降も正式用語の【】を保つ", (number) => {
+    const slug = r8_3GiinKey(number);
+    const terms = r8_3GiinAnchors.filter((a) => a.slug === slug).map((a) => a.term);
+    const body = findEasyContent(slug).content;
+    expect(unbracketedR8_3Terms(body, terms)).toEqual([]);
+    // Negative control: removing one subsequent-use pair must be detected.
+    const repeated = terms.find((term) => body.includes(`【${term}】`)
+      && body.split(`【${term}】`).length > 2);
+    expect(repeated).toBeDefined();
+    if (repeated == null) throw new Error("再使用の検査例がない");
+    const first = body.indexOf(`【${repeated}】`);
+    const second = body.indexOf(`【${repeated}】`, first + repeated.length + 2);
+    const broken = body.slice(0, second) + repeated
+      + body.slice(second + repeated.length + 2);
+    expect(unbracketedR8_3Terms(broken, terms)).toContain(repeated);
+  });
+
+  it("再使用の検査は見出し・ふりがな・言いかえ・長い正式名称の内部を数えない", () => {
+    const text = "## 意見書\n【防災庁設置法】［防災庁］（＝防災庁の 法律）\n【防災庁】";
+    expect(unbracketedR8_3Terms(text, ["防災庁", "防災庁設置法", "意見書"])).toEqual([]);
+    expect(unbracketedR8_3Terms(text + "\n防災庁設置法", ["防災庁", "防災庁設置法"])).toEqual(["防災庁設置法"]);
+  });
+
 });

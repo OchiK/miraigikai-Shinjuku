@@ -7,6 +7,7 @@ import { billContentsR8_1OrdinancesB } from "./bill-contents-r8-1-ordinances-b-d
 import { billContentsR8_1OrdinancesC } from "./bill-contents-r8-1-ordinances-c-data";
 import { billContentsR8_1Giin } from "./bill-contents-r8-1-giin-data";
 import { billContentsR8_3 } from "./bill-contents-r8-3-data";
+import { billContentsR8_3Giin } from "./bill-contents-r8-3-giin-data";
 import { gianKey, shoninKey } from "./shinjuku-r8-2-inventory";
 
 // やさしい日本語版（easy）は公式一次資料をもとに別途整備する。
@@ -4651,6 +4652,8 @@ export const billContentsWithBillSlug: BillContentWithBillSlug[] = [
   ...giinBillContents,
   // 令和8年第3回定例会の区長提出案件22件の解説。出典と台帳は bill-contents-r8-3-data.ts を参照
   ...billContentsR8_3,
+  // 令和8年第3回定例会の議員提出議案第11〜14号（条例案2件・意見書2件）の解説。出典と台帳は bill-contents-r8-3-giin-data.ts を参照
+  ...billContentsR8_3Giin,
   // 令和8年第1回定例会の先行整備5件（第1・5・20・31号議案、議員提出議案第6号）の解説。出典と台帳は bill-contents-r8-1-data.ts を参照
   ...billContentsR8_1,
   // 令和8年第1回定例会の議員提出議案第1〜5号（否決された条例案5件）の解説。出典と台帳は bill-contents-r8-1-giin-data.ts を参照

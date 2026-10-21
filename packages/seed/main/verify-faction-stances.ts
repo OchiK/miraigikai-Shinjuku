@@ -13,12 +13,16 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   compareStanceTable,
+  dropUnseededRows,
   type ExtractedStanceTable,
   FACTION_STANCE_SOURCES,
   R8_1_VOTE_COLUMNS,
   r8_1BillVotes,
   R8_2_VOTE_COLUMNS,
   r8_2BillVotes,
+  R8_3_UNSEEDED_ROWS,
+  R8_3_VOTE_COLUMNS,
+  r8_3BillVotes,
 } from "./shinjuku-faction-stances";
 
 /** PDFを一時ディレクトリに落として表を読み、ディレクトリは必ず消す */
@@ -42,15 +46,26 @@ async function extractTableFromUrl(url: string): Promise<ExtractedStanceTable> {
 }
 
 async function verifySession(
-  sessionSlug: "r8-1" | "r8-2",
+  sessionSlug: "r8-1" | "r8-2" | "r8-3",
   columns: readonly { heading: string }[],
-  votes: typeof r8_1BillVotes
+  votes: typeof r8_1BillVotes,
+  unseeded?: { titles: readonly string[]; tableRows: number }
 ) {
   const source = FACTION_STANCE_SOURCES[sessionSlug];
   if (!source) throw new Error(`出典が見つかりません: ${sessionSlug}`);
   console.log(`=== ${sessionSlug}: ${source.label} ===\n${source.url}\n`);
-  const table = await extractTableFromUrl(source.url);
-  const problems = compareStanceTable(table, votes, columns);
+  const extracted = await extractTableFromUrl(source.url);
+  const problems: string[] = [];
+  let table = extracted;
+  if (unseeded) {
+    const dropped = dropUnseededRows(extracted, unseeded, votes.length);
+    problems.push(...dropped.problems);
+    table = dropped.table;
+    console.log(
+      `seed に入れない${extracted.rows.length - table.rows.length}行を件名で除いた`
+    );
+  }
+  problems.push(...compareStanceTable(table, votes, columns));
 
   const headings = columns.map((c) => c.heading);
   console.log(`照合: ${votes.length}議案 × ${headings.length}会派`);
@@ -73,8 +88,14 @@ async function verifySession(
 async function main() {
   const r8_1Ok = await verifySession("r8-1", R8_1_VOTE_COLUMNS, r8_1BillVotes);
   const r8_2Ok = await verifySession("r8-2", R8_2_VOTE_COLUMNS, r8_2BillVotes);
+  const r8_3Ok = await verifySession(
+    "r8-3",
+    R8_3_VOTE_COLUMNS,
+    r8_3BillVotes,
+    R8_3_UNSEEDED_ROWS
+  );
 
-  if (!r8_1Ok || !r8_2Ok) {
+  if (!r8_1Ok || !r8_2Ok || !r8_3Ok) {
     process.exit(1);
   }
   console.log("全会期の会派賛否照合が成功しました");

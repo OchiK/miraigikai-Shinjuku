@@ -2,7 +2,7 @@
   "linkPages": {
     "https://www.city.shinjuku.lg.jp/kusei/file08_00015.html": [
       {
-        "text": "令和8年第3回定例会の主な日程",
+        "text": "令和8年第3回定例会結果",
         "href": "https://www.city.shinjuku.lg.jp/kusei/gikai01_00123620210909_00008.html"
       },
       {
@@ -28,6 +28,10 @@
       {
         "text": "第2回定例会",
         "href": "https://www.city.shinjuku.lg.jp/kusei/file08_05_0003820210204_00014.html"
+      },
+      {
+        "text": "第3回定例会",
+        "href": "https://www.city.shinjuku.lg.jp/kusei/gikai01_00123620210909_00008.html"
       },
       {
         "text": "第1回定例会",
@@ -508,6 +512,14 @@
     ],
     "https://www.city.shinjuku.lg.jp/kusei/file08_05_0004020210118_00006.html": [
       {
+        "text": "「防災庁」発足を見据えた地方自治体との連携強化および防災体制の抜本的強化を求める意見書",
+        "href": "https://www.city.shinjuku.lg.jp/content/000468813.pdf"
+      },
+      {
+        "text": "固定資産税及び都市計画税の軽減措置の継続を求める意見書",
+        "href": "https://www.city.shinjuku.lg.jp/content/000468814.pdf"
+      },
+      {
         "text": "ドナーミルクの利用拡大を求める意見書",
         "href": "https://www.city.shinjuku.lg.jp/content/000459264.pdf"
       },
@@ -530,6 +542,7 @@
     ]
   },
   "pdfs": {
-    "https://www.city.shinjuku.lg.jp/content/000459252.pdf": "14afb68aedc9c04d403ea2156c535ec7fabebe3cdccd04217df5bfd8648faa8d"
+    "https://www.city.shinjuku.lg.jp/content/000459252.pdf": "14afb68aedc9c04d403ea2156c535ec7fabebe3cdccd04217df5bfd8648faa8d",
+    "https://www.city.shinjuku.lg.jp/content/000468947.pdf": "f421eee5931b7fa8aa026d5ff7680ce5e233ec6773b3260931baeb1a671845cf"
   }
 }

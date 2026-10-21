@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import { findDuplicates } from "./shinjuku-r8-2-inventory";
 import {
   R8_3_ALL_LABELS,
+  R8_3_COUNCIL_RESULTS_PDF,
   R8_3_COUNCIL_SESSION_URL,
   R8_3_COUNCILOR_BILL_LABELS,
   R8_3_DECISIONS_ONLY_LABELS,
@@ -30,9 +31,19 @@ const decisionsOnlyItems = r8ThirdSessionItems.filter(
   (item) => item.itemType === "doui" || item.itemType === "shimon"
 );
 
-/** 議員提出議案（議会公式の会期ページに載る2件） */
+/** 議員提出議案（議会公式の会期ページに載る4件） */
 const councilorItems = r8ThirdSessionItems.filter(
   (item) => item.itemType === "giin"
+);
+
+/** 議員提出議案のうち条例案（第11・12号）。全文PDFは公開されていない */
+const councilorOrdinanceItems = councilorItems.filter(
+  (item) => item.itemNumber <= 12
+);
+
+/** 議員提出議案のうち意見書（第13・14号） */
+const councilorOpinionItems = councilorItems.filter(
+  (item) => item.itemNumber >= 13
 );
 
 /** 公式PDFのURL形式。コンテンツIDは必ず9桁ゼロ埋め。 */
@@ -68,6 +79,15 @@ const VERIFIED_FULL_TEXT_PDFS: Record<string, string> = {
   第80号議案: "000466383",
 };
 
+/**
+ * 実際に取得して本文を確認した意見書の全文PDF（「決議・意見書（令和8年）」ページに掲載）。
+ * 2026-10-21 取得。
+ */
+const VERIFIED_OPINION_PDFS: Record<string, string> = {
+  議員提出議案第13号: "000468813",
+  議員提出議案第14号: "000468814",
+};
+
 describe("令和8年第3回定例会インベントリ", () => {
   it("会期は公式ページ記載の「会期：9月16日～10月15日」", () => {
     expect(R8_3_SESSION).toMatchObject({
@@ -82,9 +102,9 @@ describe("令和8年第3回定例会インベントリ", () => {
     expect(R8_3_SESSION.is_active).toBe(true);
   });
 
-  it("区長提出22件・同意と諮問4件・議員提出2件の28件で過不足が無い", () => {
+  it("区長提出22件・同意と諮問4件・議員提出4件の30件で過不足が無い", () => {
     const labels = r8ThirdSessionItems.map((i) => i.officialLabel);
-    expect(labels).toHaveLength(28);
+    expect(labels).toHaveLength(30);
     expect([...labels].sort()).toEqual([...R8_3_ALL_LABELS].sort());
   });
 
@@ -111,14 +131,27 @@ describe("令和8年第3回定例会インベントリ", () => {
     }
   });
 
-  it("議員提出議案は会期ページ記載の第11・12号の2件で、件名は原文どおり", () => {
+  it("議員提出議案は会期ページ記載の第11〜14号の4件で、件名は原文どおり", () => {
+    expect(R8_3_COUNCILOR_BILL_LABELS).toEqual([
+      "議員提出議案第11号",
+      "議員提出議案第12号",
+      "議員提出議案第13号",
+      "議員提出議案第14号",
+    ]);
     expect(councilorItems.map((i) => i.officialLabel)).toEqual(
       R8_3_COUNCILOR_BILL_LABELS
     );
     expect(councilorItems.map((i) => i.officialTitle)).toEqual([
       "新宿区シルバーパス購入費助成金交付条例",
       "新宿区安心居住支援家賃の助成に関する条例",
+      "「防災庁」発足を見据えた地方自治体との連携強化および防災体制の抜本的強化を求める意見書",
+      "固定資産税及び都市計画税の軽減措置の継続を求める意見書",
     ]);
+    for (const item of councilorItems) {
+      expect(item.sourcePageUrl, item.officialLabel).toBe(
+        R8_3_COUNCIL_SESSION_URL
+      );
+    }
   });
 
   it("識別名・安定識別子に重複が無い", () => {
@@ -170,18 +203,28 @@ describe("令和8年第3回定例会インベントリ", () => {
     }
   });
 
-  it("議員提出議案と同意・諮問は全文PDFを確認できていないため null", () => {
-    for (const item of [...councilorItems, ...decisionsOnlyItems]) {
+  it("意見書（第13・14号）の全文PDFは取得して確認したファイルを指す", () => {
+    for (const item of councilorOpinionItems) {
+      expect(item.fullTextPdfUrl, item.officialLabel).toBe(
+        `https://www.city.shinjuku.lg.jp/content/${VERIFIED_OPINION_PDFS[item.officialLabel]}.pdf`
+      );
+    }
+  });
+
+  it("議員提出の条例案と同意・諮問は全文PDFが公開されていないため null", () => {
+    for (const item of [...councilorOrdinanceItems, ...decisionsOnlyItems]) {
       expect(item.fullTextPdfUrl).toBeNull();
     }
   });
 
-  it("概要PDFは決算認定・議員提出議案・同意・諮問だけが無く、ほかは公式PDFを指す", () => {
+  it("概要PDFは議案が公式の概要PDF、議員提出の条例案が「議案の概要と審議結果」PDFで、ほかは無い", () => {
     for (const item of r8ThirdSessionItems) {
-      if (item.itemType !== "gian") {
-        expect(item.overviewPdfUrl).toBeNull();
-      } else {
+      if (item.itemType === "gian") {
         expect(item.overviewPdfUrl).toMatch(OFFICIAL_PDF_URL);
+      } else if (councilorOrdinanceItems.includes(item)) {
+        expect(item.overviewPdfUrl).toBe(R8_3_COUNCIL_RESULTS_PDF);
+      } else {
+        expect(item.overviewPdfUrl, item.officialLabel).toBeNull();
       }
     }
   });
@@ -198,9 +241,18 @@ describe("令和8年第3回定例会インベントリ", () => {
     expect(mayorItems.filter((i) => i.decision === "認定")).toHaveLength(4);
   });
 
-  it("議員提出議案は議決結果ページに載らないため未議決のまま", () => {
+  it("議員提出議案は「議案の概要と審議結果」PDFの表記どおり（条例案は否決、意見書は可決）", () => {
+    expect(councilorItems.map((i) => [i.officialLabel, i.decision])).toEqual([
+      ["議員提出議案第11号", "否決"],
+      ["議員提出議案第12号", "否決"],
+      // PDF の「可決」は ShinjukuDecision に無いため「原案可決」に写す（R8-2 第9・10号と同じ）
+      ["議員提出議案第13号", "原案可決"],
+      ["議員提出議案第14号", "原案可決"],
+    ]);
     for (const item of councilorItems) {
-      expect(item.decision).toBeNull();
+      expect(item.decisionSourceUrl, item.officialLabel).toBe(
+        R8_3_COUNCIL_RESULTS_PDF
+      );
     }
   });
 
@@ -211,17 +263,24 @@ describe("令和8年第3回定例会インベントリ", () => {
     }
   });
 
-  it("議員提出議案と同意・諮問は解説未作成・レビュー未了", () => {
-    for (const item of [...councilorItems, ...decisionsOnlyItems]) {
+  it("議員提出議案4件は解説を公開するが、公開レビューは未了", () => {
+    for (const item of councilorItems) {
+      expect(item.hasPublishableContent, item.officialLabel).toBe(true);
+      expect(item.reviewCompleted, item.officialLabel).toBe(false);
+    }
+  });
+
+  it("同意・諮問は解説未作成・レビュー未了", () => {
+    for (const item of decisionsOnlyItems) {
       expect(item.hasPublishableContent).toBe(false);
       expect(item.reviewCompleted).toBe(false);
     }
   });
 
-  it("全28件を変換し、区長提出22件は approved・published（レビュー済み）にする", () => {
+  it("全30件を変換し、区長提出22件は approved・published（レビュー済み）にする", () => {
     const bills = toR8_3BillInserts();
 
-    expect(bills).toHaveLength(28);
+    expect(bills).toHaveLength(30);
     expect(bills.map((bill) => bill.slug)).toEqual(
       r8ThirdSessionItems.map(buildR8_3ItemKey)
     );
@@ -272,24 +331,34 @@ describe("令和8年第3回定例会インベントリ", () => {
     }
   });
 
-  it("議員提出2件を coming_soon（レビュー未了）・会期ページ出典としてDB行へ変換する", () => {
+  it("議員提出4件を published（レビュー未了）・会期ページ出典・審議結果PDFの議決結果としてDB行へ変換する", () => {
     const bills = toR8_3BillInserts(councilorItems);
 
     expect(bills.map((bill) => bill.slug)).toEqual([
       "shinjuku-2026-r3-giin-11",
       "shinjuku-2026-r3-giin-12",
+      "shinjuku-2026-r3-giin-13",
+      "shinjuku-2026-r3-giin-14",
+    ]);
+    expect(bills.map((bill) => [bill.status, bill.status_note])).toEqual([
+      ["rejected", "本会議で否決"],
+      ["rejected", "本会議で否決"],
+      ["approved", "本会議で原案可決"],
+      ["approved", "本会議で原案可決"],
+    ]);
+    expect(bills.map((bill) => [bill.pdf_url, bill.overview_pdf_url])).toEqual([
+      [null, R8_3_COUNCIL_RESULTS_PDF],
+      [null, R8_3_COUNCIL_RESULTS_PDF],
+      ["https://www.city.shinjuku.lg.jp/content/000468813.pdf", null],
+      ["https://www.city.shinjuku.lg.jp/content/000468814.pdf", null],
     ]);
     for (const bill of bills) {
       expect(bill).toMatchObject({
-        status: "submitted",
-        status_note: null,
-        publish_status: "coming_soon",
+        publish_status: "published",
         is_featured: false,
         is_review_completed: false,
-        pdf_url: null,
-        overview_pdf_url: null,
         source_page_url: R8_3_COUNCIL_SESSION_URL,
-        decision_source_url: null,
+        decision_source_url: R8_3_COUNCIL_RESULTS_PDF,
       });
     }
   });

@@ -21,6 +21,10 @@ export const FACTION_STANCE_SOURCES: Record<string, FactionStanceSource> = {
     label: "新宿区議会「議案の概要と審議結果」（令和8年第2回定例会）",
     url: "https://www.city.shinjuku.lg.jp/content/000459252.pdf",
   },
+  "r8-3": {
+    label: "新宿区議会「議案の概要と審議結果」（令和8年第3回定例会）",
+    url: "https://www.city.shinjuku.lg.jp/content/000468947.pdf",
+  },
 };
 
 /** 会期の賛否の出典。出典の無い会期（slug が無い場合も含む）は null */
