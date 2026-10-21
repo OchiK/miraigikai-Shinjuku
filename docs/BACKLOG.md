@@ -234,3 +234,8 @@ Acceptance:
 - 分野別の議案一覧（トップページの `BillsByTagSection` やタグ一覧/詳細画面）およびアーカイブ一覧画面（`/sessions` / 過去会期詳細など）において、カードの背景色とページの地色（コンテナ背景）の階調差を整理し、カードと背景が同化しないようにする
 - Organic デザインシステムのトークン（`bg-mirai-surface-sunken` / `bg-card` / `--color-neutral-*`）に基づき、白や直角を使わずに柔らかい面構成と影でコントラストを確保する
 - モバイル・デスクトップの両方で視認性が向上していることを確認する
+
+Progress (2026-10-21):
+- 原因は `(main)` レイアウトの `<main>` が `bg-mirai-surface`（#ebddc5、`bg-card` と同値）で塗られていたこと。`bg-background`（#f5ead8）に替え、地の上の `bg-card` カードとの比を 1.00 から 1.125 にした。
+- 「もっと見る」と「これから掲載される議案」の枠線カードを `border-0 bg-card shadow-(--shadow-mirai-sm)` に揃えた。ガイドページの言語リンクは `bg-card` の面で包んだ。
+- 残り: 帯（#eee7db）と地の比は 1.09 から 1.03 に下がる。フィルタチップ・免責事項・`LegalParagraph` なども同じ。レポート系3画面と意見一覧（`/bills/[id]/opinions`）は自前の `bg-mirai-surface` のまま。デスクトップでは700pxの本文カラムが外側の地と同色になり、境界は `sm:shadow-lg` だけで示される。

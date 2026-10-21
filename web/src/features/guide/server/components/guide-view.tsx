@@ -115,7 +115,7 @@ export function GuideView({ locale }: GuideViewProps) {
 
         <nav
           aria-label={text.otherLanguagesLabel}
-          className="flex flex-col gap-3"
+          className="flex flex-col gap-3 rounded-xl bg-card p-5 shadow-mirai-sm"
         >
           <Button asChild className="self-start">
             <Link href={routes.home()} hrefLang="ja">
