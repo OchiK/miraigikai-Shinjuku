@@ -20,6 +20,8 @@ export function MainLayout({ children }: MainLayoutProps) {
     <div
       className={cn(
         "relative max-w-[700px] mx-auto md:mt-24",
+        // インタビューのエラー表示や本文下の余白も従来の地色を保つ
+        isInterview && "[&>main]:bg-mirai-surface",
         // インタビューページ以外ではshadowを表示
         !isInterview && "sm:shadow-lg",
         // 議案詳細ページのみ、チャットサイドバー用のオフセット
