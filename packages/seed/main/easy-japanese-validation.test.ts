@@ -2449,6 +2449,115 @@ describe("やさしい日本語版が行政用語のアンカーを保ってい�
       yomi: "げんあんかけつ",
       gloss: "出した 通りの 内容で 決まること",
     },
+    // 令和8年第3回定例会の議員提出議案第11〜14号（P5-4）。【】ごと消されても検出できるよう明示する。
+    {
+      slug: r8_3GiinKey(11),
+      term: "議員提出議案",
+      yomi: "ぎいんていしゅつぎあん",
+      gloss: "区長では なく 議員が 出した 議案",
+    },
+    {
+      slug: r8_3GiinKey(12),
+      term: "議員提出議案",
+      yomi: "ぎいんていしゅつぎあん",
+      gloss: "区長では なく 議員が 出した 議案",
+    },
+    {
+      slug: r8_3GiinKey(13),
+      term: "議員提出議案",
+      yomi: "ぎいんていしゅつぎあん",
+      gloss: "区長では なく 議員が 出した 議案",
+    },
+    {
+      slug: r8_3GiinKey(14),
+      term: "議員提出議案",
+      yomi: "ぎいんていしゅつぎあん",
+      gloss: "区長では なく 議員が 出した 議案",
+    },
+    {
+      slug: r8_3GiinKey(11),
+      term: "条例",
+      yomi: "じょうれい",
+      gloss: "区の 決まり",
+    },
+    {
+      slug: r8_3GiinKey(11),
+      term: "否決",
+      yomi: "ひけつ",
+      gloss: "反対が 多くて 案が 通らなかった こと",
+    },
+    {
+      slug: r8_3GiinKey(12),
+      term: "条例",
+      yomi: "じょうれい",
+      gloss: "区の 決まり",
+    },
+    {
+      slug: r8_3GiinKey(12),
+      term: "否決",
+      yomi: "ひけつ",
+      gloss: "反対が 多くて 案が 通らなかった こと",
+    },
+    {
+      slug: r8_3GiinKey(13),
+      term: "意見書",
+      yomi: "いけんしょ",
+      gloss: "区議会が 国などに 出す 意見の 文書",
+    },
+    {
+      slug: r8_3GiinKey(13),
+      term: "地方自治法",
+      yomi: "ちほうじちほう",
+      gloss: "区や 市の しくみの 法律",
+    },
+    {
+      slug: r8_3GiinKey(13),
+      term: "可決",
+      yomi: "かけつ",
+      gloss: "賛成が 多くて 案が 通った こと",
+    },
+    {
+      slug: r8_3GiinKey(14),
+      term: "意見書",
+      yomi: "いけんしょ",
+      gloss: "区議会が 国などに 出す 意見の 文書",
+    },
+    {
+      slug: r8_3GiinKey(14),
+      term: "地方自治法",
+      yomi: "ちほうじちほう",
+      gloss: "区や 市の しくみの 法律",
+    },
+    {
+      slug: r8_3GiinKey(14),
+      term: "可決",
+      yomi: "かけつ",
+      gloss: "賛成が 多くて 案が 通った こと",
+    },
+    {
+      slug: r8_3GiinKey(13),
+      term: "防災庁設置法",
+      yomi: "ぼうさいちょう せっちほう",
+      gloss: "新しい 国の 組織を つくる 法律",
+    },
+    {
+      slug: r8_3GiinKey(14),
+      term: "固定資産税",
+      yomi: "こていしさんぜい",
+      gloss: "土地や 建物に かかる 税",
+    },
+    {
+      slug: r8_3GiinKey(14),
+      term: "都市計画税",
+      yomi: "としけいかくぜい",
+      gloss: "まちづくりの ための 税",
+    },
+    {
+      slug: r8_3GiinKey(14),
+      term: "小規模住宅用地",
+      yomi: "しょうきぼ じゅうたくようち",
+      gloss: "住宅に 使う 広さの 小さい 土地",
+    },
   ];
 
   function countOccurrences(haystack: string, needle: string): number {
