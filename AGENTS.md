@@ -286,3 +286,35 @@ Claude Code のセッションでは、作業を次のように振り分ける�
 6. builder: commit・push・PR作成。checker: `gh pr checks` とマージ可否の確認。
 7. Opus またはユーザー: `import_production.yml` の dry-run 差分を承認して apply。checker: 本番ページの読み取り GET で反映を確認。
 8. builder: worktree で BACKLOG/ARCHIVE を更新。git 管理外の `/Users/ken/antigravity/Mirai_gikai/knowledge/log.md` と `/Users/ken/antigravity/Mirai_gikai/_handoff.md` はメインチェックアウト側を絶対パスで、バックアップを取ってから更新する（worktree には存在しない）。
+
+## Codex routing (project-local)
+
+## Codex model routing
+
+These rules apply to Codex only. Preserve CLAUDE.md and .claude/agents; their model names and Checker write exceptions do not apply to Codex.
+
+Main Strategist: gpt-6.1-sol, medium. Planning, source conflicts, ambiguous intent, domain judgments, scope and approval gates stay here.
+Builder: gpt-6.1-sol, medium. Execute a settled, user-authorized plan or named audit repairs.
+Checker: gpt-5.6-luna, low, read-only. Exact mechanical evidence only; return NEEDS JUDGMENT for meaning, intent, source support, privacy, or visual decisions.
+Auditor: gpt-6.1-sol, medium, read-only, fresh context. Independent final judgment; never audit its own implementation.
+
+Use only low or medium reasoning for the main thread, custom agents, built-in and ad hoc agents. Never exceed medium. Verify model availability before spawning; stop instead of silently substituting. Set both model and effort for ad hoc spawns. No nested delegation. Keep tiny tasks in the main thread.
+
+For substantive authorized implementation, use the project agents when useful: Strategist freezes scope, source authority, baseline and acceptance criteria; Checker gathers bounded evidence; Builder preserves affected files and implements; Checker checks stable results; fresh Auditor compares every criterion and Changes from Plan; Strategist presents acceptance evidence. Pass original sources, baseline, plan, artifacts and limitations to the Auditor without inherited Builder conversation (fork_turns="none" where supported). Approved fixes require another Builder pass and fresh audit.
+
+Only the Builder writes authorized backups, scratch outputs, reports, logs or project files. Checker and Auditor return findings in their responses: no installs, builds, renders, preparation scripts, backups or log edits that write files. The parent or authorized Builder generates disposable evidence. Check actual inherited child permissions before delegation; stop if read-only boundaries cannot be maintained.
+
+Shared writes, builds and dependent audits stay sequential. Parallelize only independent bounded reads against stable inputs; at most three subagents. Preserve all dirty/untracked work and synced content. Use rtk for shell commands and apply_patch for edits. Missing runtime, native rendering, source, database, CI or deployed evidence must remain explicit; a test exit does not prove those states. No global-setting changes, external messages, publication, commits or pushes without explicit authorization for that action. This routing setup alone authorizes no substantive project work.
+
+### Mirai Gikai safeguards
+
+Read the approved plan, binding rulings and original primary sources before substantive work. Plans do not override primary-source facts; stop on conflicts instead of forcing facts to the plan. Use semantic claim-to-sentence alignment, not merely excerpt or substring presence. Unknown details stay explicit; never mark unsupported claims supported. Preserve claim-ledger hashes and required BOM/CRLF and regenerate via the established tools.
+All application/content changes still require a worktree branched from main outside the repository. Preserve dirty and untracked main-checkout work; do not automatically stash or move it. The 2026-10-08 exception authorized only this initial local Codex routing setup, not future main-checkout edits.
+Preserve Organic design, source disclosure, fixed explanation templates and relevant testing tiers. Production DB operations, import apply, publication, active-session changes and destructive seed/reset operations require explicit action-specific authorization. A configuration request never invokes the repository's automatic commit/push/PR workflow.
+Only an authorized Builder creates backups or updates logs, including ignored main-checkout knowledge/log.md and _handoff.md at their exact paths. Checker and Auditor never use the Claude backup/log-write exceptions. Current source/API/model or pricing claims require independent verification. Keep source, local tests, browser, database, CI and production evidence distinct. A passing test or import log alone is not publication proof.
+
+Use mirai_gikai_builder, mirai_gikai_checker and mirai_gikai_auditor.
+
+## Codex model ceiling
+
+GPT-6.1 Sol is the highest permitted Codex model for this project. Use gpt-6.1-sol at medium for the main Strategist, Builder and fresh independent Auditor; use gpt-5.6-luna at low for mechanical checking. Do not select Astra or escalate to another model automatically, including built-in/ad hoc agents; obtain explicit user approval for any exception. Keep the reasoning ceiling at medium.
