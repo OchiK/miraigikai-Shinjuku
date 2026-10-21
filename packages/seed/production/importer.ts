@@ -27,6 +27,8 @@ import {
   r8_1BillVotes,
   R8_2_VOTE_COLUMNS,
   r8_2BillVotes,
+  R8_3_VOTE_COLUMNS,
+  r8_3BillVotes,
   toFactionStanceImportRows,
 } from "../main/shinjuku-faction-stances";
 import type { AdminClient } from "../shared/helper";
@@ -102,6 +104,7 @@ export const productionDataset: ImportDataset = {
   factionStances: [
     ...toFactionStanceImportRows(r8_1BillVotes, factions, R8_1_VOTE_COLUMNS),
     ...toFactionStanceImportRows(r8_2BillVotes, factions, R8_2_VOTE_COLUMNS),
+    ...toFactionStanceImportRows(r8_3BillVotes, factions, R8_3_VOTE_COLUMNS),
   ],
   bills,
   createBillContents,

@@ -2,11 +2,15 @@ import { describe, expect, it } from "vitest";
 import { factions } from "./data";
 import {
   compareStanceTable,
+  dropUnseededRows,
   parseVoteMarks,
   R8_1_VOTE_COLUMNS,
   r8_1BillVotes,
   R8_2_VOTE_COLUMNS,
   r8_2BillVotes,
+  R8_3_UNSEEDED_ROWS,
+  R8_3_VOTE_COLUMNS,
+  r8_3BillVotes,
   resolveFactionAtVote,
   toFactionStanceImportRows,
 } from "./shinjuku-faction-stances";
@@ -25,6 +29,7 @@ import {
   r8SecondSessionItems,
   toBillInserts,
 } from "./shinjuku-r8-2-inventory";
+import { r8_3GiinKey, toR8_3BillInserts } from "./shinjuku-r8-3-inventory";
 
 const rows = toFactionStanceImportRows(r8_2BillVotes, factions);
 /** 議員提出議案の slug（区長提出議案の反対と分けて数えるため） */
@@ -168,6 +173,144 @@ describe("令和8年第2回定例会の会派賛否", () => {
         column.nameAtVote
     ).map((column) => column.heading);
     expect(renamed).toEqual(["れいわ"]);
+  });
+});
+
+const r8_3Rows = toFactionStanceImportRows(
+  r8_3BillVotes,
+  factions,
+  R8_3_VOTE_COLUMNS
+);
+
+describe("令和8年第3回定例会の会派賛否", () => {
+  it("議員提出議案第11〜14号の4件だけを持ち、いずれも DB の議案にある", () => {
+    const billSlugs = new Set(toR8_3BillInserts().map((bill) => bill.slug));
+    expect(r8_3BillVotes.map((bill) => bill.billKey)).toEqual([
+      r8_3GiinKey(11),
+      r8_3GiinKey(12),
+      r8_3GiinKey(13),
+      r8_3GiinKey(14),
+    ]);
+    for (const bill of r8_3BillVotes) {
+      expect(billSlugs.has(bill.billKey)).toBe(true);
+    }
+  });
+
+  it("列は表の見出しどおりの9会派で、すべて DB の会派の表示名と一致する", () => {
+    expect(R8_3_VOTE_COLUMNS.map((column) => column.heading)).toEqual([
+      "自参ク",
+      "公明",
+      "共産",
+      "新宿会",
+      "民無ク",
+      "維新",
+      "現役",
+      "いのち",
+      "アプデ",
+    ]);
+    for (const column of R8_3_VOTE_COLUMNS) {
+      expect(
+        resolveFactionAtVote(column.nameAtVote, factions).display_name
+      ).toBe(column.nameAtVote);
+    }
+  });
+
+  it("4議案×9会派＝36行になり、アップデート新宿の行も作る", () => {
+    expect(r8_3Rows).toHaveLength(36);
+    expect(r8_3Rows.filter((row) => row.faction_name === "update")).toHaveLength(
+      4
+    );
+  });
+
+  it("否決された第11・12号は、共産といのちだけが賛成", () => {
+    for (const itemNumber of [11, 12]) {
+      const forFactions = r8_3Rows
+        .filter(
+          (row) =>
+            row.bill_slug === r8_3GiinKey(itemNumber) && row.type === "for"
+        )
+        .map((row) => row.faction_name);
+      expect(forFactions).toEqual(["kyosan", "inochi"]);
+    }
+    expect(
+      r8_3BillVotes.slice(0, 2).map((bill) => bill.marks)
+    ).toEqual(["××○××××○×", "××○××××○×"]);
+  });
+
+  it("意見書（第13・14号）は全9会派が賛成", () => {
+    for (const itemNumber of [13, 14]) {
+      const votes = r8_3Rows.filter(
+        (row) => row.bill_slug === r8_3GiinKey(itemNumber)
+      );
+      expect(votes).toHaveLength(9);
+      expect(votes.every((row) => row.type === "for")).toBe(true);
+    }
+  });
+});
+
+describe("R8_3_UNSEEDED_ROWS", () => {
+  it("区長提出22件・同意1件・諮問1行の24件名で、議員提出議案4件と合わせて表の28行になる", () => {
+    expect(R8_3_UNSEEDED_ROWS.titles).toHaveLength(24);
+    expect(new Set(R8_3_UNSEEDED_ROWS.titles).size).toBe(24);
+    expect(R8_3_UNSEEDED_ROWS.titles.length + r8_3BillVotes.length).toBe(
+      R8_3_UNSEEDED_ROWS.tableRows
+    );
+    expect(R8_3_UNSEEDED_ROWS.tableRows).toBe(28);
+  });
+
+  it("第76号議案は表の表記（第Ⅱ期）で除き、seed の件名は除外リストに入らない", () => {
+    expect(R8_3_UNSEEDED_ROWS.titles).toContain(
+      "道路改良工事（江戸川橋通り第Ⅱ期）請負契約"
+    );
+    expect(R8_3_UNSEEDED_ROWS.titles).not.toContain(
+      "道路改良工事（江戸川橋通り第2)期）請負契約"
+    );
+    for (const bill of r8_3BillVotes) {
+      expect(R8_3_UNSEEDED_ROWS.titles).not.toContain(bill.titleInSource);
+    }
+  });
+});
+
+describe("dropUnseededRows", () => {
+  const table = {
+    headings: ["甲"],
+    rows: [
+      { title: "区長提出", marks: "○", result: "可決" },
+      { title: "諮問", marks: "○", result: "決定" },
+      { title: "議員提出", marks: "×", result: "否決" },
+    ],
+  };
+  const unseeded = { titles: ["区長提出", "諮問"], tableRows: 3 };
+
+  it("除外リストの件名の行を除き、ほかの行の並びは保つ", () => {
+    expect(dropUnseededRows(table, unseeded, 1)).toEqual({
+      table: {
+        headings: ["甲"],
+        rows: [{ title: "議員提出", marks: "×", result: "否決" }],
+      },
+      problems: [],
+    });
+  });
+
+  it("除外リストにあるのに表に無い件名を報告する", () => {
+    expect(
+      dropUnseededRows(
+        table,
+        { titles: ["区長提出", "存在しない"], tableRows: 3 },
+        2
+      ).problems
+    ).toEqual(["除外リストの件名がPDFに無い: 存在しない"]);
+  });
+
+  it("表の行数と、除いたあとの行数が seed の件数と違えば報告する", () => {
+    const problems = dropUnseededRows(
+      table,
+      { titles: ["区長提出"], tableRows: 4 },
+      1
+    ).problems;
+    expect(problems).toHaveLength(2);
+    expect(problems[0]).toBe("PDFの表が3行ある（4行のはず）");
+    expect(problems[1]).toContain("除いたあとのPDFの行が2行ある（seed は1件）");
   });
 });
 

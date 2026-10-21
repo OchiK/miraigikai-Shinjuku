@@ -5,6 +5,8 @@ import {
   r8_1BillVotes,
   R8_2_VOTE_COLUMNS,
   r8_2BillVotes,
+  R8_3_VOTE_COLUMNS,
+  r8_3BillVotes,
   toFactionStanceImportRows,
 } from "./shinjuku-faction-stances";
 import {
@@ -311,7 +313,8 @@ export function createBillsTags(
 
 // 会派見解データ
 //
-// 令和8年第2回定例会の会派ごとの賛否。出典は新宿区議会「議案の概要と審議結果」で、
+// 令和8年第1〜3回定例会の会派ごとの賛否（第3回は議員提出議案4件だけ）。
+// 出典は新宿区議会「議案の概要と審議結果」で、
 // 表の転記と会派の対応は shinjuku-faction-stances.ts にまとめてある
 // （本番インポーターと同じ行を使う）。
 export function createFactionStances(
@@ -321,6 +324,7 @@ export function createFactionStances(
   const allVotes = [
     ...toFactionStanceImportRows(r8_1BillVotes, factions, R8_1_VOTE_COLUMNS),
     ...toFactionStanceImportRows(r8_2BillVotes, factions, R8_2_VOTE_COLUMNS),
+    ...toFactionStanceImportRows(r8_3BillVotes, factions, R8_3_VOTE_COLUMNS),
   ];
   return allVotes.map((row) => {
     const faction = insertedFactions.find((f) => f.name === row.faction_name);

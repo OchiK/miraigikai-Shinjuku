@@ -22,16 +22,22 @@ type CouncilSessionInsert =
  * 区長提出議案22件（第63〜80号議案の18件は原案可決、認定第1〜4号は認定）に加え、
  * 提出議案一覧ページに載らず議決結果ページにだけ載る同意第1号（同意）・諮問第1〜3号（決定）の
  * 4件も登録している（解説は作成しないため coming_soon・reviewCompleted: false）。
- * 議員提出議案2件は議決結果ページに載らないため decision: null のまま。
  * 議決日は同ページに記載がない。
  * 解説（やさしい／ふつう／くわしく）は P5-2 で区長提出議案の全22件を作成し、主張台帳
  * （docs/verification/20260930_0910_claim-ledger-r8-3.csv）で一次資料と突合した。
  * 公開レビュー（独立したファクトチェック）は完了済み。審議状況の節は議決結果ページで
  * 書き直し、台帳を突合し直した。
  *
- * 議員提出議案（第11・12号）は区長提出議案の一覧ページに載らないため、議会公式の
- * 会期ページ（2026-10-01 取得）から識別名・件名だけを転記した。会期ページに全文PDFは
- * 無く、解説も未作成のため coming_soon で先行登録する（P5-4）。
+ * 議員提出議案（第11〜14号）は区長提出議案の一覧ページにも議決結果ページにも載らない。
+ * 識別名・件名は議会公式の会期ページ（2026-10-19 更新、2026-10-21 取得）から転記した。
+ * 議決結果は同ページからリンクされた「議案の概要と審議結果」PDF（R8_3_COUNCIL_RESULTS_PDF）
+ * の表記で、第11・12号（条例案）は「否決」、第13・14号（意見書）は「可決」。意見書の
+ * 「可決」は ShinjukuDecision に無いため、R8-2 第9・10号と同じく「原案可決」に写す。
+ * 第11・12号の全文PDFは公開されていない。第13・14号の全文は「決議・意見書（令和8年）」
+ * ページ（R8_2_COUNCIL_RESOLUTIONS_URL と同じ file08_05_0004020210118_00006.html）のPDF。解説は P5-4 で4件とも作成し、主張台帳
+ * （docs/verification/20261021_1241_claim-ledger-r8-3-giin.csv）で一次資料と突合したが、
+ * 公開レビューは未了（reviewCompleted: false）。議員提出議案は議決日も提出者も
+ * これらの資料に記載がない。
  */
 
 /** 提出議案一覧ページ（会期・件名・全文PDF・概要PDFの出典） */
@@ -64,6 +70,13 @@ export const R8_3_COUNCIL_SESSION_URL =
   "https://www.city.shinjuku.lg.jp/kusei/gikai01_00123620210909_00008.html";
 
 /**
+ * 議会公式の「議案の概要と審議結果」PDF（会期ページからリンク）。
+ * 議員提出議案の概要・議決結果と、全案件の会派ごとの賛否の出典。
+ */
+export const R8_3_COUNCIL_RESULTS_PDF =
+  "https://www.city.shinjuku.lg.jp/content/000468947.pdf";
+
+/**
  * 案件の種別。
  * - `gian`: 第N号議案（区長提出議案）
  * - `nintei`: 認定第N号（決算の認定）
@@ -90,18 +103,25 @@ export interface R8_3SessionItem {
   officialTitle: string;
   /**
    * 全文PDF URL（実ファイルを取得し、当該案件の全文であることを確認済み）。
-   * 議員提出議案は会期ページに全文PDFが無いため null。推測で他のPDFを入れないこと。
+   * 議員提出議案の条例案（第11・12号）は全文PDFが公開されていないため null。
+   * 推測で他のPDFを入れないこと。
    */
   fullTextPdfUrl: string | null;
   /**
    * 当該案件を収録した概要PDF URL。
    * 決算認定（認定第1〜4号）は提出議案一覧ページに概要PDFが無い
    * （「決算書・実績報告は会計室のページ」への案内だけ）ため null。
-   * 議員提出議案も審議前は概要PDFが無いため null。
+   * 議員提出議案の条例案は「議案の概要と審議結果」PDFが概要の出典。
+   * 意見書は全文PDFがあるため null。
    */
   overviewPdfUrl: string | null;
-  /** 公式議決結果。議決結果ページに載らない案件（議員提出議案）は null */
+  /** 公式議決結果。議決結果が公開されていない案件は null */
   decision: R8_3Decision | null;
+  /**
+   * 議決結果の出典。既定は議決結果ページ（R8_3_DECISIONS_URL）。
+   * 議決結果ページに載らない議員提出議案は「議案の概要と審議結果」PDF。
+   */
+  decisionSourceUrl?: string;
   /** 識別名・件名の出典ページ。既定は区長提出議案の提出議案一覧ページ */
   sourcePageUrl?: string;
   /** 解説を公開表示してよいか。解説が未作成のあいだは false */
@@ -424,18 +444,19 @@ export const r8ThirdSessionItems: R8_3SessionItem[] = [
     hasPublishableContent: false,
     reviewCompleted: false,
   },
-  // 議員提出議案。識別名・件名は議会公式の会期ページ（2026-10-01 取得）の記載どおり。
-  // 解説は審議・閉会後に会議録と「議案の概要と審議結果」PDFから作成する（P5-4）。
+  // 議員提出議案。識別名・件名は議会公式の会期ページ（2026-10-21 取得）の記載どおり。
+  // 議決結果は「議案の概要と審議結果」PDF。解説は作成済みだが公開レビューは未了。
   {
     itemType: "giin",
     itemNumber: 11,
     officialLabel: "議員提出議案第11号",
     officialTitle: "新宿区シルバーパス購入費助成金交付条例",
     fullTextPdfUrl: null,
-    overviewPdfUrl: null,
-    decision: null,
+    overviewPdfUrl: R8_3_COUNCIL_RESULTS_PDF,
+    decision: "否決",
+    decisionSourceUrl: R8_3_COUNCIL_RESULTS_PDF,
     sourcePageUrl: R8_3_COUNCIL_SESSION_URL,
-    hasPublishableContent: false,
+    hasPublishableContent: true,
     reviewCompleted: false,
   },
   {
@@ -444,10 +465,40 @@ export const r8ThirdSessionItems: R8_3SessionItem[] = [
     officialLabel: "議員提出議案第12号",
     officialTitle: "新宿区安心居住支援家賃の助成に関する条例",
     fullTextPdfUrl: null,
-    overviewPdfUrl: null,
-    decision: null,
+    overviewPdfUrl: R8_3_COUNCIL_RESULTS_PDF,
+    decision: "否決",
+    decisionSourceUrl: R8_3_COUNCIL_RESULTS_PDF,
     sourcePageUrl: R8_3_COUNCIL_SESSION_URL,
-    hasPublishableContent: false,
+    hasPublishableContent: true,
+    reviewCompleted: false,
+  },
+  // 意見書。全文PDFは「決議・意見書（令和8年）」ページに掲載。識別名（議員提出議案第N号）は
+  // 会期ページにしか載らないため、出典ページは会期ページにする。
+  {
+    itemType: "giin",
+    itemNumber: 13,
+    officialLabel: "議員提出議案第13号",
+    officialTitle:
+      "「防災庁」発足を見据えた地方自治体との連携強化および防災体制の抜本的強化を求める意見書",
+    fullTextPdfUrl: officialPdfUrl("000468813"),
+    overviewPdfUrl: null,
+    decision: "原案可決",
+    decisionSourceUrl: R8_3_COUNCIL_RESULTS_PDF,
+    sourcePageUrl: R8_3_COUNCIL_SESSION_URL,
+    hasPublishableContent: true,
+    reviewCompleted: false,
+  },
+  {
+    itemType: "giin",
+    itemNumber: 14,
+    officialLabel: "議員提出議案第14号",
+    officialTitle: "固定資産税及び都市計画税の軽減措置の継続を求める意見書",
+    fullTextPdfUrl: officialPdfUrl("000468814"),
+    overviewPdfUrl: null,
+    decision: "原案可決",
+    decisionSourceUrl: R8_3_COUNCIL_RESULTS_PDF,
+    sourcePageUrl: R8_3_COUNCIL_SESSION_URL,
+    hasPublishableContent: true,
     reviewCompleted: false,
   },
 ];
@@ -535,7 +586,9 @@ export function toR8_3BillInsert(item: R8_3SessionItem): BillInsert {
     pdf_url: item.fullTextPdfUrl,
     overview_pdf_url: item.overviewPdfUrl,
     source_page_url: item.sourcePageUrl ?? R8_3_SUBMISSIONS_URL,
-    decision_source_url: item.decision === null ? null : R8_3_DECISIONS_URL,
+    decision_source_url:
+      item.decisionSourceUrl ??
+      (item.decision === null ? null : R8_3_DECISIONS_URL),
   };
 }
 
@@ -561,13 +614,13 @@ export const R8_3_DECISIONS_ONLY_LABELS: string[] = [
   ...Array.from({ length: 3 }, (_, i) => `諮問第${1 + i}号`),
 ];
 
-/** 議会公式の会期ページに載っている議員提出議案の識別名（第11・12号の2件） */
-export const R8_3_COUNCILOR_BILL_LABELS: string[] = [
-  "議員提出議案第11号",
-  "議員提出議案第12号",
-];
+/** 議会公式の会期ページに載っている議員提出議案の識別名（条例案2件・意見書2件の4件） */
+export const R8_3_COUNCILOR_BILL_LABELS: string[] = Array.from(
+  { length: 4 },
+  (_, i) => `議員提出議案第${11 + i}号`
+);
 
-/** 会期の全案件の識別名（区長提出22件 + 同意・諮問4件 + 議員提出2件 = 28件） */
+/** 会期の全案件の識別名（区長提出22件 + 同意・諮問4件 + 議員提出4件 = 30件） */
 export const R8_3_ALL_LABELS: string[] = [
   ...R8_3_OFFICIAL_LABELS,
   ...R8_3_DECISIONS_ONLY_LABELS,

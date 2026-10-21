@@ -44,15 +44,20 @@ const r8_1ItemsWithContent = r8FirstSessionItems.filter(
   (item) => item.hasPublishableContent
 );
 
-/** 第3回定例会のうち解説を作成済みの区長提出議案22件 */
+/** 第3回定例会のうち解説を作成済みの26件（区長提出議案22件、議員提出議案第11〜14号） */
 const r8_3ItemsWithContent = r8ThirdSessionItems.filter(
   (item) => item.hasPublishableContent
+);
+
+/** 第3回定例会の区長提出議案22件（公開レビュー済み） */
+const r8_3MayorItems = r8ThirdSessionItems.filter(
+  (item) => item.itemType === "gian" || item.itemType === "nintei"
 );
 
 /**
  * 解説（bill_contents）をそろえた議案。
  * 第1回定例会の全48件（パイロット5件、議員提出議案第1〜5号、予算関連議案11件、条例案 Group A・B・C の27件）、第2回定例会の区長提出議案23件・議員提出議案4件の27件、
- * 第3回定例会の22件の全97件。並びは bills（data.ts）の登録順に合わせる。
+ * 第3回定例会の26件の全101件。並びは bills（data.ts）の登録順に合わせる。
  */
 const BILL_SLUGS_WITH_CONTENT = [
   ...r8_1ItemsWithContent.map(buildR8_1ItemKey),
@@ -61,8 +66,8 @@ const BILL_SLUGS_WITH_CONTENT = [
 ];
 
 describe("bills seed", () => {
-  it("R8-1の48件・R8-2の27件・R8-3の28件を公式インベントリから投入する", () => {
-    expect(bills).toHaveLength(103);
+  it("R8-1の48件・R8-2の27件・R8-3の30件を公式インベントリから投入する", () => {
+    expect(bills).toHaveLength(105);
     expect(bills.map((b) => b.slug)).toEqual([
       ...r8FirstSessionItems.map(buildR8_1ItemKey),
       ...r8SecondSessionItems.map(buildItemKey),
@@ -113,7 +118,7 @@ describe("公開状態と解説の整合", () => {
     expect(publishedWithoutContent).toEqual([]);
   });
 
-  it("R8-1の21件・R8-2の27件・R8-3の22件を published にし、R8-1の残り27件とR8-3の同意・諮問4件と議員提出2件だけを coming_soon にする", () => {
+  it("R8-1の21件・R8-2の27件・R8-3の26件を published にし、R8-1の残り27件とR8-3の同意・諮問4件だけを coming_soon にする", () => {
     expect(
       bills
         .filter((b) => b.publish_status === "published")
@@ -131,8 +136,6 @@ describe("公開状態と解説の整合", () => {
       "shinjuku-2026-r3-shimon-1",
       "shinjuku-2026-r3-shimon-2",
       "shinjuku-2026-r3-shimon-3",
-      "shinjuku-2026-r3-giin-11",
-      "shinjuku-2026-r3-giin-12",
     ]);
   });
 
@@ -146,13 +149,30 @@ describe("公開状態と解説の整合", () => {
     }
   });
 
-  it("R8-3の解説を持つ22件は公開レビュー済み（is_review_completed: true）", () => {
-    const r8_3Slugs = new Set(r8_3ItemsWithContent.map(buildR8_3ItemKey));
+  it("R8-3の区長提出22件は公開レビュー済み（is_review_completed: true）", () => {
+    const r8_3Slugs = new Set(r8_3MayorItems.map(buildR8_3ItemKey));
     const r8_3Bills = bills.filter((b) => r8_3Slugs.has(b.slug ?? ""));
 
     expect(r8_3Bills).toHaveLength(22);
     for (const bill of r8_3Bills) {
       expect(bill.is_review_completed, bill.slug ?? "").toBe(true);
+    }
+  });
+
+  it("R8-3の議員提出議案第11〜14号は公開するが公開レビューは未了（is_review_completed: false）", () => {
+    const giinBills = bills.filter((b) =>
+      /^shinjuku-2026-r3-giin-/.test(b.slug ?? "")
+    );
+
+    expect(giinBills.map((b) => b.slug)).toEqual([
+      "shinjuku-2026-r3-giin-11",
+      "shinjuku-2026-r3-giin-12",
+      "shinjuku-2026-r3-giin-13",
+      "shinjuku-2026-r3-giin-14",
+    ]);
+    for (const bill of giinBills) {
+      expect(bill.publish_status, bill.slug ?? "").toBe("published");
+      expect(bill.is_review_completed, bill.slug ?? "").toBe(false);
     }
   });
 
@@ -206,9 +226,10 @@ describe("createBillContents", () => {
     }
   });
 
-  it("令和8年第1回定例会の10件、第2回定例会の27件、第3回定例会の22件すべてが解説を持つ", () => {
+  it("令和8年第1回定例会の48件、第2回定例会の27件、第3回定例会の26件すべてが解説を持つ", () => {
     // 第2回は区長提出議案23件（ステップ3の5件 + ステップ4パイロットの3件 +
-    // ステップ4残り15件）と議員提出議案4件。第3回は第63〜80号議案と認定第1〜4号。
+    // ステップ4残り15件）と議員提出議案4件。第3回は第63〜80号議案と認定第1〜4号、
+    // 議員提出議案第11〜14号。
     // 対象の全件と一致することを確かめる（取りこぼしと余剰の双方を検出する）。
     // 期待値は各会期のインベントリから導出する。
     // bills 全件と比べると、別会期の議案を seed に足した瞬間に無関係な理由で落ちる。
@@ -340,7 +361,7 @@ describe("createBillsTags", () => {
 
     expect(billsTags.some((bt) => bt.bill_id === unmapped.id)).toBe(false);
     // R8-2 の区長提出議案23件 + R8-3 の区長提出議案22件
-    // （R8-2 の議員提出議案4件と R8-3 の議員提出議案2件、同意・諮問4件は未分類）
+    // （R8-2 の議員提出議案4件と R8-3 の議員提出議案4件、同意・諮問4件は未分類）
     expect(billsTags).toHaveLength(23 + 22);
   });
 });
@@ -385,12 +406,22 @@ describe("createFactionStances", () => {
       })
     );
     // R8-1: 48件×8会派=384件 + R8-2: 27件×8会派=216件
-    expect(stances).toHaveLength(384 + 216);
+    // + R8-3: 議員提出議案4件×9会派=36件
+    expect(stances).toHaveLength(384 + 216 + 36);
   });
 
-  it("採決後に結成された会派には賛否を付けない", () => {
+  it("採決後に結成された会派には賛否を付けない（アップデート新宿は R8-3 から）", () => {
     const stances = createFactionStances(insertedBills, insertedFactions);
-    expect(stances.some((s) => s.faction_id === "update-uuid")).toBe(false);
+    const updateBillSlugs = stances
+      .filter((s) => s.faction_id === "update-uuid")
+      .map(
+        (s) => insertedBills.find((bill) => bill.id === s.bill_id)?.slug ?? ""
+      );
+
+    expect(updateBillSlugs).toHaveLength(4);
+    for (const slug of updateBillSlugs) {
+      expect(slug).toMatch(/^shinjuku-2026-r3-/);
+    }
   });
 });
 

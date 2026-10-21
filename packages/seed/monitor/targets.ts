@@ -11,6 +11,7 @@ import {
   r8SecondSessionItems,
 } from "../main/shinjuku-r8-2-inventory";
 import {
+  R8_3_COUNCIL_RESULTS_PDF,
   R8_3_DECISIONS_URL,
   R8_3_SUBMISSIONS_URL,
   r8ThirdSessionItems,
@@ -46,7 +47,10 @@ export const LINK_WATCH_URLS: string[] = [
 ];
 
 /** 内容の差し替えを sha256 で見るPDF（議員提出議案の議決結果・会派賛否の出典） */
-export const PDF_WATCH_URLS: string[] = [R8_2_COUNCIL_RESULTS_PDF];
+export const PDF_WATCH_URLS: string[] = [
+  R8_2_COUNCIL_RESULTS_PDF,
+  R8_3_COUNCIL_RESULTS_PDF,
+];
 
 /**
  * インベントリに登録済みの会期。

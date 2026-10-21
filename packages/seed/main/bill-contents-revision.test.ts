@@ -13,10 +13,13 @@ import {
 } from "./shinjuku-r8-1-inventory";
 import { buildItemKey, r8SecondSessionItems } from "./shinjuku-r8-2-inventory";
 import {
+  R8_3_COUNCIL_RESULTS_PDF,
+  R8_3_COUNCIL_SESSION_URL,
   R8_3_DECISIONS_URL,
   R8_3_SUBMISSIONS_URL,
   buildR8_3ItemKey,
   r8ThirdSessionItems,
+  r8_3GiinKey,
 } from "./shinjuku-r8-3-inventory";
 
 /**
@@ -76,6 +79,11 @@ const R8_3_CLAIM_LEDGER_PATH = ledgerPath(
   "../../../docs/verification/20260930_0910_claim-ledger-r8-3.csv"
 );
 
+/** 令和8年第3回定例会の議員提出議案第11〜14号（条例案2件・意見書2件）の easy / normal / hard 版の突合記録。 */
+const R8_3_GIIN_CLAIM_LEDGER_PATH = ledgerPath(
+  "../../../docs/verification/20261021_1241_claim-ledger-r8-3-giin.csv"
+);
+
 /** 令和8年第1回定例会のパイロット5件（第1・5・20・31号議案、議員提出議案第6号）の easy / normal / hard 版の突合記録。 */
 const R8_1_PILOT_CLAIM_LEDGER_PATH = ledgerPath(
   "../../../docs/verification/20261003_1330_claim-ledger-r8-1-pilot.csv"
@@ -111,6 +119,7 @@ const CLAIM_LEDGER_PATHS = [
   EASY_CLAIM_LEDGER_PATH,
   GIIN_CLAIM_LEDGER_PATH,
   R8_3_CLAIM_LEDGER_PATH,
+  R8_3_GIIN_CLAIM_LEDGER_PATH,
   R8_1_PILOT_CLAIM_LEDGER_PATH,
   R8_1_GIIN_CLAIM_LEDGER_PATH,
   R8_1_BUDGET_CLAIM_LEDGER_PATH,
@@ -183,7 +192,7 @@ describe("解説の内容ハッシュ", () => {
     expect(actual).toEqual(reviewedContentSha256);
   });
 
-  it("291変種（第1回のパイロット5件・議員提出議案5件・予算関連議案11件・条例案27件、第2回の区長提出23件・議員提出4件、第3回の22件の各3段）すべてがハッシュ固定されている", () => {
+  it("303変種（第1回のパイロット5件・議員提出議案5件・予算関連議案11件・条例案27件、第2回の区長提出23件・議員提出4件、第3回の区長提出22件・議員提出4件の各3段）すべてがハッシュ固定されている", () => {
     // 台帳に載っている変種だけを突き合わせると、
     // 「台帳に行を書かずに解説だけ足す」と全テストが通ってしまう。
     // 対象外の集合を明示的に固定し、新しい解説が黙って素通りしないようにする。
@@ -195,7 +204,7 @@ describe("解説の内容ハッシュ", () => {
       .sort();
 
     expect(unpinned).toEqual([]);
-    expect(Object.keys(pinned)).toHaveLength(291);
+    expect(Object.keys(pinned)).toHaveLength(303);
   });
 
   it("台帳に載っている変種はすべて実在する", () => {
@@ -756,6 +765,182 @@ const R8_1_PILOT_SOURCE_SHA256: Record<string, string> = {
   [R8_1_COUNCIL_SESSION_URL]:
     "869549fe3ba94ac28c6e8fd003d4ad71484501a78203fc7a885109aae4ab487c",
 };
+
+/** 議員提出議案第11〜14号の出典URLと、取得時点の sha256（2026-10-21）。 */
+const R8_3_GIIN_SOURCE_SHA256: Record<string, string> = {
+  [R8_3_COUNCIL_RESULTS_PDF]:
+    "f421eee5931b7fa8aa026d5ff7680ce5e233ec6773b3260931baeb1a671845cf",
+  "https://www.city.shinjuku.lg.jp/content/000468813.pdf":
+    "9e09bf316e6bef455b861893625499c8cfdc40fd406972cf4a5f38776743524b",
+  "https://www.city.shinjuku.lg.jp/content/000468814.pdf":
+    "3d5d8d4c0b517cc8d41491f65b91c6b559b0b7f9e0194e5c17c3f3f4a6d7538a",
+  // HTML は区が更新すると変わる。最終更新日 2026-10-19 のページを 2026-10-21 に取得した時点の値。
+  [R8_3_COUNCIL_SESSION_URL]:
+    "89aa878bba93fb76c241be14e8c0a641176e54e82a5bc21f0a480c3ec4140035",
+};
+
+describe("令和8年第3回定例会 議員提出議案第11〜14号の主張台帳の構造", () => {
+  // 条例案2件（否決）と意見書2件（可決）。議決結果ページは区長提出議案しか載せず、
+  // 本会議の会議録は台帳作成時（2026-10-21）に未公開だったため、議決結果と会派別の賛否は
+  // 「議案の概要と審議結果」の採決結果行から supported で引く。議決日は書かない。
+  const rows = readLedger(R8_3_GIIN_CLAIM_LEDGER_PATH);
+  const giinKeys = new Set([11, 12, 13, 14].map(r8_3GiinKey));
+  const giinContents = billContentsWithBillSlug.filter((c) =>
+    giinKeys.has(c.bill_slug)
+  );
+
+  it("議員提出議案第11〜14号だけを指し、インベントリで公開・レビュー未了になっている", () => {
+    expect([...new Set(rows.map((r) => r.item_key))].sort()).toEqual(
+      [...giinKeys].sort()
+    );
+
+    const items = r8ThirdSessionItems.filter((item) =>
+      giinKeys.has(buildR8_3ItemKey(item))
+    );
+    expect(items).toHaveLength(4);
+    for (const item of items) {
+      expect(item.hasPublishableContent, item.officialLabel).toBe(true);
+      expect(item.reviewCompleted, item.officialLabel).toBe(false);
+    }
+  });
+
+  it("事実主張の判定はすべて supported である", () => {
+    // 出典に記載がない事項は解説本文の「わからないこと」にだけ書き、台帳に行を作らない。
+    expect([...new Set(rows.map((r) => r.verdict))]).toEqual(["supported"]);
+  });
+
+  it("各変種に、「議案の概要と審議結果」の採決結果行を出典とする審議状況の行がある", () => {
+    const voteCounts = new Map<string, number>();
+    for (const r of rows) {
+      if (r.page_or_section !== "審議状況（議員提出議案の採決結果行）") continue;
+      expect(r.source_url, r.claim_id).toBe(R8_3_COUNCIL_RESULTS_PDF);
+      const key = `${r.item_key}:${r.difficulty}`;
+      voteCounts.set(key, (voteCounts.get(key) ?? 0) + 1);
+    }
+
+    expect(voteCounts.size).toBe(12);
+  });
+
+  it("採決結果行の引用は、第11・12号が「××〇××××〇×否決」、第13・14号が全9会派の賛成で「可決」", () => {
+    const expected: Record<string, string> = {
+      [r8_3GiinKey(11)]: "××〇××××〇×否決",
+      [r8_3GiinKey(12)]: "××〇××××〇×否決",
+      [r8_3GiinKey(13)]: "〇〇〇〇〇〇〇〇〇可決",
+      [r8_3GiinKey(14)]: "〇〇〇〇〇〇〇〇〇可決",
+    };
+    for (const r of rows.filter(
+      (r) => r.page_or_section === "審議状況（議員提出議案の採決結果行）"
+    )) {
+      expect(r.evidence_excerpt.endsWith(expected[r.item_key]), r.claim_id).toBe(
+        true
+      );
+    }
+  });
+
+  it("4件×3段の各変種が title / summary / content すべての行を持つ", () => {
+    const byVariant = new Map<string, Set<string>>();
+    for (const row of rows) {
+      const key = `${row.item_key}:${row.difficulty}`;
+      const fields = byVariant.get(key) ?? new Set<string>();
+      fields.add(row.content_field);
+      byVariant.set(key, fields);
+    }
+
+    const incomplete = [...byVariant.entries()]
+      .filter(([, fields]) =>
+        ["title", "summary", "content"].some((f) => !fields.has(f))
+      )
+      .map(([key]) => key)
+      .sort();
+
+    expect(incomplete).toEqual([]);
+    expect(byVariant.size).toBe(12);
+  });
+
+  it("claim_id が一意で、主張・出典・ハッシュ・位置・引用がいずれも空でない", () => {
+    const ids = rows.map((r) => r.claim_id);
+    expect(new Set(ids).size).toBe(ids.length);
+
+    const incomplete = rows
+      .filter(
+        (r) =>
+          !r.final_claim ||
+          !r.source_url ||
+          !/^[0-9a-f]{64}$/.test(r.source_sha256) ||
+          !r.page_or_section ||
+          !r.evidence_excerpt
+      )
+      .map((r) => r.claim_id);
+
+    expect(incomplete).toEqual([]);
+  });
+
+  it("出典は審議結果PDF・会期ページ・意見書全文PDFだけで、sha256 は取得時点の値に固定されている", () => {
+    const shaByUrl = new Map<string, Set<string>>();
+    for (const r of rows) {
+      const shas = shaByUrl.get(r.source_url) ?? new Set<string>();
+      shas.add(r.source_sha256);
+      shaByUrl.set(r.source_url, shas);
+    }
+
+    expect(shaByUrl.has(R8_3_DECISIONS_URL)).toBe(false);
+    expect([...shaByUrl.keys()].sort()).toEqual(
+      Object.keys(R8_3_GIIN_SOURCE_SHA256).sort()
+    );
+    for (const [url, shas] of shaByUrl) {
+      expect([...shas], url).toEqual([R8_3_GIIN_SOURCE_SHA256[url]]);
+    }
+  });
+
+  it("議決日を書かない（意見書の日付を本会議の議決日にしない）", () => {
+    // 会議録が未公開で、議案ごとの議決日は一次資料から確かめられない。
+    for (const c of giinContents) {
+      const text = `${c.title}\n${c.summary}\n${c.content}`;
+      expect(text, `${c.bill_slug}:${c.difficulty_level}`).not.toMatch(
+        /\d+月\d+日[（(]?[^）)\n]{0,4}[）)]?の\s*本会議で/
+      );
+    }
+  });
+
+  it("賛成した会派を提出者と書かず、提出者は「わからないこと」に置く", () => {
+    for (const c of giinContents) {
+      const label = `${c.bill_slug}:${c.difficulty_level}`;
+      expect(c.content, label).not.toMatch(/提出者[はが:：]\s*(?:日本共産党|いのちの党)/);
+      expect(c.content, label).toMatch(/提出|出したか/);
+    }
+  });
+
+  it("各変種に「わからないこと」系の節がある", () => {
+    const heading = {
+      easy: "## わからない こと",
+      normal: "## 分からないこと",
+    } as Record<string, string>;
+    for (const c of giinContents) {
+      const label = `${c.bill_slug}:${c.difficulty_level}`;
+      if (c.difficulty_level === "hard") {
+        expect(c.content, label).toMatch(
+          /## 5\. (?:資料から読み取れない事項|出典に記載がない事項)/
+        );
+      } else {
+        expect(c.content, label).toContain(heading[c.difficulty_level]);
+      }
+    }
+  });
+
+  it("本文に出てくる出典URLはすべて台帳に載っている", () => {
+    const ledgerUrls = new Set(rows.map((r) => r.source_url));
+    const missing = new Set<string>();
+
+    for (const content of giinContents) {
+      const text = `${content.title}\n${content.summary}\n${content.content}`;
+      for (const url of text.match(/https?:\/\/[^\s|)]+/g) ?? []) {
+        if (!ledgerUrls.has(url)) missing.add(url);
+      }
+    }
+
+    expect([...missing].sort()).toEqual([]);
+  });
+});
 
 /** 本会議の会議録の発言（council_id 3163 = 令和8年第1回定例会）。キャプチャは schedule_id。 */
 const MINUTE_VIEW_URL =

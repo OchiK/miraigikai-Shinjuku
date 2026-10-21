@@ -5,6 +5,12 @@ import {
   r8_1ShoninKey,
 } from "./shinjuku-r8-1-inventory";
 import { giinKey, gianKey, shoninKey } from "./shinjuku-r8-2-inventory";
+import {
+  buildR8_3ItemKey,
+  r8_3GianKey,
+  r8_3GiinKey,
+  r8ThirdSessionItems,
+} from "./shinjuku-r8-3-inventory";
 
 export { FACTION_STANCE_SOURCES } from "@mirai-gikai/shared/bills/faction-stance-sources";
 
@@ -462,6 +468,57 @@ export const r8_2BillVotes: SeedBillVotes[] = [
   },
 ];
 
+// 新宿区議会 会派ごとの賛否（令和8年第3回定例会）
+//
+// 出典: 新宿区議会「議案の概要と審議結果（賛成…○、反対…×）」（令和8年第3回定例会）
+//   https://www.city.shinjuku.lg.jp/content/000468947.pdf
+//   （sha256 f421eee5931b7fa8aa026d5ff7680ce5e233ec6773b3260931baeb1a671845cf、2026-10-21 取得）
+//   （掲載ページ: https://www.city.shinjuku.lg.jp/kusei/gikai01_00123620210909_00008.html）
+//
+// 表の列は採決時点の9会派。第2回定例会の8列に「アップデート新宿」（令和8年7月1日結成）が
+// 加わり、「れいわ新選組 新宿」は「いのちの党 新宿」（略称「いのち」）になった。
+// nameAtVote は表の欄外の会派略称の正式名称で、DB の display_name と同じ。
+export const R8_3_VOTE_COLUMNS = [
+  { heading: "自参ク", nameAtVote: "自民・参政クラブ" },
+  { heading: "公明", nameAtVote: "新宿区議会公明党" },
+  { heading: "共産", nameAtVote: "日本共産党新宿区議会議員団" },
+  { heading: "新宿会", nameAtVote: "新宿未来の会" },
+  { heading: "民無ク", nameAtVote: "立憲民主党・無所属クラブ" },
+  { heading: "維新", nameAtVote: "日本維新の会・新宿区議団" },
+  { heading: "現役", nameAtVote: "現役世代に優しい新宿・減税の会" },
+  { heading: "いのち", nameAtVote: "いのちの党 新宿" },
+  { heading: "アプデ", nameAtVote: "アップデート新宿" },
+] as const;
+
+// 表は28行（区長提出議案22件、同意1件、諮問3件を1行、議員提出議案4件）。
+// このうち議員提出議案第11〜14号の4件だけを入れる。区長提出議案22件の賛否は、
+// 公開レビュー済みの解説（「会派ごとの賛否は議決結果ページに載っていません」）の
+// 改稿と一緒に別の PR で入れる。同意・諮問は解説の無い案件なので入れない。
+// verify-faction-stances.ts は、入れない24行（R8_3_UNSEEDED_ROWS）を件名で除いてから照合する。
+export const r8_3BillVotes: SeedBillVotes[] = [
+  {
+    billKey: r8_3GiinKey(11),
+    titleInSource: "新宿区シルバーパス購入費助成金交付条例",
+    marks: "××○××××○×",
+  },
+  {
+    billKey: r8_3GiinKey(12),
+    titleInSource: "新宿区安心居住支援家賃の助成に関する条例",
+    marks: "××○××××○×",
+  },
+  {
+    billKey: r8_3GiinKey(13),
+    titleInSource:
+      "「防災庁」発足を見据えた地方自治体との連携強化および防災体制の抜本的強化を求める意見書",
+    marks: "○○○○○○○○○",
+  },
+  {
+    billKey: r8_3GiinKey(14),
+    titleInSource: "固定資産税及び都市計画税の軽減措置の継続を求める意見書",
+    marks: "○○○○○○○○○",
+  },
+];
+
 const MARK_TO_STANCE: Record<string, StanceType> = {
   "○": "for",
   "×": "against",
@@ -556,6 +613,62 @@ export type ExtractedStanceTable = {
   headings: string[];
   rows: { title: string; marks: string; result: string }[];
 };
+
+/** 第76号議案は表の表記（第Ⅱ期）がインベントリ（提出議案一覧ページの「第2)期」）と違う */
+const R8_3_TITLE_IN_RESULTS_PDF: Record<string, string> = {
+  [r8_3GianKey(76)]: "道路改良工事（江戸川橋通り第Ⅱ期）請負契約",
+};
+
+/**
+ * 令和8年第3回定例会の表のうち seed に入れない行（区長提出議案22件・同意1件・諮問1行）と、
+ * 表の行数（30件のうち諮問第1〜3号が1行にまとまって28行）。
+ */
+export const R8_3_UNSEEDED_ROWS = {
+  titles: [
+    ...new Set(
+      r8ThirdSessionItems
+        .filter((item) => item.itemType !== "giin")
+        .map(
+          (item) =>
+            R8_3_TITLE_IN_RESULTS_PDF[buildR8_3ItemKey(item)] ??
+            item.officialTitle
+        )
+    ),
+  ],
+  tableRows: 28,
+};
+
+/**
+ * 表のうち seed に入れない行を件名で除く（令和8年第3回定例会は表の一部だけを入れるため）。
+ * 表の行数の違い、除外リストにあるのに表に無い件名、除いたあとの行数と seed の件数の違いを
+ * problems に返す。残った行の並びと中身は compareStanceTable で確かめる。
+ */
+export function dropUnseededRows(
+  table: ExtractedStanceTable,
+  unseeded: { titles: readonly string[]; tableRows: number },
+  seededCount: number
+): { table: ExtractedStanceTable; problems: string[] } {
+  const problems: string[] = [];
+  if (table.rows.length !== unseeded.tableRows) {
+    problems.push(
+      `PDFの表が${table.rows.length}行ある（${unseeded.tableRows}行のはず）`
+    );
+  }
+  const excluded = new Set(unseeded.titles);
+  const rows = table.rows.filter((row) => !excluded.has(row.title));
+  const present = new Set(table.rows.map((row) => row.title));
+  problems.push(
+    ...unseeded.titles
+      .filter((title) => !present.has(title))
+      .map((title) => `除外リストの件名がPDFに無い: ${title}`)
+  );
+  if (rows.length !== seededCount) {
+    problems.push(
+      `除いたあとのPDFの行が${rows.length}行ある（seed は${seededCount}件）:\n${rows.map((row) => `  ${row.title}`).join("\n")}`
+    );
+  }
+  return { table: { ...table, rows }, problems };
+}
 
 /**
  * PDFから読んだ表と seed を1行ずつ比べ、食い違いを文章で返す（無ければ空配列）。

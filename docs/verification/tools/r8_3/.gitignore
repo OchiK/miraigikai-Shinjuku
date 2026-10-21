@@ -1,5 +1,6 @@
 pdf/
 contents.json
+contents_giin.json
 rebuilt.csv
 kessan-*.md
 __pycache__/
