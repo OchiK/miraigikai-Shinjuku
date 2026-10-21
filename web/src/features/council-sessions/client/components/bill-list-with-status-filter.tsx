@@ -233,7 +233,7 @@ export function BillListWithStatusFilter({
                     <Card
                       key={bill.id}
                       lang="ja"
-                      className="border border-black"
+                      className="border-0 bg-card shadow-(--shadow-mirai-sm)"
                     >
                       <CardContent className="flex items-center justify-between py-4 px-5">
                         <div className="flex flex-col gap-1 min-w-0">

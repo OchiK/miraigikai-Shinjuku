@@ -68,7 +68,7 @@ export function BillsByTagSection({
                 href={`/sessions/${sessionSlug}/bills?tag=${tag.id}` as Route}
                 className="block"
               >
-                <Card className="border border-black hover:bg-gray-50 transition-colors cursor-pointer">
+                <Card className="border-0 bg-card shadow-(--shadow-mirai-sm) hover:bg-neutral-300 transition-colors cursor-pointer">
                   <CardContent className="flex items-center justify-between py-4 px-5">
                     <span
                       lang={locale}
@@ -76,7 +76,7 @@ export function BillsByTagSection({
                     >
                       {home.moreTagBills(tag.label)}
                     </span>
-                    <ChevronRight className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                    <ChevronRight className="h-5 w-5 text-mirai-text-muted flex-shrink-0" />
                   </CardContent>
                 </Card>
               </Link>
