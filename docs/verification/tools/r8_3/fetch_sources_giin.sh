@@ -4,6 +4,7 @@
 # PDF の sha256 が 2026-10-21 取得時の値と違えば、区が資料を差し替えたので止まる（台帳を作り直す前に読み直すこと）。
 # 会期ページ（HTML）は区が更新すると sha256 が変わる。ledger_build_giin.py が記録値と比べて止まる。
 set -eu
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 mkdir -p pdf
 cd pdf
 for id in 000468947 000468813 000468814; do
@@ -26,3 +27,6 @@ for name in ("session",):
     t = re.sub(r"<script.*?</script>|<style.*?</style>", "", t, flags=re.S)
     open(f"{name}.txt", "w").write(html.unescape(re.sub(r"<[^>]+>", "\n", t)))
 PY
+
+# 用語説明の公式資料も、原本の固定ハッシュを確認してから抽出する。
+python3 "$SCRIPT_DIR/glossary_sources_giin.py" .

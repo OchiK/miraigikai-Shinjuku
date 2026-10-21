@@ -2457,24 +2457,6 @@ describe("やさしい日本語版が行政用語のアンカーを保ってい�
       gloss: "区長では なく 議員が 出した 議案",
     },
     {
-      slug: r8_3GiinKey(12),
-      term: "議員提出議案",
-      yomi: "ぎいんていしゅつぎあん",
-      gloss: "区長では なく 議員が 出した 議案",
-    },
-    {
-      slug: r8_3GiinKey(13),
-      term: "議員提出議案",
-      yomi: "ぎいんていしゅつぎあん",
-      gloss: "区長では なく 議員が 出した 議案",
-    },
-    {
-      slug: r8_3GiinKey(14),
-      term: "議員提出議案",
-      yomi: "ぎいんていしゅつぎあん",
-      gloss: "区長では なく 議員が 出した 議案",
-    },
-    {
       slug: r8_3GiinKey(11),
       term: "条例",
       yomi: "じょうれい",
@@ -2482,9 +2464,33 @@ describe("やさしい日本語版が行政用語のアンカーを保ってい�
     },
     {
       slug: r8_3GiinKey(11),
+      term: "新宿区シルバーパス購入費助成金交付条例",
+      yomi: "しんじゅくく しるばーぱす こうにゅうひ じょせいきん こうふ じょうれい",
+      gloss: "シルバーパスを 買う お金を 助ける 決まり",
+    },
+    {
+      slug: r8_3GiinKey(11),
+      term: "助成",
+      yomi: "じょせい",
+      gloss: "お金を 出して 助ける こと",
+    },
+    {
+      slug: r8_3GiinKey(11),
+      term: "認知機能",
+      yomi: "にんちきのう",
+      gloss: "覚えたり 考えたり する 頭の 働き",
+    },
+    {
+      slug: r8_3GiinKey(11),
       term: "否決",
       yomi: "ひけつ",
-      gloss: "反対が 多くて 案が 通らなかった こと",
+      gloss: "案を 認めなかった こと",
+    },
+    {
+      slug: r8_3GiinKey(12),
+      term: "議員提出議案",
+      yomi: "ぎいんていしゅつぎあん",
+      gloss: "区長では なく 議員が 出した 議案",
     },
     {
       slug: r8_3GiinKey(12),
@@ -2494,9 +2500,33 @@ describe("やさしい日本語版が行政用語のアンカーを保ってい�
     },
     {
       slug: r8_3GiinKey(12),
+      term: "新宿区安心居住支援家賃の助成に関する条例",
+      yomi: "しんじゅくく あんしんきょじゅう しえん やちんの じょせいに かんする じょうれい",
+      gloss: "家賃の 一部を 助ける 決まり",
+    },
+    {
+      slug: r8_3GiinKey(12),
+      term: "民間賃貸住宅",
+      yomi: "みんかん ちんたい じゅうたく",
+      gloss: "民間の 貸し家",
+    },
+    {
+      slug: r8_3GiinKey(12),
+      term: "低所得世帯",
+      yomi: "ていしょとく せたい",
+      gloss: "所得の 低い 世帯",
+    },
+    {
+      slug: r8_3GiinKey(12),
+      term: "助成",
+      yomi: "じょせい",
+      gloss: "お金を 出して 助ける こと",
+    },
+    {
+      slug: r8_3GiinKey(12),
       term: "否決",
       yomi: "ひけつ",
-      gloss: "反対が 多くて 案が 通らなかった こと",
+      gloss: "案を 認めなかった こと",
     },
     {
       slug: r8_3GiinKey(13),
@@ -2506,33 +2536,15 @@ describe("やさしい日本語版が行政用語のアンカーを保ってい�
     },
     {
       slug: r8_3GiinKey(13),
-      term: "地方自治法",
-      yomi: "ちほうじちほう",
-      gloss: "区や 市の しくみの 法律",
+      term: "議員提出議案",
+      yomi: "ぎいんていしゅつぎあん",
+      gloss: "区長では なく 議員が 出した 議案",
     },
     {
       slug: r8_3GiinKey(13),
-      term: "可決",
-      yomi: "かけつ",
-      gloss: "賛成が 多くて 案が 通った こと",
-    },
-    {
-      slug: r8_3GiinKey(14),
-      term: "意見書",
-      yomi: "いけんしょ",
-      gloss: "区議会が 国などに 出す 意見の 文書",
-    },
-    {
-      slug: r8_3GiinKey(14),
       term: "地方自治法",
       yomi: "ちほうじちほう",
       gloss: "区や 市の しくみの 法律",
-    },
-    {
-      slug: r8_3GiinKey(14),
-      term: "可決",
-      yomi: "かけつ",
-      gloss: "賛成が 多くて 案が 通った こと",
     },
     {
       slug: r8_3GiinKey(13),
@@ -2541,10 +2553,52 @@ describe("やさしい日本語版が行政用語のアンカーを保ってい�
       gloss: "新しい 国の 組織を つくる 法律",
     },
     {
+      slug: r8_3GiinKey(13),
+      term: "防災庁",
+      yomi: "ぼうさいちょう",
+      gloss: "国の 新しい 組織",
+    },
+    {
+      slug: r8_3GiinKey(13),
+      term: "二次災害",
+      yomi: "にじさいがい",
+      gloss: "地震の あとの 土砂災害など",
+    },
+    {
+      slug: r8_3GiinKey(13),
+      term: "可決",
+      yomi: "かけつ",
+      gloss: "案を 認める こと",
+    },
+    {
+      slug: r8_3GiinKey(14),
+      term: "意見書",
+      yomi: "いけんしょ",
+      gloss: "区議会が 国などに 出す 意見の 文書",
+    },
+    {
+      slug: r8_3GiinKey(14),
+      term: "議員提出議案",
+      yomi: "ぎいんていしゅつぎあん",
+      gloss: "区長では なく 議員が 出した 議案",
+    },
+    {
+      slug: r8_3GiinKey(14),
+      term: "東京都知事",
+      yomi: "とうきょうと ちじ",
+      gloss: "東京都の 代表",
+    },
+    {
+      slug: r8_3GiinKey(14),
+      term: "地方自治法",
+      yomi: "ちほうじちほう",
+      gloss: "区や 市の しくみの 法律",
+    },
+    {
       slug: r8_3GiinKey(14),
       term: "固定資産税",
       yomi: "こていしさんぜい",
-      gloss: "土地や 建物に かかる 税",
+      gloss: "土地や 建物などに かかる 税",
     },
     {
       slug: r8_3GiinKey(14),
@@ -2556,7 +2610,25 @@ describe("やさしい日本語版が行政用語のアンカーを保ってい�
       slug: r8_3GiinKey(14),
       term: "小規模住宅用地",
       yomi: "しょうきぼ じゅうたくようち",
-      gloss: "住宅に 使う 広さの 小さい 土地",
+      gloss: "住宅1戸に つき 200平方メートルまでの 住宅用地",
+    },
+    {
+      slug: r8_3GiinKey(14),
+      term: "小規模非住宅用地",
+      yomi: "しょうきぼ ひじゅうたくようち",
+      gloss: "住宅 以外の 宅地で 面積などの 条件に 合う もの",
+    },
+    {
+      slug: r8_3GiinKey(14),
+      term: "負担水準",
+      yomi: "ふたんすいじゅん",
+      gloss: "今年の 土地の 評価額で 前年の 税の 計算の もとになる 額を 割った 割合",
+    },
+    {
+      slug: r8_3GiinKey(14),
+      term: "可決",
+      yomi: "かけつ",
+      gloss: "案を 認める こと",
     },
   ];
 
@@ -2629,7 +2701,12 @@ describe("やさしい日本語版が行政用語のアンカーを保ってい�
       expect(countOccurrences(body, anchor)).toBe(1);
       // 正式名称の初出が、アンカーの中の1文字目（【の次）であることを見る。
       // 言いかえだけを先に出して正式名称を後回しにすると落ちる。
-      expect(body.indexOf(term)).toBe(body.indexOf(anchor) + 1);
+      const firstUseBody = [11, 12, 13, 14].map(r8_3GiinKey).includes(slug)
+        ? maskLongerTerms(body, term, bracketedTerms(body))
+            .replace(/^#{1,6}\s.*$/gm, (heading) => "\u0000".repeat(heading.length))
+            .replace(/［[^］]+］（＝[^）]+）/g, (gloss) => "\u0000".repeat(gloss.length))
+        : body;
+      expect(firstUseBody.indexOf(term)).toBe(body.indexOf(anchor) + 1);
     }
   );
 
@@ -2735,4 +2812,56 @@ describe("やさしい日本語版が行政用語のアンカーを保ってい�
       expect(countOccurrences(content, `（＝${gloss}）`)).toBe(1);
     }
   );
+  // Scoped to the four new variants; older content is not silently rewritten.
+  const r8_3GiinAnchors = anchoredTerms.filter(({ slug }) =>
+    [11, 12, 13, 14].map(r8_3GiinKey).includes(slug)
+  );
+
+  function unbracketedR8_3Terms(content: string, terms: string[]): string[] {
+    const body = content
+      .replace(/^#{1,6}\s.*$/gm, "")
+      .replace(/［[^］]+］（＝[^）]+）/g, "");
+    // A longer proper name is one token; its internal shorter terms are not uses.
+    const tokens = new RegExp(
+      `【[^】]+】|${[...terms]
+        .sort((a, b) => b.length - a.length)
+        .map(escapeForRegExp)
+        .join("|")}`,
+      "g"
+    );
+    return [...body.matchAll(tokens)]
+      .map((match) => match[0])
+      .filter((token) => !token.startsWith("【"));
+  }
+
+  it("R8-3議員提出4件の初出アンカー30件を固定している", () => {
+    expect(r8_3GiinAnchors).toHaveLength(30);
+    expect([11, 12, 13, 14].map((n) =>
+      r8_3GiinAnchors.filter((a) => a.slug === r8_3GiinKey(n)).length
+    )).toEqual([6, 7, 7, 10]);
+  });
+
+  it.each([11, 12, 13, 14])("第%s号は2回目以降も正式用語の【】を保つ", (number) => {
+    const slug = r8_3GiinKey(number);
+    const terms = r8_3GiinAnchors.filter((a) => a.slug === slug).map((a) => a.term);
+    const body = findEasyContent(slug).content;
+    expect(unbracketedR8_3Terms(body, terms)).toEqual([]);
+    // Negative control: removing one subsequent-use pair must be detected.
+    const repeated = terms.find((term) => body.includes(`【${term}】`)
+      && body.split(`【${term}】`).length > 2);
+    expect(repeated).toBeDefined();
+    if (repeated == null) throw new Error("再使用の検査例がない");
+    const first = body.indexOf(`【${repeated}】`);
+    const second = body.indexOf(`【${repeated}】`, first + repeated.length + 2);
+    const broken = body.slice(0, second) + repeated
+      + body.slice(second + repeated.length + 2);
+    expect(unbracketedR8_3Terms(broken, terms)).toContain(repeated);
+  });
+
+  it("再使用の検査は見出し・ふりがな・言いかえ・長い正式名称の内部を数えない", () => {
+    const text = "## 意見書\n【防災庁設置法】［防災庁］（＝防災庁の 法律）\n【防災庁】";
+    expect(unbracketedR8_3Terms(text, ["防災庁", "防災庁設置法", "意見書"])).toEqual([]);
+    expect(unbracketedR8_3Terms(text + "\n防災庁設置法", ["防災庁", "防災庁設置法"])).toEqual(["防災庁設置法"]);
+  });
+
 });

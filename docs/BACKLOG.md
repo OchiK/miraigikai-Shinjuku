@@ -171,7 +171,7 @@ Progress（2026-10-01）:
 
 Progress（2026-10-21）:
 - 閉会後に公開された「議案の概要と審議結果」PDF（`content/000468947.pdf`）と意見書全文PDF（`000468813`・`000468814`）で、議員提出議案を4件に更新した。第11・12号（条例案）は否決、第13・14号（意見書）は可決（`原案可決` に写す。R8-2 第9・10号と同じ）。議決結果の出典は同PDF（`decisionSourceUrl`）。
-- 4件×3難易度＝12変種の解説を作成した（`packages/seed/main/bill-contents-r8-3-giin-data.ts`）。`hasPublishableContent: true`・`reviewCompleted: false`（公開レビューは別途）。主張台帳は `docs/verification/20261021_1241_claim-ledger-r8-3-giin.csv`（275行、全行 supported、ツール: `docs/verification/tools/r8_3/{fetch_sources_giin.sh,spec_giin.py,ledger_build_giin.py,dump_giin.ts,rebuild_giin.sh}`）。
+- 4件×3難易度＝12変種の解説を作成した（`packages/seed/main/bill-contents-r8-3-giin-data.ts`）。`hasPublishableContent: true`・`reviewCompleted: false`（公開レビューは別途）。主張台帳は `docs/verification/20261021_1241_claim-ledger-r8-3-giin.csv`（307行、うち用語説明30行。全行 supported、ツール: `docs/verification/tools/r8_3/{fetch_sources_giin.sh,glossary_sources_giin.py,spec_giin.py,ledger_build_giin.py,dump_giin.ts,rebuild_giin.sh}`）。
 - R8-3 本会議の会議録は 2026-10-21 時点で未公開のため、提出者・議案ごとの議決日・委員会審査・討論は「わからないこと」に置いた。第11・12号は全文PDFも無く、会期ページ（「条例（2件）」）と審議結果PDF（「条例の改正（2件）」）で区分が違うため、新規制定か改正かも書いていない。
 - 会派別の賛否は議員提出議案4件だけを投入した（`r8_3BillVotes`、9会派。`FACTION_STANCE_SOURCES["r8-3"]`）。区長提出22件は下の P5-7 に回した。`extract-faction-stances.py` を結合セルと「決定」に対応させ、`verify:faction-stances` で r8-1・r8-2・r8-3 の不一致なしを確認した。
 - P5-1 監視に審議結果PDFを加え、`state.json` を自動 PR #147 と同じ状態に進めた（#147 はこの PR のマージ後にクローズする）。

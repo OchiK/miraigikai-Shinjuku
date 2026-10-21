@@ -16,6 +16,8 @@ tools/r8_1/ledger_build.py（R8-1 議員提出議案）と同じ書式・同じ�
   python3 ledger_build_giin.py <contents.json> <出力.csv> spec_giin
 """
 import csv, hashlib, importlib, io, json, re, sys, unicodedata
+from pathlib import Path
+from glossary_sources_giin import SOURCES as GLOSSARY_SOURCES
 
 BASE = "https://www.city.shinjuku.lg.jp/content/"
 SOURCES = {
@@ -24,7 +26,8 @@ SOURCES = {
     "O14": (BASE + "000468814.pdf", "000468814"),
     "SES": ("https://www.city.shinjuku.lg.jp/kusei/gikai01_00123620210909_00008.html", "session"),
 }
-HTML_FILES = ("session",)
+SOURCES.update({key: (source["url"], source["name"]) for key, source in GLOSSARY_SOURCES.items()})
+HTML_FILES = ("session",) + tuple(source["name"] for source in GLOSSARY_SOURCES.values() if source["kind"] != "pdf")
 
 SHA = {}
 for line in open("pdf/sha256.txt"):
@@ -39,6 +42,14 @@ for line in open("pdf/html-sha256.txt"):
     name = f.replace(".html", "")
     if name in SHA and SHA[name] != h:
         HTML_SHA_ERRORS.append(f"{f} の sha256 が記録値と違う: 取得 {h} / 記録 {SHA[name]}")
+
+# Re-hash the fetched original bytes, rather than trusting a pre-written hash list.
+for source in GLOSSARY_SOURCES.values():
+    name = source["name"]
+    actual = hashlib.sha256(Path(f"pdf/{name}.{source['kind']}").read_bytes()).hexdigest()
+    SHA[name] = source["sha256"]
+    if actual != SHA[name]:
+        HTML_SHA_ERRORS.append(f"{name}: source changed: {actual} != {SHA[name]}")
 
 
 def norm(t):
@@ -100,6 +111,17 @@ def build(spec_modules, contents_path, out_path):
                         "evidence_excerpt": excerpt, "verdict": "supported",
                         "reviewed_content_sha256": hashes[key],
                     })
+    # A definition is a factual claim, even when it is inside anchor assistance.
+    # The actual term + gloss must have exactly one independently authored spec row.
+    for content in contents:
+        if content["difficulty_level"] != "easy":
+            continue
+        expected = [f"用語「{term}」の言いかえ: {gloss}" for term, gloss in
+                    re.findall(r"【([^】]+)】［[^］]+］（＝([^）]+)）", content["content"])]
+        actual = [r["final_claim"] for r in rows if r["item_key"] == content["bill_slug"]
+                  and r["difficulty"] == "easy" and r["page_or_section"].startswith("用語説明（")]
+        if sorted(expected) != sorted(actual):
+            errors.append(f"{content['bill_slug']}: glossary coverage differs: expected {expected} / actual {actual}")
     ids = [r["claim_id"] for r in rows]
     dup = {i for i in ids if ids.count(i) > 1}
     if dup:
@@ -126,6 +148,8 @@ def build(spec_modules, contents_path, out_path):
     for k in hashes:
         if k not in fields:
             errors.append(f"{k} has no ledger rows")
+    if errors:
+        return rows, errors, fields
     buf = io.StringIO()
     w = csv.DictWriter(buf, fieldnames=list(rows[0].keys()), lineterminator="\r\n")
     w.writeheader()

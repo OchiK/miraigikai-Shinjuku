@@ -777,6 +777,24 @@ const R8_3_GIIN_SOURCE_SHA256: Record<string, string> = {
   // HTML は区が更新すると変わる。最終更新日 2026-10-19 のページを 2026-10-21 に取得した時点の値。
   [R8_3_COUNCIL_SESSION_URL]:
     "89aa878bba93fb76c241be14e8c0a641176e54e82a5bc21f0a480c3ec4140035",
+  "https://www.city.shinjuku.lg.jp/kusei/file08_00001.html":
+    "d9423d23641822ad325f74b772c2bc440b05b60003546bddcc5ab19becfbce07",
+  "https://www.city.toshima.lg.jp/368/kuse/gikai/aramashi/2210120908.html":
+    "b6b05e5326d36068be56d7ef44ca8b56527ae54f9e458e4d036ef8f6d97df5ea",
+  "https://www.city.tokyo-nakano.lg.jp/kenko_hukushi/kourei/ninchisyo/ninchisyotoha.html":
+    "ea5a1b68fc0bfa249a063c768dd3eed8a383c86c1d966db08617901b1d65da15",
+  "https://laws.e-gov.go.jp/api/1/lawdata/322AC0000000067":
+    "bca93e805c3f6395a4cf9d96d37be02b4c25d19712e9f97e32615442b2380519",
+  "https://laws.e-gov.go.jp/api/1/lawdata/419AC1000000112":
+    "0b2c9b05367c5abb7e792211f30e0b02f4da43c550435cc51299958ceead653f",
+  "https://www.pref.tochigi.lg.jp/e12/welfare/chiikifukushi/zenpan/1255573950730.html":
+    "5e9ab47fda998520f9d0317504e2949373c3eb697aacc33149fd2eac4ee6b6d3",
+  "https://www.tax.metro.tokyo.lg.jp/portal/pdf/summary/summary-00.pdf":
+    "8afb8523e728a6a09a60f1214236813ae8514083947ca27323f92cb22453c538",
+  "https://www.tax.metro.tokyo.lg.jp/documents/d/tax/hijyuu2tsuutatsu":
+    "ddd35ca4140e85476cc4e49a703e38facbac5cf13d896293c5d5d8724c295c34",
+  "https://www.tax.metro.tokyo.lg.jp/documents/d/tax/hijyutaku":
+    "f5d3463ef287c9c90914f4c4d23096ccbd7317b7823a24575106f6832e715a51",
 };
 
 describe("令和8年第3回定例会 議員提出議案第11〜14号の主張台帳の構造", () => {
@@ -801,6 +819,19 @@ describe("令和8年第3回定例会 議員提出議案第11〜14号の主張台
     for (const item of items) {
       expect(item.hasPublishableContent, item.officialLabel).toBe(true);
       expect(item.reviewCompleted, item.officialLabel).toBe(false);
+    }
+  });
+
+  it("やさしい版の言いかえ全30件が実際の本文と同じ表現で1対1に台帳へ載る", () => {
+    const definitions = rows.filter((row) => row.page_or_section.startsWith("用語説明（"));
+    expect(definitions).toHaveLength(30);
+    for (const content of giinContents.filter((c) => c.difficulty_level === "easy")) {
+      const expected = [...content.content.matchAll(/【([^】]+)】［[^］]+］（＝([^）]+)）/g)]
+        .map((match) => `用語「${match[1]}」の言いかえ: ${match[2]}`);
+      const actual = definitions.filter((row) => row.item_key === content.bill_slug);
+      expect(actual.every((row) => row.difficulty === "easy" && row.content_field === "content")).toBe(true);
+      expect(actual.map((row) => row.final_claim).sort()).toEqual(expected.sort());
+      expect(actual.every((row) => row.source_url && row.evidence_excerpt)).toBe(true);
     }
   });
 
