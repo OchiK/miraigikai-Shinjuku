@@ -766,10 +766,10 @@ const R8_1_PILOT_SOURCE_SHA256: Record<string, string> = {
     "869549fe3ba94ac28c6e8fd003d4ad71484501a78203fc7a885109aae4ab487c",
 };
 
-/** 議員提出議案第11〜14号の出典URLと、取得時点の sha256（2026-10-21）。 */
+/** 議員提出議案第11〜14号の出典URLと、取得時点の sha256（2026-10-21。審議結果PDFだけ 2026-10-22 差し替え版で、2026-10-23 取得）。 */
 const R8_3_GIIN_SOURCE_SHA256: Record<string, string> = {
   [R8_3_COUNCIL_RESULTS_PDF]:
-    "f421eee5931b7fa8aa026d5ff7680ce5e233ec6773b3260931baeb1a671845cf",
+    "c865ede3bc1fa9df147713601d9bfad3360e2eb415c47cfc0b95ffd6d43c400c",
   "https://www.city.shinjuku.lg.jp/content/000468813.pdf":
     "9e09bf316e6bef455b861893625499c8cfdc40fd406972cf4a5f38776743524b",
   "https://www.city.shinjuku.lg.jp/content/000468814.pdf":
