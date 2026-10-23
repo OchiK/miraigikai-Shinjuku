@@ -37,7 +37,7 @@ import {
 //
 // | 出典 | URL | sha256 |
 // | --- | --- | --- |
-// | 議案の概要と審議結果（令和8年第3回定例会） | https://www.city.shinjuku.lg.jp/content/000468947.pdf | f421eee5931b7fa8aa026d5ff7680ce5e233ec6773b3260931baeb1a671845cf |
+// | 議案の概要と審議結果（令和8年第3回定例会）（2026-10-22 差し替え版、2026-10-23 取得） | https://www.city.shinjuku.lg.jp/content/000468947.pdf | c865ede3bc1fa9df147713601d9bfad3360e2eb415c47cfc0b95ffd6d43c400c |
 // | 令和8年第3回定例会 会期ページ（最終更新日 2026-10-19、2026-10-21 取得） | https://www.city.shinjuku.lg.jp/kusei/gikai01_00123620210909_00008.html | 89aa878bba93fb76c241be14e8c0a641176e54e82a5bc21f0a480c3ec4140035 |
 // | 意見書 全文（第13号） | https://www.city.shinjuku.lg.jp/content/000468813.pdf | 9e09bf316e6bef455b861893625499c8cfdc40fd406972cf4a5f38776743524b |
 // | 意見書 全文（第14号） | https://www.city.shinjuku.lg.jp/content/000468814.pdf | 3d5d8d4c0b517cc8d41491f65b91c6b559b0b7f9e0194e5c17c3f3f4a6d7538a |
@@ -62,7 +62,7 @@ const OPINION_13_PDF = "https://www.city.shinjuku.lg.jp/content/000468813.pdf";
 const OPINION_14_PDF = "https://www.city.shinjuku.lg.jp/content/000468814.pdf";
 
 const RESULTS_PDF_SHA256 =
-  "f421eee5931b7fa8aa026d5ff7680ce5e233ec6773b3260931baeb1a671845cf";
+  "c865ede3bc1fa9df147713601d9bfad3360e2eb415c47cfc0b95ffd6d43c400c";
 const SESSION_PAGE_SHA256 =
   "89aa878bba93fb76c241be14e8c0a641176e54e82a5bc21f0a480c3ec4140035";
 const OPINION_13_PDF_SHA256 =
