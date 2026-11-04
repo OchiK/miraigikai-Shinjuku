@@ -472,7 +472,7 @@ export const r8_2BillVotes: SeedBillVotes[] = [
 //
 // 出典: 新宿区議会「議案の概要と審議結果（賛成…○、反対…×）」（令和8年第3回定例会）
 //   https://www.city.shinjuku.lg.jp/content/000468947.pdf
-//   （sha256 c865ede3bc1fa9df147713601d9bfad3360e2eb415c47cfc0b95ffd6d43c400c、2026-10-22 差し替え版・2026-10-23 取得。第11〜14号の行は差し替え前と同一）
+//   （sha256 b6030ed23338eca4b037b4461f80e6b5834b0d927cd0fd8ea1b525b58e45e5ad、2026-11-02 差し替え版・2026-11-04 取得。第11〜14号の行・賛否は同一）
 //   （掲載ページ: https://www.city.shinjuku.lg.jp/kusei/gikai01_00123620210909_00008.html）
 //
 // 表の列は採決時点の9会派。第2回定例会の8列に「アップデート新宿」（令和8年7月1日結成）が
