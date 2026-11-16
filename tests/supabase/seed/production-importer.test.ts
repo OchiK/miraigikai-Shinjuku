@@ -312,7 +312,7 @@ describe("本番用インポーター", () => {
     expect(contents).toHaveLength(81);
   });
 
-  it("初回インポートで議員38名と委員会所属87件を投入する", async () => {
+  it("初回インポートで議員38名と委員会所属83件を投入する", async () => {
     const memberNames = dataset.councilMembers.map((member) => member.name);
     const { data: members, error: membersError } = await adminClient
       .from("council_members")
@@ -329,7 +329,7 @@ describe("本番用インポーター", () => {
       })
       .in("council_members.name", memberNames);
     if (linksError) throw new Error(linksError.message);
-    expect(count).toBe(87);
+    expect(count).toBe(83);
   });
 
   it("初回インポートで質問要約124件を投入し、会期ページがある会期だけ紐づける", async () => {
@@ -561,6 +561,200 @@ describe("本番用インポーター", () => {
     const before = await fetchMembers();
     await runImport();
     expect(await fetchMembers()).toEqual(before);
+  });
+
+  it("2026-08-07の名簿から2026-11-09へ移行し、退任者の質問を残して委員会所属4件を削除する", async () => {
+    const prefix = `${runId}-roster-transition`;
+    const current = buildDataset(prefix);
+    const named = (name: string) => `${prefix}-${name}`;
+    const prior: ImportDataset = {
+      ...current,
+      factions: current.factions
+        .filter((faction) => faction.name !== named("rikken-forum"))
+        .map((faction) => {
+          if (faction.name === named("genekisedai")) {
+            return {
+              ...faction,
+              display_name: named("現役世代に優しい新宿・減税の会"),
+              alternative_names: ["現役"],
+            };
+          }
+          return faction.name === named("update")
+            ? { ...faction, sort_order: 9, is_active: true }
+            : faction;
+        }),
+      councilMembers: current.councilMembers.map((member, index) => {
+        if (index === 12) {
+          return {
+            ...member,
+            isActive: true,
+            factionRole: "幹事長・会計",
+            committees: {
+              [named("福祉健康委員会")]: "委員",
+              [named("本庁舎対策等特別委員会")]: "委員",
+            },
+          };
+        }
+        if (index === 24) return { ...member, factionRole: "副幹事長・会計" };
+        if (index === 25) {
+          return {
+            ...member,
+            faction: named("genekisedai"),
+            factionRole: "幹事長",
+          };
+        }
+        if (index === 26) {
+          return {
+            ...member,
+            isActive: true,
+            factionRole: "副幹事長・会計",
+            committees: {
+              [named("文教子ども家庭委員会")]: "委員",
+              [named("文化観光産業等特別委員会")]: "委員",
+            },
+          };
+        }
+        return index === 27 ? { ...member, factionRole: "幹事長" } : member;
+      }),
+    };
+    const departedNames = [named("大門 さちえ"), named("おやまだ 静香")];
+    const fetchDepartedQuestions = async () => {
+      const { data, error } = await adminClient
+        .from("council_member_questions")
+        .select("id, council_members!inner(name)")
+        .in("council_members.name", departedNames)
+        .order("id");
+      if (error) throw new Error(error.message);
+      return data;
+    };
+
+    try {
+      await importInventory(adminClient, { dryRun: false, dataset: prior });
+      const questionsBefore = await fetchDepartedQuestions();
+      expect(questionsBefore).toHaveLength(3);
+      const { data: before, error: beforeError } = await adminClient
+        .from("council_members")
+        .select("id, name, is_active, sort_order")
+        .in("name", departedNames)
+        .order("sort_order");
+      if (beforeError) throw new Error(beforeError.message);
+      expect(before?.map((member) => member.is_active)).toEqual([true, true]);
+
+      const report = await importInventory(adminClient, {
+        dryRun: false,
+        dataset: current,
+      });
+      const removedLinks = prior.councilMembers
+        .filter((member) => departedNames.includes(member.name))
+        .flatMap((member) =>
+          Object.keys(member.committees).map(
+            (committee) => `${member.name}::${committee}`
+          )
+        );
+      expect(removedLinks).toHaveLength(4);
+      expect(
+        report.tables
+          .find((table) => table.table === "council_member_committees")
+          ?.extraneous.sort()
+      ).toEqual(removedLinks.sort());
+      expect(
+        report.tables.find((table) => table.table === "factions")?.created
+      ).toEqual([named("rikken-forum")]);
+
+      const { data: after, error: afterError } = await adminClient
+        .from("council_members")
+        .select("id, name, is_active, sort_order, faction_role")
+        .in("name", departedNames)
+        .order("sort_order");
+      if (afterError) throw new Error(afterError.message);
+      expect(after).toEqual(
+        before?.map((member) => ({
+          ...member,
+          is_active: false,
+          faction_role: null,
+        }))
+      );
+      expect(after?.map((member) => member.sort_order)).toEqual([13, 27]);
+      const { data: links, error: linksError } = await adminClient
+        .from("council_member_committees")
+        .select("id, council_members!inner(name)")
+        .in("council_members.name", departedNames);
+      if (linksError) throw new Error(linksError.message);
+      expect(links).toEqual([]);
+      expect(await fetchDepartedQuestions()).toEqual(questionsBefore);
+
+      const { data: updatedFactions, error: factionsError } = await adminClient
+        .from("factions")
+        .select("name, display_name, is_active")
+        .in("name", [
+          named("update"),
+          named("genekisedai"),
+          named("rikken-forum"),
+        ]);
+      if (factionsError) throw new Error(factionsError.message);
+      expect(updatedFactions).toEqual(
+        expect.arrayContaining([
+          {
+            name: named("update"),
+            display_name: named("アップデート新宿"),
+            is_active: false,
+          },
+          {
+            name: named("genekisedai"),
+            display_name: named("現役世代に優しい新宿"),
+            is_active: true,
+          },
+          {
+            name: named("rikken-forum"),
+            display_name: named("新宿区議会立憲フォーラム"),
+            is_active: true,
+          },
+        ])
+      );
+    } finally {
+      const { data: session } = await adminClient
+        .from("council_sessions")
+        .select("id")
+        .eq("slug", current.billSessionSlug)
+        .maybeSingle();
+      if (session)
+        await adminClient
+          .from("bills")
+          .delete()
+          .eq("council_session_id", session.id);
+      await adminClient
+        .from("council_sessions")
+        .delete()
+        .eq("slug", current.billSessionSlug);
+      await adminClient
+        .from("tags")
+        .delete()
+        .in(
+          "label",
+          current.tags.map((tag) => tag.label)
+        );
+      await adminClient
+        .from("council_members")
+        .delete()
+        .in(
+          "name",
+          current.councilMembers.map((member) => member.name)
+        );
+      await adminClient
+        .from("committees")
+        .delete()
+        .in(
+          "name",
+          current.committees.map((committee) => committee.name)
+        );
+      await adminClient
+        .from("factions")
+        .delete()
+        .in(
+          "name",
+          current.factions.map((faction) => faction.name)
+        );
+    }
   });
 
   it("名簿から外れた議員を削除せず非現職にする", async () => {
@@ -865,10 +1059,10 @@ describe("本番用インポーター", () => {
     expect(byTable("council_sessions")?.created).toEqual([
       unseen.billSessionSlug,
     ]);
-    expect(byTable("factions")?.created).toHaveLength(9);
+    expect(byTable("factions")?.created).toHaveLength(10);
     expect(byTable("committees")?.created).toHaveLength(9);
     expect(byTable("council_members")?.created).toHaveLength(38);
-    expect(byTable("council_member_committees")?.created).toHaveLength(87);
+    expect(byTable("council_member_committees")?.created).toHaveLength(83);
     expect(byTable("council_member_questions")?.created).toHaveLength(124);
     expect(byTable("bills")?.created).toHaveLength(27);
     expect(byTable("bill_contents")?.created).toHaveLength(81);

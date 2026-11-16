@@ -3,7 +3,7 @@
  * 同じ公式ページ・同じ更新日を指す。名簿を更新したらここも更新する。
  */
 export const COUNCILOR_SOURCES = {
-  asOf: "2026年8月7日",
+  asOf: "2026年11月9日",
   /** X（旧Twitter）アカウントの掲載基準と、本人のものと確認した日 */
   xAccounts: {
     rule: "本人のウェブサイトからのリンク、またはプロフィールの「新宿区議会議員」の記載で本人のものと確認したアカウント",
@@ -23,7 +23,7 @@ export const COUNCILOR_SOURCES = {
   },
   /** 英語表示用。上の日付・基準を変えたらここも合わせる */
   en: {
-    asOf: "August 7, 2026",
+    asOf: "November 9, 2026",
     xAccountsRule:
       "accounts we confirmed as the councilor's own, either through a link from their website or a profile that names them as a Shinjuku City Council member",
     xAccountsAsOf: "September 26, 2026",

@@ -972,7 +972,7 @@ function councilMemberRows(
     x_url: member.xUrl,
     terms: member.terms,
     sort_order: index + 1,
-    is_active: true,
+    is_active: member.isActive ?? true,
   }));
 }
 

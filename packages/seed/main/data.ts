@@ -55,9 +55,10 @@ export const councilSessions: CouncilSessionInsert[] = [
 ];
 
 // 会派データ
-// 出典: 新宿区議会「会派構成」（2026年8月7日更新）
+// 出典: 新宿区議会「会派構成」（2026年11月9日更新）
 // https://www.city.shinjuku.lg.jp/kusei/file08_00003.html
-// 並びは同ページの掲載順（所属人数順）。alternative_names には公式の委員会名簿で
+// 令和8年11月1日付けの会派分裂・名称変更を反映。活動中の会派は同ページの掲載順。
+// alternative_names には公式の委員会名簿で
 // 使われる略称と、会派名変更前の名称を入れる（議決結果PDFとの突合に使う）。
 export const factions: FactionInsert[] = [
   {
@@ -103,9 +104,10 @@ export const factions: FactionInsert[] = [
     is_active: true,
   },
   {
+    // 令和8年11月1日付けで「現役世代に優しい新宿・減税の会」から名称変更
     name: "genekisedai",
-    display_name: "現役世代に優しい新宿・減税の会",
-    alternative_names: ["現役"],
+    display_name: "現役世代に優しい新宿",
+    alternative_names: ["現役", "現役世代に優しい新宿・減税の会"],
     sort_order: 7,
     is_active: true,
   },
@@ -118,12 +120,20 @@ export const factions: FactionInsert[] = [
     is_active: true,
   },
   {
-    // 令和8年7月1日結成
+    // 令和8年11月1日結成
+    name: "rikken-forum",
+    display_name: "新宿区議会立憲フォーラム",
+    alternative_names: ["新立憲"],
+    sort_order: 9,
+    is_active: true,
+  },
+  {
+    // 令和8年7月1日結成。令和8年11月8日付けの大門さちえ議員の退職により所属議員0名
     name: "update",
     display_name: "アップデート新宿",
     alternative_names: ["アプデ"],
-    sort_order: 9,
-    is_active: true,
+    sort_order: 10,
+    is_active: false,
   },
 ];
 
@@ -154,7 +164,7 @@ export const committees: CommitteeInsert[] = [
     is_active: true,
   },
   // 以下は議員の所属委員会として必要なもの。
-  // 出典: 新宿区議会「委員会名簿」（2026年8月7日更新）
+  // 出典: 新宿区議会「委員会名簿」（2026年11月9日更新）
   // https://www.city.shinjuku.lg.jp/kusei/file08_01_00013.html
   // 所管事項の説明は一次情報で確認できていないため description は入れない。
   {
