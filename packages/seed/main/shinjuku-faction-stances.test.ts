@@ -166,13 +166,13 @@ describe("令和8年第2回定例会の会派賛否", () => {
     ).toEqual(new Set(["れいわ新選組 新宿"]));
   });
 
-  it("名称の変わっていない7会派は、採決時の名前が現在の表示名と同じ", () => {
+  it("名称の変わっていない6会派は、採決時の名前が現在の表示名と同じ", () => {
     const renamed = R8_2_VOTE_COLUMNS.filter(
       (column) =>
         resolveFactionAtVote(column.nameAtVote, factions).display_name !==
         column.nameAtVote
     ).map((column) => column.heading);
-    expect(renamed).toEqual(["れいわ"]);
+    expect(renamed).toEqual(["現役", "れいわ"]);
   });
 });
 
@@ -196,7 +196,7 @@ describe("令和8年第3回定例会の会派賛否", () => {
     }
   });
 
-  it("列は表の見出しどおりの9会派で、すべて DB の会派の表示名と一致する", () => {
+  it("列は表の見出しどおりの9会派で、現役は旧名称、それ以外は表示名で対応する", () => {
     expect(R8_3_VOTE_COLUMNS.map((column) => column.heading)).toEqual([
       "自参ク",
       "公明",
@@ -209,9 +209,13 @@ describe("令和8年第3回定例会の会派賛否", () => {
       "アプデ",
     ]);
     for (const column of R8_3_VOTE_COLUMNS) {
-      expect(
-        resolveFactionAtVote(column.nameAtVote, factions).display_name
-      ).toBe(column.nameAtVote);
+      const faction = resolveFactionAtVote(column.nameAtVote, factions);
+      if (column.heading === "現役") {
+        expect(faction.name).toBe("genekisedai");
+        expect(faction.alternative_names).toContain(column.nameAtVote);
+      } else {
+        expect(faction.display_name).toBe(column.nameAtVote);
+      }
     }
   });
 

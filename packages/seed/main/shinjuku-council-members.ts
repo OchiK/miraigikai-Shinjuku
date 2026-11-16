@@ -2,7 +2,7 @@ import type { Database } from "@mirai-gikai/supabase";
 
 // 新宿区議会議員の名簿（第20期、令和5年5月1日～令和9年4月30日）
 //
-// 出典（いずれも 2026年8月7日 更新時点の公式ページ）:
+// 出典（いずれも 2026年11月9日 更新時点の公式ページ）:
 // - 議員名簿（議席番号順・当選期数・所属会派・ウェブサイト）
 //   https://www.city.shinjuku.lg.jp/kusei/gikai01_000112.html
 // - 会派構成（会派ごとの所属議員と会派内役職）
@@ -29,6 +29,8 @@ export type SeedCouncilMember = {
   faction: string;
   /** 会派内の役職（会派構成ページの表記） */
   factionRole: string | null;
+  /** 現職かどうか。省略時は true。退任者も歴史的記録として保持する */
+  isActive?: boolean;
   terms: number;
   websiteUrl: string | null;
   /**
@@ -40,7 +42,8 @@ export type SeedCouncilMember = {
   committees: Record<string, CommitteeRole>;
 };
 
-// 配列の並びは公式名簿の議席番号順（No.1〜No.38）
+// 配列の並びは公式名簿の議席番号順（No.1〜No.38）。
+// 欠員の議席13・27は、過去の質問と議席番号を保持するため非アクティブ行で残す。
 export const councilMembers: SeedCouncilMember[] = [
   {
     name: "木もと ひろゆき",
@@ -203,17 +206,16 @@ export const councilMembers: SeedCouncilMember[] = [
     },
   },
   {
+    // 令和8年11月8日付けで公職選挙法第90条の規定により退職
     name: "大門 さちえ",
     nameKana: "だいもん さちえ",
     faction: "update",
-    factionRole: "幹事長・会計",
+    factionRole: null,
+    isActive: false,
     terms: 3,
     websiteUrl: "http://sachiedaimon.com/",
     xUrl: "https://x.com/SachieDaimon",
-    committees: {
-      福祉健康委員会: "委員",
-      本庁舎対策等特別委員会: "委員",
-    },
+    committees: {},
   },
   {
     name: "山口 かおる",
@@ -366,7 +368,7 @@ export const councilMembers: SeedCouncilMember[] = [
     name: "渡辺 やすし",
     nameKana: "わたなべ やすし",
     faction: "genekisedai",
-    factionRole: "副幹事長・会計",
+    factionRole: "幹事長・会計",
     terms: 1,
     websiteUrl: "https://watanabe-yasushi.tokyo/",
     xUrl: "https://x.com/nabe_yas1985",
@@ -378,8 +380,8 @@ export const councilMembers: SeedCouncilMember[] = [
   {
     name: "田中 ゆきえ",
     nameKana: "たなか ゆきえ",
-    faction: "genekisedai",
-    factionRole: "幹事長",
+    faction: "rikken-forum",
+    factionRole: "幹事長・会計",
     terms: 2,
     websiteUrl: "http://www.tanakayukie.com",
     xUrl: null,
@@ -389,23 +391,22 @@ export const councilMembers: SeedCouncilMember[] = [
     },
   },
   {
+    // 令和8年10月31日付けで辞職
     name: "おやまだ 静香",
     nameKana: "おやまだ しずか",
     faction: "ishin",
-    factionRole: "副幹事長・会計",
+    factionRole: null,
+    isActive: false,
     terms: 1,
     websiteUrl: "https://www.shizuka-oyamada.jp/",
     xUrl: "https://x.com/zuka_shinjuku",
-    committees: {
-      文教子ども家庭委員会: "委員",
-      文化観光産業等特別委員会: "委員",
-    },
+    committees: {},
   },
   {
     name: "古畑 まさのり",
     nameKana: "ふるはた まさのり",
     faction: "ishin",
-    factionRole: "幹事長",
+    factionRole: "幹事長・会計",
     terms: 1,
     websiteUrl: "https://go2senkyo.com/seijika/185645",
     xUrl: "https://x.com/Furuhata_SJK",
@@ -583,7 +584,7 @@ export function createCouncilMemberInserts(
     x_url: member.xUrl,
     terms: member.terms,
     sort_order: index + 1,
-    is_active: true,
+    is_active: member.isActive ?? true,
   }));
 }
 

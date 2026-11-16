@@ -216,13 +216,17 @@ describe("議員ローダー 統合テスト", () => {
     });
   });
 
-  it("seed の実データを委員会別にまとめると、9委員会・延べ87件で各委員会に委員長と副委員長が1人ずつ", async (ctx) => {
+  it("seed の実データを委員会別にまとめると、現職36人・9委員会・延べ83件で各委員会に委員長と副委員長が1人ずつ", async (ctx) => {
     // このファイルや並行する統合テストが入れた「テスト」委員会は除く
     const groups = groupCouncilorsByCommittee(await getCouncilors()).filter(
       (g) => !g.committee.name.startsWith("テスト")
     );
     // CI の DB には議員の seed が入らないため、pnpm seed 済みのローカルでだけ確かめる
     if (groups.length === 0) ctx.skip();
+
+    expect(
+      new Set(groups.flatMap((g) => g.members.map((m) => m.councilor.id))).size
+    ).toBe(36);
 
     expect(groups.map((g) => g.committee.kind)).toEqual([
       "standing",
@@ -235,7 +239,7 @@ describe("議員ローダー 統合テスト", () => {
       "special",
       "special",
     ]);
-    expect(groups.reduce((sum, g) => sum + g.members.length, 0)).toBe(87);
+    expect(groups.reduce((sum, g) => sum + g.members.length, 0)).toBe(83);
     for (const { members } of groups) {
       expect(members.filter((m) => m.role === "委員長")).toHaveLength(1);
       expect(members.filter((m) => m.role === "副委員長")).toHaveLength(1);

@@ -376,6 +376,7 @@ describe("createFactionStances", () => {
     "ishin",
     "genekisedai",
     "inochi",
+    "rikken-forum",
     "update",
   ].map((name) => ({ id: `${name}-uuid`, name }));
 
