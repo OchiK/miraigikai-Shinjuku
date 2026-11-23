@@ -6,10 +6,9 @@ import {
 } from "./shinjuku-r8-1-inventory";
 import { giinKey, gianKey, shoninKey } from "./shinjuku-r8-2-inventory";
 import {
-  buildR8_3ItemKey,
   r8_3GianKey,
   r8_3GiinKey,
-  r8ThirdSessionItems,
+  r8_3NinteiKey,
 } from "./shinjuku-r8-3-inventory";
 
 export { FACTION_STANCE_SOURCES } from "@mirai-gikai/shared/bills/faction-stance-sources";
@@ -475,12 +474,12 @@ export const r8_2BillVotes: SeedBillVotes[] = [
 //
 // 出典: 新宿区議会「議案の概要と審議結果（賛成…○、反対…×）」（令和8年第3回定例会）
 //   https://www.city.shinjuku.lg.jp/content/000468947.pdf
-//   （sha256 b6030ed23338eca4b037b4461f80e6b5834b0d927cd0fd8ea1b525b58e45e5ad、2026-11-02 差し替え版・2026-11-04 取得。第11〜14号の行・賛否は同一）
+//   （sha256 b6030ed23338eca4b037b4461f80e6b5834b0d927cd0fd8ea1b525b58e45e5ad、2026-11-02 差し替え版・2026-11-04 取得。区長提出22件と議員提出4件の賛否の出典）
 //   （掲載ページ: https://www.city.shinjuku.lg.jp/kusei/gikai01_00123620210909_00008.html）
 //
 // 表の列は採決時点の9会派。第2回定例会の8列に「アップデート新宿」（令和8年7月1日結成）が
 // 加わり、「れいわ新選組 新宿」は「いのちの党 新宿」（略称「いのち」）になった。
-// nameAtVote は表の欄外の会派略称の正式名称で、DB の display_name と同じ。
+// nameAtVote は採決時点の名称。現在の会派とは display_name または alternative_names で対応する。
 export const R8_3_VOTE_COLUMNS = [
   { heading: "自参ク", nameAtVote: "自民・参政クラブ" },
   { heading: "公明", nameAtVote: "新宿区議会公明党" },
@@ -494,11 +493,125 @@ export const R8_3_VOTE_COLUMNS = [
 ] as const;
 
 // 表は28行（区長提出議案22件、同意1件、諮問3件を1行、議員提出議案4件）。
-// このうち議員提出議案第11〜14号の4件だけを入れる。区長提出議案22件の賛否は、
-// 公開レビュー済みの解説（「会派ごとの賛否は議決結果ページに載っていません」）の
-// 改稿と一緒に別の PR で入れる。同意・諮問は解説の無い案件なので入れない。
-// verify-faction-stances.ts は、入れない24行（R8_3_UNSEEDED_ROWS）を件名で除いてから照合する。
+// 区長提出22件と議員提出4件を表順に保持する。同意・諮問の2行だけを除外する。
 export const r8_3BillVotes: SeedBillVotes[] = [
+  {
+    billKey: r8_3GianKey(63),
+    titleInSource: "令和8年度新宿区一般会計補正予算（第4号）",
+    marks: "○○○○○○○○○",
+  },
+  {
+    billKey: r8_3GianKey(64),
+    titleInSource: "令和8年度新宿区一般会計補正予算（第5号）",
+    marks: "○○○○○○○○○",
+  },
+  {
+    billKey: r8_3GianKey(65),
+    titleInSource: "令和8年度新宿区介護保険特別会計補正予算（第2号）",
+    marks: "○○○○○○○○○",
+  },
+  {
+    billKey: r8_3GianKey(66),
+    titleInSource: "令和8年度新宿区後期高齢者医療特別会計補正予算（第1号）",
+    marks: "○○○○○○○○○",
+  },
+  {
+    billKey: r8_3NinteiKey(1),
+    titleInSource: "令和7年度新宿区一般会計歳入歳出決算",
+    marks: "○○×○○○○×○",
+  },
+  {
+    billKey: r8_3NinteiKey(2),
+    titleInSource: "令和7年度新宿区国民健康保険特別会計歳入歳出決算",
+    marks: "○○×○○○○×○",
+  },
+  {
+    billKey: r8_3NinteiKey(3),
+    titleInSource: "令和7年度新宿区介護保険特別会計歳入歳出決算",
+    marks: "○○×○○○○×○",
+  },
+  {
+    billKey: r8_3NinteiKey(4),
+    titleInSource: "令和7年度新宿区後期高齢者医療特別会計歳入歳出決算",
+    marks: "○○×○○○○×○",
+  },
+  {
+    billKey: r8_3GianKey(67),
+    titleInSource: "新宿区公益保護のための通報に関する条例の一部を改正する条例",
+    marks: "○○○○○○○○○",
+  },
+  {
+    billKey: r8_3GianKey(68),
+    titleInSource: "新宿区立しんじゅく多文化共生プラザ条例の一部を改正する条例",
+    marks: "○○×○○○○×○",
+  },
+  {
+    billKey: r8_3GianKey(69),
+    titleInSource:
+      "新宿区乳児等通園支援事業の実施に関する条例の一部を改正する条例",
+    marks: "○○○○○○○○○",
+  },
+  {
+    billKey: r8_3GianKey(70),
+    titleInSource:
+      "新宿区家庭的保育事業等の設備及び運営に関する基準を定める条例及び新宿区乳児等通園支援事業の設備及び運営に関する基準を定める条例の一部を改正する条例",
+    marks: "○○○○○○○○○",
+  },
+  {
+    billKey: r8_3GianKey(71),
+    titleInSource: "新宿区景観まちづくり条例の一部を改正する条例",
+    marks: "○○○○○○○○○",
+  },
+  {
+    billKey: r8_3GianKey(72),
+    titleInSource:
+      "新宿区立の小学校、中学校及び特別支援学校の非常勤の学校医、学校歯科医及び学校薬剤師の公務災害補償に関する条例の一部を改正する条例",
+    marks: "○○○○○○○○○",
+  },
+  {
+    billKey: r8_3GianKey(73),
+    titleInSource:
+      "ＥＳＣＯ事業による新宿区立防災センター外11施設照明ＬＥＤ化工事等委託契約",
+    marks: "○○○○○○○○○",
+  },
+  {
+    billKey: r8_3GianKey(74),
+    titleInSource:
+      "ＥＳＣＯ事業による新宿区四谷特別出張所外6施設照明ＬＥＤ化工事等委託契約",
+    marks: "○○○○○○○○○",
+  },
+  {
+    billKey: r8_3GianKey(75),
+    titleInSource:
+      "ＥＳＣＯ事業による新宿区大久保特別出張所外10施設照明ＬＥＤ化工事等委託契約",
+    marks: "○○○○○○○○○",
+  },
+  {
+    billKey: r8_3GianKey(76),
+    titleInSource: "道路改良工事（江戸川橋通り第Ⅱ期）請負契約",
+    marks: "○○○○○○○○○",
+  },
+  {
+    billKey: r8_3GianKey(77),
+    titleInSource:
+      "イントラネットシステム及び情報システム統合基盤に係るマイクロソフト社ソフトウェアライセンスの買入れについて",
+    marks: "○○○○○○○○○",
+  },
+  {
+    billKey: r8_3GianKey(78),
+    titleInSource: "権利の放棄について",
+    marks: "○○○○○○○○○",
+  },
+  {
+    billKey: r8_3GianKey(79),
+    titleInSource: "損害賠償の額の決定について",
+    marks: "○○○○○○○○○",
+  },
+  {
+    billKey: r8_3GianKey(80),
+    titleInSource: "訴えの提起について",
+    marks: "○○○○○○○○○",
+  },
   {
     billKey: r8_3GiinKey(11),
     titleInSource: "新宿区シルバーパス購入費助成金交付条例",
@@ -617,26 +730,11 @@ export type ExtractedStanceTable = {
   rows: { title: string; marks: string; result: string }[];
 };
 
-/** 第76号議案は表の表記（第Ⅱ期）がインベントリ（提出議案一覧ページの「第2)期」）と違う */
-const R8_3_TITLE_IN_RESULTS_PDF: Record<string, string> = {
-  [r8_3GianKey(76)]: "道路改良工事（江戸川橋通り第Ⅱ期）請負契約",
-};
-
-/**
- * 令和8年第3回定例会の表のうち seed に入れない行（区長提出議案22件・同意1件・諮問1行）と、
- * 表の行数（30件のうち諮問第1〜3号が1行にまとまって28行）。
- */
+/** 同意1件と諮問第1〜3号（結合1行）は解説未作成のため除外する。 */
 export const R8_3_UNSEEDED_ROWS = {
   titles: [
-    ...new Set(
-      r8ThirdSessionItems
-        .filter((item) => item.itemType !== "giin")
-        .map(
-          (item) =>
-            R8_3_TITLE_IN_RESULTS_PDF[buildR8_3ItemKey(item)] ??
-            item.officialTitle
-        )
-    ),
+    "新宿区教育委員会委員任命の同意について",
+    "人権擁護委員候補者の推薦に関する意見の聴取について",
   ],
   tableRows: 28,
 };

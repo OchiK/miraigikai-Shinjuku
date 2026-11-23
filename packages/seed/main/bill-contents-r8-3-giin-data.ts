@@ -1,8 +1,5 @@
 import type { BillContentWithBillSlug } from "./bill-contents-data";
-import {
-  R8_3_VOTE_COLUMNS,
-  r8_3BillVotes,
-} from "./shinjuku-faction-stances";
+import { hardVoteTable } from "./r8-3-vote-text";
 import {
   R8_3_COUNCIL_RESULTS_PDF,
   R8_3_COUNCIL_SESSION_URL,
@@ -96,37 +93,6 @@ const NORMAL_REJECTED_VOTES = `「議案の概要と審議結果」による会�
 
 - 賛成（2会派）: 日本共産党新宿区議会議員団、いのちの党 新宿
 - 反対（7会派）: 自民・参政クラブ、新宿区議会公明党、新宿未来の会、立憲民主党・無所属クラブ、日本維新の会・新宿区議団、現役世代に優しい新宿・減税の会、アップデート新宿`;
-
-const MARK_LABEL: Record<string, string> = {
-  "○": "賛成（○）",
-  "×": "反対（×）",
-};
-
-/**
- * 「議案の概要と審議結果」の会派別の賛否の表（hard）。
- * 列と記号は会派賛否 seed（R8_3_VOTE_COLUMNS・r8_3BillVotes）から作り、本文と seed がずれないようにする。
- */
-function hardVoteTable(itemNumber: number, result: string): string {
-  const votes = r8_3BillVotes.find((v) => v.billKey === r8_3GiinKey(itemNumber));
-  if (!votes) {
-    throw new Error(`会派賛否が見つかりません: 議員提出議案第${itemNumber}号`);
-  }
-  const marks = [...votes.marks];
-  const rows = R8_3_VOTE_COLUMNS.map((column, i) => {
-    const label = MARK_LABEL[marks[i]];
-    if (!label) {
-      throw new Error(`賛否の記号「${marks[i]}」は変換できません: ${votes.marks}`);
-    }
-    return `| ${column.heading}（${column.nameAtVote}） | ${label} |`;
-  });
-  return [
-    "| 会派（表の略称） | 態度 |",
-    "|------|------|",
-    ...rows,
-    "",
-    `議決結果の欄は「${result}」である。表は会派の態度を示すもので、所属議員ごとの投票は記載がない。`,
-  ].join("\n");
-}
 
 export const billContentsR8_3Giin: BillContentWithBillSlug[] = [
   // =========================================================================
@@ -254,7 +220,7 @@ ${NORMAL_REJECTED_VOTES}
 
 会派別の賛否（「議案の概要と審議結果」）:
 
-${hardVoteTable(11, "否決")}
+${hardVoteTable(r8_3GiinKey(11), "否決")}
 
 ## 2. 条例の骨子
 
@@ -426,7 +392,7 @@ ${NORMAL_REJECTED_VOTES}
 
 会派別の賛否（「議案の概要と審議結果」）:
 
-${hardVoteTable(12, "否決")}
+${hardVoteTable(r8_3GiinKey(12), "否決")}
 
 ## 2. 条例の骨子
 
@@ -632,7 +598,7 @@ ${EASY_SESSION}
 
 「議案の概要と審議結果」は、議決結果を「可決」とし、9会派すべてを賛成（○）とする。同表の概要欄は、本意見書が「国会及び政府に対して強く求めました」と記す。
 
-${hardVoteTable(13, "可決")}
+${hardVoteTable(r8_3GiinKey(13), "可決")}
 
 ## 5. 出典に記載がない事項
 
@@ -800,7 +766,7 @@ ${EASY_SESSION}
 
 「議案の概要と審議結果」は、議決結果を「可決」とし、9会派すべてを賛成（○）とする。同表の概要欄は、本意見書が軽減措置の令和9年度以後の継続を「東京都に要望しました」と記す。
 
-${hardVoteTable(14, "可決")}
+${hardVoteTable(r8_3GiinKey(14), "可決")}
 
 ## 5. 出典に記載がない事項
 

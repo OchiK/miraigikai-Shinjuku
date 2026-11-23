@@ -4,6 +4,8 @@ import { fileURLToPath } from "node:url";
 import { parse } from "csv-parse/sync";
 import { describe, expect, it } from "vitest";
 import { billContentsWithBillSlug } from "./bill-contents-data";
+import { validateMayorVoteText } from "./r8-3-vote-text";
+import { r8_3BillVotes } from "./shinjuku-faction-stances";
 import {
   R8_1_COUNCIL_RESULTS_PDF,
   R8_1_COUNCIL_SESSION_URL,
@@ -511,7 +513,7 @@ const NO_SOURCE_NOTE =
 
 describe("令和8年第3回定例会22件の主張台帳の構造", () => {
   // 審議状況は議決結果ページ（R8_3_DECISIONS_URL）を出典とする supported の行で持つ。
-  // 出典から確かめられない点（議決日・会派ごとの賛否を含む）は needs_source として、
+  // 会派賛否は審議結果PDFを出典とする。議決日・個人投票などの不記載は needs_source として、
   // 解説本文の「わからない こと」「出典に記載がない事項」と審議状況の注記にだけ置く。
   const rows = readLedger(R8_3_CLAIM_LEDGER_PATH);
   // 台帳は区長提出議案22件のもの。議員提出議案（第11・12号）と、議決結果ページにだけ
@@ -590,10 +592,11 @@ describe("令和8年第3回定例会22件の主張台帳の構造", () => {
     }
   });
 
-  it("議決結果ページの不記載の開示は各変種1行で、そのページのURLとHTMLハッシュを指す", () => {
+  it("議決日・個人投票の不記載は各変種1行で、審議結果PDFを指す", () => {
     const absent = rows.filter(
       (r) =>
-        r.final_claim === "議決日と会派ごとの賛否は議決結果ページに載っていない"
+        r.final_claim ===
+        "議決日と所属議員ごとの投票は、議決結果ページと「議案の概要と審議結果」のどちらにも載っていない"
     );
     expect(absent).toHaveLength(66);
     expect(
@@ -601,14 +604,105 @@ describe("令和8年第3回定例会22件の主張台帳の構造", () => {
     ).toBe(66);
     for (const r of absent) {
       expect(r.content_field, r.claim_id).toBe("content");
-      expect(r.source_url, r.claim_id).toBe(R8_3_DECISIONS_URL);
+      expect(r.source_url, r.claim_id).toBe(R8_3_COUNCIL_RESULTS_PDF);
       expect(r.source_sha256, r.claim_id).toBe(
-        "ce0da96ac3ee25a9225c50dfac5b93b58f12d63594af3db0a956bb4182905389"
+        "b6030ed23338eca4b037b4461f80e6b5834b0d927cd0fd8ea1b525b58e45e5ad"
       );
       expect(r.page_or_section, r.claim_id).toBe("出典に記載がない事項");
       expect(r.verdict, r.claim_id).toBe("needs_source");
       expect(r.evidence_excerpt, r.claim_id).toBe(NO_SOURCE_NOTE);
     }
+  });
+
+  it("各変種に賛否行が1行あり、b603 の記号が seed と一致する", () => {
+    const voteRows = rows.filter((r) => r.page_or_section === "会派別の賛否");
+    expect(voteRows).toHaveLength(66);
+    expect(
+      new Set(voteRows.map((r) => `${r.item_key}:${r.difficulty}`)).size
+    ).toBe(66);
+    for (const r of voteRows) {
+      expect(r.verdict).toBe("supported");
+      expect(r.source_url).toBe(R8_3_COUNCIL_RESULTS_PDF);
+      expect(r.source_sha256).toBe(
+        "b6030ed23338eca4b037b4461f80e6b5834b0d927cd0fd8ea1b525b58e45e5ad"
+      );
+      const marks = (r.evidence_excerpt.match(/[〇○×]/g) ?? [])
+        .join("")
+        .replaceAll("〇", "○");
+      expect(marks).toBe(
+        r8_3BillVotes.find((v) => v.billKey === r.item_key)?.marks
+      );
+      expect(r.evidence_excerpt.replace(/\s/g, "")).toMatch(/(?:可決|認定)$/);
+      expect(r.evidence_excerpt.replace(/\s/g, "").length).toBeGreaterThan(12);
+      expect(r.evidence_excerpt).not.toContain("…");
+    }
+  });
+
+  it("採決時の名称を使う32変種に会派略称の根拠を1行ずつ持つ", () => {
+    const legendRows = rows.filter(
+      (r) => r.page_or_section === "会派略称（欄外）"
+    );
+    expect(legendRows).toHaveLength(32);
+    for (const c of billContentsWithBillSlug.filter((c) =>
+      r8_3Keys.has(c.bill_slug)
+    )) {
+      const opposed = r8_3BillVotes
+        .find((v) => v.billKey === c.bill_slug)
+        ?.marks.includes("×");
+      const matching = legendRows.filter(
+        (r) => r.item_key === c.bill_slug && r.difficulty === c.difficulty_level
+      );
+      expect(matching).toHaveLength(
+        c.difficulty_level === "hard" || opposed ? 1 : 0
+      );
+    }
+    for (const r of legendRows) {
+      expect(r.verdict).toBe("supported");
+      expect(r.source_url).toBe(R8_3_COUNCIL_RESULTS_PDF);
+      expect(r.evidence_excerpt).toContain(
+        "現役＝現役世代に優しい新宿・減税の会"
+      );
+    }
+  });
+
+  it("理由・討論・委員会審査の不記載を各変種1行で開示する", () => {
+    const absent = rows.filter(
+      (r) =>
+        r.final_claim ===
+        "各会派の賛否の理由・討論と委員会での審査の内容は確認できない"
+    );
+    expect(absent).toHaveLength(66);
+    expect(
+      new Set(absent.map((r) => `${r.item_key}:${r.difficulty}`)).size
+    ).toBe(66);
+    for (const r of absent) {
+      expect(r.source_url).toBe(R8_3_COUNCIL_RESULTS_PDF);
+      expect(r.page_or_section).toBe("出典に記載がない事項");
+      expect(r.verdict).toBe("needs_source");
+      expect(r.evidence_excerpt).toBe(NO_SOURCE_NOTE);
+    }
+  });
+
+  it("本文66変種の実際の節が seed と一致し、不明事項と旧文言を検査する", () => {
+    const contents = billContentsWithBillSlug.filter((c) =>
+      r8_3Keys.has(c.bill_slug)
+    );
+    expect(contents).toHaveLength(66);
+    expect(validateMayorVoteText(contents, r8_3BillVotes)).toEqual([]);
+    for (const c of contents) {
+      expect(c.content).not.toMatch(
+        /賛成した 会派は|会派ごとの賛否は[、，].*(?:載っていません|記載がない)/
+      );
+      expect(c.content).not.toContain("新宿区議会立憲フォーラム");
+      expect(c.content).not.toMatch(/現役世代に優しい新宿(?!・減税の会)/);
+    }
+    expect(
+      rows.filter(
+        (r) =>
+          r.final_claim ===
+          "議決日と会派ごとの賛否は議決結果ページに載っていない"
+      )
+    ).toEqual([]);
   });
 
   it("最終更新日の行が各変種にちょうど1行あり、議決結果ページの最終更新日を引く", () => {
@@ -652,6 +746,7 @@ describe("令和8年第3回定例会22件の主張台帳の構造", () => {
     const allowed = new Set<string>([
       R8_3_SUBMISSIONS_URL,
       R8_3_DECISIONS_URL,
+      R8_3_COUNCIL_RESULTS_PDF,
       ...r8_3MayorItems.flatMap((i) =>
         [i.fullTextPdfUrl, i.overviewPdfUrl].filter(
           (url): url is string => url !== null

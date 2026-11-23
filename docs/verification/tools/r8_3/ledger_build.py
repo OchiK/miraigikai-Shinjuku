@@ -10,18 +10,25 @@
   議決結果が案件種別の想定（議案は原案可決、決算は認定）と違えば止まる。
 
 使い方（fetch_sources.sh を実行したディレクトリで）:
-  python3 ledger_build.py <contents.json> <出力.csv> spec_b1 spec_b2
+  rebuild.sh <repo-root> [出力.csv]（保存コピーから pdf/ を準備して実行）
+  直接実行: python3 ledger_build.py <contents.json> <出力.csv> spec_b1 spec_b2
+  dump.ts の第3引数で出した votes.json を VOTES_PATH（カレント）に置く。
 """
 import csv, hashlib, importlib, io, json, re, sys, unicodedata
 
 BASE = "https://www.city.shinjuku.lg.jp/content/"
 SOURCES = {
+    "RES": (BASE + "000468947.pdf", "000468947"),
     "SUB": ("https://www.city.shinjuku.lg.jp/kusei/kuseijoho01_001109_03.html", "submissions"),
     "DEC": ("https://www.city.shinjuku.lg.jp/kusei/soumu01_002090_00018.html", "decisions"),
     "O4": (BASE + "000464781.pdf", "000464781"),
     "O5": (BASE + "000464782.pdf", "000464782"),
     "OJ": (BASE + "000464786.pdf", "000464786"),
 }
+# dump.ts の第3引数で生成する必須入力。rebuild.sh は作業ディレクトリに出力する。
+VOTES_PATH = "votes.json"
+EXPECTED_RES_SHA256 = "b6030ed23338eca4b037b4461f80e6b5834b0d927cd0fd8ea1b525b58e45e5ad"
+
 for k, pdf in {
     "P63": "000466336", "P64": "000466337", "P65": "000466338", "P66": "000466339",
     "PC1": "000466361", "PC2": "000466362", "PC3": "000466363", "PC4": "000466364",
@@ -90,15 +97,31 @@ def excerpt_ok(src, excerpt):
 
 def build(spec_modules, contents_path, out_path):
     contents = json.load(open(contents_path))
+    votes = {v["billKey"]: v for v in json.load(open(VOTES_PATH))}
+    actual_res_sha = hashlib.sha256(open("pdf/000468947.pdf", "rb").read()).hexdigest()
+    for check, actual in (("RES PDF bytes", actual_res_sha), ("RES pdf/sha256.txt entry", SHA["000468947"])):
+        if actual != EXPECTED_RES_SHA256:
+            raise ValueError(f"{check} sha256 mismatch: actual={actual}, expected={EXPECTED_RES_SHA256}")
     hashes = {}
     for c in contents:
         h = hashlib.sha256(f"{c['title']}\n{c['summary']}\n{c['content']}".encode()).hexdigest()
         hashes[(c["bill_slug"], c["difficulty_level"])] = h
     rows, errors = [], list(HTML_SHA_ERRORS)
+
     for mod in spec_modules:
         m = importlib.import_module(mod)
         for bill in m.BILLS:
             slug, prefix, facts, claims, main_src = bill["slug"], bill["prefix"], bill["facts"], bill["claims"], bill["main"]
+            facts = {**facts, "legend": getattr(m, "LEGEND")}
+            claims = list(claims)
+            for level in ("easy", "normal", "hard"):
+                # 新規行は変種ごとの既存行の後に置き、既存 claim_id を保つ。
+                # 主張本文は下の fact == "vote" で検証済み記号を使って組み立てる。
+                claims.append((level, "content", "", "vote"))
+                if level == "hard" or "×" in votes[slug]["marks"]:
+                    claims.append((level, "content", "会派略称と採決時の正式名称", "legend"))
+                claims.append((level, "content", "各会派の賛否の理由・討論と委員会での審査の内容は確認できない", "REASONS_ABSENCE"))
+            claims = [claim for level in ("easy", "normal", "hard") for claim in claims if claim[0] == level]
             counters = {}
             for level, field, claim, fact in claims:
                 lv = {"easy": "E", "normal": "N", "hard": "H"}[level]
@@ -106,10 +129,10 @@ def build(spec_modules, contents_path, out_path):
                 ck = f"{lv}{fd}"
                 counters[ck] = counters.get(ck, 0) + 1
                 cid = f"{prefix}-{ck}-{counters[ck]:02d}"
-                if fact is None or fact == "DEC_ABSENCE":
+                if fact is None or fact in ("DEC_ABSENCE", "REASONS_ABSENCE"):
                     # 不記載を確認した資料自体を指す。引用のない開示は従来どおり
                     # needs_source とし、根拠付きの肯定的事実主張に見せない。
-                    src = "DEC" if fact == "DEC_ABSENCE" else main_src
+                    src = "RES" if fact in ("DEC_ABSENCE", "REASONS_ABSENCE") else main_src
                     section = "出典に記載がない事項"
                     excerpt = NO_SOURCE_NOTE
                     verdict = "needs_source"
@@ -132,6 +155,17 @@ def build(spec_modules, contents_path, out_path):
                         errors.append(f"{cid}: unknown fact {fact}"); continue
                     src, section, excerpt = facts[fact]
                     verdict = "supported"
+                    if fact == "vote":
+                        quotation = norm(excerpt)
+                        if "…" in excerpt or TEXT["RES"][0].count(quotation) != 1:
+                            errors.append(f"{cid}: vote excerpt must occur exactly once in RES")
+                        marks = "".join(re.findall("[〇○×]", excerpt)).replace("〇", "○")
+                        if marks != votes[slug]["marks"]:
+                            errors.append(f"{cid}: vote marks differ from seed: {marks}")
+                        result = "認定" if "-nintei-" in slug else "可決"
+                        if not quotation.replace("〇", "○").endswith(marks + result):
+                            errors.append(f"{cid}: vote excerpt has no matching result")
+                        claim = "会派別の賛否（自参ク・公明・共産・新宿会・民無ク・維新・現役・いのち・アプデの順）: " + marks
                     if not excerpt_ok(src, excerpt):
                         errors.append(f"{cid} [{fact}] excerpt not found in {src}: {excerpt}")
                 url, f = SOURCES[src]

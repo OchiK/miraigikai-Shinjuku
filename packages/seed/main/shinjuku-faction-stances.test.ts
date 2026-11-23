@@ -29,7 +29,14 @@ import {
   r8SecondSessionItems,
   toBillInserts,
 } from "./shinjuku-r8-2-inventory";
-import { r8_3GiinKey, toR8_3BillInserts } from "./shinjuku-r8-3-inventory";
+import {
+  buildR8_3ItemKey,
+  r8_3GianKey,
+  r8_3GiinKey,
+  r8_3NinteiKey,
+  r8ThirdSessionItems,
+  toR8_3BillInserts,
+} from "./shinjuku-r8-3-inventory";
 
 const rows = toFactionStanceImportRows(r8_2BillVotes, factions);
 /** 議員提出議案の slug（区長提出議案の反対と分けて数えるため） */
@@ -183,9 +190,12 @@ const r8_3Rows = toFactionStanceImportRows(
 );
 
 describe("令和8年第3回定例会の会派賛否", () => {
-  it("議員提出議案第11〜14号の4件だけを持ち、いずれも DB の議案にある", () => {
+  it("区長提出22件と議員提出4件を表順に持ち、いずれも DB の議案にある", () => {
     const billSlugs = new Set(toR8_3BillInserts().map((bill) => bill.slug));
     expect(r8_3BillVotes.map((bill) => bill.billKey)).toEqual([
+      ...[63, 64, 65, 66].map(r8_3GianKey),
+      ...[1, 2, 3, 4].map(r8_3NinteiKey),
+      ...Array.from({ length: 14 }, (_, i) => r8_3GianKey(67 + i)),
       r8_3GiinKey(11),
       r8_3GiinKey(12),
       r8_3GiinKey(13),
@@ -194,6 +204,42 @@ describe("令和8年第3回定例会の会派賛否", () => {
     for (const bill of r8_3BillVotes) {
       expect(billSlugs.has(bill.billKey)).toBe(true);
     }
+  });
+
+  it("区長提出で反対があるのは決算4件と第68号だけで、件名は第76号以外インベントリに一致する", () => {
+    const mayor = r8_3BillVotes.filter((v) => !v.billKey.includes("-giin-"));
+    expect(mayor).toHaveLength(22);
+    expect(
+      mayor.filter((v) => v.marks.includes("×")).map((v) => v.billKey)
+    ).toEqual([...[1, 2, 3, 4].map(r8_3NinteiKey), r8_3GianKey(68)]);
+    for (const v of mayor) {
+      expect(v.marks).toBe(
+        v.billKey.includes("-nintei-") || v.billKey === r8_3GianKey(68)
+          ? "○○×○○○○×○"
+          : "○○○○○○○○○"
+      );
+      const item = r8ThirdSessionItems.find(
+        (i) => buildR8_3ItemKey(i) === v.billKey
+      );
+      expect(v.titleInSource).toBe(
+        v.billKey === r8_3GianKey(76)
+          ? "道路改良工事（江戸川橋通り第Ⅱ期）請負契約"
+          : item?.officialTitle
+      );
+    }
+    expect(r8_3Rows.filter((r) => r.type === "against")).toHaveLength(24);
+    expect(
+      r8_3Rows
+        .filter((r) => r.faction_name === "genekisedai")
+        .every(
+          (r) => r.faction_name_at_vote === "現役世代に優しい新宿・減税の会"
+        )
+    ).toBe(true);
+    expect(
+      r8_3Rows
+        .filter((r) => r.faction_name === "update")
+        .every((r) => r.faction_name_at_vote === "アップデート新宿")
+    ).toBe(true);
   });
 
   it("列は表の見出しどおりの9会派で、現役は旧名称、それ以外は表示名で対応する", () => {
@@ -219,11 +265,11 @@ describe("令和8年第3回定例会の会派賛否", () => {
     }
   });
 
-  it("4議案×9会派＝36行になり、アップデート新宿の行も作る", () => {
-    expect(r8_3Rows).toHaveLength(36);
-    expect(r8_3Rows.filter((row) => row.faction_name === "update")).toHaveLength(
-      4
-    );
+  it("26議案×9会派＝234行になり、アップデート新宿の行も作る", () => {
+    expect(r8_3Rows).toHaveLength(234);
+    expect(
+      r8_3Rows.filter((row) => row.faction_name === "update")
+    ).toHaveLength(26);
   });
 
   it("否決された第11・12号は、共産といのちだけが賛成", () => {
@@ -237,7 +283,9 @@ describe("令和8年第3回定例会の会派賛否", () => {
       expect(forFactions).toEqual(["kyosan", "inochi"]);
     }
     expect(
-      r8_3BillVotes.slice(0, 2).map((bill) => bill.marks)
+      [11, 12].map(
+        (n) => r8_3BillVotes.find((v) => v.billKey === r8_3GiinKey(n))?.marks
+      )
     ).toEqual(["××○××××○×", "××○××××○×"]);
   });
 
@@ -253,19 +301,19 @@ describe("令和8年第3回定例会の会派賛否", () => {
 });
 
 describe("R8_3_UNSEEDED_ROWS", () => {
-  it("区長提出22件・同意1件・諮問1行の24件名で、議員提出議案4件と合わせて表の28行になる", () => {
-    expect(R8_3_UNSEEDED_ROWS.titles).toHaveLength(24);
-    expect(new Set(R8_3_UNSEEDED_ROWS.titles).size).toBe(24);
+  it("同意・諮問の2件名で、seed 26件と合わせて表の28行になる", () => {
+    expect(R8_3_UNSEEDED_ROWS.titles).toHaveLength(2);
+    expect(new Set(R8_3_UNSEEDED_ROWS.titles).size).toBe(2);
     expect(R8_3_UNSEEDED_ROWS.titles.length + r8_3BillVotes.length).toBe(
       R8_3_UNSEEDED_ROWS.tableRows
     );
     expect(R8_3_UNSEEDED_ROWS.tableRows).toBe(28);
   });
 
-  it("第76号議案は表の表記（第Ⅱ期）で除き、seed の件名は除外リストに入らない", () => {
-    expect(R8_3_UNSEEDED_ROWS.titles).toContain(
-      "道路改良工事（江戸川橋通り第Ⅱ期）請負契約"
-    );
+  it("第76号議案は表の表記（第Ⅱ期）で投入し、除外しない", () => {
+    expect(
+      r8_3BillVotes.find((v) => v.billKey === r8_3GianKey(76))?.titleInSource
+    ).toBe("道路改良工事（江戸川橋通り第Ⅱ期）請負契約");
     expect(R8_3_UNSEEDED_ROWS.titles).not.toContain(
       "道路改良工事（江戸川橋通り第2)期）請負契約"
     );

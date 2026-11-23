@@ -407,8 +407,8 @@ describe("createFactionStances", () => {
       })
     );
     // R8-1: 48件×8会派=384件 + R8-2: 27件×8会派=216件
-    // + R8-3: 議員提出議案4件×9会派=36件
-    expect(stances).toHaveLength(384 + 216 + 36);
+    // + R8-3: 区長提出22件＋議員提出4件、26件×9会派=234件
+    expect(stances).toHaveLength(384 + 216 + 234);
   });
 
   it("採決後に結成された会派には賛否を付けない（アップデート新宿は R8-3 から）", () => {
@@ -419,7 +419,7 @@ describe("createFactionStances", () => {
         (s) => insertedBills.find((bill) => bill.id === s.bill_id)?.slug ?? ""
       );
 
-    expect(updateBillSlugs).toHaveLength(4);
+    expect(updateBillSlugs).toHaveLength(26);
     for (const slug of updateBillSlugs) {
       expect(slug).toMatch(/^shinjuku-2026-r3-/);
     }
