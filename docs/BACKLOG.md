@@ -227,8 +227,8 @@ Acceptance:
 - AI インタビュー。いまは設定で無効
 - 更新通知（notifications）
 - zh-Hant は 2026-09-24 の方針（議案の翻訳は英語のみ）で見送り。やるなら案内ページの追加として扱う
-- 議員名簿・会派構成・委員会名簿ページ（gikai01_000112.html / file08_00003.html / file08_01_00013.html）の更新監視（packages/seed/monitor/targets.ts）への追加（完了: PR #未定）
-- Admin AI収集（admin/src/features/ai-collection/server/utils/faction-matching.ts）における「立憲」部分一致の曖昧性解消（「立憲民主党・無所属クラブ」と「新宿区議会立憲フォーラム」の2会派が併存するため）（完了: PR #未定）
+- 議員名簿・会派構成・委員会名簿ページ（gikai01_000112.html / file08_00003.html / file08_01_00013.html）の更新監視（packages/seed/monitor/targets.ts）への追加（完了: PR #159）
+- Admin AI収集（admin/src/features/ai-collection/server/utils/faction-matching.ts）における「立憲」部分一致の曖昧性解消（「立憲民主党・無所属クラブ」と「新宿区議会立憲フォーラム」の2会派が併存するため）（完了: PR #159）
 
 ---
 
