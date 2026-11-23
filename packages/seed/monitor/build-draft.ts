@@ -36,12 +36,17 @@ export function buildDraftFile(result: DetectionResult): DraftFile {
  * リポジトリに書き出す（下書きPRでコミットする）部分だけを残す。
  *
  * 新しい会期・未登録の案件・食い違いは (公式サイト, インベントリ) だけで決まるので、
- * 転記されるまで毎回同じ内容になる。一方、リンクの増減とPDFの差し替えは state.json との
+ * 転記されるまで毎回同じ内容になる。一方、リンク・PDF・名簿等の本文の更新は state.json との
  * 相対差分で、PRをマージすると消える。これをコミットするファイルに混ぜると、マージのたびに
  * main と食い違って追いかけPRができてしまうため、PR本文と実行サマリーにだけ出す。
  */
 export function pendingOnly(result: DetectionResult): DetectionResult {
-  return { ...result, linkPageChanges: [], pdfChanges: [] };
+  return {
+    ...result,
+    linkPageChanges: [],
+    pdfChanges: [],
+    contentPageChanges: [],
+  };
 }
 
 export function hasPendingDrafts(result: DetectionResult): boolean {
@@ -158,13 +163,31 @@ export function buildReport(result: DetectionResult): string {
     lines.push("");
   }
 
+  if (result.contentPageChanges.length > 0) {
+    lines.push(
+      "### 議員名簿・会派構成・委員会名簿の更新",
+      "",
+      "本文の差分は生成していない。ページを開き、議員・会派・委員会の `packages/seed/main/data.ts` を別PRで更新する必要があるか判断する。",
+      ""
+    );
+    for (const change of result.contentPageChanges) {
+      lines.push(
+        `- ${change.label}: ${change.url}`,
+        `  - 最終更新日: ${cell(change.previousLastUpdated)} → ${cell(change.currentLastUpdated)}`,
+        `  - sha256: \`${change.previousSha256.slice(0, 12)}…\` → \`${change.currentSha256.slice(0, 12)}…\``
+      );
+    }
+    lines.push("");
+  }
+
   lines.push(
     "### 次にやること",
     "",
     "1. 公式ページ・PDFを開き、上の内容が正しいか確かめる。",
     "2. 新しい会期ならインベントリ（`packages/seed/main/shinjuku-*-inventory.ts`）を別PRで作り、`packages/seed/monitor/targets.ts` の `KNOWN_SESSIONS` に足す。",
     "3. 解説を書いて公開レビューを終えるまで `reviewCompleted` は `false` のままにする。",
-    "4. このPRは、監視状態を進めるためにマージするか、不要ならクローズする。"
+    "4. 名簿・会派・委員会の更新があればページを開き、`packages/seed/main/data.ts` の更新を別PRにするか判断する。",
+    "5. このPRは、監視状態を進めるためにマージするか、不要ならクローズする。"
   );
 
   return `${lines.join("\n")}\n`;

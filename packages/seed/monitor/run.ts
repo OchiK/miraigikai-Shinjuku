@@ -37,12 +37,14 @@ import {
   type SessionPages,
 } from "./detect-changes";
 import {
+  fingerprintContentPages,
   parseDecisionPage,
   parseIndexPage,
   parseLinks,
   parseSubmissionPage,
 } from "./parse-council-page";
 import {
+  CONTENT_WATCH_PAGES,
   DECISIONS_INDEX_URL,
   KNOWN_SESSIONS,
   LINK_WATCH_URLS,
@@ -120,7 +122,7 @@ function readState(): MonitorState {
     return parseMonitorState(JSON.parse(readFileSync(STATE_PATH, "utf-8")));
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-      return { linkPages: {}, pdfs: {} };
+      return { linkPages: {}, pdfs: {}, contentPages: {} };
     }
     throw error;
   }
@@ -183,6 +185,15 @@ async function main() {
     pdfs[url] = await fetchSha256(url);
   }
 
+  const contentHtml: Record<string, string> = {};
+  for (const { url } of CONTENT_WATCH_PAGES) {
+    contentHtml[url] = await fetchText(url);
+  }
+  const contentPages = fingerprintContentPages(
+    CONTENT_WATCH_PAGES,
+    contentHtml
+  );
+
   const result = detectChanges({
     knownSessions: KNOWN_SESSIONS,
     knownSnapshots,
@@ -190,6 +201,8 @@ async function main() {
     previousState: readState(),
     linkPages,
     pdfs,
+    contentPages,
+    contentWatchPages: CONTENT_WATCH_PAGES,
   });
   const changed = hasChanges(result);
   const message = changed ? buildReport(result) : NO_CHANGE_MESSAGE;
@@ -204,7 +217,7 @@ async function main() {
 
   writeFileSync(
     STATE_PATH,
-    `${JSON.stringify(buildNextState(linkPages, pdfs), null, 2)}\n`
+    `${JSON.stringify(buildNextState(linkPages, pdfs, contentPages), null, 2)}\n`
   );
   // コミットする下書きには、転記されるまで変わらない部分だけを書く（pendingOnly を参照）
   if (hasPendingDrafts(result)) {

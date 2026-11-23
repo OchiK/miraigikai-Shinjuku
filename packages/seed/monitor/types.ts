@@ -91,6 +91,26 @@ export interface MonitorState {
   linkPages: Record<string, PageLink[]>;
   /** PDF URL → sha256（16進） */
   pdfs: Record<string, string>;
+  contentPages: Record<string, ContentPageSnapshot>;
+}
+
+export interface ContentWatchPage {
+  label: string;
+  url: string;
+}
+
+export interface ContentPageSnapshot {
+  sha256: string;
+  lastUpdated: string | null;
+}
+
+export interface ContentPageChange {
+  label: string;
+  url: string;
+  previousSha256: string;
+  currentSha256: string;
+  previousLastUpdated: string | null;
+  currentLastUpdated: string | null;
 }
 
 /**
@@ -150,4 +170,5 @@ export interface DetectionResult {
   proposedChanges: ProposedChange[];
   linkPageChanges: LinkPageChange[];
   pdfChanges: PdfChange[];
+  contentPageChanges: ContentPageChange[];
 }

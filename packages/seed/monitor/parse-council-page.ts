@@ -1,4 +1,7 @@
+import { createHash } from "node:crypto";
 import type {
+  ContentPageSnapshot,
+  ContentWatchPage,
   DecisionEntry,
   IndexEntry,
   PageLink,
@@ -82,6 +85,46 @@ export function toPlainText(fragment: string): string {
     .replace(/（新規ウィンドウ表示）/g, "")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+/** タグ境界を空白として残し、本文監視用のテキストにする。 */
+export function toContentText(fragment: string): string {
+  return decodeEntities(fragment.replace(/<[^>]+>/g, " "))
+    .replace(/\[PDF形式[：:][^\]]*\]/g, "")
+    .replace(/（新規ウィンドウ表示）/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+export function fingerprintContentPage(html: string): ContentPageSnapshot {
+  // 本文監視は終了マーカー必須のため、既存呼び出し向けに文書末尾へフォールバックする extractPrimaryContent は使わない。
+  const start = html.indexOf(PRIMARY_START);
+  const end = html.indexOf(PRIMARY_END, start);
+  if (start < 0 || end < 0) {
+    throw new Error("本文領域（#primaryIn01）の開始・終了マーカーが必要");
+  }
+  const openingEnd = html.indexOf(">", start);
+  const text = toContentText(html.slice(openingEnd + 1, end));
+  return {
+    sha256: createHash("sha256").update(text, "utf8").digest("hex"),
+    lastUpdated:
+      /最終更新日\s*[：:]\s*(\d{4}年\d{1,2}月\d{1,2}日)/.exec(text)?.[1] ??
+      null,
+  };
+}
+
+export function fingerprintContentPages(
+  pages: ContentWatchPage[],
+  htmlByUrl: Record<string, string>
+): Record<string, ContentPageSnapshot> {
+  return Object.fromEntries(
+    pages.map(({ url }) => {
+      if (htmlByUrl[url] === undefined) {
+        throw new Error(`${url} のHTMLがない`);
+      }
+      return [url, fingerprintContentPage(htmlByUrl[url])];
+    })
+  );
 }
 
 export function resolveUrl(

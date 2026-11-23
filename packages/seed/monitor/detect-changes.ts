@@ -1,4 +1,6 @@
 import type {
+  ContentPageSnapshot,
+  ContentWatchPage,
   DetectionResult,
   DraftItem,
   IndexEntry,
@@ -278,6 +280,8 @@ export interface DetectInput {
   previousState: MonitorState;
   linkPages: Record<string, PageLink[]>;
   pdfs: Record<string, string>;
+  contentPages: Record<string, ContentPageSnapshot>;
+  contentWatchPages: ContentWatchPage[];
 }
 
 export function detectChanges(input: DetectInput): DetectionResult {
@@ -317,12 +321,30 @@ export function detectChanges(input: DetectInput): DetectionResult {
       current: sha,
     }));
 
+  const contentPageChanges = input.contentWatchPages.flatMap(({ label, url }) => {
+    const previous = input.previousState.contentPages[url];
+    const current = input.contentPages[url];
+    if (!previous || !current || previous.sha256 === current.sha256)
+      return [];
+    return [
+      {
+        label,
+        url,
+        previousSha256: previous.sha256,
+        currentSha256: current.sha256,
+        previousLastUpdated: previous.lastUpdated,
+        currentLastUpdated: current.lastUpdated,
+      },
+    ];
+  });
+
   return {
     newSessions: input.newSessions,
     draftItems,
     proposedChanges,
     linkPageChanges,
     pdfChanges,
+    contentPageChanges,
   };
 }
 
@@ -332,7 +354,8 @@ export function hasChanges(result: DetectionResult): boolean {
     result.draftItems.length > 0 ||
     result.proposedChanges.length > 0 ||
     result.linkPageChanges.length > 0 ||
-    result.pdfChanges.length > 0
+    result.pdfChanges.length > 0 ||
+    result.contentPageChanges.length > 0
   );
 }
 
@@ -359,17 +382,37 @@ export function parseMonitorState(json: unknown): MonitorState {
       throw new Error(`monitor/state.json の pdfs["${url}"] が文字列でない`);
     }
   }
-  return json as unknown as MonitorState;
+  const contentPages = json.contentPages === undefined ? {} : json.contentPages;
+  if (!isRecord(contentPages)) {
+    throw new Error("monitor/state.json の contentPages がオブジェクトでない");
+  }
+  for (const [url, entry] of Object.entries(contentPages)) {
+    if (
+      !isRecord(entry) ||
+      typeof entry.sha256 !== "string" ||
+      (typeof entry.lastUpdated !== "string" && entry.lastUpdated !== null)
+    ) {
+      throw new Error(
+        `monitor/state.json の contentPages["${url}"] の形式が不正`
+      );
+    }
+  }
+  return { ...json, contentPages } as unknown as MonitorState;
 }
 
 /** 次回の比較基準。キーをソートして、同じ内容なら同じJSONになるようにする */
 export function buildNextState(
   linkPages: Record<string, PageLink[]>,
-  pdfs: Record<string, string>
+  pdfs: Record<string, string>,
+  contentPages: Record<string, ContentPageSnapshot> = {}
 ): MonitorState {
   const sortKeys = <T>(record: Record<string, T>): Record<string, T> =>
     Object.fromEntries(
       Object.entries(record).sort(([a], [b]) => a.localeCompare(b))
     );
-  return { linkPages: sortKeys(linkPages), pdfs: sortKeys(pdfs) };
+  return {
+    linkPages: sortKeys(linkPages),
+    pdfs: sortKeys(pdfs),
+    contentPages: sortKeys(contentPages),
+  };
 }

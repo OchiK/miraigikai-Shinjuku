@@ -3,11 +3,11 @@
 import { createAdminClient } from "@mirai-gikai/supabase";
 import { requireAdmin } from "@/features/auth/server/lib/auth-server";
 import type { FactionMatchStatus } from "../../shared/types";
-import { findFactionByName } from "../utils/faction-matching";
+import { matchFaction } from "../../shared/utils/faction-matching";
 
 /**
  * 会派名リストに対して、DBの会派とのマッチング状況を返す。
- * display_name の完全一致 → alternative_names の完全一致 → 部分一致の順で検索。
+ * display_name → alternative_names の完全一致だけで検索し、複数会派への一致は未一致扱いにする。
  */
 export async function getFactionMatchStatus(
   factionNames: string[]
@@ -24,10 +24,8 @@ export async function getFactionMatchStatus(
   const factions = allFactions ?? [];
 
   return factionNames.map((searchName) => {
-    const normalized = searchName.trim().toLowerCase();
-
-    const matched = findFactionByName(factions, searchName);
-    if (!matched) {
+    const result = matchFaction(factions, searchName);
+    if (result.kind !== "matched") {
       return {
         factionName: searchName,
         matchedFactionId: null,
@@ -36,16 +34,11 @@ export async function getFactionMatchStatus(
       };
     }
 
-    const matchedBy =
-      matched.display_name.toLowerCase() === normalized
-        ? "display_name"
-        : "alternative_name";
-
     return {
       factionName: searchName,
-      matchedFactionId: matched.id,
-      matchedDisplayName: matched.display_name,
-      matchedBy,
+      matchedFactionId: result.faction.id,
+      matchedDisplayName: result.faction.display_name,
+      matchedBy: result.matchedBy,
     };
   });
 }

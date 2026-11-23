@@ -16,7 +16,7 @@ import {
   R8_3_SUBMISSIONS_URL,
   r8ThirdSessionItems,
 } from "../main/shinjuku-r8-3-inventory";
-import type { KnownSession } from "./types";
+import type { ContentWatchPage, KnownSession } from "./types";
 
 /**
  * 監視対象。
@@ -50,6 +50,22 @@ export const LINK_WATCH_URLS: string[] = [
 export const PDF_WATCH_URLS: string[] = [
   R8_2_COUNCIL_RESULTS_PDF,
   R8_3_COUNCIL_RESULTS_PDF,
+];
+
+/** 名簿・会派・委員会の本文テキストの更新を見るページ。 */
+export const CONTENT_WATCH_PAGES: ContentWatchPage[] = [
+  {
+    label: "議員名簿",
+    url: "https://www.city.shinjuku.lg.jp/kusei/gikai01_000112.html",
+  },
+  {
+    label: "会派構成",
+    url: "https://www.city.shinjuku.lg.jp/kusei/file08_00003.html",
+  },
+  {
+    label: "委員会名簿",
+    url: "https://www.city.shinjuku.lg.jp/kusei/file08_01_00013.html",
+  },
 ];
 
 /**

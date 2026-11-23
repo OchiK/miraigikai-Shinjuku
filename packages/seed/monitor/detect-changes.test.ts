@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { buildReport, hasPendingDrafts, pendingOnly } from "./build-draft";
 import {
   buildDraftItems,
   buildNextState,
@@ -14,6 +15,7 @@ import {
   type DetectInput,
 } from "./detect-changes";
 import {
+  fingerprintContentPages,
   parseDecisionPage,
   parseIndexPage,
   parseSubmissionPage,
@@ -24,7 +26,7 @@ import {
   R8_3_DECISIONS_URL,
   R8_3_SESSION,
 } from "../main/shinjuku-r8-3-inventory";
-import { KNOWN_SESSIONS } from "./targets";
+import { CONTENT_WATCH_PAGES, KNOWN_SESSIONS } from "./targets";
 import type {
   DetectionResult,
   IndexEntry,
@@ -96,8 +98,10 @@ const baseInput = (): DetectInput => ({
   knownSessions: [known],
   knownSnapshots: [matchingSnapshot()],
   newSessions: [],
-  previousState: { linkPages: {}, pdfs: {} },
+  previousState: { linkPages: {}, pdfs: {}, contentPages: {} },
   linkPages: {},
+  contentPages: {},
+  contentWatchPages: [],
   pdfs: {},
 });
 
@@ -635,6 +639,7 @@ describe("hasChanges", () => {
     proposedChanges: [],
     linkPageChanges: [],
     pdfChanges: [],
+    contentPageChanges: [],
   };
 
   it.each([
@@ -658,7 +663,7 @@ describe("parseMonitorState", () => {
       linkPages: { u: [{ text: "a", href: "h" }] },
       pdfs: { p: "sha" },
     };
-    expect(parseMonitorState(state)).toEqual(state);
+    expect(parseMonitorState(state)).toEqual({ ...state, contentPages: {} });
   });
 
   it.each([
@@ -684,7 +689,124 @@ describe("buildNextState", () => {
           "https://example.jp/a.pdf": "1",
           "https://example.jp/b.pdf": "2",
         },
+        contentPages: {},
       })
+    );
+  });
+});
+
+describe("content page monitoring", () => {
+  const page = CONTENT_WATCH_PAGES[0];
+  const before = { sha256: "a".repeat(64), lastUpdated: "2026年11月9日" };
+  const after = { sha256: "b".repeat(64), lastUpdated: "2026年11月23日" };
+  const input = (): DetectInput => ({
+    ...baseInput(),
+    contentWatchPages: [page],
+    contentPages: { [page.url]: after },
+  });
+  it("初回・同じshaでは通知しない", () => {
+    expect(detectChanges(input()).contentPageChanges).toEqual([]);
+    const same = input();
+    same.previousState.contentPages[page.url] = after;
+    expect(detectChanges(same).contentPageChanges).toEqual([]);
+  });
+  it("本文の更新を通知し、コミットする下書きには残さない", () => {
+    const changed = input();
+    changed.previousState.contentPages[page.url] = before;
+    const result = detectChanges(changed);
+    expect(result.contentPageChanges).toEqual([
+      {
+        label: page.label,
+        url: page.url,
+        previousSha256: before.sha256,
+        currentSha256: after.sha256,
+        previousLastUpdated: before.lastUpdated,
+        currentLastUpdated: after.lastUpdated,
+      },
+    ]);
+    expect(hasChanges(result)).toBe(true);
+    expect(hasPendingDrafts(result)).toBe(false);
+    expect(pendingOnly(result).contentPageChanges).toEqual([]);
+    expect(buildReport(pendingOnly(result))).not.toContain(
+      "### 議員名簿・会派構成・委員会名簿の更新"
+    );
+  });
+  it.each([
+    null,
+    [],
+    "bad",
+    1,
+  ])("contentPages の不正なmapを拒否する: %s", (value) => {
+    expect(() =>
+      parseMonitorState({ linkPages: {}, pdfs: {}, contentPages: value })
+    ).toThrow(/contentPages/);
+  });
+  it.each([
+    null,
+    [],
+    {},
+    { sha256: 1, lastUpdated: null },
+    { sha256: "sha" },
+    { sha256: "sha", lastUpdated: 1 },
+  ])("URLを示して不正なentryを拒否する: %s", (entry) => {
+    expect(() =>
+      parseMonitorState({
+        linkPages: {},
+        pdfs: {},
+        contentPages: { [page.url]: entry },
+      })
+    ).toThrow(page.url);
+  });
+  it("null の更新日を受け付け、キーをソートして最後に置く", () => {
+    const contentPages = { z: before, a: { sha256: "sha", lastUpdated: null } };
+    const state = buildNextState({}, {}, contentPages);
+    expect(Object.keys(state)).toEqual(["linkPages", "pdfs", "contentPages"]);
+    expect(Object.keys(state.contentPages)).toEqual(["a", "z"]);
+    expect(parseMonitorState(state)).toEqual(state);
+  });
+  it("監視対象の3 URLすべてが保存済みの状態に含まれる（形だけを検証）", () => {
+    expect(CONTENT_WATCH_PAGES.map(({ label }) => label)).toEqual([
+      "議員名簿",
+      "会派構成",
+      "委員会名簿",
+    ]);
+    const state = parseMonitorState(
+      JSON.parse(readFileSync(new URL("./state.json", import.meta.url), "utf8"))
+    );
+    for (const { url } of CONTENT_WATCH_PAGES) {
+      expect(state.contentPages[url]).toBeDefined();
+    }
+  });
+  it("実HTMLの名簿変更を一度だけ報告する", () => {
+    const names = [
+      "member-roster.html",
+      "faction-composition.html",
+      "committee-roster.html",
+    ];
+    const html = Object.fromEntries(
+      CONTENT_WATCH_PAGES.map(({ url }, i) => [url, fixture(names[i])])
+    );
+    const original = fingerprintContentPages(CONTENT_WATCH_PAGES, html);
+    const previousState = buildNextState({}, {}, original);
+    html[page.url] = html[page.url].replace("No.1 木もと", "No.1 木もだ");
+    const contentPages = fingerprintContentPages(CONTENT_WATCH_PAGES, html);
+    const current = {
+      ...input(),
+      contentWatchPages: CONTENT_WATCH_PAGES,
+      previousState,
+      contentPages,
+    };
+    const result = detectChanges(current);
+    expect(result.contentPageChanges).toHaveLength(1);
+    expect(result.contentPageChanges[0].label).toBe("議員名簿");
+    expect(buildReport(result)).toContain(
+      "### 議員名簿・会派構成・委員会名簿の更新"
+    );
+    const next = buildNextState({}, {}, contentPages);
+    const repeated = detectChanges({ ...current, previousState: next });
+    expect(hasChanges(repeated)).toBe(false);
+    expect(buildReport(repeated)).not.toContain(
+      "### 議員名簿・会派構成・委員会名簿の更新"
     );
   });
 });

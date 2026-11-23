@@ -9,7 +9,7 @@ import {
   Loader2,
   RefreshCw,
 } from "lucide-react";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,36 +21,21 @@ import { reapplyStances } from "../../server/actions/reapply-stances";
 import type {
   BillFieldOverride,
   CollectionRun,
-  DraftBill,
-  DraftFactionStance,
   ExistingBillDetail,
   FactionMatchStatus,
 } from "../../shared/types";
 
+import {
+  buildReviewDiffs,
+  type DiffItem,
+  type OverrideState,
+  refreshOverrides,
+  STANCE_LABELS,
+  STATUS_LABELS,
+} from "../../shared/utils/review-diffs";
+
 type DraftReviewProps = {
   run: CollectionRun;
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  submitted: "提出",
-  in_committee: "委員会審査",
-  plenary_session: "本会議",
-  approved: "可決",
-  rejected: "否決",
-  adopted: "採択",
-  partially_adopted: "趣旨採択",
-  preparing: "準備中",
-};
-
-const STANCE_LABELS: Record<string, string> = {
-  for: "賛成",
-  against: "反対",
-  neutral: "中立",
-  absent: "欠席",
-  conditional_for: "条件付き賛成",
-  conditional_against: "条件付き反対",
-  considering: "検討中",
-  continued_deliberation: "継続審査",
 };
 
 const STANCE_VARIANTS: Record<
@@ -67,102 +52,21 @@ const STANCE_VARIANTS: Record<
   continued_deliberation: "outline",
 };
 
-type OverrideState = {
-  updateStatus: boolean;
-  updateContents: boolean;
-  stances: Record<string, boolean>;
-};
-
-type DiffItem =
-  | { key: "status"; label: string; from: string; to: string }
-  | { key: "contents"; label: string; from: string; to: string }
-  | {
-      key: `stance_${string}`;
-      factionName: string;
-      label: string;
-      from: string;
-      to: string;
-    };
-
-function computeDiffs(
-  draft: DraftBill,
-  detail: ExistingBillDetail,
-  runStances: DraftFactionStance[]
-): DiffItem[] {
-  const diffs: DiffItem[] = [];
-
-  if (draft.status !== detail.status) {
-    diffs.push({
-      key: "status",
-      label: "ステータス",
-      from: STATUS_LABELS[detail.status] ?? detail.status,
-      to: STATUS_LABELS[draft.status] ?? draft.status,
-    });
-  }
-
-  const currentSummary = detail.contents?.summary ?? "";
-  const newSummary = draft.summary.slice(0, 500);
-  if (currentSummary !== newSummary) {
-    diffs.push({
-      key: "contents",
-      label: "概要・本文",
-      from: currentSummary || "（なし）",
-      to: newSummary,
-    });
-  }
-
-  for (const draftStance of runStances) {
-    const existing = detail.factionStances.find(
-      (s) =>
-        s.factionName === draftStance.factionName ||
-        s.factionName.includes(draftStance.factionName) ||
-        draftStance.factionName.includes(s.factionName)
-    );
-    const fromType = existing?.type ?? "";
-    const toType =
-      draftStance.stanceType === "absent" ? "" : draftStance.stanceType;
-    const fromComment = existing?.comment ?? "";
-    const toComment = draftStance.comment ?? "";
-
-    if (fromType !== toType || fromComment !== toComment) {
-      diffs.push({
-        key: `stance_${draftStance.factionName}`,
-        factionName: draftStance.factionName,
-        label: `会派「${draftStance.factionName}」の賛否`,
-        from: fromType ? (STANCE_LABELS[fromType] ?? fromType) : "（なし）",
-        to:
-          draftStance.stanceType === "absent"
-            ? "欠席（適用不可）"
-            : (STANCE_LABELS[draftStance.stanceType] ?? draftStance.stanceType),
-      });
-    }
-  }
-
-  return diffs;
-}
-
-function buildInitialOverride(diffs: DiffItem[]): OverrideState {
-  const stances: Record<string, boolean> = {};
-  for (const diff of diffs) {
-    if (diff.key.startsWith("stance_") && "factionName" in diff) {
-      stances[diff.factionName] = true;
-    }
-  }
-  return {
-    updateStatus: diffs.some((d) => d.key === "status"),
-    updateContents: diffs.some((d) => d.key === "contents"),
-    stances,
-  };
-}
-
 export function DraftReview({ run }: DraftReviewProps) {
-  const existingSet = new Set(run.existingBillNumbers ?? []);
+  const existingSet = useMemo(
+    () => new Set(run.existingBillNumbers ?? []),
+    [run.existingBillNumbers]
+  );
 
   const newBills = run.bills.filter(
     (b) => !b.billNumber || !existingSet.has(b.billNumber)
   );
-  const existingBills = run.bills.filter(
-    (b) => b.billNumber != null && existingSet.has(b.billNumber)
+  const existingBills = useMemo(
+    () =>
+      run.bills.filter(
+        (b) => b.billNumber != null && existingSet.has(b.billNumber)
+      ),
+    [run.bills, existingSet]
   );
 
   const [selectedNewIds, setSelectedNewIds] = useState<Set<string>>(
@@ -176,6 +80,9 @@ export function DraftReview({ run }: DraftReviewProps) {
   const [isApplying, setIsApplying] = useState(false);
   const [isReapplying, setIsReapplying] = useState(false);
   const [isRefreshingMatch, setIsRefreshingMatch] = useState(false);
+  const [existingDetails, setExistingDetails] = useState<ExistingBillDetail[]>(
+    []
+  );
   const [diffsMap, setDiffsMap] = useState<Map<string, DiffItem[]>>(new Map());
   const [factionMatchMap, setFactionMatchMap] = useState<
     Map<string, FactionMatchStatus>
@@ -185,17 +92,38 @@ export function DraftReview({ run }: DraftReviewProps) {
     new Set(run.factionStances.map((s) => s.id))
   );
 
+  const applyMatchStatuses = useCallback(
+    (
+      details: ExistingBillDetail[],
+      matchStatuses: FactionMatchStatus[],
+      preserveOverrides: boolean
+    ) => {
+      const newMatchMap = new Map<string, FactionMatchStatus>();
+      for (const status of matchStatuses) {
+        newMatchMap.set(status.factionName, status);
+      }
+      const nextDiffs = buildReviewDiffs(
+        existingBills,
+        details,
+        run.factionStances,
+        newMatchMap
+      );
+      setFactionMatchMap(newMatchMap);
+      setDiffsMap(nextDiffs);
+      setOverrides((previous) =>
+        refreshOverrides(nextDiffs, preserveOverrides ? previous : new Map())
+      );
+    },
+    [existingBills, run.factionStances]
+  );
+
   const fetchMatchStatuses = useCallback(async () => {
     if (run.factionStances.length === 0) return;
     const matchStatuses = await getFactionMatchStatus([
       ...new Set(run.factionStances.map((s) => s.factionName)),
     ]);
-    const newMatchMap = new Map<string, FactionMatchStatus>();
-    for (const status of matchStatuses) {
-      newMatchMap.set(status.factionName, status);
-    }
-    setFactionMatchMap(newMatchMap);
-  }, [run.factionStances]);
+    applyMatchStatuses(existingDetails, matchStatuses, true);
+  }, [run.factionStances, existingDetails, applyMatchStatuses]);
 
   // Fetch existing bill details and faction match status on mount
   // biome-ignore lint/correctness/useExhaustiveDependencies: run once on mount
@@ -218,31 +146,8 @@ export function DraftReview({ run }: DraftReviewProps) {
             : Promise.resolve([]),
         ]);
 
-        const newMatchMap = new Map<string, FactionMatchStatus>();
-        for (const status of matchStatuses) {
-          newMatchMap.set(status.factionName, status);
-        }
-        setFactionMatchMap(newMatchMap);
-
-        if (details.length > 0) {
-          const detailMap = new Map(details.map((d) => [d.name, d]));
-          const newDiffsMap = new Map<string, DiffItem[]>();
-          const newOverrides = new Map<string, OverrideState>();
-
-          for (const bill of existingBills) {
-            const detail = detailMap.get(bill.title);
-            if (!detail) continue;
-            const runStances = run.factionStances.filter(
-              (s) => s.billTitle === bill.title
-            );
-            const diffs = computeDiffs(bill, detail, runStances);
-            newDiffsMap.set(bill.id, diffs);
-            newOverrides.set(bill.id, buildInitialOverride(diffs));
-          }
-
-          setDiffsMap(newDiffsMap);
-          setOverrides(newOverrides);
-        }
+        setExistingDetails(details);
+        applyMatchStatuses(details, matchStatuses, false);
       } finally {
         setIsLoadingDetails(false);
       }

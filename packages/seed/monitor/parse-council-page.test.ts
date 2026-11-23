@@ -3,12 +3,15 @@ import { describe, expect, it } from "vitest";
 import {
   decodeEntities,
   extractPrimaryContent,
+  fingerprintContentPage,
+  fingerprintContentPages,
   parseDecisionPage,
   parseIndexPage,
   parseLinks,
   parseSubmissionPage,
   resolveUrl,
   splitLabel,
+  toContentText,
   toPlainText,
   toSessionId,
 } from "./parse-council-page";
@@ -231,5 +234,65 @@ describe("parseLinks", () => {
     expect(parseLinks(html, R8_3_URL)).toEqual([
       { text: "資料", href: "https://www.city.shinjuku.lg.jp/content/1.pdf" },
     ]);
+  });
+});
+
+describe("content fingerprints", () => {
+  const wrap = (text: string) =>
+    `<div id="primaryIn01">${text}<!-- /primaryIn01 -->`;
+  it.each([
+    "member-roster.html",
+    "faction-composition.html",
+    "committee-roster.html",
+  ])("%s の本文と更新日を読む", (name) => {
+    const result = fingerprintContentPage(fixture(name));
+    expect(result.lastUpdated).toBe("2026年11月9日");
+    expect(result.sha256).toMatch(/^[a-f0-9]{64}$/);
+  });
+  it("本文の議員名の変更を検知し、外側の変更は無視する", () => {
+    const html = fixture("member-roster.html");
+    expect(html).toContain("No.1 木もと");
+    const original = fingerprintContentPage(html);
+    expect(
+      fingerprintContentPage(html.replace("No.1 木もと", "No.1 木もだ")).sha256
+    ).not.toBe(original.sha256);
+    expect(fingerprintContentPage(`outside${html}footer`)).toEqual(original);
+  });
+  it("br とセル間のインデントを吸収する", () => {
+    for (const [before, after] of [
+      ["3期<br>新宿区議会公明党", "3期<br>\n  新宿区議会公明党"],
+      ["<td>甲</td><td>乙</td>", "<td>甲</td>\n  <td>乙</td>"],
+    ]) {
+      expect(fingerprintContentPage(wrap(before))).toEqual(
+        fingerprintContentPage(wrap(after))
+      );
+    }
+  });
+  it("セルの境界を越えて文字を動かすと変わる", () => {
+    expect(
+      fingerprintContentPage(wrap("<td>甲乙</td><td>丙</td>")).sha256
+    ).not.toBe(fingerprintContentPage(wrap("<td>甲</td><td>乙丙</td>")).sha256);
+  });
+  it("注記・エンティティ・全角空白を正規化する", () => {
+    expect(
+      toContentText(
+        "<p>甲&nbsp;　乙&#32;丙 &amp;</p>[PDF形式：1KB]（新規ウィンドウ表示）"
+      )
+    ).toBe("甲 乙 丙 &");
+    expect(
+      fingerprintContentPage(wrap("最終更新日 : 2026年1月2日")).lastUpdated
+    ).toBe("2026年1月2日");
+    expect(fingerprintContentPage(wrap("日付なし")).lastUpdated).toBeNull();
+  });
+  it.each([
+    "<div>本文<!-- /primaryIn01 -->",
+    '<div id="primaryIn01">本文</div>',
+  ])("マーカーの欠落を拒否する: %s", (html) => {
+    expect(() => fingerprintContentPage(html)).toThrow(/マーカー/);
+  });
+  it("取得されていないページを拒否する", () => {
+    expect(() =>
+      fingerprintContentPages([{ label: "名簿", url: "missing" }], {})
+    ).toThrow(/missing/);
   });
 });
