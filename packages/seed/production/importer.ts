@@ -42,6 +42,7 @@ import {
   normalizeArray,
   normalizeTimestamp,
 } from "./diff";
+import { chunkValues, paginate } from "./paginate";
 
 type BillInsert = Database["public"]["Tables"]["bills"]["Insert"];
 type BillContentInsert = Database["public"]["Tables"]["bill_contents"]["Insert"];
@@ -123,13 +124,6 @@ interface ImportContext {
   supabase: AdminClient;
   dataset: ImportDataset;
 }
-
-/**
- * PostgREST の既定の返却上限。
- * 上限に達した読み出しは「DBに無い」と誤判定しかねないため、
- * 黙って進めずに停止する（現在は23議案・69変種で遠く及ばない）。
- */
-const POSTGREST_MAX_ROWS = 1000;
 
 const SESSION_FIELDS: FieldSpec[] = [
   { field: "name" },
@@ -725,101 +719,209 @@ async function applyInventoryTransaction(
 // 読み出し
 // ---------------------------------------------------------------------------
 
+/** 最小限の構造型で Supabase のクエリの推論結果を保つ。 */
+interface PageQuery<T>
+  extends PromiseLike<{
+    data: T[] | null;
+    count: number | null;
+    error: { message: string } | null;
+  }> {
+  order(column: string): PageQuery<T>;
+  range(from: number, to: number): PageQuery<T>;
+}
+
+async function fetchPages<T, B>(
+  table: string,
+  batches: readonly B[],
+  query: (batch: B, head: boolean) => PageQuery<T>,
+  keyOf: (row: T) => string,
+  orderColumns = ["id"]
+) {
+  return paginate({
+    table,
+    batches,
+    keyOf,
+    countRows: async (batch) => {
+      const { count, error } = await query(batch, true);
+      if (error) throw new Error(`${table} の件数取得に失敗: ${error.message}`);
+      if (count === null) throw new Error(`${table} の件数が取得できない`);
+      return count;
+    },
+    readPage: async (batch, from, to) => {
+      let page = query(batch, false);
+      for (const column of orderColumns) page = page.order(column);
+      const { data, error } = await page.range(from, to);
+      if (error) throw new Error(`${table} の取得に失敗: ${error.message}`);
+      return data ?? [];
+    },
+  });
+}
+
 async function fetchCouncilSessions(supabase: AdminClient, slugs: string[]) {
-  if (slugs.length === 0) return [];
-  const { data, error } = await supabase
-    .from("council_sessions")
-    .select("id, name, slug, council_url, start_date, end_date, is_active")
-    .in("slug", slugs);
-  if (error) {
-    throw new Error(`council_sessions の取得に失敗: ${error.message}`);
-  }
-  return assertWithinRowLimit(data ?? [], "council_sessions");
+  return fetchPages(
+    "council_sessions",
+    chunkValues(slugs),
+    (batch, head) =>
+      supabase
+        .from("council_sessions")
+        .select(
+          "id, name, slug, council_url, start_date, end_date, is_active",
+          { count: "exact", head }
+        )
+        .in("slug", batch),
+    requireSlug
+  );
 }
 
 async function fetchTags(supabase: AdminClient, labels: string[]) {
-  if (labels.length === 0) return [];
-  const { data, error } = await supabase
-    .from("tags")
-    .select("id, label, description, featured_priority")
-    .in("label", labels);
-  if (error) {
-    throw new Error(`tags の取得に失敗: ${error.message}`);
-  }
-  return assertWithinRowLimit(data ?? [], "tags");
+  return fetchPages(
+    "tags",
+    chunkValues(labels),
+    (batch, head) =>
+      supabase
+        .from("tags")
+        .select("id, label, description, featured_priority", {
+          count: "exact",
+          head,
+        })
+        .in("label", batch),
+    (row) => row.label
+  );
 }
 
 async function fetchFactions(supabase: AdminClient, names: string[]) {
-  if (names.length === 0) return [];
-  const { data, error } = await supabase
-    .from("factions")
-    .select(
-      "name, display_name, alternative_names, logo_url, sort_order, is_active"
-    )
-    .in("name", names);
-  if (error) {
-    throw new Error(`factions の取得に失敗: ${error.message}`);
-  }
-  return assertWithinRowLimit(data ?? [], "factions");
+  return fetchPages(
+    "factions",
+    chunkValues(names),
+    (batch, head) =>
+      supabase
+        .from("factions")
+        .select(
+          "name, display_name, alternative_names, logo_url, sort_order, is_active",
+          { count: "exact", head }
+        )
+        .in("name", batch),
+    (row) => row.name
+  );
 }
 
 async function fetchCommittees(supabase: AdminClient, names: string[]) {
-  if (names.length === 0) return [];
-  const { data, error } = await supabase
-    .from("committees")
-    .select("name, description, sort_order, is_active")
-    .in("name", names);
-  if (error) {
-    throw new Error(`committees の取得に失敗: ${error.message}`);
-  }
-  return assertWithinRowLimit(data ?? [], "committees");
+  return fetchPages(
+    "committees",
+    chunkValues(names),
+    (batch, head) =>
+      supabase
+        .from("committees")
+        .select("name, description, sort_order, is_active", {
+          count: "exact",
+          head,
+        })
+        .in("name", batch),
+    (row) => row.name
+  );
 }
 
 async function fetchCouncilMembers(supabase: AdminClient, rosterKey: string) {
-  const { data, error } = await supabase
-    .from("council_members")
-    .select(
-      "name, name_kana, faction_role, official_url, website_url, x_url, terms, sort_order, is_active, roster_key, factions(name)"
-    )
-    .eq("roster_key", rosterKey);
-  if (error) {
-    throw new Error(`council_members の取得に失敗: ${error.message}`);
-  }
-  return assertWithinRowLimit(data ?? [], "council_members");
+  return fetchPages(
+    "council_members",
+    [rosterKey],
+    (batch, head) =>
+      supabase
+        .from("council_members")
+        .select(
+          "name, name_kana, faction_role, official_url, website_url, x_url, terms, sort_order, is_active, roster_key, factions(name)",
+          { count: "exact", head }
+        )
+        .eq("roster_key", batch),
+    (row) => row.name
+  );
 }
 
 async function fetchCouncilMemberCommittees(
   supabase: AdminClient,
   rosterKey: string
 ) {
-  const { data, error } = await supabase
-    .from("council_member_committees")
-    .select(
-      "role, council_members!inner(name, roster_key), committees(name)"
-    )
-    .eq("council_members.roster_key", rosterKey);
-  if (error) {
-    throw new Error(
-      `council_member_committees の取得に失敗: ${error.message}`
-    );
-  }
-  return assertWithinRowLimit(data ?? [], "council_member_committees");
+  return fetchPages(
+    "council_member_committees",
+    [rosterKey],
+    (batch, head) =>
+      supabase
+        .from("council_member_committees")
+        .select(
+          "role, council_members!inner(name, roster_key), committees(name)",
+          { count: "exact", head }
+        )
+        .eq("council_members.roster_key", batch),
+    (row) =>
+      compositeKey(row.council_members?.name ?? "", row.committees?.name ?? "")
+  );
 }
 
 async function fetchCouncilMemberQuestions(
   supabase: AdminClient,
   rosterKey: string
 ) {
-  const { data, error } = await supabase
-    .from("council_member_questions")
-    .select(
-      "session_name, venue_type, question_kind, title, summary, topic_tags, speech_date, source_url, council_members!inner(name, roster_key), council_sessions(slug)"
-    )
-    .eq("council_members.roster_key", rosterKey);
-  if (error) {
-    throw new Error(`council_member_questions の取得に失敗: ${error.message}`);
-  }
-  return assertWithinRowLimit(data ?? [], "council_member_questions");
+  return fetchPages(
+    "council_member_questions",
+    [rosterKey],
+    (batch, head) =>
+      supabase
+        .from("council_member_questions")
+        .select(
+          "session_name, venue_type, question_kind, title, summary, topic_tags, speech_date, source_url, council_members!inner(name, roster_key), council_sessions(slug)",
+          { count: "exact", head }
+        )
+        .eq("council_members.roster_key", batch)
+        // 出典のない質問は既存の差分計算でも対象外。NULL は一意制約の対象外。
+        .not("source_url", "is", null),
+    (row) => compositeKey(row.council_members?.name ?? "", row.source_url ?? "")
+  );
+}
+
+async function fetchBillContents(supabase: AdminClient, billIds: string[]) {
+  return fetchPages(
+    "bill_contents",
+    chunkValues(billIds),
+    (batch, head) =>
+      supabase
+        .from("bill_contents")
+        .select("bill_id, difficulty_level, title, summary, content", {
+          count: "exact",
+          head,
+        })
+        .in("bill_id", batch),
+    (row) => compositeKey(row.bill_id, row.difficulty_level)
+  );
+}
+
+async function fetchBillsTags(supabase: AdminClient, billIds: string[]) {
+  return fetchPages(
+    "bills_tags",
+    chunkValues(billIds),
+    (batch, head) =>
+      supabase
+        .from("bills_tags")
+        .select("bill_id, tag_id, tags(label)", { count: "exact", head })
+        .in("bill_id", batch),
+    (row) => compositeKey(row.bill_id, row.tags?.label ?? row.tag_id),
+    ["bill_id", "tag_id"]
+  );
+}
+
+async function fetchFactionStances(supabase: AdminClient, billIds: string[]) {
+  return fetchPages(
+    "faction_stances",
+    chunkValues(billIds),
+    (batch, head) =>
+      supabase
+        .from("faction_stances")
+        .select(
+          "bill_id, faction_id, type, faction_name_at_vote, factions(name)",
+          { count: "exact", head }
+        )
+        .in("bill_id", batch),
+    (row) => compositeKey(row.bill_id, row.factions?.name ?? row.faction_id)
+  );
 }
 
 type BillRow = {
@@ -832,93 +934,35 @@ type BillRow = {
 const BILL_COLUMNS =
   "id, name, slug, bill_number, status, status_note, publish_status, published_at, is_featured, is_review_completed, thumbnail_url, pdf_url, overview_pdf_url, source_page_url, decision_source_url, council_session_id";
 
-/**
- * インベントリの slug に一致する議案と、対象会期に紐づく議案の両方を読む。
- * 後者はインベントリ外の議案を検出するために必要で、削除には使わない。
- */
+/** slug と会期の検索結果は重なるため、それぞれ検査した後で ID により統合する。 */
 async function fetchBills(
   supabase: AdminClient,
   slugs: string[],
   sessionIds: string[]
 ) {
+  const bySlug = await fetchPages(
+    "bills",
+    chunkValues(slugs),
+    (batch, head) =>
+      supabase
+        .from("bills")
+        .select(BILL_COLUMNS, { count: "exact", head })
+        .in("slug", batch),
+    billKey
+  );
+  const bySession = await fetchPages(
+    "bills",
+    chunkValues(sessionIds),
+    (batch, head) =>
+      supabase
+        .from("bills")
+        .select(BILL_COLUMNS, { count: "exact", head })
+        .in("council_session_id", batch),
+    billKey
+  );
   const byId = new Map<string, BillRow>();
-
-  if (slugs.length > 0) {
-    const { data, error } = await supabase
-      .from("bills")
-      .select(BILL_COLUMNS)
-      .in("slug", slugs);
-    if (error) {
-      throw new Error(`bills の取得に失敗: ${error.message}`);
-    }
-    for (const row of assertWithinRowLimit(data ?? [], "bills")) {
-      byId.set(row.id, row);
-    }
-  }
-
-  if (sessionIds.length > 0) {
-    const { data, error } = await supabase
-      .from("bills")
-      .select(BILL_COLUMNS)
-      .in("council_session_id", sessionIds);
-    if (error) {
-      throw new Error(`会期に紐づく bills の取得に失敗: ${error.message}`);
-    }
-    for (const row of assertWithinRowLimit(data ?? [], "bills")) {
-      byId.set(row.id, row);
-    }
-  }
-
+  for (const row of [...bySlug, ...bySession]) byId.set(row.id, row);
   return [...byId.values()];
-}
-
-async function fetchBillContents(supabase: AdminClient, billIds: string[]) {
-  if (billIds.length === 0) return [];
-  const { data, error } = await supabase
-    .from("bill_contents")
-    .select("bill_id, difficulty_level, title, summary, content")
-    .in("bill_id", billIds);
-  if (error) {
-    throw new Error(`bill_contents の取得に失敗: ${error.message}`);
-  }
-  return assertWithinRowLimit(data ?? [], "bill_contents");
-}
-
-async function fetchBillsTags(supabase: AdminClient, billIds: string[]) {
-  if (billIds.length === 0) return [];
-  const { data, error } = await supabase
-    .from("bills_tags")
-    .select("bill_id, tag_id, tags(label)")
-    .in("bill_id", billIds);
-  if (error) {
-    throw new Error(`bills_tags の取得に失敗: ${error.message}`);
-  }
-  return assertWithinRowLimit(data ?? [], "bills_tags");
-}
-
-async function fetchFactionStances(supabase: AdminClient, billIds: string[]) {
-  if (billIds.length === 0) return [];
-  const { data, error } = await supabase
-    .from("faction_stances")
-    .select("bill_id, faction_id, type, faction_name_at_vote, factions(name)")
-    .in("bill_id", billIds);
-  if (error) {
-    throw new Error(`faction_stances の取得に失敗: ${error.message}`);
-  }
-  return assertWithinRowLimit(data ?? [], "faction_stances");
-}
-
-/**
- * 返却上限に達した読み出しをそのまま差分計算へ渡さない。
- * 読み落とした行を「DBに無い＝新規」と報告してしまうため。
- */
-function assertWithinRowLimit<T>(rows: T[], table: string): T[] {
-  if (rows.length >= POSTGREST_MAX_ROWS) {
-    throw new Error(
-      `${table} の読み出しが返却上限（${POSTGREST_MAX_ROWS}件）に達した。差分が正しく出せないため、ページング処理を実装すること。`
-    );
-  }
-  return rows;
 }
 
 // ---------------------------------------------------------------------------
