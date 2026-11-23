@@ -17,7 +17,7 @@ import { gianKey, shoninKey } from "./shinjuku-r8-2-inventory";
 // 末尾で連結するので、全27案件に easy 版がある。
 // 1文40字以内・行政用語はアンカー保持プロトコルで残すという規約は
 // easy-japanese-validation.test.ts で機械的に検証する。
-type DifficultyLevel = "easy" | "normal" | "hard";
+export type DifficultyLevel = "easy" | "normal" | "hard";
 
 export interface BillContentWithBillSlug {
   /** 対象議案の安定識別子。件名は重複しうるため slug で突合する。 */
