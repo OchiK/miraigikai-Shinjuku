@@ -10,5 +10,5 @@ export const siteConfig = {
   councilBillsDetailUrl:
     "https://www.city.shinjuku.lg.jp/kusei/kuseijoho01_001109_03.html",
   councilFactionExamples:
-    "自由民主党新宿区議会議員団、新宿区議会公明党、日本共産党新宿区議会議員団、立憲民主党・無所属クラブ等",
+    "自民・参政クラブ、新宿区議会公明党、日本共産党新宿区議会議員団、新宿未来の会、立憲民主党・無所属クラブ、日本維新の会・新宿区議団、現役世代に優しい新宿、いのちの党 新宿、新宿区議会立憲フォーラム等",
 } as const;

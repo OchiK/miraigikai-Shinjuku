@@ -1,10 +1,11 @@
 import "server-only";
 
-export type FactionRecord = {
-  id: string;
-  display_name: string;
-  alternative_names: string[];
-};
+import {
+  type FactionRecord,
+  matchFaction,
+} from "../../shared/utils/faction-matching";
+
+export type { FactionRecord } from "../../shared/utils/faction-matching";
 
 /**
  * 会派名でDBの会派を検索する。
@@ -12,6 +13,7 @@ export type FactionRecord = {
  * マッチング方式（完全一致のみ）:
  * 1. display_name と完全一致
  * 2. alternative_names のいずれかと完全一致
+ * 同じ優先順位で複数会派に一致した場合は undefined を返す。
  *
  * 部分一致は使用しない。
  * 略称・旧称など全ての別表記は alternative_names に明示登録することで対応する。
@@ -22,16 +24,6 @@ export function findFactionByName(
   factions: FactionRecord[],
   searchName: string
 ): FactionRecord | undefined {
-  const normalized = searchName.trim().toLowerCase();
-
-  // 1. display_name と完全一致
-  const exactDisplayMatch = factions.find(
-    (f) => f.display_name.toLowerCase() === normalized
-  );
-  if (exactDisplayMatch) return exactDisplayMatch;
-
-  // 2. alternative_names のいずれかと完全一致
-  return factions.find((f) =>
-    f.alternative_names.some((alt) => alt.toLowerCase() === normalized)
-  );
+  const result = matchFaction(factions, searchName);
+  return result.kind === "matched" ? result.faction : undefined;
 }

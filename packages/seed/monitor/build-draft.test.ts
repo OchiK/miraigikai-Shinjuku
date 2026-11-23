@@ -28,7 +28,52 @@ const empty: DetectionResult = {
   proposedChanges: [],
   linkPageChanges: [],
   pdfChanges: [],
+  contentPageChanges: [],
 };
+
+describe("content page report", () => {
+  const change = {
+    label: "議員名簿",
+    url: "https://example.jp/roster",
+    previousSha256: "a".repeat(64),
+    currentSha256: "b".repeat(64),
+    previousLastUpdated: "2026年11月9日",
+    currentLastUpdated: "2026年11月23日",
+  };
+  it("ページ・前後の更新日・短いハッシュ・確認手順を示す", () => {
+    const report = buildReport({ ...empty, contentPageChanges: [change] });
+    for (const text of [
+      "### 議員名簿・会派構成・委員会名簿の更新",
+      change.label,
+      change.url,
+      change.previousLastUpdated,
+      change.currentLastUpdated,
+      "aaaaaaaaaaaa",
+      "bbbbbbbbbbbb",
+      "本文の差分は生成していない",
+      "packages/seed/main/data.ts",
+      "別PR",
+    ]) {
+      expect(report).toContain(text);
+    }
+    expect(report.indexOf("### 議員名簿")).toBeLessThan(
+      report.indexOf("### 次にやること")
+    );
+  });
+  it("更新日なしをダッシュで示し、変更がなければ節を出さない", () => {
+    expect(
+      buildReport({
+        ...empty,
+        contentPageChanges: [
+          { ...change, previousLastUpdated: null, currentLastUpdated: null },
+        ],
+      })
+    ).toContain("最終更新日: — → —");
+    expect(buildReport(empty)).not.toContain(
+      "### 議員名簿・会派構成・委員会名簿の更新"
+    );
+  });
+});
 
 describe("buildDraftFile", () => {
   it("型をすり抜けた値が来ても、未レビュー・非公開で書き出す", () => {

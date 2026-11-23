@@ -544,5 +544,19 @@
   "pdfs": {
     "https://www.city.shinjuku.lg.jp/content/000459252.pdf": "14afb68aedc9c04d403ea2156c535ec7fabebe3cdccd04217df5bfd8648faa8d",
     "https://www.city.shinjuku.lg.jp/content/000468947.pdf": "b6030ed23338eca4b037b4461f80e6b5834b0d927cd0fd8ea1b525b58e45e5ad"
+  },
+  "contentPages": {
+    "https://www.city.shinjuku.lg.jp/kusei/file08_00003.html": {
+      "sha256": "cb2254a044aa2eb410b16a44822de14d9e29436f13bd53c86123d2cb666c521b",
+      "lastUpdated": "2026年11月9日"
+    },
+    "https://www.city.shinjuku.lg.jp/kusei/file08_01_00013.html": {
+      "sha256": "7931dea47e1bd90dae97c42f9f382c48011812a11da3026d6796fed38ab8df0f",
+      "lastUpdated": "2026年11月9日"
+    },
+    "https://www.city.shinjuku.lg.jp/kusei/gikai01_000112.html": {
+      "sha256": "10edacd447ba9304b32e47dd7e7277d15e75a6a45ee5faff83500c325add3a89",
+      "lastUpdated": "2026年11月9日"
+    }
   }
 }
