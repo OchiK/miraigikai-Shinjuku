@@ -35,6 +35,7 @@
   - [P5-0 bill_number のユニーク制約を会期スコープにする ✅](#p5-0-bill_number-のユニーク制約を会期スコープにする-)
   - [P5-1 Automation（新宿区議会更新検知とドラフト生成）](#p5-1-automation)
   - [P5-5 令和8年第1回定例会（R8-1）の議案データ整備と投入](#p5-5-令和8年第1回定例会r8-1の議案データ整備と投入r8-1-session-bills-ingestion--done)
+  - [P5-7 R8-3 区長提出22件の会派賛否と66変種の改稿 — Done](#p5-7-r8-3-区長提出22件の会派賛否と66変種の改稿--done)
 - [P7 議員関連機能](#p7-議員関連機能)
   - [P7-1 議員ページ（世田谷モデル） — Done](#p7-1-議員ページcouncil-person-page---世田谷モデル--done)
   - [P7-3 議員本人のX（旧Twitter）アカウント表示](#p7-3-議員本人のx旧twitterアカウント表示councilor-xtwitter-account-links)
@@ -340,6 +341,25 @@ Progress（2026-10-03〜2026-10-04）:
   - 7件を `publish_status: "published"` / `is_review_completed: true` に更新。GitHub Actions（`import_production.yml` run 37176336738）により本番DBへ非破壊反映し、公開サイト（`/sessions/r8-1/bills`）にて全48件のリンクが正常表示されることを確認。
   - これにより、令和8年第1回定例会の全48件（区長提出42件、議員提出6件）すべての3難易度解説（計144変種）の作成・公開レビュー・本番公開（100%）が完了。Phase 2（解説作成・公開レビュー）が完了した。
 - 2026-10-04: 全48議案の会派別賛否データ（全48議案×8会派＝384行）を `packages/seed/main/faction-stances-r8-1-data.ts` として作成し、PR #136 でマージ。GitHub Actions（`import_production.yml` run 37179105128、事前の dry-run 37179052968）により本番DBへ非破壊反映完了。本番の各議案詳細ページ（`/bills/[id]`）にて会派別賛否バーおよび各会派の態度一覧が正常表示されることを確認。これにより P5-5 の全作業（インベントリ・全48件3難易度解説・主張台帳・会派別賛否データ・本番公開）が完了。
+
+### P5-7 R8-3 区長提出22件の会派賛否と66変種の改稿 — Done
+「議案の概要と審議結果」（`000468947`）には区長提出22件の会派別の賛否も載っている（認定第1〜4号と第68号議案で共産・いのちが反対）。一方、公開レビュー済みの66変種は「会派ごとの賛否は（議決結果）ページに載っていません」と書いているため、賛否だけを先に入れると同じ詳細ページで矛盾して見える（P5-4 の判断 Q3-A）。
+
+Acceptance:
+- `r8_3BillVotes` に区長提出22件を表の並びで加え、`verify-faction-stances.ts` の除外リストから外す
+- 66変種の審議状況とわからないことの節を、審議結果PDFに基づく記述に改稿する
+- `docs/verification/tools/r8_3/` で `20260930_0910_claim-ledger-r8-3.csv` を再生成し、`cmp`・BOM・CRLF・revision テストを通す（「22件」describe が審議状況の出典を議決結果ページに固定している点の扱いを先に決める）
+- 申し送り: `000468947` は 2026-10-22（c865）および 2026-11-02（b603）に差し替えられた。賛否記号は一貫して不変。最新版（b603）を出典にする（確認記録 `docs/verification/20261104_1125_R8-3審議結果PDF差し替え確認記録.md`）
+
+Progress（2026-11-23）:
+- PR #160（`2c466ff`）で実装・マージした（作業記録: `docs/20261123_1717_R8-3区長提出22件_会派賛否反映記録.md`）。
+  - `r8_3BillVotes` に区長提出22件を `000468947.pdf`（b603）の表順で追加（全26件・234行、全会期834行）、除外リストは同意・諮問の2行のみとした。
+  - 66変種の審議状況・不明事項・一次資料表を改稿（会派文と hard の9会派表は `packages/seed/main/r8-3-vote-text.ts` で seed から生成、title・summary・見出し・保護対象節は不変）。議決日・個人投票・賛否理由・討論・委員会審査の不記載を明記した。
+  - 主張台帳 `docs/verification/20260930_0910_claim-ledger-r8-3.csv` を `docs/verification/tools/r8_3/rebuild.sh` でオフライン再生成（1,556行: supported 1,345 / needs_source 211、BOM・CRLF・`cmp` 一致、内容不変1,326行の `claim_id` 移動なし）。
+  - 検証: `@mirai-gikai/seed` 単体テスト 21ファイル / 2,900 tests PASS・typecheck PASS、ライブ PDF（b603）`verify:faction-stances` 全会期不一致なし、`pnpm test:integration`（root 197 / web 148）PASS。独立監査は Review Round 2 / Round 3 とも **PASS**、`/review` code-quality 指摘（A〜E）も修正済み。
+- 本番DB非破壊インポート完了: `import_production.yml` dry-run（run `45145615765`）で期待差分（`faction_stances` 新規198・更新0・インベントリ外0、`bill_contents` 更新66、他テーブル差分なし）を確認後、apply（run `45146149597`）を実行。一次資料バックアップ（Artifact ID `14804945173`）取得、キャッシュ無効化（`bills`, `council-sessions`, `councilors`）、Vercel 再ビルド起動まで完了。
+- 後続の本番インポーター1,000行上限ページング対応も PR #161（`de2d0c5`）で実装・マージし、マージ後の本番 dry-run（run `45151415433`）で全11テーブル差分なし（`faction_stances` 変更なし834、`bill_contents` 変更なし303）を確認済み。
+- 申し送り（未確認事項）: 本番 `bill_translations` に R8-3 の英語翻訳が存在するかは未確認（存在する場合は原文ハッシュ更新により stale 化）。
 
 ---
 
