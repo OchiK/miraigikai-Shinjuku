@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { calculateSourceHash } from "../../../packages/shared/src/i18n/source-hash";
 import { createClient } from "@supabase/supabase-js";
 import { afterEach, describe, expect, it } from "vitest";
 import type { Database } from "../../../packages/supabase/types/supabase.types";
@@ -56,6 +57,7 @@ const dataset: ImportDataset = {
       type: "for" as const,
     }))
   ).flat(),
+  billContentTranslations: [],
   createBillContents: () => [],
   createBillsTags: () => [],
 };
@@ -75,6 +77,128 @@ describe("本番インポーターのページング（実 Supabase）", () => {
         .like(column, `${runId}%`);
       if (error)
         throw new Error(`${table} のテストデータ削除に失敗: ${error.message}`);
+    }
+  });
+
+  it("reads English translations in 100-bill batches with exact counts and id order", async () => {
+    const japanese = { title: "題名", summary: "要約", content: "本文" };
+    const inventory: ImportDataset = {
+      ...dataset,
+      factionStances: [],
+      createBillContents: (bills) =>
+        bills.map((bill) => ({
+          bill_id: bill.id,
+          difficulty_level: "normal",
+          ...japanese,
+        })),
+      billContentTranslations: dataset.bills.map((bill) => ({
+        bill_slug: bill.slug as string,
+        difficulty_level: "normal",
+        locale: "en",
+        status: "generated",
+        title: "Title",
+        summary: "Summary",
+        content: "Content",
+        model: "test",
+        prompt_version: "test",
+        source_hash: calculateSourceHash({
+          difficulty_level: "normal",
+          ...japanese,
+        }),
+      })),
+    };
+    const first = await importInventory(adminClient, {
+      dryRun: false,
+      dataset: inventory,
+    });
+    const expectedKeys = inventory.billContentTranslations
+      .map((row) => `${row.bill_slug}::normal::en`)
+      .sort();
+    expect(
+      first.tables
+        .find((table) => table.table === "bill_content_translations")
+        ?.created.slice()
+        .sort()
+    ).toEqual(expectedKeys);
+    const session = await adminClient
+      .from("council_sessions")
+      .select("id")
+      .eq("slug", sessionSlug)
+      .single();
+    expect(session.error).toBeNull();
+    if (!session.data) throw new Error("Missing paging fixture session");
+    const bills = await adminClient
+      .from("bills")
+      .select("id")
+      .eq("council_session_id", session.data.id);
+    expect(bills.error).toBeNull();
+    expect(bills.data).toHaveLength(billCount);
+    const requests: { url: URL; head: boolean; count: string | null }[] = [];
+    const client = createClient<Database>(
+      process.env.SUPABASE_URL ?? "http://127.0.0.1:54421",
+      process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
+      {
+        global: {
+          fetch: async (input, init) => {
+            const url = new URL(String(input));
+            if (url.pathname.endsWith("/bill_content_translations"))
+              requests.push({
+                url,
+                head: init?.method === "HEAD",
+                count: new Headers(init?.headers).get("prefer"),
+              });
+            return fetch(input, init);
+          },
+        },
+      }
+    );
+    const second = await importInventory(client, {
+      dryRun: true,
+      dataset: inventory,
+    });
+    const translations = second.tables.find(
+      (table) => table.table === "bill_content_translations"
+    );
+    expect(translations?.unchanged.slice().sort()).toEqual(expectedKeys);
+    expect(translations?.protected).toEqual([]);
+    expect(translations?.extraneous).toEqual([]);
+    expect(translations?.created).toEqual([]);
+    expect(translations?.updated).toEqual([]);
+    expect(requests.filter((request) => request.head)).toHaveLength(2);
+    const reads = requests.filter((request) => !request.head);
+    expect(reads).toHaveLength(2);
+    for (const request of requests) {
+      expect(request.count).toContain("count=exact");
+      expect(request.url.searchParams.get("locale")).toBe("eq.en");
+      const filter =
+        request.url.searchParams.get("bill_contents.bill_id") ?? "";
+      expect(filter.startsWith("in.(")).toBe(true);
+      expect(filter.slice(4, -1).split(",").length).toBeLessThanOrEqual(100);
+    }
+    const batchIds = reads.map(({ url }) =>
+      (url.searchParams.get("bill_contents.bill_id") ?? "")
+        .slice(4, -1)
+        .split(",")
+    );
+    expect(batchIds.map((ids) => ids.length).sort((a, b) => a - b)).toEqual([
+      12, 100,
+    ]);
+    expect(batchIds.flat().sort()).toEqual(
+      bills.data?.map((bill) => bill.id).sort()
+    );
+    expect(
+      requests
+        .filter((request) => request.head)
+        .map(({ url }) => url.searchParams.get("bill_contents.bill_id"))
+        .sort()
+    ).toEqual(
+      reads
+        .map(({ url }) => url.searchParams.get("bill_contents.bill_id"))
+        .sort()
+    );
+    for (const { url } of reads) {
+      expect(url.searchParams.get("order")).toBe("id.asc");
+      expect(url.searchParams.get("limit")).toBe("1000");
     }
   });
 

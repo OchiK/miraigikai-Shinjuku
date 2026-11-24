@@ -142,6 +142,7 @@ function buildDataset(idPrefix: string): ImportDataset {
       ...bill,
       slug: prefixed(bill.slug as string),
     })),
+    billContentTranslations: [],
     createBillContents: (bills) =>
       createBillContents(toInventoryRefs(bills), r8_2Contents),
     // タグ表は R8-3 の議案も引くが、複製インベントリは R8-2 だけなので、

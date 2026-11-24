@@ -6,9 +6,11 @@ import {
   formatImportReport,
   formatValue,
   hasChanges,
+  noChangesMessage,
   normalizeTimestamp,
   normalizeArray,
 } from "./diff";
+import { reconcileTranslationWrites } from "./translation-sync";
 
 const billFields = [
   { field: "publish_status" },
@@ -241,6 +243,15 @@ describe("normalizeArray", () => {
 });
 
 describe("formatValue", () => {
+  it("オブジェクトは項目名と値を出し、長い場合は表示を制限する", () => {
+    expect(formatValue({ title: "日本語の見出し" })).toBe(
+      '{"title":"日本語の見出し"}'
+    );
+    const value = { content: "あ".repeat(300) };
+    const json = JSON.stringify(value);
+    expect(formatValue(value)).toBe(`${json.slice(0, 160)}…(${json.length}文字)`);
+  });
+
   it("長い本文は先頭だけを出して文字数を添える", () => {
     const formatted = formatValue("あ".repeat(100));
 
@@ -260,6 +271,7 @@ describe("formatImportReport", () => {
         table: "bills",
         label: "議案",
         created: ["shinjuku-2026-r2-gian-62"],
+        protected: [],
         updated: [
           {
             key: "shinjuku-2026-r2-gian-42",
@@ -284,6 +296,88 @@ describe("formatImportReport", () => {
     expect(output).toContain("dry-run");
     expect(output).toContain(
       "議案  新規 1 / 更新 1 / 変更なし 1 / インベントリ外 1"
+    );
+    expect(output.split("\n")[1]).toBe(
+      "議案  新規 1 / 更新 1 / 変更なし 1 / インベントリ外 1"
+    );
+  });
+
+  it("保護された行があれば集計行に保護件数を添える", () => {
+    const output = formatImportReport({
+      ...report,
+      tables: [
+        {
+          ...report.tables[0],
+          protected: [{ key: "保護する議案", reason: "承認済み" }],
+        },
+      ],
+    });
+    expect(output.split("\n")[1]).toBe(
+      "議案  新規 1 / 更新 1 / 変更なし 1 / インベントリ外 1 / 保護 1"
+    );
+  });
+
+  it("日本語スナップショットで変わった項目を省略せず示す", () => {
+    const before = { title: "見出し", summary: "要約", content: "あ".repeat(300) };
+    const after = { ...before, content: `${before.content}変更` };
+    const output = formatImportReport({
+      ...report,
+      tables: [
+        {
+          ...report.tables[0],
+          updated: [
+            {
+              key: "議案::normal::en",
+              changes: [{ field: "source_snapshot", before, after }],
+            },
+          ],
+        },
+      ],
+    });
+    expect(output).toContain("source_snapshot（変更項目: content）:");
+    expect(output).toContain('{"title":"見出し","summary":"要約","content":');
+    expect(output).not.toContain("[object Object]");
+  });
+
+  it("配列は従来の文字列表現を保ち、片側だけが配列でも変更項目を付けない", () => {
+    const longArray = ["a".repeat(200), "b"];
+    expect(formatValue(["a"])).toBe("a");
+    expect(formatValue(["a", "b"])).toBe("a,b");
+    expect(formatValue(longArray)).toBe(longArray.toString());
+    for (const [before, after] of [
+      [["a"], ["a", "b"]],
+      [["a"], { title: "b" }],
+      [{ title: "a" }, ["b"]],
+    ]) {
+      const output = formatImportReport({
+        ...report,
+        tables: [
+          {
+            ...report.tables[0],
+            updated: [{ key: "配列", changes: [{ field: "value", before, after }] }],
+          },
+        ],
+      });
+      expect(output).toContain(
+        `~ 配列  value: ${formatValue(before)} -> ${formatValue(after)}`
+      );
+      expect(output).not.toContain("変更項目");
+    }
+  });
+
+  it("新規の予測がRPCで更新になった行もキーと理由を出力する", () => {
+    const key = { bill_slug: "議案", difficulty_level: "normal", locale: "en" };
+    const table = reconcileTranslationWrites(
+      {
+        ...report.tables[0],
+        created: ["議案::normal::en"],
+        updated: [],
+      },
+      { created: [], updated: [key] }
+    );
+    expect(table.updated).toEqual([{ key: "議案::normal::en", changes: [] }]);
+    expect(formatImportReport({ dryRun: false, tables: [table] })).toContain(
+      "~ 議案::normal::en（RPC の結果で更新を確認）"
     );
   });
 
@@ -316,6 +410,7 @@ describe("formatImportReport", () => {
 
 describe("hasChanges", () => {
   const emptyTable = {
+    protected: [],
     table: "bills",
     label: "議案",
     created: [],
@@ -328,6 +423,36 @@ describe("hasChanges", () => {
     expect(
       hasChanges({ dryRun: true, tables: [emptyTable] })
     ).toBe(false);
+  });
+
+  it("protected-only differences are non-actionable and never claim equality", () => {
+    const report = {
+      dryRun: true,
+      tables: [
+        {
+          ...emptyTable,
+          protected: [
+            { key: "bill::normal::en", reason: "Admin で編集または作成された" },
+          ],
+        },
+      ],
+    };
+    expect(hasChanges(report)).toBe(false);
+    expect(noChangesMessage(report)).toBe(
+      "書き込み対象なし。保護された差分が 1 件ある"
+    );
+    expect(formatImportReport(report)).toContain(
+      "保護: Admin で編集または作成された"
+    );
+    expect(noChangesMessage({ dryRun: true, tables: [emptyTable] })).toContain(
+      "一致している"
+    );
+    expect(
+      noChangesMessage({
+        dryRun: false,
+        tables: [{ ...emptyTable, created: ["bill"] }],
+      })
+    ).toBeNull();
   });
 
   it("新規があれば true", () => {

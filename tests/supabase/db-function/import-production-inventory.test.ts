@@ -1,5 +1,12 @@
-import { afterAll, describe, expect, it } from "vitest";
-import { adminClient } from "../utils";
+import type { Json } from "../../../packages/supabase/types/supabase.types";
+import { afterAll, beforeEach, describe, expect, it } from "vitest";
+import {
+  adminClient,
+  getAnonClient,
+  createTestUser,
+  getAuthenticatedClient,
+  cleanupTestUser,
+} from "../utils";
 
 const runId = `itest-production-rpc-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
 const sessionSlug = `${runId}-session`;
@@ -739,5 +746,260 @@ describe("import_production_inventory", () => {
       if (cleared.error) throw new Error(cleared.error.message);
       expect((await fetchRow()).x_url).toBeNull();
     });
+  });
+});
+
+// These tests deliberately send raw payloads past the TS preflight.
+describe("15 argument translation RPC", () => {
+  const prefix = `${runId}-translations`;
+  const source = { title: `${prefix} 原文`, summary: "概要", content: "本文" };
+  const translated = { title: "Title", summary: "Summary", content: "Content" };
+  const hash = `v1:${"a".repeat(64)}`;
+  const slug = `${prefix}-bill`;
+  const session = `${prefix}-session`;
+  const row = (overrides: Record<string, Json> = {}) => ({
+    bill_slug: slug,
+    difficulty_level: "normal",
+    locale: "en",
+    ...translated,
+    source_hash: hash,
+    source_snapshot: source,
+    model: "test",
+    prompt_version: "test",
+    ...overrides,
+  });
+  const args = (rows = [row()]) => ({
+    p_council_sessions: [
+      {
+        name: prefix,
+        slug: session,
+        start_date: "2026-11-24",
+        end_date: null,
+        is_active: false,
+        council_url: null,
+      },
+    ],
+    p_tags: [],
+    p_bills: [
+      {
+        name: prefix,
+        slug,
+        bill_number: prefix,
+        status: "submitted",
+        publish_status: "draft",
+        published_at: null,
+        is_featured: false,
+        is_review_completed: false,
+      },
+    ],
+    p_bill_contents: [
+      { bill_slug: slug, difficulty_level: "normal", ...source },
+    ],
+    p_bills_tags: [],
+    p_bill_session_slug: session,
+    p_factions: [],
+    p_committees: [],
+    p_council_members: [],
+    p_council_member_committees: [],
+    p_council_roster_key: prefix,
+    p_council_member_questions: [],
+    p_faction_stances: [],
+    p_bill_sessions: [{ bill_slug: slug, council_session_slug: session }],
+    p_bill_content_translations: rows,
+  });
+  const fetchRows = async () => {
+    const { data, error } = await adminClient
+      .from("bill_content_translations")
+      .select("*, bill_contents!inner(bills!inner(slug))")
+      .eq("bill_contents.bills.slug", slug);
+    if (error) throw error;
+    return data;
+  };
+  const clearFixture = async () => {
+    const bills = await adminClient.from("bills").delete().eq("slug", slug);
+    expect(bills.error).toBeNull();
+    const sessions = await adminClient
+      .from("council_sessions")
+      .delete()
+      .eq("slug", session);
+    expect(sessions.error).toBeNull();
+  };
+  const expectRolledBack = async () => {
+    const bills = await adminClient.from("bills").select("id").eq("slug", slug);
+    const contents = await adminClient
+      .from("bill_contents")
+      .select("id")
+      .eq("title", source.title);
+    const sessions = await adminClient
+      .from("council_sessions")
+      .select("id")
+      .eq("slug", session);
+    for (const result of [bills, contents, sessions]) {
+      expect(result.error).toBeNull();
+      expect(result.data).toEqual([]);
+    }
+    expect(await fetchRows()).toEqual([]);
+  };
+  // Prove this exact fixture reaches translation writes before each mutation.
+  beforeEach(async () => {
+    await clearFixture();
+    const base = await adminClient.rpc("import_production_inventory", args());
+    expect(base.error).toBeNull();
+    expect(base.data).toEqual({
+      translations: {
+        created: [
+          { bill_slug: slug, difficulty_level: "normal", locale: "en" },
+        ],
+        updated: [],
+      },
+    });
+    expect(await fetchRows()).toHaveLength(1);
+    await clearFixture();
+    await expectRolledBack();
+  });
+  afterAll(clearFixture);
+
+  it.each([
+    [
+      "unknown bill",
+      { bill_slug: `${prefix}-unknown` },
+      "translation references unknown bill slug",
+    ],
+    [
+      "wrong locale",
+      { locale: "ko" },
+      "translations require locale en and difficulty normal",
+    ],
+    [
+      "wrong difficulty",
+      { difficulty_level: "hard" },
+      "translations require locale en and difficulty normal",
+    ],
+    [
+      "missing difficulty",
+      { difficulty_level: null },
+      "translations require locale en and difficulty normal",
+    ],
+    [
+      "empty title",
+      { title: "" },
+      "translation title, summary and content must not be empty",
+    ],
+    [
+      "empty summary",
+      { summary: "  " },
+      "translation title, summary and content must not be empty",
+    ],
+    [
+      "empty content",
+      { content: "" },
+      "translation title, summary and content must not be empty",
+    ],
+    [
+      "invalid hash",
+      { source_hash: "v1:bad" },
+      "invalid translation source_hash",
+    ],
+    [
+      "wrong snapshot",
+      { source_snapshot: { ...source, content: "wrong" } },
+      "translation source_snapshot does not match imported bill content",
+    ],
+    [
+      "missing snapshot",
+      { source_snapshot: null },
+      "translation source_snapshot does not match imported bill content",
+    ],
+  ])("rejects %s and rolls back bills and contents", async (_label, overrides, message) => {
+    const { error } = await adminClient.rpc(
+      "import_production_inventory",
+      args([row(overrides)])
+    );
+    expect(error).toMatchObject({ code: "P0001", message });
+    await expectRolledBack();
+  });
+
+  it("rejects duplicate keys and rolls back", async () => {
+    const { error } = await adminClient.rpc(
+      "import_production_inventory",
+      args([row(), row()])
+    );
+    expect(error).toMatchObject({
+      code: "P0001",
+      message: "duplicate bill content translation key",
+    });
+    await expectRolledBack();
+  });
+
+  it("rejects a nonexistent normal content variant and rolls back its bill", async () => {
+    const payload = { ...args(), p_bill_contents: [] };
+    const { error } = await adminClient.rpc(
+      "import_production_inventory",
+      payload
+    );
+    expect(error).toMatchObject({
+      code: "P0001",
+      message: "translation references nonexistent bill content difficulty",
+    });
+    await expectRolledBack();
+  });
+
+  it("denies anonymous and authenticated callers", async () => {
+    const anon = await getAnonClient().rpc(
+      "import_production_inventory",
+      args()
+    );
+    expect(anon.error).toMatchObject({ code: "42501" });
+    expect(anon.error?.message).toContain(
+      "permission denied for function import_production_inventory"
+    );
+    const user = await createTestUser(`${prefix}@example.com`);
+    try {
+      const client = await getAuthenticatedClient(user.email, user.password);
+      const result = await client.rpc("import_production_inventory", args());
+      expect(result.error).toMatchObject({ code: "42501" });
+      expect(result.error?.message).toContain(
+        "permission denied for function import_production_inventory"
+      );
+    } finally {
+      await cleanupTestUser(user.id);
+    }
+    await expectRolledBack();
+  });
+
+  it("ignores approval payload fields, returns actual writes, and preserves identical rows", async () => {
+    const payload = args([
+      row({
+        status: "reviewed",
+        reviewed_at: "2026-11-24T00:00:00Z",
+        reviewed_by: "not-a-reviewer",
+      }),
+    ]);
+    const first = await adminClient.rpc("import_production_inventory", payload);
+    expect(first.error).toBeNull();
+    const key = { bill_slug: slug, difficulty_level: "normal", locale: "en" };
+    expect(first.data).toEqual({
+      translations: { created: [key], updated: [] },
+    });
+    const before = await fetchRows();
+    expect(before).toHaveLength(1);
+    expect(before[0]).toMatchObject({
+      ...translated,
+      source_hash: hash,
+      source_snapshot: source,
+      model: "test",
+      prompt_version: "test",
+      status: "generated",
+      reviewed_at: null,
+      reviewed_by: null,
+      imported_snapshot: translated,
+    });
+    const second = await adminClient.rpc(
+      "import_production_inventory",
+      payload
+    );
+    expect(second.error).toBeNull();
+    expect(second.data).toEqual({ translations: { created: [], updated: [] } });
+    expect(await fetchRows()).toEqual(before);
   });
 });

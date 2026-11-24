@@ -9,7 +9,7 @@
  */
 import { createAdminClient } from "../shared/helper";
 import { parseCliArgs, requireSupabaseEnv } from "./cli-args";
-import { formatImportReport, hasChanges } from "./diff";
+import { formatImportReport, noChangesMessage } from "./diff";
 import { importInventory } from "./importer";
 
 async function main() {
@@ -27,9 +27,8 @@ async function main() {
 
   console.log(formatImportReport(report));
 
-  if (dryRun && !hasChanges(report)) {
-    console.log("差分なし（インベントリとDBは一致している）");
-  }
+  const message = noChangesMessage(report);
+  if (message) console.log(message);
 }
 
 main().catch((error) => {

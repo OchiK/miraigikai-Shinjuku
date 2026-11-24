@@ -149,4 +149,38 @@ describe("bill_content_translations 制約", () => {
       .eq("id", translation.id);
     expect(data).toEqual([]);
   });
+  it.each([
+    ["null", null, true],
+    ["complete text", { title: "t", summary: "s", content: "c" }, true],
+    ["string", "text", false],
+    ["array", [], false],
+    ["missing key", { title: "t", summary: "s" }, false],
+    ["null key", { title: "t", summary: "s", content: null }, false],
+    ["numeric key", { title: "t", summary: "s", content: 1 }, false],
+  ])("imported_snapshot: %s", async (_label, imported_snapshot, valid) => {
+    const content = await setupContent();
+    const { data, error } = await adminClient
+      .from("bill_content_translations")
+      .insert({
+        bill_content_id: content.id,
+        locale: "en",
+        title: "t",
+        summary: "s",
+        content: "c",
+        source_hash: `v1:${"0".repeat(64)}`,
+        imported_snapshot,
+      })
+      .select("imported_snapshot")
+      .single();
+    if (valid) {
+      expect(error).toBeNull();
+      expect(data?.imported_snapshot).toEqual(imported_snapshot);
+    } else {
+      expect(error?.code).toBe("23514");
+      expect(error?.message).toContain(
+        "bill_content_translations_imported_snapshot_shape"
+      );
+      expect(data).toBeNull();
+    }
+  });
 });
