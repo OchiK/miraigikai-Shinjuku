@@ -1,25 +1,27 @@
 import { billContentsWithBillSlug } from "./bill-contents-data";
 import { type SeededBillRef, requireBillBySlug } from "./bill-ref";
+import { r8_3BillTranslationsWithBillSlug } from "./bill-translations-r8-3-data";
 import { gianKey, shoninKey } from "./shinjuku-r8-2-inventory";
 
 /**
- * 議案コンテンツの翻訳（多言語基盤の動作確認用）。
+ * 議案コンテンツの参考訳。
  *
  * 翻訳元は bill-contents-data.ts の同じ議案・同じ難易度の日本語で、
  * source_hash はその日本語から計算した値を固定している。日本語を直すと
  * bill-translations-data.test.ts が失敗するので、翻訳も直してから
  * ハッシュを更新すること（ハッシュだけ書き換えてはならない）。
  *
- * en 以外（zh-Hans / ko / ne / my / vi）は機械翻訳で、編集側にその言語を読める人が
- * いないため人の確認は受けていない（2026-09-24 時点）。確認済みと書かないこと。
+ * 新規の訳文は Git に generated の下書きとして置く。承認と reviewed_at /
+ * reviewed_by は Admin（DB）で管理し、Git やインポーターから承認しない。
+ * 例外は凍結した R8-2 試作2件の英語 reviewed 行だけで、承認記録も保持する。
+ * 他の5言語の試作行は人の確認を受けておらず、公開対象に含めない。
  *
- * 人の確認が終わるまでは status を generated にする。reviewed へ移すときは
- * reviewed_at と reviewed_by も必ず設定する。公開画面は reviewed しか出さない。
- * 確認の手順は docs/20260923_1500_多言語基盤_ロケール方式の決定記録.md を参照。
- *
- * このデータは本番インポーター（packages/seed/production）の対象外。
+ * ロケール方式は docs/20260923_1500_多言語基盤_ロケール方式の決定記録.md、
+ * 英語のみの公開方針は docs/20260924_0450_多言語方針の見直し_英語のみ翻訳と多言語案内ページ.md、
+ * 同期と承認の手順は docs/20261124_1135_英訳の本番同期と確認手順.md を参照。
+ * 本番同期の対象は R8-3 の英語下書きだけ。R8-2 の試作12行はローカル専用。
  */
-type BillTranslationSeed = {
+export type BillTranslationSeed = {
   bill_slug: string;
   difficulty_level: "easy" | "normal" | "hard";
   locale: "en" | "zh-Hans" | "ko" | "ne" | "my" | "vi";
@@ -42,7 +44,7 @@ type BillTranslationSeed = {
     }
 );
 
-export const billTranslationsWithBillSlug: BillTranslationSeed[] = [
+export const r8_2BillTranslationsWithBillSlug: BillTranslationSeed[] = [
   // =========================================================================
   // 承認第2号 専決処分の承認について（新宿区特別区税条例の一部を改正する条例）
   // =========================================================================
@@ -823,6 +825,11 @@ Dự án đã được thông qua nguyên văn (原案可決) tại Kỳ họp �
   },
 ];
 
+export const billTranslationsWithBillSlug: BillTranslationSeed[] = [
+  ...r8_2BillTranslationsWithBillSlug,
+  ...r8_3BillTranslationsWithBillSlug,
+];
+
 export function createBillContentTranslations(
   insertedBills: SeededBillRef[],
   insertedContents: Array<{
@@ -831,27 +838,35 @@ export function createBillContentTranslations(
     difficulty_level: string;
   }>
 ) {
-  return billTranslationsWithBillSlug.map(
-    ({ bill_slug, difficulty_level, ...translation }) => {
-      const bill = requireBillBySlug(insertedBills, bill_slug);
-      const content = insertedContents.find(
-        (c) => c.bill_id === bill.id && c.difficulty_level === difficulty_level
+  return billTranslationsWithBillSlug.map((seed) => {
+    const { bill_slug, difficulty_level, ...translation } = seed;
+    const bill = requireBillBySlug(insertedBills, bill_slug);
+    const content = insertedContents.find(
+      (c) => c.bill_id === bill.id && c.difficulty_level === difficulty_level
+    );
+    if (!content) {
+      throw new Error(
+        `bill_contents not found for translation: ${bill_slug} / ${difficulty_level}`
       );
-      if (!content) {
-        throw new Error(
-          `bill_contents not found for translation: ${bill_slug} / ${difficulty_level}`
-        );
-      }
-      return {
-        bill_content_id: content.id,
-        ...translation,
-        source_snapshot: findTranslationSourceSnapshot(
-          bill_slug,
-          difficulty_level
-        ),
-      };
     }
-  );
+    return {
+      bill_content_id: content.id,
+      ...translation,
+      ...(r8_3BillTranslationsWithBillSlug.includes(seed)
+        ? {
+            imported_snapshot: {
+              title: translation.title,
+              summary: translation.summary,
+              content: translation.content,
+            },
+          }
+        : {}),
+      source_snapshot: findTranslationSourceSnapshot(
+        bill_slug,
+        difficulty_level
+      ),
+    };
+  });
 }
 
 /**

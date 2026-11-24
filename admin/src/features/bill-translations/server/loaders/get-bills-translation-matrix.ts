@@ -11,10 +11,10 @@ import {
   findTranslationStatusesByContentIds,
 } from "../repositories/bill-translation-repository";
 
-const TRANSLATION_MATRIX_SESSION_SLUG = "r8-2";
+const TRANSLATION_MATRIX_SESSION_SLUG = "r8-3";
 
 /**
- * 令和8年第2回定例会の全議案 × 翻訳先ロケールの翻訳状態を返す。
+ * 令和8年第3回定例会の全議案 × 翻訳先ロケールの翻訳状態を返す。
  * 対象は「ふつう」の日本語に対する翻訳（公開画面は選んだ難易度の翻訳がなければ
  * 「ふつう」の翻訳に落とすため、公開可否はここで決まる）。
  */

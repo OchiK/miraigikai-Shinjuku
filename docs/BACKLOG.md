@@ -82,6 +82,9 @@ Progress (2026-09-25):
 ROADMAP の「UI translation」の残りは P8-12 の残作業（定例会の議案一覧・議員一覧・FAQ/規約などの下層ページ、議案詳細の見出し、英語文言のネイティブ確認、`<html lang>`）で扱う。2026-09-26 に FAQ/規約とネイティブ確認以外を済ませた。`<html lang>` は `ja` のままにすると決めた（P8-12 参照）。
 
 ### P3-4 翻訳・ルビ手動確認・編集機能（Translation & Ruby Review Tooling）
+
+2026-11-24時点で、R8-3区長提出案件は Git に22件の英訳下書き、本番未反映・未承認（人による承認前）。ローカル Supabase で同期・更新列の検証・選択復旧・画面表示を確認し、lint・型チェック・ビルド・単体テスト・統合テストは、再実行を含めすべて成功した。詳細とキャッシュ確認時の注意点は[運用手順の検証記録](20261124_1135_英訳の本番同期と確認手順.md#2026-11-24-のローカル検証記録)を参照。**本番DBの現在の反映・承認・公開状態、GitHub 上の workflow 実行、CI は未確認。**
+
 AI生成翻訳（generated）の対照確認・手動編集・公開承認（reviewed）および、
 ルビ（ふりがな）の誤読確認・手動補正を行える管理画面・レビュー手段を整備する。
 詳細は `docs/20260923_1650_翻訳およびルビ手動確認編集機能_要件定義.md` を参照。
@@ -100,6 +103,52 @@ Progress (2026-09-23):
 - ルビのプレビューは保留。公開画面の議案本文は raw HTML を通さず（`<ruby>` は落ちる）、`【正式名称】［ふりがな］（＝言いかえ）` もそのまま文字として出る。
   利用者に見えるふりがなは外部スクリプト Rubyful V2 が付けるものだけなので、管理画面で独自にルビを描くと公開画面と食い違う。
   先に公開側の描画方針を決めること。
+
+### P3-6 英訳検査の適用範囲と見逃しの改善
+
+2026-11-24: `packages/seed/main/translation-checks.ts` に、正しい英訳を不合格にするケースと、一部の誤訳を検出できないケースが残っている。現在のR8-3区長提出22件には該当する誤りはなく、この22件の英訳には影響しない。正しい英訳を妨げる検査の修正は、R8-3議員提出議案とR8-4の英訳に着手する前に済ませる。誤訳の見逃しを減らす追加対応は任意とし、人によるAdminでの全文対照確認を続ける。
+
+Acceptance:
+- 必須: 以下の適用範囲の修正と合わせて、`packages/seed/main/translation-checks.ts` の `checkTranslationNumbers` を金額・一般数値・日付と元号・時刻・表内の順序の検査に分け、`checkTranslationTerminology` を議決結果・会派の検査に分ける。和文の元号名・英文の元号名・西暦換算の基準年は1つの対応表にまとめ、判定結果と既存の検出能力を維持する。
+- 必須: 元号の期間表記で、2つ目の年の前にも `fiscal` がある `from fiscal 2027 to fiscal 2032` を許す。`2018 (Heisei 30) through 2020 (Reiwa 2)` など、令和以外や元号をまたぐ期間も、それぞれの元号名と元年に対応させる。
+- 必須: `令和8年度から3年間` を2026〜2021年の期間と誤認しない。同じ元号の2つ目の数値は、後ろに「年度」または「年間」ではない「年」がある場合に年として扱う。
+- 必須: 17時だけでなく18時・22時などの12時間表記と、17時30分のように分がある時刻に対応する。
+- 必須: 認定マンション・認定こども園・要支援認定・認定調査を議決の認定と区別する。`were certified as needing long-term care` や `not certified as…` を一律に不合格にせず、議決結果の検査は「認定されました」「認定した」に対応させる。
+- 必須: 否決の訳語を対応表に加え、継続審査の `has not been passed` を可決結果の誤った否定と区別する。
+- 必須: 引用符で囲んだ5語以上の資料名を、文中引用と区別して明示的な例外リストに追加する。
+- 任意: `wasn't passed`、`failed to be passed`、`was rejected instead of passed as originally proposed (原案可決)`、`has not yet been certified (認定)` の見逃しを減らす。
+- 任意: `…whether to certify this settlement, which it already certified (認定)` のように、認定を求める記述に認定済みの主張を混ぜた文を検出する。
+- 任意: 2027〜2036年の隣に誤って `Reiwa 8–18` と書くケースを検出する。同じフィールドの別の箇所にある年度への誤置換や、「分からないこと」の項目の脱落も検査の限界として残っている。
+- 任意: 本文の算式（第72号の葬祭補償）や要約の `¥85,490→¥90,790` など、表以外での矢印の逆転を検出する。
+- 任意: `from 453 to 310` の順序逆転、`5 p.m. to 7 p.m.` の午前・午後の誤り、表の行ラベルの入れ替えを検出する。
+- 任意対応の候補: 議決結果に `was passed as…` / `was certified (認定)` を要求し、表以外にも矢印の順序検査を広げる。
+
+Progress (2026-11-24):
+- 後続作業として登録。検査コード・訳文・テストは未変更。
+
+### P3-7 英訳同期・復旧処理のテストと保守性の改善（任意）
+
+2026-11-24: 英訳同期とバックアップ復旧の追加検証・保守性改善の候補。すべて任意の後続作業とし、P3-6の必須対応とは分けて扱う。
+
+Acceptance:
+- `packages/seed/production/translation-sync.test.ts`: `reconcileTranslationWrites` で、新規予定だった行が反映されず保護に回る分岐と、RPCの確定結果にあるキーを `unchanged`・`protected` から除く分岐を個別に検証する。
+- `packages/seed/production/translation-sync.test.ts`: 入力不正の9ケースにある引数なしの `.toThrow()` を、各ケースの理由に対応するエラーメッセージの検証にする。
+- `tests/supabase/db-function/import-production-inventory.test.ts`: 翻訳payloadが配列でない場合・nullの場合、DBには存在するが `p_bills` に含まれない議案、文字列でない本文・nullの本文、nullの `source_hash` を15引数版RPCの統合テストに加える。
+- `packages/seed/production/importer.ts`: RPCが翻訳の確定結果を返さない場合のエラーと、`translationPayloads` による投入データの組み立てを単体テストで検証する。
+- `packages/seed/production/redact-backup.test.ts`: CLIの引数不足、入出力が同じパス、出力ファイルが既にある場合に失敗することを検証する。
+- `tests/supabase/seed/production-importer-translations.test.ts` などのDBテストは、各テストの終了後に `afterEach` でテストデータを片付ける形を検討する。追加したテストの題名を日本語にそろえ、`tests/supabase/seed/production-importer-paging.test.ts` のサービスキー未設定時の空文字フォールバックを明示的なエラーにする。
+- `packages/seed/main/bill-translations-data.ts`: `imported_snapshot` を付けるかどうかを、配列の `includes(seed)` によるオブジェクトの参照一致で決める実装を見直す。
+- `packages/seed/production/importer.ts`: RPC結果の `as unknown as` による型変換を見直し、受け取った値の構造を確認して型を絞る。
+- `packages/seed/production/importer.ts` と `packages/seed/production/translation-sync.ts`: 重複する日本語原文の検索を整理し、slugを `bill_id` に入れて受け渡す箇所の識別子を明確にする。
+- `packages/seed/production/diff.ts`: `TableDiff.protected` を他の差分項目と同じ順序・形式で配置し、保護対象と理由を説明するJSDocを付ける。
+- `packages/seed/main/translation-checks.ts`、`packages/seed/main/translation-terms.ts`、`packages/seed/production/translation-sync.ts` などに追加したコメントの日本語・英語の混在を整理する。
+- `packages/seed/production/redact-backup.ts`: 列数が不正な場合のエラーに行番号・期待列数・実際の列数を加え、reviewerや本文などの値は出力しない。
+- `supabase/migrations/20261124090000_import_bill_content_translations.sql` の `returning (xmax = 0)` が挿入と更新を判別する意図を説明する。既存migrationは書き換えず、新しいmigrationで関数を変更する機会に合わせて行う。
+- `packages/seed/main/translation-checks.ts` の `TextFields` と `packages/seed/production/translation-sync.ts` の `TranslationText` が持つ同じ本文3項目の型定義を整理する。
+- `docs/DATA_PIPELINE.md` と `docs/20261124_1135_英訳の本番同期と確認手順.md` に重複する検証記録は、内容を一方にまとめてリンクで参照し、更新時の食い違いを防ぐ。
+
+Progress (2026-11-24):
+- 後続作業として登録。上記のテスト追加・実装変更は未着手。
 
 ---
 

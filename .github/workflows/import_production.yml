@@ -2,6 +2,7 @@
 #
 # 自然キー（slug / label / (bill_id, difficulty_level)）で upsert するため、
 # bills.id が保たれ、インタビュー回答・レポート・チャット履歴は一切削除されない。
+# 英語下書きは承認・Admin 編集を保護して同期する。バックアップの確認者は置換する。
 # 破壊的な再シードが必要なときだけ seed_production.yml を使うこと。
 name: Import Production DB (非破壊)
 
@@ -115,12 +116,20 @@ jobs:
             --table=public.tags \
             --table=public.bills \
             --table=public.bill_contents \
+            --table=public.bill_content_translations \
             --table=public.bills_tags \
             --table=public.factions \
             --table=public.committees \
             --table=public.council_members \
             --table=public.council_member_committees \
-            --file=/backup/backup-data.sql
+            --file=/backup/backup-data.raw.sql
+
+      # 置換の失敗時は後続の upload / import を実行しない。
+      - name: Redact translation reviewers in backup
+        if: ${{ inputs.dry_run == false && inputs.confirm == 'apply' }}
+        run: |
+          pnpm --filter @mirai-gikai/seed redact:backup "$PWD/backup-data.raw.sql" "$PWD/backup-data.sql"
+          rm backup-data.raw.sql
 
       - name: Upload backup artifact
         if: ${{ inputs.dry_run == false && inputs.confirm == 'apply' }}

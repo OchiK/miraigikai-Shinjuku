@@ -1,6 +1,16 @@
 import type { Database } from "@mirai-gikai/supabase";
 import { createBillContents } from "../main/bill-contents-data";
 import type { SeededBillRef } from "../main/bill-ref";
+import type { BillTranslationSeed } from "../main/bill-translations-data";
+import { r8_3BillTranslationsWithBillSlug } from "../main/bill-translations-r8-3-data";
+import {
+  classifyTranslations,
+  reconcileTranslationWrites,
+  translationText,
+  validateTranslations,
+  type TranslationPayload,
+  type TranslationWrites,
+} from "./translation-sync";
 import {
   committees,
   councilSessions,
@@ -65,6 +75,7 @@ const SHINJUKU_COUNCIL_ROSTER_KEY = "shinjuku-city-council";
  * 流し込めるように差し替え可能にしてある。
  */
 export interface ImportDataset {
+  billContentTranslations: BillTranslationSeed[];
   councilSessions: CouncilSessionInsert[];
   /** 会期指定が無い議案を紐づける既定の会期 slug（後方互換用） */
   billSessionSlug: string;
@@ -89,6 +100,7 @@ export interface ImportDataset {
 
 /** 本番に投入する一次資料層（リポジトリを唯一の正とみなす範囲） */
 export const productionDataset: ImportDataset = {
+  billContentTranslations: r8_3BillTranslationsWithBillSlug,
   councilSessions,
   billSessionSlug: "r8-2",
   billSessionSlugByBillSlug,
@@ -240,6 +252,7 @@ export async function importInventory(
   const contents = await syncBillContents(context, bill);
   const billsTags = await syncBillsTags(context, bill);
   const factionStances = await syncFactionStances(context, bill);
+  const translations = await syncBillContentTranslations(context, bill);
 
   const report: ImportReport = {
     dryRun: options.dryRun,
@@ -255,11 +268,14 @@ export async function importInventory(
       contents,
       billsTags,
       factionStances,
+      translations,
     ],
   };
 
   if (!options.dryRun && hasChanges(report)) {
-    await applyInventoryTransaction(supabase, context.dataset);
+    const written = await applyInventoryTransaction(supabase, context.dataset);
+    report.tables[report.tables.indexOf(translations)] =
+      reconcileTranslationWrites(translations, written);
   }
 
   return report;
@@ -667,7 +683,7 @@ async function syncFactionStances(
 async function applyInventoryTransaction(
   supabase: AdminClient,
   dataset: ImportDataset
-): Promise<void> {
+): Promise<TranslationWrites> {
   type Args =
     Database["public"]["Functions"]["import_production_inventory"]["Args"];
 
@@ -694,7 +710,8 @@ async function applyInventoryTransaction(
   const toJson = (value: unknown) =>
     JSON.parse(JSON.stringify(value)) as Args["p_bills"];
 
-  const { error } = await supabase.rpc("import_production_inventory", {
+  const { data, error } = await supabase.rpc("import_production_inventory", {
+    p_bill_content_translations: toJson(translationPayloads(dataset)),
     p_council_sessions: toJson(dataset.councilSessions),
     p_tags: toJson(dataset.tags),
     p_bills: toJson(billsWithSessionSlugs),
@@ -713,6 +730,76 @@ async function applyInventoryTransaction(
   if (error) {
     throw new Error(`本番インポートのトランザクションに失敗: ${error.message}`);
   }
+  const result = data as unknown as { translations: TranslationWrites };
+  if (
+    !result?.translations ||
+    !Array.isArray(result.translations.created) ||
+    !Array.isArray(result.translations.updated)
+  )
+    throw new Error("翻訳の確定結果を RPC から取得できない");
+  return result.translations;
+}
+
+function translationPayloads(dataset: ImportDataset): TranslationPayload[] {
+  const sources = dataset.createBillContents(slugRefs(dataset));
+  const payloads = dataset.billContentTranslations.map((row) => {
+    const source = sources.find(
+      (source) =>
+        source.bill_id === row.bill_slug &&
+        source.difficulty_level === row.difficulty_level
+    );
+    if (!source)
+      throw new Error(
+        `翻訳元が存在しない: ${row.bill_slug}/${row.difficulty_level}`
+      );
+    return {
+      bill_slug: row.bill_slug,
+      difficulty_level: row.difficulty_level,
+      locale: row.locale,
+      ...translationText(row),
+      source_hash: row.source_hash,
+      source_snapshot: translationText(source),
+      model: row.model,
+      prompt_version: row.prompt_version,
+    };
+  });
+  validateTranslations(
+    payloads,
+    dataset.bills.map(requireSlug),
+    sources.map((source) => ({ ...source, bill_slug: source.bill_id }))
+  );
+  return payloads;
+}
+
+async function syncBillContentTranslations(
+  context: ImportContext,
+  bill: BillSyncResult
+): Promise<TableDiff> {
+  const desired = translationPayloads(context.dataset);
+  const rows = await fetchPages(
+    "bill_content_translations",
+    chunkValues(bill.inventoryBillIds),
+    (batch, head) =>
+      context.supabase
+        .from("bill_content_translations")
+        .select(
+          "id, locale, status, title, summary, content, source_hash, source_snapshot, imported_snapshot, model, prompt_version, bill_contents!inner(bill_id, difficulty_level)",
+          { count: "exact", head }
+        )
+        .eq("locale", "en")
+        .in("bill_contents.bill_id", batch),
+    (row) => row.id
+  );
+  return classifyTranslations(
+    rows.map((row) => ({
+      ...row,
+      bill_slug:
+        bill.slugById.get(row.bill_contents.bill_id) ??
+        row.bill_contents.bill_id,
+      difficulty_level: row.bill_contents.difficulty_level,
+    })),
+    desired
+  );
 }
 
 // ---------------------------------------------------------------------------

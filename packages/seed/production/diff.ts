@@ -43,6 +43,7 @@ export interface RowChange {
 
 /** 1テーブル分の差分 */
 export interface TableDiff {
+  protected: { key: string; reason: string }[];
   /** テーブル名 */
   table: string;
   /** CLI表示用の日本語ラベル */
@@ -118,7 +119,15 @@ export function diffTable({
     ? current.map((row) => row.key).filter((key) => !desiredByKey.has(key))
     : [];
 
-  return { table, label, created, updated, unchanged, extraneous };
+  return {
+    table,
+    label,
+    created,
+    updated,
+    unchanged,
+    extraneous,
+    protected: [],
+  };
 }
 
 /** 2行の値を比較し、異なるカラムだけを返す。 */
@@ -192,7 +201,7 @@ export function formatImportReport(report: ImportReport): string {
 
   for (const table of report.tables) {
     lines.push(
-      `${table.label}  新規 ${table.created.length} / 更新 ${table.updated.length} / 変更なし ${table.unchanged.length} / インベントリ外 ${table.extraneous.length}`
+      `${table.label}  新規 ${table.created.length} / 更新 ${table.updated.length} / 変更なし ${table.unchanged.length} / インベントリ外 ${table.extraneous.length}${table.protected.length > 0 ? ` / 保護 ${table.protected.length}` : ""}`
     );
 
     for (const key of table.created) {
@@ -200,9 +209,30 @@ export function formatImportReport(report: ImportReport): string {
     }
 
     for (const row of table.updated) {
+      if (row.changes.length === 0) {
+        lines.push(`  ~ ${row.key}（RPC の結果で更新を確認）`);
+      }
       for (const change of row.changes) {
+        let field = change.field;
+        if (
+          change.before !== null &&
+          change.after !== null &&
+          typeof change.before === "object" &&
+          typeof change.after === "object" &&
+          !Array.isArray(change.before) &&
+          !Array.isArray(change.after)
+        ) {
+          const before = change.before as Record<string, unknown>;
+          const after = change.after as Record<string, unknown>;
+          const changedFields = [
+            ...new Set([...Object.keys(before), ...Object.keys(after)]),
+          ].filter(
+            (key) => JSON.stringify(before[key]) !== JSON.stringify(after[key])
+          );
+          field += `（変更項目: ${changedFields.join(", ")}）`;
+        }
         lines.push(
-          `  ~ ${row.key}  ${change.field}: ${formatValue(change.before)} -> ${formatValue(change.after)}`
+          `  ~ ${row.key}  ${field}: ${formatValue(change.before)} -> ${formatValue(change.after)}`
         );
       }
     }
@@ -214,6 +244,9 @@ export function formatImportReport(report: ImportReport): string {
           : "削除しない";
       lines.push(`  ? ${key}（インベントリ外。${action}）`);
     }
+    for (const row of table.protected) {
+      lines.push(`  ! ${row.key}（保護: ${row.reason}）`);
+    }
   }
 
   return lines.join("\n");
@@ -222,6 +255,12 @@ export function formatImportReport(report: ImportReport): string {
 /** 差分表示用に値を短く整形する。長い本文は先頭だけを出す。 */
 export function formatValue(value: unknown): string {
   if (value === null || value === undefined) return "null";
+  if (typeof value === "object" && !Array.isArray(value)) {
+    const json = JSON.stringify(value);
+    return json.length <= 160
+      ? json
+      : `${json.slice(0, 160)}…(${json.length}文字)`;
+  }
   if (typeof value !== "string") return String(value);
   if (value.length <= 40) return value;
   return `${value.slice(0, 40)}…(${value.length}文字)`;
@@ -236,4 +275,16 @@ export function hasChanges(report: ImportReport): boolean {
       (table.table === "council_member_committees" &&
         table.extraneous.length > 0)
   );
+}
+
+/** No actionable writes does not imply equality when Admin rows are protected. */
+export function noChangesMessage(report: ImportReport): string | null {
+  if (hasChanges(report)) return null;
+  const count = report.tables.reduce(
+    (sum, table) => sum + table.protected.length,
+    0
+  );
+  return count > 0
+    ? `書き込み対象なし。保護された差分が ${count} 件ある`
+    : "差分なし（インベントリとDBは一致している）";
 }
