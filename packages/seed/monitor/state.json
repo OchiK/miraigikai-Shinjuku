@@ -2,8 +2,8 @@
   "linkPages": {
     "https://www.city.shinjuku.lg.jp/kusei/file08_00015.html": [
       {
-        "text": "令和8年第3回定例会結果",
-        "href": "https://www.city.shinjuku.lg.jp/kusei/gikai01_00123620210909_00008.html"
+        "text": "令和8年第4回定例会の主な日程",
+        "href": "https://www.city.shinjuku.lg.jp/kusei/gikai01_00123620210909_00010.html"
       },
       {
         "text": "インターネット中継",
@@ -32,6 +32,10 @@
       {
         "text": "第3回定例会",
         "href": "https://www.city.shinjuku.lg.jp/kusei/gikai01_00123620210909_00008.html"
+      },
+      {
+        "text": "第4回定例会",
+        "href": "https://www.city.shinjuku.lg.jp/kusei/gikai01_00123620210909_00010.html"
       },
       {
         "text": "第1回定例会",
@@ -551,12 +555,12 @@
       "lastUpdated": "2026年11月9日"
     },
     "https://www.city.shinjuku.lg.jp/kusei/file08_01_00013.html": {
-      "sha256": "7931dea47e1bd90dae97c42f9f382c48011812a11da3026d6796fed38ab8df0f",
-      "lastUpdated": "2026年11月9日"
+      "sha256": "b3a79c9162548f0bf4cab5b346924d0500332fb56049ceabc1b05418c0104b2a",
+      "lastUpdated": "2026年11月26日"
     },
     "https://www.city.shinjuku.lg.jp/kusei/gikai01_000112.html": {
-      "sha256": "10edacd447ba9304b32e47dd7e7277d15e75a6a45ee5faff83500c325add3a89",
-      "lastUpdated": "2026年11月9日"
+      "sha256": "8a8c160054873cb16fd8dc9923be0141e7247d5b09f5276d3f02db95797e18c9",
+      "lastUpdated": "2026年11月26日"
     }
   }
 }
